@@ -1,0 +1,93 @@
+# Testing
+
+## CURRENT FACT — scaffold verification
+
+Supported full verification command from `backend/`: `./scripts/test.ps1 all` on
+Windows PowerShell, or `sh scripts/test.sh all` on POSIX. Both use the repository
+`.venv` and propagate pytest's exit status. Use `unit`, `integration`, `api`, `e2e`
+or `all` (default) as the category. Tests live under those directories; reusable
+fixed inputs belong under `tests/fixtures/`. CURRENT FACT: `e2e` reports no tests
+implemented and exits zero; this is not evidence of business-flow coverage.
+
+Developer commands:
+
+| Workflow | PowerShell | POSIX |
+| --- | --- | --- |
+| All tests | `./scripts/test.ps1 all` | `sh scripts/test.sh all` |
+| Integration tests | `./scripts/test.ps1 integration` | `sh scripts/test.sh integration` |
+| Reset + migrations | `./scripts/reset_db.ps1` | `sh scripts/reset_db.sh` |
+| Reset + migrations + seed | `./scripts/reset_db.ps1 -Seed` | `sh scripts/reset_db.sh --seed` |
+| Seed/check baseline | `./scripts/seed_demo.ps1` | `sh scripts/seed_demo.sh` |
+| Inspect persisted state | `./scripts/db_status.ps1` | `sh scripts/db_status.sh` |
+
+Reset is intentionally limited to `ENVIRONMENT=development` and the canonical
+`runtime/shelfcash.db` file. Stop database users beforehand. It rejects linked
+targets/SQLite sidecars, deletes only that DB, and upgrades to Alembic head.
+Status uses a fresh read-only connection, verifies integrity, foreign keys and
+revision against migration head, and prints table counts. Missing/unmigrated DBs
+fail rather than being silently created. S0 seed verifies the empty baseline;
+no business data exists yet. Normal workflows require no hosted notebook or provider.
+
+See [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) for fresh setup, live HTTP checks,
+SQL inspection and exact expected state; [SCAFFOLD](features/SCAFFOLD.md) describes
+implemented feature verification and limitations.
+
+From `backend/`: `.\.venv\Scripts\python.exe -m pytest` on Windows, or
+`.venv/bin/python -m pytest` on POSIX. Smoke tests verify import, health payload and
+Pydantic/OpenAPI agreement, exact route inventory and domain import without transport,
+ORM or infrastructure. A temporary SQLite integration test upgrades/downgrades the
+empty Alembic baseline, checks revision state/foreign-key enforcement and uses a
+synchronous SQLAlchemy Session. No external HTTP call or provider credential is needed.
+
+## ACCEPTED DECISION — layers for future slices
+
+1. Domain invariant unit tests: plain Python quantities/dates and rules, no DB/server/LLM.
+2. Application/use-case tests: orchestration, permission boundaries, failure behavior,
+   transaction scope and deterministic output with explicit dependencies.
+3. Repository/infrastructure integration tests: temporary SQLite, migrations, same-store
+   relations, round trips, constraints and actual query behavior; isolate file artifacts.
+4. API contract tests: Pydantic/OpenAPI request/response shape, status/errors, access checks;
+   use in-process ASGI client, compare schema when public operations change.
+5. Golden scenarios: fixed versioned inputs, deterministic expected metrics/recommendation
+   and snapshot evidence. Define expected values before implementing the computation.
+
+Tests must verify observable business behavior rather than mirror implementation.
+Run targeted tests and relevant regressions per slice; full suite when warranted.
+For public contract changes, inspect an OpenAPI diff/check. Preserve reproducible
+inputs/model versions; external providers are replaced at the gateway boundary.
+
+Major feature completion requires implementation, automated tests, relevant
+integration/persistence coverage, reproducible manual steps, deterministic fixtures
+where practical, fresh-connection DB assertions where persistence is involved,
+and canonical feature documentation. Verify both API/application results and
+committed database state; never use HTTP 2xx or the writer's ORM identity alone.
+Update CURRENT_STATE and the relevant `docs/features/` document after each major
+slice; update testing/runbook/schema/API documents when their scope changes.
+Record only implemented feature contracts; do not create speculative feature docs.
+
+## Future golden scenarios — PROPOSAL, not existing tests
+
+| Scenario | Input condition | Acceptance evidence to freeze in S3 |
+| --- | --- | --- |
+| NORMAL_WEEK | Stable demand, usable stock, normal supplier terms | Demand reconciliation, three candidate simulations and deterministic comparison |
+| PROMOTION_SPIKE | Explicit promotion/demand increase | Increased demand, measured shortage/service/capital tradeoffs without LLM selection |
+| LOW_BUDGET | Binding purchase budget | Feasibility and warnings; no concealed overspend or fabricated feasible candidate |
+| SUPPLIER_DELAY | Delayed arrival relative to demand dates | Stock unavailable before arrival; deterministic shortage/service consequences |
+| EXPIRY_RISK | Lots expiring within planning horizon | FEFO allocation, excluded expired stock and exact waste evidence |
+
+## Mandatory future invariants — ACCEPTED DECISION
+
+- Demand = 100, usable inventory = 20 → raw procurement need = 80 (before pack/MOQ rules).
+- Requirement = 83, pack size = 10 → rounded purchase quantity = 90.
+- Expired inventory lot → zero usable quantity for future demand.
+- Supplier lead time = 3 days → incoming inventory unavailable before arrival.
+- Order placed → MOQ respected; purchase quantity obeys pack size.
+- FEFO → earliest usable expiry chosen, never expired/not-yet-arrived lots.
+- Future demand dates → strictly after frozen cutoff boundary.
+- Unauthorized user → state-changing action rejected by backend.
+- What-if budget permission → does not imply real-budget mutation permission.
+- No provider available → deterministic decision flow still functions.
+- Historical DecisionRun → unchanged meaning after current inventory/terms/constraints change.
+
+These scenarios/invariants are specifications for future implementation, not claims
+that forecast, FEFO, procurement, simulation or authorization works in this scaffold.
