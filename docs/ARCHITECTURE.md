@@ -1,7 +1,7 @@
 # Target Competition MVP architecture
 
 This document describes **target architecture**, not runtime implementation.
-ACCEPTED DECISION sections derive from active ADRs 001, 002, 004–010. Layout details and future
+ACCEPTED DECISION sections derive from active ADRs 001, 002, 004–011. Layout details and future
 contracts are PROPOSAL until their slice accepts them. See CURRENT_STATE for reality.
 
 ## System context — ACCEPTED DECISION
@@ -53,7 +53,9 @@ Routes handle transport and validated schemas. Application coordinates authoriza
 transactions and use cases. Domain owns plain Python business rules. Repositories
 persist/query; ORM models encode persistence, not business computation. PostgreSQL and
 local storage are infrastructure. ML artifacts are local files in the future, with
-versions captured in decision provenance. No repository abstraction is implemented yet.
+versions captured in decision provenance. CURRENT FACT: S1.5 concrete repositories
+in app/repositories take a caller-owned synchronous Session; no generic abstraction.
+See [persistence access](features/PERSISTENCE_ACCESS.md) for the accepted internal contract.
 
 ## Local persistence topology — ACCEPTED DECISION (ADR-007)
 
@@ -74,16 +76,23 @@ Developer machine
 flowchart TD
     Client[Client / Developer] --> FastAPI
     FastAPI --> Application
-    Application --> SQLAlchemy[SQLAlchemy / synchronous Session / psycopg]
+    Application --> Repository[Concrete domain repository]
+    Repository --> SQLAlchemy[SQLAlchemy / synchronous Session / psycopg]
     SQLAlchemy --> PostgreSQL[(PostgreSQL)]
 ```
 
 CURRENT FACT: health performs no persistence operation. S1.1/S1.2/S1.3 implement
-thirteen ORM tables: identity/store, catalog/recipe, supplier/terms, canonical sales,
-lot/movement and controlled planning constraints. Application/business API paths in the diagram
+sixteen ORM tables: identity/store, catalog/recipe, supplier/terms, canonical sales,
+lot/movement, controlled planning constraints and S1.4 Forecast/Decision run storage. Application/business API paths in the diagram
 remain future work. Only migrations,
 developer commands and integration tests currently connect. PROPOSAL: a backend
 container may later use Compose host `postgres`; it is not part of this slice.
+
+ACCEPTED DECISION (S1.5): application/use case owns the transaction and supplies
+one synchronous Session to all participating repositories. Repositories never
+commit, roll back, close that Session or create their own Session. Internal
+Forecast/Decision lifecycle writers lock a Store-scoped RUNNING row before staging
+terminal fields; no computation, public API or generic state-machine framework.
 
 ## Import correction and inventory audit — ACCEPTED DECISION (ADR-008/009)
 
@@ -166,3 +175,19 @@ retains unknown/ambiguous evidence and evaluates computation readiness per use c
 Current S1.3.1 schema permits unknown lot receipt date without date defaults; strict
 SupplierTerm procurement inputs remain required. No import/readiness service, public
 warning API, staging table or new application layer is implemented.
+
+## Historical runs -- ACCEPTED DECISION (ADR-011)
+
+Future computation loads authorized inputs, builds a canonical snapshot, computes
+from that exact snapshot and persists versioned results. Completed runs are historical;
+reruns create new UUIDs. Historical interpretation uses copied values/versions, not
+current mutable joins. Future services enforce immutability and package validation;
+no trigger or generic immutable framework exists. CURRENT FACT: three typed models
+and migrations implement persistence only. Forecast/Decision computation, snapshot
+builder, hashing/artifact service and business APIs remain NOT STARTED.
+CURRENT FACT: S1.5 inserts new run aggregates and reads history through scoped
+repositories. Minimal RUNNING -> COMPLETED/FAILED and RUNNING-only prediction
+append guards now exist in repository writers. Direct tracked ORM/SQL mutation can
+still bypass policy; operational services/full business validation remain future.
+Algorithm metadata belongs in future versioned packages; no engine-version framework
+is introduced. ADR-006 What-if and ADR-004 LLM authority boundaries are unchanged.

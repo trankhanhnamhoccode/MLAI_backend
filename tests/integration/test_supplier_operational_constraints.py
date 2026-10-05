@@ -16,7 +16,7 @@ from scripts.dev import migration_config
 
 BASE_TABLES = {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines"}
 NEW_TABLES = {"suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints"}
-HEAD = "0005_data_semantics_correction"
+HEAD = "0006_forecast_decision_persist"
 
 
 @pytest.fixture
@@ -89,7 +89,7 @@ def persisted_lot(engine: Engine, ids: dict[str, UUID]) -> UUID:
 
 
 def test_fresh_schema_and_downgrade_reupgrade(engine: Engine) -> None:
-    assert set(inspect(engine).get_table_names()) == BASE_TABLES | NEW_TABLES | {"alembic_version"}
+    assert set(inspect(engine).get_table_names()) == BASE_TABLES | NEW_TABLES | {"alembic_version", "forecast_runs", "forecast_predictions", "decision_runs"}
     with engine.connect() as fresh:
         assert fresh.scalar(text("SELECT current_database()")) == "shelfcash_test"
         assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == HEAD
@@ -98,7 +98,7 @@ def test_fresh_schema_and_downgrade_reupgrade(engine: Engine) -> None:
     command.downgrade(migration_config(), "0003_catalog_recipe")
     assert set(inspect(engine).get_table_names()) == BASE_TABLES | {"alembic_version"}
     command.upgrade(migration_config(), "head")
-    assert set(inspect(engine).get_table_names()) == BASE_TABLES | NEW_TABLES | {"alembic_version"}
+    assert set(inspect(engine).get_table_names()) == BASE_TABLES | NEW_TABLES | {"alembic_version", "forecast_runs", "forecast_predictions", "decision_runs"}
 
 
 def test_six_models_commit_close_reload(engine: Engine) -> None:

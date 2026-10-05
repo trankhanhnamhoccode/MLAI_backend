@@ -12,8 +12,12 @@ from app.models.sales_daily import SalesDaily
 from app.models.inventory_lot import InventoryLot
 from app.models.inventory_movement import InventoryMovement
 from app.models.business_constraint import BusinessConstraint
+from app.models.forecast_run import ForecastRun
+from app.models.forecast_prediction import ForecastPrediction
+from app.models.decision_run import DecisionRun
 
 __all__ = [
     "User", "Store", "StoreMembership", "Product", "Ingredient", "Recipe", "RecipeLine",
     "Supplier", "SupplierTerm", "SalesDaily", "InventoryLot", "InventoryMovement", "BusinessConstraint",
+    "ForecastRun", "ForecastPrediction", "DecisionRun",
 ]

@@ -24,7 +24,7 @@ See [API_CONTRACT](../API_CONTRACT.md). `GET /health` returns HTTP 200 and
 `{"status":"ok","service":"shelfcash-backend"}` by default. `/openapi.json`
 has only `/health` in paths. Interactive documentation remains disabled.
 Health reads/writes no tables. Alembic writes `public.alembic_version`, one row
-`0005_data_semantics_correction` at current head (`0001_scaffold` is historical baseline).
+`0006_forecast_decision_persist` at current head (`0001_scaffold` is historical baseline).
 Status/seed read it through a fresh PostgreSQL read-only transaction.
 Seed reports no business data and writes no rows.
 
@@ -33,10 +33,10 @@ Seed reports no business data and writes no rows.
 Follow [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md): start Compose, await health,
 check reachability, reset/migrate/seed, run tests, start FastAPI, assert health and
 OpenAPI, then inspect persisted PostgreSQL state through status and direct SQL.
-Expected `public` tables: `alembic_version` (one row `0005_data_semantics_correction`) plus
+Expected `public` tables: `alembic_version` (one row `0006_forecast_decision_persist`) plus
 empty `users`, `stores`, `store_memberships`, `products`, `ingredients`, `recipes`,
 `recipe_lines`, `suppliers`, `supplier_terms`, `sales_daily`, `inventory_lots`,
-`inventory_movements`, `business_constraints` after reset. No S1.4+ tables exist.
+`inventory_movements`, `business_constraints`, `forecast_runs`, `forecast_predictions`, `decision_runs` after reset. S1.4 run tables also exist; no Import/Order/What-if tables.
 No manual Docker exec or host database client is needed for inspection.
 
 ## Failure paths and reset/retry

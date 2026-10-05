@@ -29,7 +29,7 @@ migration head and table counts. Unreachable databases fail; unmigrated database
 fail unless reachability-only behavior is explicitly selected. No state is created
 by inspection. Seed verifies the current S1.1/S1.2/S1.3 table set at head and writes
 no data; demo seeding is not implemented. Normal workflows require no hosted notebook
-or provider. After reset all thirteen business tables are empty.
+or provider. After reset all sixteen business tables are empty.
 
 See [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) for fresh setup, live HTTP checks,
 SQL inspection and exact expected state; [SCAFFOLD](features/SCAFFOLD.md) describes
@@ -49,7 +49,7 @@ Tests include NULL STORE uniqueness, inactive activation, exact Decimal/boundari
 schema-only limitations and fresh/downgrade/re-upgrade. No ledger balance service,
 import correction or FEFO coverage is claimed. See
 [S13_VERIFICATION](runbooks/S13_VERIFICATION.md) and the four domain feature docs.
-Current Windows verification: S1.3 80 targeted, S1.3.1 9 targeted / 182 full tests pass; one existing upstream
+Current Windows verification: S1.3 80 targeted, S1.3.1 9 targeted, S1.4 58 targeted / 240 full tests pass; one existing upstream
 warning. Full suite requires healthy local PostgreSQL, with no integration skips.
 
 S1.2 targeted schema verification:
@@ -178,3 +178,45 @@ inputs, exact per-pack price and clean/refused downgrade behavior. All use isola
 shelfcash_test, fresh sessions and actual PostgreSQL. No importer/readiness test oracle
 is fabricated. See [S131_VERIFICATION](runbooks/S131_VERIFICATION.md). PowerShell
 runtime verified; unchanged POSIX wrappers retain historical syntax-only status.
+
+## S1.4 run persistence -- CURRENT FACT
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_forecast_decision_persistence.py -q
+.\scripts\test.ps1 all
+```
+
+POSIX: `.venv/bin/python -m pytest tests/integration/test_forecast_decision_persistence.py -q`.
+58 tests verify actual isolated PostgreSQL run states/windows, model metadata, exact
+ordered finite quantiles, same-store references, canonical keys, nested JSON independent
+values, reruns, completed minimum fields, partial/failed outputs and fresh/down/up
+migration. No engine or SQL immutability enforcement is claimed. Out-of-horizon
+prediction test explicitly demonstrates the future application invariant. Full suite:
+240 tests; see S14_VERIFICATION and FORECAST/DECISION_RUN docs. PowerShell runtime
+verified; POSIX wrappers unchanged with historical syntax-only status, no runtime claim.
+
+## S1.5 persistence access -- CURRENT FACT
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_repositories.py tests/unit/test_repository_contract.py tests/unit/test_repository_guards.py -q
+.\scripts\test.ps1 all
+```
+
+Real isolated PostgreSQL round trips for all sixteen tables through concrete
+repositories; Store scope/identity-map isolation, exact Decimal/NULL/JSON, date
+queries, duplicate/new-row guards, caller commit visibility/rollback and lot row
+locks. Inventory fixture transactions are not an implemented mutation service.
+See [PERSISTENCE_ACCESS](features/PERSISTENCE_ACCESS.md) and CURRENT_STATE for
+acceptance evidence; unchanged schema/API and direct ORM/SQL limitations explicit.
+RUNNING-only lifecycle guards, prediction append, terminal rejections before caller
+flush, copied JSON inputs, Store boundaries, transaction rollback, row locks and
+stale cached run refresh are exercised on real PostgreSQL. Full package/horizon/
+authorization and operational inventory mutation remain future application checks.
+
+S1.5 Windows acceptance: targeted command above **80 passed**; supported
+`test.ps1 all` **320 passed** (29 unit, 289 integration, 2 API), one existing upstream warning, no skips. This includes
+65 repository integration tests and 15 repository unit checks. Earlier 240-test totals
+above describe HISTORICAL INFORMATION at the S1.4 baseline. Pre-S1.5 protected-file
+hashes and exact generated/live OpenAPI comparison pass. Authorized development
+reset/upgrade and Alembic check pass; final status is at unchanged 0006 head with
+sixteen empty business tables. Tests only own shelfcash_test.

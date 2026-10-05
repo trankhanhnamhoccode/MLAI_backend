@@ -1,5 +1,11 @@
 # Store and identity persistence — S1.1
 
+CURRENT FACT (S1.5): internal repository access is now implemented; see
+[PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository
+absence describe the HISTORICAL INFORMATION of this schema slice. Its direct
+Session tests remain schema evidence; operational services/APIs/engines and
+application lifecycle/audit enforcement remain unimplemented.
+
 ## Status
 
 CURRENT FACT: User, Store and StoreMembership models/schema implemented. Scope is
@@ -65,12 +71,12 @@ docker compose up -d --wait --wait-timeout 90 postgres
 .\scripts\db_status.ps1
 ```
 
-Expected: healthy PostgreSQL, revision `0005_data_semantics_correction (head)`, targeted/full
+Expected: healthy PostgreSQL, revision `0006_forecast_decision_persist (head)`, targeted/full
 tests pass, development status reachable/at_head true, tables/row counts exactly
 `alembic_version: 1`, `users: 0`, `stores: 0`, `store_memberships: 0`,
 `products: 0`, `ingredients: 0`, `recipes: 0`, `recipe_lines: 0`,
 `suppliers: 0`, `supplier_terms: 0`, `sales_daily: 0`, `inventory_lots: 0`,
-`inventory_movements: 0`, `business_constraints: 0`.
+`inventory_movements: 0`, `business_constraints: 0`, `forecast_runs: 0`, `forecast_predictions: 0`, `decision_runs: 0`.
 Tests write only shelfcash_test, so development tables remain empty after testing.
 
 Inspect columns/defaults and named constraints without a GUI or host psql:
@@ -81,7 +87,7 @@ Inspect columns/defaults and named constraints without a GUI or host psql:
 
 Expected: native uuid IDs/FKs, timestamp with time zone columns, JSONB delegated
 permissions, defaults described above, unique email/pair, role/permission checks,
-and two RESTRICT FKs. These three identity tables, four S1.2 and six S1.3 tables; no S1.4+ tables.
+and two RESTRICT FKs. These three identity tables, four S1.2 and six S1.3 tables; plus three S1.4 run tables; no Import/Order/What-if tables.
 
 For persisted record verification use the targeted tests: they commit and close
 the writer Session, then independently reload/assert actual stored fields and

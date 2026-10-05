@@ -10,19 +10,35 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
   Schema changed: only unknown inventory receipt dates become nullable (no default),
   with an explicit both-known expiry check. Supplier price/effective date unchanged.
   ADR-010 Data Completeness and Missing Business Facts Policy is ACCEPTED.
+- Completed: **S1.4 -- Forecast + Decision Persistence Schema** (storage only).
+  ADR-011 Historical Run Immutability and Snapshot Policy is ACCEPTED.
+  Forecast computation: NOT STARTED. Decision computation: NOT STARTED.
+  Repository layer: implemented by S1.5 (see below). Public business API: NONE.
+  S1 overall remains IN PROGRESS: application/Pydantic boundary contracts and
+  operational validation in the roadmap remain future gates.
+- Completed: **S1.5 -- Persistence Access Contract + Repository Layer**.
+  Nine domain modules / ten concrete repositories cover all sixteen tables.
+  Store-owned access requires explicit Store scope; application supplies the shared
+  synchronous Session and owns commit/rollback. No generic CRUD or public API.
+  Forecast/Decision RUNNING-only lifecycle writers and inventory lock/append
+  primitives exist; completed/failed run writes are rejected by repository guards.
+  Inventory mutation service and full application validation remain future.
+  Contract/manual verification: [PERSISTENCE_ACCESS](features/PERSISTENCE_ACCESS.md).
 - Greenfield Competition Edition; no legacy backend was imported.
 - Current database: **PostgreSQL**, SQLAlchemy 2.x with psycopg and synchronous
   Session. ADR-007 is ACCEPTED; ADR-003 is SUPERSEDED. The empty Alembic
-  baseline is `0001_scaffold`; current head is `0005_data_semantics_correction`.
+  baseline is `0001_scaffold`; current head is `0006_forecast_decision_persist`.
 - Implemented business tables/models: `users`, `stores`, `store_memberships`,
   `products`, `ingredients`, `recipes`, `recipe_lines`, `suppliers`, `supplier_terms`,
-  `sales_daily`, `inventory_lots`, `inventory_movements`, `business_constraints` only.
+  `sales_daily`, `inventory_lots`, `inventory_movements`, `business_constraints`,
+  `forecast_runs`, `forecast_predictions`, `decision_runs` -- sixteen business tables.
   ADR-008 Import Idempotency and Correction Policy and ADR-009 Inventory Mutation
   and Audit Policy are ACCEPTED. Import/correction/mutation/FEFO behavior is not
   implemented by these storage models. No balance/expiry/audit trigger exists.
   Identity/store membership persistence exists; authentication/authorization does not.
-  Plain Python domain packages remain empty. Repository/application service layers
-  and public business APIs: not started. Remaining Schema v1 is PROPOSAL.
+  Plain Python domain packages remain empty. S1.5 concrete repositories cover all
+  sixteen tables. Application services/public business APIs remain not started.
+  Remaining Schema v1 is PROPOSAL.
 - Runtime: FastAPI app factory, Pydantic v2 settings and typed health schema.
   `GET /health` is the only API operation. `/openapi.json` is framework schema
   metadata. Interactive documentation routes are disabled.
@@ -31,9 +47,10 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
   loopback port 5432 and persistent named volume `shelfcash-postgres-data`.
   Backend remains native Python/venv; no host PostgreSQL install is needed.
 - Runtime directories are reserved for uploads and model artifacts.
-  No upload/storage feature, Session dependency or repository is implemented yet.
+  No upload/storage feature or API Session dependency is implemented yet.
+  Repositories receive a caller-owned synchronous Session.
 - Canonical documents created: AGENTS, README, architecture, domain model, Schema v1
-  proposal, API contract, decisions/ADRs 001–010, roadmap and testing guide.
+  proposal, API contract, decisions/ADRs 001–011, roadmap and testing guide.
 - Local verification tooling: PowerShell/POSIX test, reset, seed and DB status
   scripts. Reset is restricted to development/test, local hosts and explicit
   `shelfcash`/`shelfcash_test` databases; test permits only the latter. It recreates
@@ -45,12 +62,98 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
 - [Full test flow](runbooks/FULL_TEST_FLOW.md) and
   [scaffold feature guide](features/SCAFFOLD.md) provide manual HTTP and persisted
   DB verification. All execution/testing/demo preparation remains local; no Kaggle
-  or hosted notebook dependency. Only S1.1/S1.2/S1.3 schema clusters are implemented; all
+  or hosted notebook dependency. S1.1/S1.2/S1.3/S1.4 schema clusters are implemented; all
   later business features remain unimplemented. Seed verifies schema, writes no rows.
 - Integration tests own only separate `shelfcash_test`, created if absent by the
   local role. Tests run sequentially and never reset normal development state.
 
 ## Verification
+
+### S1.5 final acceptance -- CURRENT FACT
+
+S1.5 -- Persistence Access Contract + Repository Layer COMPLETE.
+Verified on Windows/Python 3.11.9, 2026-10-05:
+- Targeted repository integration + unit contract/guard command: **80 passed**
+  (65 real PostgreSQL integration, 15 unit). Supported test.ps1 all: **320 passed**
+  (289 integration, 29 unit, 2 API), no skips; one existing Starlette/AnyIO warning.
+- All sixteen tables are covered by nine domain modules / ten concrete repositories.
+  Store-scoped reads, dated Recipe/SupplierTerm/Constraint queries, chronological
+  Sales history, inventory lot/movement reads and caller transactions pass.
+- RUNNING Forecast/Decision completion/failure, RUNNING-only prediction append,
+  repeated/terminal-write rejection, copied JSON, Store isolation, row-lock lifetime,
+  stale cached status refresh and commit/close/fresh-session reload pass.
+  Multi-repository rollback leaves neither run; inventory movement failure rolls
+  back the flushed lot change. No operational mutation or computation service.
+- Compose PostgreSQL 17.11 healthy. Authorized supported development reset and
+  Alembic upgrade pass; head stays 0006_forecast_decision_persist, sixteen empty
+  business tables. Integration fixtures own only shelfcash_test.
+- Alembic check: No new upgrade operations detected. All models/migrations/accepted
+  ADRs/API_CONTRACT/pyproject hashes match the start-of-review baseline. No migration.
+- App import, generated and live OpenAPI equal baseline; live health returns exact
+  unchanged HTTP 200 payload. Verification server stopped. pip check and syntax/
+  transaction-ownership/structure audits pass; diff/status reviewed, WIP preserved.
+- Known access limit: tracked ORM/direct SQL mutation can bypass repository guards;
+  full package/horizon/authorization and audited inventory mutation remain future.
+  S1 overall IN PROGRESS under ROADMAP. No business API, engines, commit or S2+ work.
+
+### Earlier S1.5 insert/read verification -- HISTORICAL INFORMATION
+
+S1.5 insert/read baseline verified on Windows/Python 3.11.9, 2026-10-05:
+- `./scripts/test.ps1 all`: **310 passed** (29 unit, 279 integration, 2 API),
+  one existing Starlette/AnyIO deprecation warning, no skips. New S1.5 coverage:
+  55 repository integration and 15 unit tests. Earlier standalone targeted run:
+  47 passed before final coverage additions; all final additions pass in full suite.
+- All sixteen tables round-trip through concrete repositories and close/fresh
+  Session reads. Explicit Store scope, identity-map isolation, exact Decimal/NULL/
+  JSON, inclusive/open-ended/inactive date queries, duplicate/no-upsert/new-row
+  guards, caller transaction visibility/rollback and same-store FK failures pass.
+- Inventory fixture transactions prove valid balance+movement commit, failed
+  movement rolls back an already flushed balance, and scoped SELECT FOR UPDATE
+  refreshes cached balance and holds its lock until caller rollback. These tests
+  do not implement an inventory mutation service. Generated Forecast parent flush
+  and predictions remain rollbackable; no append-to-existing-run writer exists.
+- Protected-file SHA-256 checks match pre-S1.5: all models/migrations, accepted
+  ADRs, API_CONTRACT and pyproject unchanged. Generated OpenAPI exactly matches
+  pre-S1.5. Existing health/import/domain independence and migration/metadata tests
+  pass. pip check passes. No schema/public API/dependency/engine implementation.
+- Read-only supported db-status reports development shelfcash at head
+  0006_forecast_decision_persist, sixteen empty business tables and one revision row;
+  no development reset or business seed write. Tests own only shelfcash_test.
+- Contract and reproducible manual verification are in PERSISTENCE_ACCESS and
+  S15_TASK_NOTES; current docs/roadmap/testing/runbook updated, prior WIP preserved.
+  New-file syntax and scope/diff/whitespace reviewed; no commit or next slice.
+  PowerShell runtime verified; POSIX wrappers unchanged, no new POSIX runtime claim.
+- Limit: repositories return tracked mutable ORM rows; completed-run lifecycle/
+  immutability, full package/horizon validation and audited operational inventory
+  mutation remain future authorized use cases. S1 overall remains IN PROGRESS.
+
+### S1.4 acceptance -- HISTORICAL INFORMATION
+
+S1.4 verified on Windows/Python 3.11.9, 2026-10-05:
+- Targeted test_forecast_decision_persistence.py: **58 passed**, actual isolated
+  shelfcash_test. Run status/windows/time/metadata, finite ordered quantiles, business
+  key, same-store references, exact fresh-session JSON/Decimal, completed minimum
+  fields, partial/failed outputs, JSON null rejection, independent copied input values,
+  same-fingerprint reruns and zero/equal quantiles tested. Fixtures are not engine output.
+- `./scripts/test.ps1 all`: **240 passed** (14 unit, 224 integration, 2 API), one
+  existing Starlette/AnyIO deprecation warning, no skips. All previous tests preserved;
+  metadata/migration agreement and fresh/down/up succeed. Initial bootstrap assertion
+  expecting thirteen tables was updated to sixteen; final complete rerun is green.
+- Compose config/up --wait/ps pass; PostgreSQL 17.11 healthy. Development reset,
+  upgrade/current/status/seed pass at 0006_forecast_decision_persist, sixteen empty
+  business tables and one revision row. S14_VERIFICATION read-only column/constraint/
+  index/row commands execute successfully; three run row queries return [].
+- Generated/live OpenAPI exactly matches saved pre-S1.1 baseline. App/model/domain
+  imports with DB connection forbidden pass. Live /health returns exact unchanged
+  HTTP 200 payload; verification server stopped. pip check passes.
+- Pre-task hashes confirm prior models/migrations 0001-0005/accepted ADRs/API_CONTRACT
+  unchanged; only model registration is extended. Scope/diff/status/whitespace and
+  new-file syntax reviewed. No additional tables, dependencies, API, repository,
+  service, computation, snapshot builder/hasher or S2 implementation; no commit.
+- PowerShell commands runtime verified. POSIX wrappers unchanged; historical syntax
+  validation only, no native POSIX runtime claim. No remaining S1.4 acceptance blocker.
+
+### S1.3.1 acceptance -- HISTORICAL INFORMATION
 
 S1.3.1 verified on Windows/Python 3.11.9, 2026-10-05:
 - Targeted test_data_semantics_correction.py: **9 passed**, actual isolated
@@ -210,16 +313,30 @@ inventory compatibility. Verified stack: FastAPI 0.115.14, Pydantic 2.13.5,
 SQLAlchemy 2.1.3, Alembic 1.20.0. Other dependencies use declared version ranges;
 an exact transitive lockfile is not part of this scaffold.
 
-## Next recommended slice — PROPOSAL
+## Next slice -- PROPOSAL
 
-S1.4 — Forecast + Decision Persistence Schema. Freeze provenance/quantile/snapshot
-contracts and tests first; no computation is implied. Do not begin S1.4 automatically;
-completion of S1.3.1 authorizes no next slice.
+S1.5 persistence access is implemented. S1 remains IN PROGRESS pending separately
+authorized application/public boundary contracts and operational validation.
+No next slice or S2 is automatically authorized; business APIs/engines remain absent.
 
 ## Current schema-only limitations — CURRENT FACT
 
-- Inventory balance and ledger are independently stored. Atomic audited mutation,
-  mandatory receipt movement, append-only enforcement/reconciliation and actor/source
+- Repository writers guard RUNNING-only transitions and prediction append.
+  Direct tracked ORM/SQL mutation can bypass these guards. Prediction horizon membership,
+  completed forecast consumption, full package/evaluation validation, sanitization
+  and authorized snapshot capture are future service responsibilities (ADR-011).
+  DB enforces local state/shape/FKs but has no immutability/horizon triggers.
+- S1.5 repositories expose explicit insert/read/lifecycle primitives, no arbitrary
+  completed-row update/delete writer. Reads are tracked mutable ORM rows; direct
+  Session/SQL can bypass policy. Full immutable application boundaries remain future.
+- Standalone forecast input retention, artifact service, deterministic hashing and
+  full versioned algorithm/package schemas remain future engine slice requirements.
+  Fingerprint alone is not captured training content or a replay guarantee.
+
+- Inventory balance and ledger are independently stored. Scoped lock and append
+  primitives exist; automated fixture transactions prove caller commit/rollback.
+  Operational atomic audited mutation, mandatory receipt movement,
+  append-only enforcement/reconciliation and actor/source
   validation are future service work governed by ADR-009. No unexplained overwrite
   is authorized application behavior, but privileged SQL is not prevented by triggers.
 - Mandatory expiry for expiry_tracking ingredients, confirmed receipt/future-date
@@ -227,7 +344,8 @@ completion of S1.3.1 authorizes no next slice.
   checks. DB does enforce expiry order when both dates are known, same-store/exact ingredient units,
   numeric ranges and controlled scope/type registry.
 - No import parser/hash/classification/mode/correction/provenance engine, mutation
-  service, FEFO, Forecast or Decision computation. No repository or public business API.
+  service, FEFO, Forecast or Decision computation. No public business API.
+  Internal persistence access is documented in features/PERSISTENCE_ACCESS.md.
 
 ## Known unresolved decisions — PROPOSAL
 

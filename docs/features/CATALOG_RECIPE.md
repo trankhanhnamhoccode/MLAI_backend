@@ -1,5 +1,11 @@
 # Catalog + Recipe persistence — S1.2
 
+CURRENT FACT (S1.5): internal repository access is now implemented; see
+[PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository
+absence describe the HISTORICAL INFORMATION of this schema slice. Its direct
+Session tests remain schema evidence; operational services/APIs/engines and
+application lifecycle/audit enforcement remain unimplemented.
+
 ## Status and purpose
 
 CURRENT FACT: Catalog/Recipe persistence exists. Catalog/Recipe public API does
@@ -64,10 +70,10 @@ docker compose up -d --wait --wait-timeout 90 postgres
 .\scripts\db_status.ps1
 ```
 
-Expected: postgres healthy; head `0005_data_semantics_correction`; targeted/full tests pass.
+Expected: postgres healthy; head `0006_forecast_decision_persist`; targeted/full tests pass.
 Status: reachable true, database shelfcash, at_head true, alembic_version count 1;
 users, stores, store_memberships, products, ingredients, recipes, recipe_lines and `suppliers`, `supplier_terms`, `sales_daily`, `inventory_lots`,
-`inventory_movements`, `business_constraints` all
+`inventory_movements`, `business_constraints`, `forecast_runs`, `forecast_predictions`, `decision_runs` all
 count 0 after reset/tests. Tests write only shelfcash_test, not development state.
 
 Inspect columns and actual DB constraint definitions without GUI/host psql:
@@ -95,5 +101,5 @@ recreates its extension objects through migration; local Compose role has permis
 Alembic metadata comparison is not a complete exclusion-constraint oracle; targeted
 tests inspect pg_constraint and exercise actual rejection behavior.
 No repositories, application services, CRUD, BOM or auth. S1.3 persistence is
-documented separately; S1.4+ schema remains absent.
+documented separately; Forecast/Decision run storage is documented separately; Import/Order/What-if tables remain absent.
 Future API is PROPOSAL; no public payload/endpoint contracts are frozen here.

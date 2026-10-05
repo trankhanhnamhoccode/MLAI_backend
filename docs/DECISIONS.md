@@ -24,6 +24,7 @@ belongs in CURRENT_STATE; report drift rather than hiding it by editing decision
 | ADR-008 | Import Idempotency and Correction Policy | ACCEPTED | Content/business identity, no duplicate/replace-all writes; domain-specific corrections and provenance; import remains future | [ADR-008](adr/ADR-008-import-idempotency-correction-policy.md) |
 | ADR-009 | Inventory Mutation and Audit Policy | ACCEPTED | Received lot current balance + justified movement history; future atomic audited mutations, not Event Sourcing | [ADR-009](adr/ADR-009-inventory-mutation-audit-policy.md) |
 | ADR-010 | Data Completeness and Missing Business Facts Policy | ACCEPTED | No invented facts; explicit completeness/origins/readiness; unknown receipt dates remain NULL | [ADR-010](adr/ADR-010-data-completeness-and-missing-business-facts.md) |
+| ADR-011 | Historical Run Immutability and Snapshot Policy | ACCEPTED | Completed runs historical; rerun creates new run; compute from captured values; versioned packages, future service enforcement | [ADR-011](adr/ADR-011-historical-run-immutability-snapshot-policy.md) |
 
 Preserve accepted ADR intent. Gather evidence and propose a linked replacement when
 intent should change; do not quietly modify an accepted decision to simplify coding.

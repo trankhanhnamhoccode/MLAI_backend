@@ -2,7 +2,7 @@
 
 CURRENT FACT: no canonical demo seed exists. Tests use fixed health
 values and the separate local PostgreSQL `shelfcash_test` database with revision
-`0005_data_semantics_correction`. Destructive fixtures own only its `public` schema. S1.1
+`0006_forecast_decision_persist`. Destructive fixtures own only its `public` schema. S1.1
 schema tests create isolated User/Store/Membership records with fixed fields;
 explicit IDs are deterministic where needed, generated UUID identity is otherwise
 asserted by type/default. No production password/credential fixture is supplied.
@@ -29,3 +29,10 @@ S1.3.1 fixtures explicitly distinguish unknown received_date=None from snapshot
 2026-10-05. Known expiry is 2026-10-07, balance 50 ml. Canonical supplier fixture
 stores 15000 g per pack / 420000 VND per pack (source example 15 kg at 28000 VND/kg).
 No importer or unit-conversion implementation is implied by those known fixtures.
+
+S1.4 fixtures are storage-only, not Forecast/Decision Engine results: training
+2026-07-01 through 2026-09-30; forecast/planning 2026-10-01 through 2026-10-07;
+quantiles 80/100.125/130 and zero/equal boundary. Snapshot stores recipe v2, stock
+20 ml, supplier v3/cost 384000/lead2, budget7000000. Package contains fixture-only
+LEAN/BALANCED/PROTECTED evaluations. Source change to 5 ml cannot alter stored 20 ml.
+All fixtures are isolated to shelfcash_test and read back through fresh sessions.

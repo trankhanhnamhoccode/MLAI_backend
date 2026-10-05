@@ -3,7 +3,8 @@
 **CURRENT FACT:** S1.1 implements `users`, `stores`, `store_memberships`; S1.2 adds
 `products`, `ingredients`, `recipes`, `recipe_lines`. S1.3 adds `suppliers`,
 `supplier_terms`, `sales_daily`, `inventory_lots`, `inventory_movements`,
-`business_constraints` — thirteen business tables total.
+`business_constraints`; S1.4 adds `forecast_runs`, `forecast_predictions`,
+`decision_runs` -- sixteen business tables total.
 **ACCEPTED DECISION:** the storage semantics below are frozen for these authorized
 clusters. ADR-008/009 freeze import correction/inventory audit policy, not runtime
 import/mutation services. All other Schema v1 entities remain PROPOSAL; each requires its own accepted
@@ -16,8 +17,9 @@ acceptable. Alembic makes schema state/evolution explicit; long-lived backwards-
 migration support is not a current requirement. The initial empty revision creates
 only `public.alembic_version`; the next migration `0002_identity_store` creates the
 three identity/store tables. `0003_catalog_recipe` adds four catalog/recipe tables;
-`0004_supplier_ops_constraints` adds six S1.3 tables; current head
-`0005_data_semantics_correction` makes received_date nullable and clarifies its date check. No other business
+`0004_supplier_ops_constraints` adds six S1.3 tables;
+`0005_data_semantics_correction` makes received_date nullable and clarifies its date check.
+Current head `0006_forecast_decision_persist` adds the three run tables. No other business
 model is implemented. This shorter revision fits Alembic's 32-character version field.
 Tests own separate `shelfcash_test`; development
 uses `shelfcash`. Reset recreates only the guarded target's `public` schema.
@@ -27,7 +29,8 @@ uses `shelfcash`. Reset recreates only the guarded target's `public` schema.
 Models: `app/models/user.py`, `store.py`, `store_membership.py`. Migration:
 `alembic/versions/0002_identity_store.py`, parent `0001_scaffold`. All columns below
 are NOT NULL. Tables represent mutable current state, not audit snapshots. No
-repository, authentication/authorization enforcement or business API exists yet.
+authentication/authorization enforcement or business API exists yet. S1.5 repository
+access is documented separately in features/PERSISTENCE_ACCESS.md.
 
 ### Shared columns
 
@@ -108,7 +111,7 @@ does NOT grant runtime authorization in S1.1.
 Verification: [STORE_IDENTITY](features/STORE_IDENTITY.md), targeted real PostgreSQL
 tests `tests/integration/test_identity_store_schema.py`, and
 [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md). Reset leaves these three tables empty
-and the S1.2/S1.3 tables empty, with one `alembic_version` row `0005_data_semantics_correction`;
+and the S1.2/S1.3 tables empty, with one `alembic_version` row `0006_forecast_decision_persist`;
 seed writes no entities.
 
 Implementation references: [PostgreSQL date/time types](https://www.postgresql.org/docs/17/datatype-datetime.html)
@@ -186,7 +189,7 @@ day overlaps; the next version can begin the following day. Same-day recipes are
 An unbounded version blocks all later overlapping versions. Different products can
 share periods. At day D resolve using `effective_from <= D AND (effective_to IS NULL
 OR D <= effective_to)` to obtain 0/1 row. Product.active does not bypass exclusion.
-No resolver repository is implemented. Unique product/version supports product queries;
+S1.5 RecipeRepository implements the accepted inclusive date lookup, without BOM. Unique product/version supports product queries;
 exclusion supplies its GiST index; no speculative date-only index.
 
 NUMERIC maps to Decimal, with no fixed scale or implicit business rounding; price,
@@ -221,7 +224,7 @@ Verification: [CATALOG_RECIPE](features/CATALOG_RECIPE.md), actual PostgreSQL te
 `tests/integration/test_catalog_recipe_schema.py`. Downgrade to 0002 drops only
 these four tables/rows; btree_gist is retained because it may be shared/preexisting.
 Normal reset recreates public (including its extension objects), then upgrades head.
-The Compose role can install the extension. No new public API or repository exists.
+The Compose role can install the extension. No new public API exists; S1.5 adds internal repository access without schema change.
 References: [PostgreSQL btree_gist](https://www.postgresql.org/docs/17/btree-gist.html),
 [range exclusion](https://www.postgresql.org/docs/17/rangetypes.html).
 
@@ -230,7 +233,7 @@ References: [PostgreSQL btree_gist](https://www.postgresql.org/docs/17/btree-gis
 Migration `alembic/versions/0004_supplier_operational_constraints.py`, revision
 `0004_supplier_ops_constraints`, parent `0003_catalog_recipe`. Typed models are
 `app/models/supplier.py`, `supplier_term.py`, `sales_daily.py`, `inventory_lot.py`,
-`inventory_movement.py`, `business_constraint.py`. No repository/service/API exists.
+`inventory_movement.py`, `business_constraint.py`. S1.5 repositories exist; no operational service/API exists.
 Every table has UUID PK `id`, database `gen_random_uuid()` default, and `created_at
 TIMESTAMPTZ DEFAULT now()`. All except movements have `updated_at TIMESTAMPTZ` with
 the S1.1 insert/ORM-update convention; raw SQL updates must set it explicitly.
@@ -409,12 +412,17 @@ No multi-currency computation, spent/reserved/rollover, MAX_STORAGE or other sco
 Verification: [SUPPLIER](features/SUPPLIER.md), [OPERATIONAL_DATA](features/OPERATIONAL_DATA.md),
 [INVENTORY](features/INVENTORY.md), [BUSINESS_CONSTRAINTS](features/BUSINESS_CONSTRAINTS.md),
 `tests/integration/test_supplier_operational_constraints.py` and FULL_TEST_FLOW.
-Normal reset leaves thirteen empty business tables plus one current revision row;
+Normal reset leaves sixteen empty business tables plus one current revision row;
 seed writes no rows. Downgrade 0004->0003 drops only six new tables/rows, keeping
-all S1.1/S1.2 schema and btree_gist. No Import/Forecast/Decision/Order tables exist.
+all S1.1/S1.2 schema and btree_gist. S1.4 run tables are documented below; no Import/Order/What-if tables exist.
 Reference: [PostgreSQL NULLS NOT DISTINCT and exclusion](https://www.postgresql.org/docs/17/ddl-constraints.html).
 
 ## Remaining Schema v1 — PROPOSAL / FUTURE
+
+Only ImportJob/MappingProfile remain proposed in the table below. ForecastRun,
+ForecastPrediction and DecisionRun are implemented under the S1.4 contract later
+in this document; earlier speculative cutoff/actor/parameter columns were not frozen
+and are not silently claimed as implemented.
 
 ### Common conventions — PROPOSAL
 
@@ -432,9 +440,6 @@ Indexes below are candidates for real queries, not a command to create unused in
 | --- | --- | --- | --- | --- |
 | ImportJob | Trace ingestion: id, store_id, source reference/digest, status, mapping_profile_id, created_at, validation summary | Store; optional MappingProfile; provenance for imported rows | Store/date index; validated status transitions; immutable source reference; file/row errors separate from accepted data | Historical import execution/status record |
 | MappingProfile | Approved store mapping: id, store_id, profile version, canonical schema version, file fingerprint, field mapping, approval actor/time, status | Store, approving User/Membership; ImportJobs | Unique (store_id, profile key, version); mapping targets restricted to canonical fields; approved versions immutable | Versioned approved mapping snapshot, with explicit current active selection |
-| ForecastRun | Forecast provenance: id, store_id, cutoff date/time, horizon, input snapshot/digest, model/baseline identifier and version, parameters, status, created_at | Store; ForecastPredictions; DecisionRuns consume this run | Cutoff/horizon contract; store/cutoff index; completed outputs immutable; input references/digest alone insufficient if source mutates—retain used input content/artifact | Historical execution/input/model snapshot |
-| ForecastPrediction | Explicit demand quantiles: id, forecast_run_id, product_id, business_date, p25, p50, p75 | ForecastRun and same-store Product | Unique (forecast_run_id, product_id, business_date); 0 ≤ p25 ≤ p50 ≤ p75; future date strictly after cutoff; index run/date | Historical forecast output, explicit modeled quantile columns, never arbitrary JSON |
-| DecisionRun | Main auditable decision aggregate: id, store_id, forecast_run_id, cutoff/horizon, created_at, actor reference, package_schema_version, decision_package JSON | Store; ForecastRun; other provenance by copied facts/versioned references in package | package_schema_version ≥ 1, initially 1; backend validates versioned Pydantic package; index store/created_at; completed decisions immutable; recommendation must match evaluated candidates | Self-contained historical snapshot; no reinterpretation using current state |
 
 ## DecisionRun package — ACCEPTED DECISION, structure remains PROPOSAL
 
@@ -482,3 +487,124 @@ canonical procurement inputs including lead_time_days. Unknown source effective 
 cannot be promoted into an active canonical term; upload date is not evidence.
 Internal version may be system-assigned; business facts must be established.
 No import/staging/readiness column or computation exists.
+
+## IMPLEMENTED — S1.4 Forecast + Decision persistence
+
+Migration `alembic/versions/0006_forecast_decision_persistence.py`, revision
+`0006_forecast_decision_persist`, parent `0005_data_semantics_correction`. This
+30-character revision fits Alembic's version column. Only three tables are added,
+bringing the business total to sixteen. ADR-011 is ACCEPTED; previous tables unchanged.
+
+All id columns: UUID PK with gen_random_uuid(). All created_at columns: TIMESTAMPTZ
+NOT NULL server now(). Run updated_at: TIMESTAMPTZ NOT NULL server now(), ORM update
+now(); raw SQL callers maintain timestamps. Engine sessions use UTC. started_at is
+explicit/required, no date/time fallback. Columns below NOT NULL unless nullable.
+No computed engine output is generated by these models.
+
+### forecast_runs
+
+| Column | PostgreSQL type | Meaning |
+| --- | --- | --- |
+| id | UUID | Execution identity |
+| store_id | UUID | FK stores.id, RESTRICT |
+| status | VARCHAR(16) | RUNNING / COMPLETED / FAILED, explicit, no default |
+| training_start_date, training_end_date | DATE | Inclusive ordered training period |
+| forecast_start_date, forecast_end_date | DATE | Inclusive ordered forecast horizon |
+| model_type, model_version | VARCHAR(128) | Nonblank actual model identity/version |
+| artifact_key | TEXT nullable | Nonblank logical filesystem key, never binary model |
+| metrics_json | JSONB nullable | Object evaluating forecast/model, not strategy scores |
+| input_fingerprint | VARCHAR(128) nullable | Nonblank canonical-input digest; required when completed |
+| started_at | TIMESTAMPTZ | Explicit run start |
+| completed_at | TIMESTAMPTZ nullable | Terminal completion/failure time, >= start |
+| error_code | VARCHAR(64) nullable | Nonblank sanitized failure classification |
+| error_summary | TEXT nullable | Nonblank sanitized failure summary, no secret/stack dump |
+| created_at, updated_at | TIMESTAMPTZ | Metadata timestamps |
+
+PK id. `uq_forecast_runs_id_store(id,store_id)` provides composite FK target.
+`fk_forecast_runs_store` restricts orphan/cross-store parent state. CHECKs:
+`ck_forecast_runs_status`, `training_window`, `horizon`, `model_metadata`,
+`artifact_key`, `fingerprint`, `metrics_object`, `timestamps`, `state`,
+`error_nonblank` (each uses ck_forecast_runs_ prefix).
+RUNNING: no completed_at/errors. COMPLETED: completed_at/fingerprint required, errors
+absent. FAILED: completed_at and error code/summary required. Required windows/model
+metadata exist even in RUNNING/FAILED; no adjacent-window rule. Metrics/artifact optional.
+`ix_forecast_runs_store_created(store_id,created_at)` supports store run history;
+no unique fingerprint. Input fingerprint alone does not preserve training content;
+input/artifact retention remains a Forecast Engine requirement.
+
+### forecast_predictions
+
+| Column | PostgreSQL type | Meaning |
+| --- | --- | --- |
+| id | UUID | Prediction identity |
+| forecast_run_id | UUID | Existing ForecastRun |
+| store_id | UUID | Same-store integrity witness |
+| product_id | UUID | Existing same-store Product |
+| forecast_date | DATE | Predicted business date |
+| p25, p50, p75 | NUMERIC | Exact finite nonnegative ordered quantities in Product.selling_unit |
+| created_at | TIMESTAMPTZ | Metadata timestamp |
+
+PK id. `uq_forecast_predictions_run_product_date(forecast_run_id,product_id,forecast_date)`
+defines canonical prediction key. RESTRICT composite FKs `fk_forecast_predictions_run_store`
+(forecast_run_id,store_id)->forecast_runs(id,store_id) and
+`fk_forecast_predictions_product_store` (product_id,store_id)->products(id,store_id).
+`ck_forecast_predictions_quantiles`: 0 <= p25 <= p50 <= p75, all finite (NaN/infinities
+rejected). Unique index covers per-product run reads; explicit
+`ix_forecast_predictions_run_date(run,date)` supports whole-run dated horizon reads;
+`ix_forecast_predictions_product(product_id)` supports Product provenance/referenced
+parent checks. Quantiles express uncertainty; never LEAN=P25/BALANCED=P50/PROTECTED=P75.
+Prediction-date membership in the parent horizon is a future application invariant,
+not a DB CHECK/trigger; S1.4 does not implement a resolver/writer enforcing it.
+
+### decision_runs
+
+| Column | PostgreSQL type | Meaning |
+| --- | --- | --- |
+| id | UUID | Decision execution identity |
+| store_id | UUID | Same-store integrity witness |
+| status | VARCHAR(16) | RUNNING / COMPLETED / FAILED, explicit |
+| forecast_run_id | UUID | Required same-store ForecastRun |
+| planning_start_date, planning_end_date | DATE | Inclusive ordered planning period |
+| package_schema_version | INTEGER nullable | Positive when supplied/package exists; completed requires it; initial format 1 |
+| input_fingerprint | VARCHAR(128) nullable | Nonblank nonunique input digest, completed requires it |
+| input_snapshot_json | JSONB nullable | Object of actual input values/identities/versions |
+| decision_package_json | JSONB nullable | Versioned object output package, completed only |
+| recommended_strategy | VARCHAR(16) nullable | LEAN / BALANCED / PROTECTED, completed only |
+| started_at | TIMESTAMPTZ | Explicit start |
+| completed_at | TIMESTAMPTZ nullable | Terminal completion/failure time, >= start |
+| error_code | VARCHAR(64) nullable | Nonblank sanitized failure classification |
+| error_summary | TEXT nullable | Nonblank sanitized summary |
+| created_at, updated_at | TIMESTAMPTZ | Metadata timestamps |
+
+PK id. RESTRICT `fk_decision_runs_forecast_store`:
+(forecast_run_id,store_id)->forecast_runs(id,store_id), transitively an existing Store.
+CHECKs with ck_decision_runs_ prefix: status, planning_window, package_version,
+package_version_required, fingerprint, snapshot_object, package_object, strategy,
+timestamps, state, error_nonblank. COMPLETED requires version/fingerprint/snapshot/
+package/strategy/terminal time, errors absent. RUNNING requires no terminal time/errors/
+output package/recommendation. FAILED requires terminal time/errors, no package/
+recommendation. Partial states may retain captured snapshot/fingerprint/version or
+SQL NULL. JSONB uses none_as_null: SQL NULL is absent; JSON null/arrays/scalars fail
+object checks. No positive-version default fabricates a completed package.
+`ix_decision_runs_store_created(store_id,created_at)` supports history;
+`ix_decision_runs_forecast(forecast_run_id)` supports forecast provenance/dependent reads.
+Fingerprints are not unique: same-input reruns create new records.
+
+### Historical/application boundary
+
+Completed runs/predictions are historical immutable policy; no UPDATE/DELETE trigger
+exists. CURRENT FACT (S1.5): repository lifecycle writers permit only RUNNING terminal
+transitions and prediction append; direct ORM/SQL changes bypass these guards.
+Future services enforce full application immutability, completed
+forecast consumption, horizon membership, full versioned JSON validation, algorithm
+provenance, all candidate evaluations, recommendation consistency, sanitization and
+authorization. Snapshot holds values, not only live FK references. Build snapshot
+BEFORE computation and compute from it; never re-query changed inputs afterward.
+Future package includes actual evaluated LEAN/BALANCED/PROTECTED candidates; LLM
+cannot select recommendation or supply business facts. Package schema version starts
+at 1; needed engine/model version metadata belongs in the future versioned package,
+not an invented framework/column now. Hashing/input retention is not implemented.
+What-if remains non-persistent by default; no extra tables/services/APIs are added.
+Full shapes remain future application contracts; DB only checks minimal presence/object
+shape. Downgrade 0006->0005 drops exactly these three tables/history. Tests and manual
+inspection are in FORECAST, DECISION_RUN and S14_VERIFICATION.

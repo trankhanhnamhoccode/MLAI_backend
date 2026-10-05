@@ -8,7 +8,8 @@ balancing shortages, waste and capital. The owner/manager makes the final decisi
 runs a typed health endpoint with PostgreSQL/Alembic infrastructure. S1.1 implements
 User/Store/StoreMembership; S1.2 adds Product/Ingredient/Recipe/RecipeLine; S1.3 adds
 Supplier/SupplierTerm/SalesDaily/InventoryLot/InventoryMovement/BusinessConstraint
-persistence. No public business APIs, repositories,
+persistence. S1.4 adds Forecast/Decision run storage; S1.5 adds concrete typed
+repositories covering all sixteen tables. No public business APIs,
 authentication or computation exists. See
 [identity/store verification](docs/features/STORE_IDENTITY.md) and
 [catalog/recipe verification](docs/features/CATALOG_RECIPE.md) and
@@ -47,7 +48,7 @@ configures the URL, credentials and test URL. Native PostgreSQL installation is
 unnecessary. Alembic uses Settings and `.env` as the
 configuration source; `alembic.ini` records the default URL for reference.
 The original baseline creates only Alembic's revision table; current head
-`0005_data_semantics_correction` contains thirteen business tables across S1.1/S1.2/S1.3. Application import,
+`0006_forecast_decision_persist` contains sixteen business tables across S1.1/S1.2/S1.3/S1.4. Application import,
 startup and health checks do not initialize/connect to the DB, create directories
 or contact OpenRouter. No provider key is required.
 
@@ -98,3 +99,16 @@ schema evolution; long-lived compatible migrations are not a current requirement
 S1.3.1 / ADR-010 accepts explicit completeness and source-fact policies. Unknown lot
 receipt dates remain NULL; strict supplier dates and per-pack costs are unchanged.
 No import engine or business API exists. See docs/runbooks/S131_VERIFICATION.md.
+
+S1.4 implements ForecastRun/ForecastPrediction/DecisionRun storage and ADR-011
+historical policy. Forecast/Decision Engines and public business APIs
+remain NOT STARTED. Sixteen tables are inspectable locally; no pipeline/engine demo
+is claimed. See docs/features/FORECAST.md, docs/features/DECISION_RUN.md and
+docs/runbooks/S14_VERIFICATION.md. S1 overall remains IN PROGRESS.
+
+S1.5 provides [persistence access](docs/features/PERSISTENCE_ACCESS.md): explicit
+Store scope, domain-specific insert/read/lifecycle methods and caller-owned synchronous
+transactions. Repositories never commit/rollback. Forecast/Decision writers guard
+RUNNING-only transitions and prediction append; operational inventory audit and
+full application validation remain future work. Targeted verification:
+`.\.venv\Scripts\python.exe -m pytest tests/integration/test_repositories.py -q`.

@@ -90,7 +90,7 @@ def test_migration_downgrade_reupgrade_preserves_known_receipt(engine):
     with Session(engine) as fresh:
         assert fresh.get(InventoryLot, identifier).received_date == date(2026, 10, 1)
     with engine.connect() as fresh:
-        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0005_data_semantics_correction"
+        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0006_forecast_decision_persist"
 
 
 def test_downgrade_refuses_unknown_receipt_without_fabrication(engine):
@@ -106,4 +106,4 @@ def test_downgrade_refuses_unknown_receipt_without_fabrication(engine):
     with Session(engine) as fresh:
         assert fresh.get(InventoryLot, identifier).received_date is None
     with engine.connect() as fresh:
-        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0005_data_semantics_correction"
+        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0006_forecast_decision_persist"

@@ -1,5 +1,11 @@
 # Canonical daily sales persistence — S1.3
 
+CURRENT FACT (S1.5): internal repository access is now implemented; see
+[PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository
+absence describe the HISTORICAL INFORMATION of this schema slice. Its direct
+Session tests remain schema evidence; operational services/APIs/engines and
+application lifecycle/audit enforcement remain unimplemented.
+
 ## Status and purpose
 
 CURRENT FACT: SalesDaily persistence exists; no import, correction service, revenue/
@@ -29,7 +35,7 @@ be borrowed by another Store. Tests own only shelfcash_test.
 ## Manual verification and DB inspection
 
 Follow [S13_VERIFICATION](../runbooks/S13_VERIFICATION.md). Expected head
-0005_data_semantics_correction; sales_daily empty after reset. Shared command executes:
+0006_forecast_decision_persist; sales_daily empty after reset. Shared command executes:
 
 ```sql
 SELECT store_id, product_id, sales_date, quantity FROM sales_daily

@@ -1,6 +1,6 @@
 # Full local verification flow
 
-CURRENT FACT: this runbook verifies the PostgreSQL scaffold and S1.1/S1.2/S1.3 persistence
+CURRENT FACT: this runbook verifies the PostgreSQL scaffold and S1.1/S1.2/S1.3/S1.4 persistence
 schema on repository-local infrastructure. No business API/scenarios or demo seed
 entities exist. ACCEPTED DECISION: ADR-007 uses
 Docker Compose PostgreSQL, psycopg, synchronous SQLAlchemy and explicit Alembic.
@@ -45,10 +45,10 @@ Expected results:
   On first startup: `at_head: false`, revisions `[]`, tables `{}`. The optional
   `-AllowUnmigrated` flag permits this; default status requires migration head.
 - Reset recreates guarded local `public` and runs migrations. `alembic current`
-  prints `0005_data_semantics_correction (head)`; repeated upgrade is safe.
-- Status after reset reports `at_head: true`, revisions `["0005_data_semantics_correction"]`,
-  tables `{"alembic_version": 1, "users": 0, "stores": 0, "store_memberships": 0, "products": 0, "ingredients": 0, "recipes": 0, "recipe_lines": 0, "suppliers": 0, "supplier_terms": 0, "sales_daily": 0, "inventory_lots": 0, "inventory_movements": 0, "business_constraints": 0}`.
-  Exactly thirteen business tables exist; no real/demo business data is seeded.
+  prints `0006_forecast_decision_persist (head)`; repeated upgrade is safe.
+- Status after reset reports `at_head: true`, revisions `["0006_forecast_decision_persist"]`,
+  tables `{"alembic_version": 1, "users": 0, "stores": 0, "store_memberships": 0, "products": 0, "ingredients": 0, "recipes": 0, "recipe_lines": 0, "suppliers": 0, "supplier_terms": 0, "sales_daily": 0, "inventory_lots": 0, "inventory_movements": 0, "business_constraints": 0, "forecast_runs": 0, "forecast_predictions": 0, "decision_runs": 0}`.
+  Exactly sixteen business tables exist; no real/demo business data is seeded.
 - Seed says `No business seed data`, verifies the current schema and writes no rows.
   Optional `.\scripts\reset_db.ps1 -Seed` combines reset/migration/seed.
 - All automated tests pass. Integration tests create/own only `shelfcash_test`,
@@ -72,8 +72,8 @@ if (($schema.paths.PSObject.Properties.Name -join ',') -ne '/health') { throw 'U
 .\.venv\Scripts\python.exe -c "from app.config import Settings; from app.infrastructure.database.engine import create_database_engine; from sqlalchemy import text; e=create_database_engine(Settings()); c=e.connect(); print(c.execute(text('SELECT version_num FROM public.alembic_version')).all()); print(c.execute(text('SELECT tablename FROM pg_tables WHERE schemaname = :schema ORDER BY tablename'), {'schema':'public'}).all()); c.close(); e.dispose()"
 ```
 
-Expected SQL output: `[('0005_data_semantics_correction',)]` and
-`[('alembic_version',), ('business_constraints',), ('ingredients',), ('inventory_lots',), ('inventory_movements',), ('products',), ('recipe_lines',), ('recipes',), ('sales_daily',), ('store_memberships',), ('stores',), ('supplier_terms',), ('suppliers',), ('users',)]`.
+Expected SQL output: `[('0006_forecast_decision_persist',)]` and
+`[('alembic_version',), ('business_constraints',), ('decision_runs',), ('forecast_predictions',), ('forecast_runs',), ('ingredients',), ('inventory_lots',), ('inventory_movements',), ('products',), ('recipe_lines',), ('recipes',), ('sales_daily',), ('store_memberships',), ('stores',), ('supplier_terms',), ('suppliers',), ('users',)]`.
 Status before/after HTTP calls is identical; health is liveness and writes no DB
 state. Interactive documentation routes remain disabled. Stop FastAPI with Ctrl+C.
 
@@ -109,7 +109,7 @@ In a second terminal at `backend/`:
 set -eu
 .venv/bin/python -c 'import json, urllib.request; h=json.load(urllib.request.urlopen("http://127.0.0.1:8000/health")); assert h == {"status":"ok","service":"shelfcash-backend"}; s=json.load(urllib.request.urlopen("http://127.0.0.1:8000/openapi.json")); assert set(s["paths"]) == {"/health"}; print("HTTP contracts verified")'
 sh scripts/db_status.sh
-.venv/bin/python -c 'from app.config import Settings; from app.infrastructure.database.engine import create_database_engine; from sqlalchemy import text; e=create_database_engine(Settings()); c=e.connect(); assert c.execute(text("SELECT version_num FROM public.alembic_version")).all() == [("0005_data_semantics_correction",)]; assert c.execute(text("SELECT tablename FROM pg_tables WHERE schemaname = :schema ORDER BY tablename"), {"schema":"public"}).all() == [("alembic_version",), ("business_constraints",), ("ingredients",), ("inventory_lots",), ("inventory_movements",), ("products",), ("recipe_lines",), ("recipes",), ("sales_daily",), ("store_memberships",), ("stores",), ("supplier_terms",), ("suppliers",), ("users",)]; c.close(); e.dispose(); print("Persisted schema verified")'
+.venv/bin/python -c 'from app.config import Settings; from app.infrastructure.database.engine import create_database_engine; from sqlalchemy import text; e=create_database_engine(Settings()); c=e.connect(); assert c.execute(text("SELECT version_num FROM public.alembic_version")).all() == [("0006_forecast_decision_persist",)]; assert c.execute(text("SELECT tablename FROM pg_tables WHERE schemaname = :schema ORDER BY tablename"), {"schema":"public"}).all() == [("alembic_version",), ("business_constraints",), ("decision_runs",), ("forecast_predictions",), ("forecast_runs",), ("ingredients",), ("inventory_lots",), ("inventory_movements",), ("products",), ("recipe_lines",), ("recipes",), ("sales_daily",), ("store_memberships",), ("stores",), ("supplier_terms",), ("suppliers",), ("users",)]; c.close(); e.dispose(); print("Persisted schema verified")'
 ```
 
 Expected results match Windows; `sh scripts/reset_db.sh --seed` is the combined
@@ -139,3 +139,11 @@ LLM output must never be a business correctness oracle.
 S1.3.1 receipt-date/source-semantics regression and read-only column inspection:
 [S131_VERIFICATION](S131_VERIFICATION.md). Unknown receipt remains NULL; strict
 supplier inputs have no fallback defaults. Warning/Import APIs remain unimplemented.
+
+S1.4 run schema/fixture verification: [S14_VERIFICATION](S14_VERIFICATION.md).
+Completed immutability is future-service policy, not a DB trigger; no engine exists.
+
+S1.5 internal repository verification: [PERSISTENCE_ACCESS](../features/PERSISTENCE_ACCESS.md).
+Run its targeted tests after the normal setup above; they own only shelfcash_test,
+exercise caller-owned transactions and assert committed values through fresh sessions.
+Development reset/seed and health/OpenAPI behavior are unchanged.

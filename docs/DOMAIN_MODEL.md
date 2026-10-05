@@ -5,7 +5,8 @@ not implemented services. CURRENT FACT: plain Python domain packages remain empt
 but S1.1 User/Store/StoreMembership and S1.2 Product/Ingredient/Recipe/RecipeLine
 persistence models exist. S1.3 adds Supplier, SupplierTerm, SalesDaily, InventoryLot,
 InventoryMovement and BusinessConstraint. Their storage contracts are accepted in DATABASE_SCHEMA;
-all other entity details remain PROPOSAL.
+S1.4 adds ForecastRun/ForecastPrediction/DecisionRun persistence only;
+Forecast/Decision Engines remain NOT IMPLEMENTED. All other entity details remain PROPOSAL.
 
 ## IMPLEMENTED — Identity / Authorization + Store persistence subset
 
@@ -18,7 +19,7 @@ restricted while referenced. These are mutable persistence rows, not domain serv
 
 Relationship: User → many StoreMembership rows ← Store; a user may belong to multiple
 stores and a store may have multiple users. Membership persistence exists.
-Authorization enforcement, login/password verification, permissions, repositories,
+Authorization enforcement, login/password verification, permissions,
 application services and public User/Store/Membership APIs are NOT IMPLEMENTED.
 No role, membership or active flag currently authorizes an application operation.
 See [DATABASE_SCHEMA](DATABASE_SCHEMA.md) for exact accepted storage invariants and
@@ -90,11 +91,11 @@ docs for actual persistence tests and manual inspection.
 | Import / Mapping | ImportJob, MappingProfile, canonical fields | ACCEPTED: ADR-008 policy. CURRENT FACT: no import implementation. FUTURE: validated idempotent domain corrections, profiles/rules and bounded ambiguity suggestions. |
 | Catalog / Recipe | Store, Product, Ingredient, Recipe, RecipeLine; units, recipe version | CURRENT FACT: S1.2 persistence and DB integrity exist. FUTURE: APIs/resolution/BOM computation; no LLM facts. |
 | Operational Data | SalesDaily; store business date, cutoff | CURRENT FACT: canonical daily persistence. FUTURE: import/correction and sales feed to Forecasting. |
-| Forecasting | ForecastRun, ForecastPrediction, P25/P50/P75 | Deterministic model/baseline outputs with input/model versions; consumes sales and product catalog. |
+| Forecasting | ForecastRun, ForecastPrediction, P25/P50/P75 | CURRENT FACT: persistence exists. FUTURE: deterministic model/baseline outputs with input/model versions; consumes sales and product catalog. |
 | Ingredient Demand | Ingredient quantity over time | Expands forecast using catalog/recipe versions; does not select procurement strategy. |
 | Inventory / FEFO | InventoryLot, InventoryMovement; usable quantity, expiry, arrival | CURRENT FACT: lot/movement schema; ADR-009 policy. FUTURE: atomic audited mutations and FEFO/availability/allocation. |
 | Procurement | Supplier, SupplierTerm, BusinessConstraint; packs, MOQ, lead time, candidate strategy | CURRENT FACT: versioned input persistence. FUTURE: exactly LEAN/BALANCED/PROTECTED candidates; no procurement computation yet. |
-| Decision | DecisionRun, versioned package, simulation metrics, warnings, risks, recommendation, hypothetical comparison | Simulates each candidate, compares deterministically and preserves evidence; human owns final decision. |
+| Decision | DecisionRun, versioned package, simulation metrics, warnings, risks, recommendation, hypothetical comparison | CURRENT FACT: historical persistence exists. FUTURE: simulates each candidate, compares deterministically and preserves evidence; human owns final decision. |
 
 Dependencies follow the business pipeline: operational truth/catalog → forecast →
 ingredient demand → inventory/supplier constraints → candidates → exact simulation
@@ -160,3 +161,29 @@ Canonical holds sufficiently established entity facts, with allowed optional NUL
 Future mapping retains raw/unknown/ambiguous values, decisions, warnings and conflicts.
 Future warnings require code, severity, field, entity and impact. No warning API,
 parser or staging tables exist. See ADR-010 and IMPORT_MAPPING for accepted policy.
+
+## IMPLEMENTED -- S1.4 run persistence
+
+Store owns ForecastRuns; runs own explicit Product/date predictions in the same
+Store. Required training/horizon DATE windows are ordered; status is RUNNING,
+COMPLETED or FAILED. Finite Decimal quantities satisfy 0 <= P25 <= P50 <= P75
+in Product.selling_unit. These uncertainty quantiles are not mapped to
+LEAN/BALANCED/PROTECTED strategies. Metadata records the actual model/version;
+optional artifact key refers to filesystem binaries, metrics assess forecast quality.
+
+DecisionRun requires same-store ForecastRun and ordered planning period. Completed
+rows require positive package version (initially 1), fingerprint, object input/output
+JSON, constrained recommended strategy and terminal time; failed/partial rows have no
+fake completed output. Snapshots preserve used values plus identities/versions.
+ADR-011 freezes snapshot-before-computation, historical self-containment, completed
+immutability and new-run reruns. DB enforces local state/shape/FKs; service-level
+immutability, horizon membership, forecast readiness and full package validation are
+NOT IMPLEMENTED. No engine/hasher/snapshot builder or public API exists.
+S1.5 concrete repositories provide scoped persistence access; see PERSISTENCE_ACCESS.
+CURRENT FACT: Forecast/Decision repository writers guard RUNNING-only terminal
+transitions and Forecast prediction append. Full application immutability/horizon/
+package validation remains future; tracked ORM rows and privileged SQL can bypass
+repository policy. No domain computation or business semantics changed in S1.5.
+Returned ORM rows are internal persistence objects, never domain computation inputs.
+What-if stays non-persistent by default; LLM cannot select recommendation or facts.
+See FORECAST, DECISION_RUN and DATABASE_SCHEMA for actual contracts/limitations.

@@ -1,5 +1,11 @@
 # Versioned business constraint persistence — S1.3
 
+CURRENT FACT (S1.5): internal repository access is now implemented; see
+[PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository
+absence describe the HISTORICAL INFORMATION of this schema slice. Its direct
+Session tests remain schema evidence; operational services/APIs/engines and
+application lifecycle/audit enforcement remain unimplemented.
+
 ## Status and purpose
 
 CURRENT FACT: controlled BusinessConstraint persistence exists, no constraint API,
@@ -42,7 +48,7 @@ SELECT store_id, scope_type, scope_id, constraint_type, numeric_value, unit,
 ORDER BY store_id, scope_type, scope_id, constraint_type, version;
 ```
 
-Expected after reset: zero rows, head 0005_data_semantics_correction. Schema inspection
+Expected after reset: zero rows, head 0006_forecast_decision_persist. Schema inspection
 shows registry/scope/value/version/date CHECKs, NULLS NOT DISTINCT unique, partial
 exclusion and ingredient/store/unit FK. Fixture values are verified through new
 sessions by targeted tests; no manual development writes/API required.

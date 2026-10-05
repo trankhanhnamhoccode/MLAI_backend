@@ -15,12 +15,12 @@ docker compose up -d --wait postgres
 .\scripts\db_status.ps1
 ```
 
-Expected: healthy PostgreSQL; head 0005_data_semantics_correction; targeted/full suite
+Expected: healthy PostgreSQL; head 0006_forecast_decision_persist; targeted/full suite
 pass. Seed reports no business seed data and writes nothing. Status reachable true,
-database shelfcash, at_head true, alembic_version count 1 and all thirteen business
+database shelfcash, at_head true, alembic_version count 1 and all sixteen business
 tables count 0: users, stores, store_memberships, products, ingredients, recipes,
 recipe_lines, suppliers, supplier_terms, sales_daily, inventory_lots,
-inventory_movements, business_constraints. No Import/Forecast/Decision/Order tables.
+inventory_movements, business_constraints, forecast_runs, forecast_predictions, decision_runs. No Import/Order/What-if tables.
 
 Inspect actual schema and each domain's persisted rows, no GUI/host psql:
 
@@ -52,7 +52,7 @@ finally:
 '@ | .\.venv\Scripts\python.exe -
 ```
 
-Expected revision [('0005_data_semantics_correction',)], documented UUID/NUMERIC/
+Expected revision [('0006_forecast_decision_persist',)], documented UUID/NUMERIC/
 DATE/TIMESTAMPTZ columns, named constraints matching DATABASE_SCHEMA; six domain
 row queries return []. In particular exclusion constraints are partial WHERE active,
 business constraint version uniqueness is NULLS NOT DISTINCT, same-store/unit/lot
@@ -60,8 +60,9 @@ FKs exist and numeric/range/type checks are installed. Automated fixtures commit
 close and verify records using a new session before isolated reset; see feature docs
 for exact fixture values. Database state, not HTTP 2xx, proves persistence.
 
-Targeted test verifies fresh migration, downgrade 0004->0003 removes exactly six
-tables, re-upgrade recreates them; original identity/catalog migrations remain intact.
+Targeted test verifies fresh migration and descent from head through 0006/0005/0004
+to 0003. The 0006 step removes three run tables; 0004->0003 removes the six S1.3
+tables. Re-upgrade recreates all; original identity/catalog migrations remain intact.
 Failed transaction requires rollback; reset retry/guards in DATABASE_RESET. No seed
 records fabricated. Existing .sh wrappers share the Python implementation; use
 .venv/bin/python/alembic on POSIX. This Windows slice does not claim POSIX runtime

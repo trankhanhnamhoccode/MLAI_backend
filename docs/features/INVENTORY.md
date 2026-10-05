@@ -1,5 +1,11 @@
 # Inventory lot state and movement history — S1.3
 
+CURRENT FACT (S1.5): internal repository access is now implemented; see
+[PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository
+absence describe the HISTORICAL INFORMATION of this schema slice. Its direct
+Session tests remain schema evidence; operational services/APIs/engines and
+application lifecycle/audit enforcement remain unimplemented.
+
 ## Status and purpose
 
 CURRENT FACT: InventoryLot/InventoryMovement schema exists; mutation service, FEFO,
@@ -70,7 +76,7 @@ SELECT lot_id, store_id, ingredient_id, movement_type, quantity_delta,
 ORDER BY lot_id, occurred_at, id;
 ```
 
-After reset both tables have zero rows; head 0005_data_semantics_correction. Tests
+After reset both tables have zero rows; head 0006_forecast_decision_persist. Tests
 independently verify actual fixture records before their isolated cleanup. Schema
 inspection shows numeric/date/type/sign CHECKs and exact-unit/lot composite FKs.
 No GUI/host psql needed; no inventory HTTP operation exists.

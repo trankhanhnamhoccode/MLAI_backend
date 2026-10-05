@@ -13,9 +13,9 @@ docker compose up -d --wait postgres
 .\scripts\db_status.ps1
 ```
 
-Expected: healthy PostgreSQL; head 0005_data_semantics_correction; 9 targeted and
-182 full tests pass. Development has thirteen empty business tables and one revision
-row. No import, readiness, Forecast or Decision tables are added. Seed remains no-op.
+Expected: healthy PostgreSQL; head 0006_forecast_decision_persist; 9 targeted and
+240 current full tests pass. Development has sixteen empty business tables and one revision
+row. S1.4 adds run tables; no import, readiness or What-if tables exist. Seed remains no-op.
 
 Inspect using Python/psycopg, without a GUI or host psql:
 
@@ -37,13 +37,13 @@ finally:
 '@ | .\.venv\Scripts\python.exe -
 ```
 
-Expected: revision 0005; received_date nullable YES/default None; supplier fields
+Expected: revision 0006_forecast_decision_persist; received_date nullable YES/default None; supplier fields
 nullable NO/default None. Expiry CHECK permits unknown receipt or expiry, otherwise
 requires expiry >= receipt. Lot query is [] after reset. Tests create their own records,
 commit/close/reload to confirm unknown receipt is None with known expiry/quantity,
 then clean them up. Canonical pack fixture is 420000 VND for 15000 g, not 28000.
 
-Targeted tests execute 0005->0004->head with known dates and prove data survives.
+Targeted tests execute head->0004->head with known dates and prove data survives.
 With NULL dates downgrade fails transactionally, preserving head/schema/data. Before
 manual downgrade, resolve dates using confirmed source evidence or explicitly reset
 development data; never backfill upload/snapshot/current dates. Downgrade farther than

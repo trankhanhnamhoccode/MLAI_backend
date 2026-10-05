@@ -1,5 +1,11 @@
 # Supplier persistence — S1.3
 
+CURRENT FACT (S1.5): internal repository access is now implemented; see
+[PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository
+absence describe the HISTORICAL INFORMATION of this schema slice. Its direct
+Session tests remain schema evidence; operational services/APIs/engines and
+application lifecycle/audit enforcement remain unimplemented.
+
 ## S1.3.1 review — ACCEPTED DECISION / CURRENT FACT
 
 ADR-010 governs completeness. Price schema UNCHANGED: pack_cost is cost of one
@@ -57,7 +63,7 @@ missing/cross-store references and wrong units. Zero cost/durations and minimum 
 
 Use [S13_VERIFICATION](../runbooks/S13_VERIFICATION.md): start healthy PostgreSQL,
 reset/migrate, run targeted/full tests, inspect actual schema/rows. Expected head
-0005_data_semantics_correction, suppliers and supplier_terms count 0 after reset;
+0006_forecast_decision_persist, suppliers and supplier_terms count 0 after reset;
 tests do not mutate development data. The shared runbook executes these queries:
 
 ```sql
