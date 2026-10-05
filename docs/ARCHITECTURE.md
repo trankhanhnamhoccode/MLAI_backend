@@ -83,9 +83,10 @@ flowchart TD
 
 CURRENT FACT: health performs no persistence operation. S1.1/S1.2/S1.3 implement
 sixteen ORM tables: identity/store, catalog/recipe, supplier/terms, canonical sales,
-lot/movement, controlled planning constraints and S1.4 Forecast/Decision run storage. Application/business API paths in the diagram
-remain future work. Only migrations,
-developer commands and integration tests currently connect. PROPOSAL: a backend
+lot/movement, controlled planning constraints and S1.4 Forecast/Decision run storage.
+S1.6 internal application paths now connect explicitly through repositories;
+business API paths remain future work. Migrations,
+developer commands, explicitly invoked use cases and integration tests connect. PROPOSAL: a backend
 container may later use Compose host `postgres`; it is not part of this slice.
 
 ACCEPTED DECISION (S1.5): application/use case owns the transaction and supplies
@@ -174,7 +175,8 @@ Canonical facts must not be invented to fill missing source values. Future mappi
 retains unknown/ambiguous evidence and evaluates computation readiness per use case.
 Current S1.3.1 schema permits unknown lot receipt date without date defaults; strict
 SupplierTerm procurement inputs remain required. No import/readiness service, public
-warning API, staging table or new application layer is implemented.
+warning API or staging table is implemented. S1.6 application inputs preserve missing
+optional facts and reject missing required facts; they do not add a readiness engine.
 
 ## Historical runs -- ACCEPTED DECISION (ADR-011)
 
@@ -191,3 +193,50 @@ append guards now exist in repository writers. Direct tracked ORM/SQL mutation c
 still bypass policy; operational services/full business validation remain future.
 Algorithm metadata belongs in future versioned packages; no engine-version framework
 is introduced. ADR-006 What-if and ADR-004 LLM authority boundaries are unchanged.
+
+## Internal application contracts -- ACCEPTED DECISION / CURRENT FACT (S1.6)
+
+API contract != Application contract. Future HTTP / Import / internal caller ->
+typed application contract -> use case -> concrete repositories -> SQLAlchemy ->
+PostgreSQL. Application owns transaction; repository owns persistence operations;
+future engine owns deterministic business computation. No public business API exists.
+
+Pydantic v2 inputs/outputs contain explicit schemas, exact Decimal quantities/prices,
+UUID/date/aware instants, by-value results and copied typed object JSON. Shape checks
+belong to Pydantic, ownership/current-state/lifecycle to application, DB constraints
+remain final safety nets. Application errors are internal categories, independent of
+HTTP. Wrong-store and missing references consistently report NOT_FOUND.
+
+CURRENT FACT: Product create/scoped read, Sales canonical insert/inclusive history,
+Forecast/Decision start/complete/fail/scoped read and effective Recipe+lines reads
+are implemented. Forecast validates Product/horizon and atomic supplied predictions;
+Decision requires a completed same-store Forecast and atomically stores supplied
+snapshot/package metadata. Full package shape/evaluation/provenance remains future.
+
+Composition supplies a synchronous Session; write methods require idle clean state,
+explicitly begin/commit/rollback and leave Session close to caller. Reads suppress
+autoflush and never commit. An existing caller transaction is rejected without
+touching its work. Repositories still never own transaction or Session lifecycle.
+No transaction decorator, generic service, UnitOfWork or engine placeholder exists.
+See [APPLICATION_CONTRACTS](features/APPLICATION_CONTRACTS.md) for exact contracts,
+error conventions, JSON mutability limits and manual persistence verification.
+
+## Operational application closure -- CURRENT FACT (S1.7)
+
+The internal boundary now also implements Store and Ingredient create/read,
+SupplierTerm version create/read, atomic Recipe version+lines and atomic received
+lot+RECEIPT/correcting movement paths. Writes retain idle clean synchronous Session
+ownership; repositories retain caller-owned persistence only. Existing scoped lot
+row locking with refresh protects corrections through commit/rollback. The minimal
+exact nonnegative balance calculation lives in plain Python app/domain/inventory,
+without HTTP, ORM or filesystem dependencies; other engines remain unimplemented.
+
+Money is exact Decimal in Store.currency, with no rounding/conversion. Ingredient
+units match exactly; supplied business dates stay separate from aware UTC inventory
+event instants. Corrections use new Recipe/term versions and append inventory
+movements; Sales canonical duplicates stay conflicts. No version auto-close,
+absolute balance setter, public business API, schema/ADR/dependency or infrastructure
+change. Actor/provenance authorization, source importing, full Sales correction,
+Forecast/Decision computations and engine-specific cutoffs remain future slices.
+This section supersedes historical operational-service absence statements only for
+these paths. See APPLICATION_CONTRACTS and CURRENT_STATE for verified boundaries.

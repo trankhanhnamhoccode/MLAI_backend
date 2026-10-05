@@ -220,3 +220,63 @@ above describe HISTORICAL INFORMATION at the S1.4 baseline. Pre-S1.5 protected-f
 hashes and exact generated/live OpenAPI comparison pass. Authorized development
 reset/upgrade and Alembic check pass; final status is at unchanged 0006 head with
 sixteen empty business tables. Tests only own shelfcash_test.
+
+## S1.6 application contracts and persistence orchestration -- CURRENT FACT
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_application_contracts.py tests/integration/test_application_paths.py -q
+.\scripts\test.ps1 all
+```
+
+Contract/unit tests check Pydantic v2 fields, extra rejection, exact finite Decimal,
+ordered windows/quantiles, aware time, minimal typed object JSON, positive version,
+allowed recommendation and HTTP/query independence. Application integration tests
+exercise Product/Sales/Forecast/Decision/dated Recipe paths on actual shelfcash_test,
+two Stores, canonical conflicts, lifecycle/horizon/completed source, typed copied
+outputs, stale cached status refresh, caller transaction preservation and read-only
+no-commit/no-autoflush behavior. Forecast/Decision downstream failure after real flush
+rolls back all output; close/fresh-session reads independently assert persisted state.
+Existing repository tests continue to own S1.5 guards/locks/no-auto-commit behavior.
+API tests remain health/OpenAPI only; there are no public business API tests.
+
+Manual verification and expected rows: [S16_VERIFICATION](runbooks/S16_VERIFICATION.md).
+Full contract/limitations: [APPLICATION_CONTRACTS](features/APPLICATION_CONTRACTS.md).
+Fixtures are supplied persistence examples, not Forecast/Decision Engine output.
+Latest execution totals are in CURRENT_STATE; older totals above are historical.
+
+S1.6 Windows acceptance: **82 targeted passed** (38 unit, 44 application integration),
+**402 full passed** (67 unit, 333 integration, 2 API), no skips; one existing upstream
+Starlette/AnyIO warning. Alembic/pip checks, protected hashes, generated/live OpenAPI
+and live health pass. No native POSIX execution claim.
+
+## S1.7 operational application and inventory closure -- CURRENT FACT
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_operational_contracts.py tests/integration/test_operational_paths.py tests/unit/test_application_contracts.py tests/integration/test_application_paths.py -q
+# Only after targeted green, run full regression once at the final gate.
+.\scripts\test.ps1 all
+```
+
+New tests cover Store/Ingredient/SupplierTerm/Recipe and inventory receipt/correction
+contracts, exact Decimal arithmetic despite ambient precision, domain import
+independence, required facts and distinct DATE/aware UTC instants. Real isolated
+PostgreSQL tests assert close/fresh-session state, Store/unit integrity, active
+overlap/canonical conflicts without overwrite, atomic header+lines/lot+movement,
+negative-result protection and rollback after actual SQL flush. Every new writer
+is tested for commit-failure rollback and preservation of caller transactions;
+reads leave pending work unflushed. Stale cached balance refresh and real competing
+lot locks prove no lost update. Full S1 chain uses application paths; only Supplier
+identity is an explicit repository prerequisite. Existing S1.6 tests stay unchanged.
+
+See [S17_VERIFICATION](runbooks/S17_VERIFICATION.md) for individual reviewable flows,
+expected rows, reset/migration/status and health/OpenAPI checks. Final counts and
+full regression run count are recorded in CURRENT_STATE. Prior totals/absence
+claims in earlier slice sections are HISTORICAL INFORMATION where superseded.
+No business API/e2e, FEFO, Forecast/Decision computation or auth evidence is claimed.
+
+S1.7 Windows acceptance: **106 new targeted passed** (52 unit, 54 PostgreSQL
+integration); final combined S1.6/S1.7 targeted **188 passed** (90 unit, 98 integration).
+Supported full regression **508 passed** (119 unit, 387 integration, 2 API), no skips,
+one existing upstream warning; **one full regression run**, after targeted green.
+PostgreSQL, reset/upgrade/status, Alembic/pip checks, protected WIP hashes and exact
+generated/live OpenAPI/health pass. No native POSIX runtime claim.

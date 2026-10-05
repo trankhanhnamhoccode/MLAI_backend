@@ -2,7 +2,7 @@
 
 Classification: CURRENT FACT unless explicitly marked otherwise.
 
-- Project phase: **S1 — IN PROGRESS**; S0/S0.2 remain complete.
+- Project phase: **S1 — COMPLETE**; S0/S0.2 remain complete.
 - Completed: **S1.1 — Identity + Store Schema Cluster** (persistence only).
 - Completed: **S1.2 — Catalog + Recipe Schema Cluster** (persistence only).
 - Completed: **S1.3 — Supplier + Operational + Constraints Schema** (persistence only).
@@ -14,16 +14,34 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
   ADR-011 Historical Run Immutability and Snapshot Policy is ACCEPTED.
   Forecast computation: NOT STARTED. Decision computation: NOT STARTED.
   Repository layer: implemented by S1.5 (see below). Public business API: NONE.
-  S1 overall remains IN PROGRESS: application/Pydantic boundary contracts and
-  operational validation in the roadmap remain future gates.
+  S1.6/S1.7 now cover the authorized operational application/Pydantic flow;
+  S1.7 final acceptance closes the canonical S1 operational gates.
 - Completed: **S1.5 -- Persistence Access Contract + Repository Layer**.
   Nine domain modules / ten concrete repositories cover all sixteen tables.
   Store-owned access requires explicit Store scope; application supplies the shared
   synchronous Session and owns commit/rollback. No generic CRUD or public API.
   Forecast/Decision RUNNING-only lifecycle writers and inventory lock/append
   primitives exist; completed/failed run writes are rejected by repository guards.
-  Inventory mutation service and full application validation remain future.
+  S1.7 implements atomic receipt/corrections; full engine validation remains future.
   Contract/manual verification: [PERSISTENCE_ACCESS](features/PERSISTENCE_ACCESS.md).
+- Completed: **S1.6 -- Application Contracts + Validated Read/Write Paths**.
+  Typed Product create/read, Sales
+  insert/history, Forecast/Decision start/complete/fail/read and dated Recipe+lines
+  read use S1.5 repositories. By-value outputs, explicit Store context, internal
+  errors and application commit/rollback exist. Forecast horizon/Product validation
+  and completed same-store Forecast consumption by Decision are implemented;
+  full package/evaluation/provenance validation and engines remain absent.
+  [APPLICATION_CONTRACTS](features/APPLICATION_CONTRACTS.md) freezes the boundary;
+  [S16_VERIFICATION](runbooks/S16_VERIFICATION.md) provides usable local steps.
+- Completed: **S1.7 -- Application Coverage + Inventory Transaction Closure**.
+  Typed Store/Ingredient create/read,
+  SupplierTerm version create/read, atomic Recipe version+lines, positive receipt
+  lot+RECEIPT and justified delta COUNT_CORRECTION/MANUAL_ADJUSTMENT exist.
+  Scoped lot row locks refresh current balances; exact plain Python domain arithmetic
+  rejects negative results. Every mutation owns one balance+movement transaction.
+  Money/unit/business-date/event-time/correction conventions are frozen in
+  [APPLICATION_CONTRACTS](features/APPLICATION_CONTRACTS.md); reproducible checks
+  are in [S17_VERIFICATION](runbooks/S17_VERIFICATION.md).
 - Greenfield Competition Edition; no legacy backend was imported.
 - Current database: **PostgreSQL**, SQLAlchemy 2.x with psycopg and synchronous
   Session. ADR-007 is ACCEPTED; ADR-003 is SUPERSEDED. The empty Alembic
@@ -33,11 +51,14 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
   `sales_daily`, `inventory_lots`, `inventory_movements`, `business_constraints`,
   `forecast_runs`, `forecast_predictions`, `decision_runs` -- sixteen business tables.
   ADR-008 Import Idempotency and Correction Policy and ADR-009 Inventory Mutation
-  and Audit Policy are ACCEPTED. Import/correction/mutation/FEFO behavior is not
-  implemented by these storage models. No balance/expiry/audit trigger exists.
+  and Audit Policy are ACCEPTED. S1.7 enforces atomic audited receipt/corrections
+  at the trusted internal application boundary. Import/FEFO and full Sales correction
+  remain absent. No balance/expiry/audit trigger exists.
   Identity/store membership persistence exists; authentication/authorization does not.
-  Plain Python domain packages remain empty. S1.5 concrete repositories cover all
-  sixteen tables. Application services/public business APIs remain not started.
+  Plain Python domain implements only exact nonnegative inventory balance arithmetic;
+  other domain engines remain absent. S1.5 concrete repositories cover all sixteen
+  tables. S1.6/S1.7 internal application use cases exist;
+  public business APIs remain not started.
   Remaining Schema v1 is PROPOSAL.
 - Runtime: FastAPI app factory, Pydantic v2 settings and typed health schema.
   `GET /health` is the only API operation. `/openapi.json` is framework schema
@@ -63,13 +84,95 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
   [scaffold feature guide](features/SCAFFOLD.md) provide manual HTTP and persisted
   DB verification. All execution/testing/demo preparation remains local; no Kaggle
   or hosted notebook dependency. S1.1/S1.2/S1.3/S1.4 schema clusters are implemented; all
-  later business features remain unimplemented. Seed verifies schema, writes no rows.
+  later computation/public business features remain unimplemented; S1.5/S1.6/S1.7 provide
+  internal persistence/application paths. Seed verifies schema, writes no rows.
 - Integration tests own only separate `shelfcash_test`, created if absent by the
   local role. Tests run sequentially and never reset normal development state.
 
 ## Verification
 
-### S1.5 final acceptance -- CURRENT FACT
+### S1.7 final acceptance -- CURRENT FACT
+
+S1.7 COMPLETE; S1 overall COMPLETE. Verified on Windows/Python 3.11.9, 2026-10-06:
+- New S1.7 targeted coverage: **106 passed** (52 unit/domain, 54 actual PostgreSQL
+  integration). Final targeted command after authorized reset/upgrade includes
+  unchanged S1.6 regression: **188 passed** (90 unit, 98 integration).
+- Supported test.ps1 all: **508 passed** (119 unit, 387 integration, 2 API), no skips;
+  one existing upstream Starlette/AnyIO deprecation warning. Full regression run
+  count for S1.7: **1**, only at final gate after targeted green; no rerun needed.
+- Store/Ingredient/SupplierTerm create/read and Recipe atomic version+lines pass
+  scoped validation, exact Decimal, required dates, duplicate/period conflicts and
+  typed fresh-session retrieval without silent overwrite/auto-close.
+- Positive receipt creates exactly one lot and RECEIPT together. Tracked expiry
+  is required, unknown received_date stays NULL, source refs stay paired, unit/cost
+  remain canonical, aware supplied events preserve their instant normalized UTC.
+- Correcting deltas require COUNT_CORRECTION/MANUAL_ADJUSTMENT and nonblank note;
+  negative results fail without new history. Locked materialized balance and
+  appended movement commit together. Pure domain arithmetic stays exact despite
+  small ambient precision and imports without HTTP/ORM/infrastructure.
+- Recipe downstream CHECK after header/line flush leaves no aggregate; receipt
+  downstream failures after lot or movement flush leave no partial state; movement
+  CHECK after balance flush restores old balance/history. All six new writers'
+  commit failures roll back. Caller-owned transactions remain untouched; reads
+  neither flush nor commit pending work. Success/failure assertions use fresh Sessions.
+- PostgreSQL pg_stat_activity confirms actual second-writer Lock wait; first -5
+  and second -7 yield 50 ->45 ->38 with three movements summing to 38. Cached old
+  balance also refreshes correctly. Complete S1 operational application chain passes;
+  Supplier identity remains the explicitly authorized repository prerequisite.
+- Compose PostgreSQL 17.11 healthy; supported development reset, Alembic upgrade/
+  current and no-op seed succeed. Final db-status: shelfcash at unchanged head
+  0006_forecast_decision_persist, sixteen empty business tables and one revision row.
+  Tests own only shelfcash_test. Alembic check detects no new upgrade operations;
+  pip check reports no broken requirements.
+- 53 pre-S1.7 protected-file hashes match: models/migrations/accepted ADRs/public
+  API contract/dependencies/all existing tests unchanged. All 160 pre-existing
+  files remain present; changes stay within authorized extensions/docs. Prior S1.6
+  WIP is preserved. Application import/construction does not connect to DB.
+  Exact generated/live OpenAPI comparison and live health 200/payload pass;
+  verifier server stopped. Diff/status, document links, AST and whitespace reviewed.
+- Canonical contracts/feature docs/testing/state/roadmap/manual guide distinguish
+  current paths from historical schema-only absence claims. No schema/migration,
+  public business API, auth/actor enforcement, import/computation engine, commit or
+  S2+ implementation. Native POSIX runtime is not claimed. Rollback affects only
+  S1.7 application/domain/tests/docs, with no database rollback.
+
+### S1.6 final acceptance -- HISTORICAL INFORMATION
+
+S1.6 COMPLETE. Verified on Windows/Python 3.11.9, 2026-10-06:
+- Targeted application command: **82 passed** (38 contract/unit, 44 actual
+  PostgreSQL integration). Supported test.ps1 all: **402 passed** (67 unit,
+  333 integration, 2 API), no skips, one existing Starlette/AnyIO warning.
+- Product typed create/scoped read and canonical Sales insert/inclusive ordered
+  history pass with exact Decimal/NULL, conflict/no-overwrite and Store isolation.
+  Effective Recipe+typed lines verifies inclusive/open-ended/no-version behavior.
+- Forecast/Decision start/complete/fail/read, current locked lifecycle, terminal
+  guards, stale cached status refresh, horizon/Product/terminal-time checks and
+  completed same-store Forecast consumption pass. Outputs are by-value; JSON/input
+  mutations do not change stored values. Supplied fixtures do not claim engines.
+- Explicit commit and failure rollback, untouched caller-owned transaction, read
+  no-commit/no-autoflush, commit failure and fresh-session persistence pass.
+  A Forecast downstream CHECK failure rolls back an already flushed prediction;
+  a Decision downstream OperationalError rolls back all flushed completion fields.
+  Known named unique conflicts map to application errors; unexpected DB errors
+  propagate after rollback. Repository transaction-ownership regressions pass.
+- Compose PostgreSQL 17.11 healthy. Supported authorized development reset,
+  upgrade/current/seed/status pass; sixteen business tables remain empty at
+  0006_forecast_decision_persist with one revision row. Tests own only shelfcash_test.
+  Alembic check: No new upgrade operations detected. pip check passes.
+- Pre-S1.6 protected hashes confirm models/migrations/accepted ADRs/API_CONTRACT/
+  dependencies unchanged. Application import/construction causes no DB connection;
+  generated/live OpenAPI equal saved baseline, live health exact unchanged HTTP 200.
+  Verification server stopped. Syntax/type/dependency/query/whitespace/link audits
+  and diff/status review pass. Initial working tree was clean; no prior WIP removed.
+- APPLICATION_CONTRACTS, S16_VERIFICATION and S16_TASK_NOTES document the frozen
+  scope, limitations, rollback and manual verification. Current architecture,
+  roadmap/testing/schema/domain and affected feature docs explicitly distinguish
+  S1.6 application behavior from historical schema/repository-only limitations.
+- No schema change/migration, public business API, engine, inventory mutation,
+  import/correction, authentication/authorization, commit or S2+ work. Native POSIX
+  runtime is not claimed. S1 overall remains IN PROGRESS; remaining gates below.
+
+### S1.5 final acceptance -- HISTORICAL INFORMATION
 
 S1.5 -- Persistence Access Contract + Repository Layer COMPLETE.
 Verified on Windows/Python 3.11.9, 2026-10-05:
@@ -315,44 +418,51 @@ an exact transitive lockfile is not part of this scaffold.
 
 ## Next slice -- PROPOSAL
 
-S1.5 persistence access is implemented. S1 remains IN PROGRESS pending separately
-authorized application/public boundary contracts and operational validation.
-No next slice or S2 is automatically authorized; business APIs/engines remain absent.
+S1.7 implements the remaining authorized S1 operational contracts and writes.
+S1.7 and S1 are COMPLETE after final acceptance; no canonical operational S1
+gate remains open. The next canonical phase is
+**S2 -- Forecast**, PROPOSAL / NOT STARTED. Freeze forecast cutoff/horizon,
+baseline/quantile behavior and provenance with separately authorized work.
+No next slice, business API or engine starts automatically.
 
 ## Current schema-only limitations — CURRENT FACT
 
 - Repository writers guard RUNNING-only transitions and prediction append.
-  Direct tracked ORM/SQL mutation can bypass these guards. Prediction horizon membership,
-  completed forecast consumption, full package/evaluation validation, sanitization
-  and authorized snapshot capture are future service responsibilities (ADR-011).
+  Direct tracked ORM/SQL mutation can bypass these guards. S1.6 validates prediction
+  horizon membership and completed forecast consumption in its application paths.
+  Full package/evaluation validation, sanitization
+  and authorized snapshot capture remain future service responsibilities (ADR-011).
   DB enforces local state/shape/FKs but has no immutability/horizon triggers.
 - S1.5 repositories expose explicit insert/read/lifecycle primitives, no arbitrary
   completed-row update/delete writer. Reads are tracked mutable ORM rows; direct
-  Session/SQL can bypass policy. Full immutable application boundaries remain future.
+  Session/SQL can bypass policy. S1.6 returns by-value outputs and guards its lifecycle
+  paths; wider immutable application boundaries remain future.
 - Standalone forecast input retention, artifact service, deterministic hashing and
   full versioned algorithm/package schemas remain future engine slice requirements.
   Fingerprint alone is not captured training content or a replay guarantee.
 
-- Inventory balance and ledger are independently stored. Scoped lock and append
-  primitives exist; automated fixture transactions prove caller commit/rollback.
-  Operational atomic audited mutation, mandatory receipt movement,
-  append-only enforcement/reconciliation and actor/source
-  validation are future service work governed by ADR-009. No unexplained overwrite
-  is authorized application behavior, but privileged SQL is not prevented by triggers.
-- Mandatory expiry for expiry_tracking ingredients, confirmed receipt/future-date
-  validation and exact budget unit matching Store.currency remain future application
-  checks. DB does enforce expiry order when both dates are known, same-store/exact ingredient units,
-  numeric ranges and controlled scope/type registry.
-- No import parser/hash/classification/mode/correction/provenance engine, mutation
-  service, FEFO, Forecast or Decision computation. No public business API.
+- Inventory balance and ledger are independently stored. S1.7 receipt/correction
+  paths require movement and balance in one locked application transaction and
+  reject negative results. They append history without edit/delete. Direct ORM/SQL
+  can bypass policy: no append-only/reconciliation/audit trigger or actor permission
+  exists. Optional paired source refs are retained; authentication is not implemented.
+- S1.7 tracked Ingredient receipts require expiry and both-known dates enforce order;
+  unknown receipt remains NULL. DATE facts are explicit and separate from UTC event
+  instants. No future-date derivation, automatic expiry or engine cutoff is invented.
+  All supplied money inherits Store.currency; no budget writer is in this slice.
+  Future budget boundaries must enforce the unchanged budget unit=Store.currency rule.
+- No import parser/hash/classification/mode/correction/provenance engine, full Sales
+  correction, FEFO, Forecast or Decision computation. No public business API.
   Internal persistence access is documented in features/PERSISTENCE_ACCESS.md.
 
 ## Known unresolved decisions — PROPOSAL
 
-- Future Store API fields, validation and error contract. S1.1 UUID storage and
+- Future public Store API fields, validation and transport error contract. S1.1 UUID storage and
   timezone/currency defaults are frozen; public identifier/payload contracts are not.
 - Authentication/bootstrap and minimum store isolation needed before data exposure.
-- Currency precision/rounding, units/conversions and Vietnam business-date cutoff.
+- Engine-specific currency rounding, explicit unit conversions and Vietnam
+  forecast/expiry business-day cutoff. S1.7 already freezes exact Decimal,
+  Store.currency inheritance, exact units and separate DATE/aware UTC instants.
 - Recipe resolver/API behavior beyond frozen inclusive date selection; forecast
   baseline/quantile calibration and simulator
   time granularity, objectives/tie breaks and constraint infeasibility policy.

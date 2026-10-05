@@ -49,6 +49,10 @@ class ForecastRepository:
             raise InvalidLifecycleTransition("Forecast write requires a RUNNING run")
         return run
 
+    def get_running_for_update(self, store_id: UUID, run_id: UUID) -> ForecastRun | None:
+        """Load current RUNNING metadata for application validation under the lock."""
+        return self._running_run(store_id, run_id)
+
     def add_predictions(self, store_id: UUID, run_id: UUID,
                         predictions: Sequence[ForecastPrediction]) -> ForecastRun | None:
         """Stage predictions only for a locked RUNNING run; no computation/upsert."""

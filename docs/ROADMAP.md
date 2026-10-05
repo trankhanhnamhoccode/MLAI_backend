@@ -1,7 +1,7 @@
 # Vertical-slice roadmap
 
-CURRENT FACT: S0 is complete; S1 is in progress with S1.1/S1.2/S1.3/S1.4 persistence schemas
-implemented (acceptance status recorded in CURRENT_STATE). Future slices are PROPOSAL, not permission to
+CURRENT FACT: S0 is complete; S1 is complete with S1.1/S1.2/S1.3/S1.4 persistence schemas
+implemented, with S1.5/S1.6/S1.7 operational access (acceptance in CURRENT_STATE). Future slices are PROPOSAL, not permission to
 implement them or an accepted public contract. Every slice must freeze precise
 contracts, acceptance tests, rollback scope and affected BE/FE/ML/Data/demo behavior
 before implementation. Preserve unrelated WIP; no batches of backend layers.
@@ -19,24 +19,27 @@ before implementation. Preserve unrelated WIP; no batches of backend layers.
 S6 hardens authorization; it is not permission to postpone minimum access enforcement
 needed by any earlier slice. No unprotected real business data exposure is implied.
 
-## S1 schema clusters
+## S1 implementation slices
 
 HISTORICAL INFORMATION: scope exclusions in S1.1-S1.4 rows describe those schema
 slices when delivered. CURRENT FACT: S1.5 adds internal repositories for all their
-tables; public APIs, operational services and engines remain future work.
+tables; S1.6/S1.7 add internal operational application paths. Public APIs and engines remain future work.
 
 | Slice | Status | Scope |
 | --- | --- | --- |
-| S1.1 — Identity + Store | COMPLETE; 22 targeted; current full suite 240 passes | Only users/stores/store_memberships, storage constraints, direct Session tests and manual inspection; no APIs/repos/auth |
-| S1.2 — Catalog + Recipe | COMPLETE; 51 targeted; current full suite 240 passes, usable manual guide | Only products/ingredients/recipes/recipe_lines; scoped SKU, dated nonoverlap, yield/loss, exact unit/same-store constraints; no APIs/repos/BOM |
-| S1.3 — Supplier / Operational / Constraints | COMPLETE; 80 targeted / 240 current full passes, usable manual guide | Exactly suppliers/terms, canonical sales, received lots/movement history, registry constraints; ADR-008/009 accepted; no import/mutation/FEFO/API/repos |
-| S1.3.1 -- Data Completeness & Source Semantics | COMPLETE; 9 targeted / 240 current full passes | ADR-010; unknown receipt date nullable without default; strict supplier dates/per-pack costs unchanged; no import/readiness implementation |
+| S1.1 — Identity + Store | COMPLETE; 22 targeted; historical full suite 240 passes | Only users/stores/store_memberships, storage constraints, direct Session tests and manual inspection; no APIs/repos/auth |
+| S1.2 — Catalog + Recipe | COMPLETE; 51 targeted; historical full suite 240 passes, usable manual guide | Only products/ingredients/recipes/recipe_lines; scoped SKU, dated nonoverlap, yield/loss, exact unit/same-store constraints; no APIs/repos/BOM |
+| S1.3 — Supplier / Operational / Constraints | COMPLETE; 80 targeted / 240 historical full passes, usable manual guide | Exactly suppliers/terms, canonical sales, received lots/movement history, registry constraints; ADR-008/009 accepted; no import/mutation/FEFO/API/repos |
+| S1.3.1 -- Data Completeness & Source Semantics | COMPLETE; 9 targeted / 240 historical full passes | ADR-010; unknown receipt date nullable without default; strict supplier dates/per-pack costs unchanged; no import/readiness implementation |
 | S1.4 -- Forecast / Decision persistence | COMPLETE; 58 targeted / 240 full passes | Three run tables, dated/status/quantile/state constraints, same-store FKs, versioned snapshot/package, ADR-011; no engine/API/repos |
-| S1.5 -- Persistence Access Contract + Repository Layer | COMPLETE; 65 repository integration / 15 unit checks; 320 full passes | Concrete typed access for sixteen tables; explicit Store scope, caller-owned transactions, inserts/history/date queries, RUNNING-only lifecycle guards and PostgreSQL acceptance tests; no generic framework, public API or engines |
+| S1.5 -- Persistence Access Contract + Repository Layer | COMPLETE; 65 repository integration / 15 unit checks; historical full suite 320 passes | Concrete typed access for sixteen tables; explicit Store scope, caller-owned transactions, inserts/history/date queries, RUNNING-only lifecycle guards and PostgreSQL acceptance tests; no generic framework, public API or engines |
+| S1.6 -- Application Contracts + Validated Read/Write Paths | COMPLETE; 38 unit / 44 application integration; 82 targeted / 402 full passes | Typed Product/Sales paths, Forecast/Decision persistence lifecycle, effective Recipe read, by-value outputs, explicit Store context/transactions/errors, atomic PostgreSQL rollback; no schema/API/engine change |
+| S1.7 -- Application Coverage + Inventory Transaction Closure | COMPLETE; 106 new targeted / 188 combined targeted / 508 full passes; one final full regression | Typed Store/Ingredient/SupplierTerm create/read, atomic Recipe version+lines, received lot+RECEIPT and locked justified corrections; frozen exact money/unit/DATE/UTC/correction semantics; no schema/API/engine change |
 
 S1.5 is authorized and implemented; see PERSISTENCE_ACCESS for its internal contract.
-Remaining application/public boundary contracts, auth and computation need separately
-authorized slices; none is started automatically.
+S1.6 adds representative contracts; S1.7 closes remaining authorized operational
+boundaries. Public transports, auth and computation need separately authorized
+slices; none is started automatically.
 
 ## Local verification gate
 
@@ -44,8 +47,8 @@ CURRENT FACT: S0 includes categorized repository test runners, guarded PostgreSQ
 reset/migration, explicit no-op schema-verification seed, read-only DB inspection, a
 [scaffold feature guide](features/SCAFFOLD.md) and
 [fresh-environment runbook](runbooks/FULL_TEST_FLOW.md). Business seeds and e2e
-scenarios are not implemented. S1.1/S1.2/S1.3/S1.4 implement sixteen persistence tables; S1 as a
-whole is not complete.
+scenarios are not implemented. S1.1-S1.4 implement sixteen persistence tables;
+S1.5-S1.7 implement operational persistence/application paths. S1.7 final acceptance passes, and S1 is COMPLETE.
 
 ACCEPTED DECISION: future major slices are complete only with automated tests,
 relevant integration/persistence coverage, usable manual verification, deterministic
@@ -56,9 +59,17 @@ while its verification instructions are unusable.
 
 ## S1 overall acceptance -- CURRENT FACT / PROPOSAL
 
-S1 remains IN PROGRESS. All authorized schema clusters are complete, but the S1
-row above also calls for frozen application/Pydantic boundary contracts and validated
-read/write paths; these are not implemented by direct Session schema tests. The
-implemented S1.5 establishes persistence access and transaction gates. Application
-validation/Pydantic public contracts remain separate future work. S2 remains PROPOSAL
-and NOT STARTED; this update authorizes no next slice or public API.
+S1.7 has implemented the authorized remaining S1 gates: Store/Ingredient/SupplierTerm
+create/read, Recipe atomic version+lines, audited initial inventory receipt and
+movement-backed locked corrections; exact money/unit/DATE/UTC/correction semantics.
+S1.7 COMPLETE; S1 overall COMPLETE. Targeted and full regression gates pass;
+no canonical S1 acceptance gate remains open. See CURRENT_STATE for counts/evidence.
+The full operational chain is tested with fresh-session persistence; only Supplier
+identity creation remains an explicit S1.5 repository prerequisite, as authorized.
+
+Future budget/constraint writers, actor authorization, full Sales correction,
+source conversion, engine-specific currency rounding/day cutoffs and public APIs
+are deliberately outside S1.7 and are not newly invented S1 completion gates.
+Next canonical phase: **S2 -- Forecast**, PROPOSAL / NOT STARTED. Freeze cutoff,
+horizon, baseline/model, quantiles and provenance in a separately authorized slice.
+This update authorizes no next slice or API.

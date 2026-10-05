@@ -147,3 +147,18 @@ S1.5 internal repository verification: [PERSISTENCE_ACCESS](../features/PERSISTE
 Run its targeted tests after the normal setup above; they own only shelfcash_test,
 exercise caller-owned transactions and assert committed values through fresh sessions.
 Development reset/seed and health/OpenAPI behavior are unchanged.
+
+S1.6 internal typed application verification:
+[APPLICATION_CONTRACTS](../features/APPLICATION_CONTRACTS.md) and
+[S16_VERIFICATION](S16_VERIFICATION.md). Run its targeted application/unit tests
+after the same setup; they use only shelfcash_test and verify committed/rolled-back
+Forecast/Decision output through fresh Sessions. No business route or engine exists.
+
+## S1.7 operational acceptance -- CURRENT FACT
+
+[S17_VERIFICATION](S17_VERIFICATION.md) supplies the targeted operational checks,
+individual manual scenarios and expected fresh-session state. Run targeted tests
+first and full regression once at the final gate (repeat only after fixing a full
+suite failure). S1.7 implements atomic receipt/corrections and Recipe version writes;
+earlier schema-slice absence statements are HISTORICAL INFORMATION where superseded.
+No Import/Forecast/Decision/FEFO computation or public business API is implemented.

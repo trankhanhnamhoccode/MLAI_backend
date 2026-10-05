@@ -1,4 +1,33 @@
-# Catalog + Recipe persistence — S1.2
+# Catalog + Recipe persistence and boundaries -- S1.2 / S1.7
+
+## Ingredient and Recipe writes -- CURRENT FACT (S1.7)
+
+IngredientUseCases.create/get validates Store and returns copied typed values;
+nullable scoped SKU conflicts map to CONFLICT. RecipeUseCases.create_version
+validates scoped Product/Ingredients, exact line units, unique ingredient lines,
+positive yield and explicit loss in [0,1). Header and all supplied lines persist
+atomically; a downstream failure after header/line flush leaves neither behind.
+Required lines may explicitly be empty under existing storage semantics; no BOM
+readiness is claimed. get_active keeps inclusive date selection and typed lines.
+Corrections create explicit new versions/periods; uniqueness/period exclusions map
+to CONFLICT without auto-closing or overwriting old rows. Writes own transactions;
+reads do not flush/commit caller work. No schema/API/unit conversion/BOM change.
+Fresh-session, atomic rollback, commit-failure, unit and ownership tests are in
+new test_operational_paths.py. See
+[APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and
+[S17_VERIFICATION](../runbooks/S17_VERIFICATION.md).
+
+## Original schema slice -- HISTORICAL INFORMATION
+
+The following S1.2/S1.5/S1.6 implementation-status statements describe earlier
+delivery. S1.7 above supersedes Ingredient/Recipe writer absence claims; the
+storage constraints and future engine/public API limitations remain applicable.
+
+CURRENT FACT (S1.6): typed Product create/scoped read and effective Recipe+lines
+read now exist; see [APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and its
+application integration tests. The schema-slice absence statements below are
+HISTORICAL INFORMATION where superseded by S1.5/S1.6. Recipe/Ingredient writers,
+BOM and public business APIs remain unimplemented.
 
 CURRENT FACT (S1.5): internal repository access is now implemented; see
 [PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository

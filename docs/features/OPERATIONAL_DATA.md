@@ -1,5 +1,11 @@
 # Canonical daily sales persistence — S1.3
 
+CURRENT FACT (S1.6): typed Sales insert/inclusive history validates same-store
+Product and maps duplicate canonical keys to CONFLICT without sum/upsert/overwrite.
+See [APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and application integration
+tests. Schema-slice absence statements below are HISTORICAL INFORMATION where
+superseded by S1.5/S1.6. Import/correction and public APIs remain unimplemented.
+
 CURRENT FACT (S1.5): internal repository access is now implemented; see
 [PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository
 absence describe the HISTORICAL INFORMATION of this schema slice. Its direct

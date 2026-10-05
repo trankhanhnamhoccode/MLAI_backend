@@ -1,6 +1,17 @@
 # Persistence access -- S1.5
 
-## Status -- CURRENT FACT
+## Current application composition -- CURRENT FACT (S1.7)
+
+S1.6/S1.7 use these repositories for typed operational contracts, owned write
+transactions, read no-autoflush and by-value results. S1.7 implements atomic
+receipt/corrections using the existing scoped lot lock/append primitives; no new
+repository extension was needed. Repository ownership and limitations stay intact.
+See [APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and
+[S17_VERIFICATION](../runbooks/S17_VERIFICATION.md). S1 completion is recorded in
+CURRENT_STATE/ROADMAP. Earlier absence/status/count statements below are HISTORICAL
+INFORMATION where superseded by those paths; privileged SQL still bypasses policy.
+
+## S1.5 status -- HISTORICAL INFORMATION
 
 Concrete synchronous SQLAlchemy repositories cover all sixteen business tables.
 S1.5 is COMPLETE: targeted 80 passes (65 integration / 15 unit), full suite
@@ -50,6 +61,16 @@ the entire failed transaction before retry. The aggregate checks every supplied
 prediction's Store/new-row/run identity before staging any member.
 
 ## Concrete modules -- CURRENT FACT
+
+CURRENT FACT (S1.6): [APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) now supplies
+validated typed representative calls and returns by-value results. The S1.5 contract
+below remains unchanged: repositories return internal ORM rows and never commit,
+rollback or close. Application use cases own full transactions on idle clean Sessions;
+composition/caller closes the Session. ForecastRepository and DecisionRepository add
+only get_running_for_update, exposing existing scoped refreshed RUNNING locks for
+application validation. No direct SQL queries bypass repositories in these use cases.
+Repository-only horizon/full-package limitations below do not claim S1.6 lacks its
+Product/date/lifecycle validation; privileged/direct persistence still bypasses it.
 
 | Module / repository | Tables / explicit access |
 | --- | --- |

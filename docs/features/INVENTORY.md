@@ -1,4 +1,29 @@
-# Inventory lot state and movement history — S1.3
+# Inventory lot state and movement history -- S1.3 / S1.7
+
+## Operational receipt and correction -- CURRENT FACT (S1.7)
+
+InventoryUseCases.receive creates a positive received balance plus one RECEIPT in
+one transaction. Scoped Ingredient/unit and optional Supplier are validated;
+expiry_tracking requires expiry. Unknown received_date stays NULL. Money is exact
+Decimal in Store.currency per base unit; aware occurred_at is normalized UTC.
+InventoryUseCases.adjust accepts signed nonzero COUNT_CORRECTION or
+MANUAL_ADJUSTMENT with a required nonblank reason note and optional paired source.
+SELECT FOR UPDATE refreshes the scoped lot; exact plain Python arithmetic rejects
+negative results. Balance and appended movement commit/rollback together. Concurrent
+writers are serialized per lot. No overwrite/history edit/delete, actor/auth, usage,
+waste/expiration writer, reconciliation trigger or FEFO is introduced.
+get/movements return typed copied values without flush/commit. lot_code is nonunique;
+no import identity/deduplication behavior is invented. Privileged SQL can bypass
+policy. Tests verify rollback after lot/movement/balance SQL flush, commit failures,
+fresh-session persisted balances, stale-cache refresh and actual PostgreSQL lock wait.
+See [APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and
+[S17_VERIFICATION](../runbooks/S17_VERIFICATION.md).
+
+## Original schema slice -- HISTORICAL INFORMATION
+
+The following S1.3/S1.3.1 implementation-status statements record delivery at that
+time. S1.5 repositories and the S1.7 paths above supersede their absence claims;
+persistence constraints and future FEFO/actor/cutoff limitations remain applicable.
 
 CURRENT FACT (S1.5): internal repository access is now implemented; see
 [PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository

@@ -33,6 +33,10 @@ class DecisionRepository:
             raise InvalidLifecycleTransition("Decision write requires a RUNNING run")
         return run
 
+    def get_running_for_update(self, store_id: UUID, run_id: UUID) -> DecisionRun | None:
+        """Load current RUNNING metadata for application validation under the lock."""
+        return self._running_run(store_id, run_id)
+
     def complete_run(self, store_id: UUID, run_id: UUID, *, completed_at: datetime,
                      input_fingerprint: str, package_schema_version: int,
                      input_snapshot_json: dict[str, Any],

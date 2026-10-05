@@ -1,4 +1,27 @@
-# Supplier persistence — S1.3
+# Supplier persistence and terms boundary -- S1.3 / S1.7
+
+## SupplierTerm application path -- CURRENT FACT (S1.7)
+
+SupplierTermUseCases.create/get uses typed by-value contracts and explicit Store
+scope. Supplier identity remains a repository prerequisite. Required procurement
+facts are not defaulted: version, effective_from, pack size, minimum packs, per-pack
+cost and lead time. Same-store Supplier/Ingredient and exact base unit are validated.
+Decimal pack_cost is whole-pack cost in Store.currency: 15000 g at confirmed
+28 VND/g means 420000 VND/pack, supplied explicitly. No conversion/import engine.
+New terms create a new explicit version; named unique/active-period exclusions map
+to CONFLICT and leave previous terms untouched. No overwrite or auto-close.
+Inclusive adjacent nonoverlapping periods pass; active overlaps fail; inactive
+term overlap remains accepted. Writes own begin/flush/commit/rollback; scoped reads
+never commit/autoflush. Fresh-session, rollback, ownership and commit-failure tests
+are in test_operational_paths.py. See
+[APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and
+[S17_VERIFICATION](../runbooks/S17_VERIFICATION.md).
+
+## Original schema slice -- HISTORICAL INFORMATION
+
+The following S1.3/S1.3.1 absence claims describe that delivery; S1.5 repositories
+and S1.7 term boundaries supersede them. Procurement, identity API, source mapping
+and conversion remain future work; canonical storage rules are unchanged.
 
 CURRENT FACT (S1.5): internal repository access is now implemented; see
 [PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository

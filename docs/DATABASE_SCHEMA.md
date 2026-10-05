@@ -608,3 +608,10 @@ What-if remains non-persistent by default; no extra tables/services/APIs are add
 Full shapes remain future application contracts; DB only checks minimal presence/object
 shape. Downgrade 0006->0005 drops exactly these three tables/history. Tests and manual
 inspection are in FORECAST, DECISION_RUN and S14_VERIFICATION.
+
+CURRENT FACT (S1.6): schema is unchanged. Application paths now enforce prediction
+horizon/Product membership, completed same-store forecast consumption, terminal
+time/lifecycle and atomic supplied completion; see APPLICATION_CONTRACTS. Earlier
+references to future horizon/readiness enforcement above describe the schema's limits,
+not missing checks in those implemented application paths. Direct SQL still bypasses
+them; full business package/provenance validation remains future.

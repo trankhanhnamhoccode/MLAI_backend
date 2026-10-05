@@ -1,5 +1,13 @@
 # DecisionRun persistence — S1.4
 
+CURRENT FACT (S1.6): typed start/complete/fail/read paths require completed same-store
+Forecast consumption, validate planning/terminal time/lifecycle and atomically
+persist supplied copied snapshot/package metadata. See
+[APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and application integration tests.
+Schema-slice absence/future-application statements below are HISTORICAL INFORMATION
+where superseded by S1.5/S1.6. Full package/evaluation/provenance validation and
+Decision computation/public APIs remain unimplemented; fixtures are not engine output.
+
 CURRENT FACT (S1.5): internal repository access is now implemented; see
 [PERSISTENCE_ACCESS](PERSISTENCE_ACCESS.md). Statements below about repository
 absence describe the HISTORICAL INFORMATION of this schema slice. Its direct

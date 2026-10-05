@@ -4,18 +4,22 @@ ShelfCash is a Decision Intelligence backend for Vietnamese F&B stores. It will
 help a store decide what ingredients to buy, how much, when and under which strategy,
 balancing shortages, waste and capital. The owner/manager makes the final decision.
 
-**CURRENT FACT:** S0 infrastructure is complete and S1 is in progress. The backend
+**CURRENT FACT:** S0 infrastructure and S1 operational truth are complete. The backend
 runs a typed health endpoint with PostgreSQL/Alembic infrastructure. S1.1 implements
 User/Store/StoreMembership; S1.2 adds Product/Ingredient/Recipe/RecipeLine; S1.3 adds
 Supplier/SupplierTerm/SalesDaily/InventoryLot/InventoryMovement/BusinessConstraint
 persistence. S1.4 adds Forecast/Decision run storage; S1.5 adds concrete typed
-repositories covering all sixteen tables. No public business APIs,
-authentication or computation exists. See
+repositories covering all sixteen tables. S1.6/S1.7 add typed internal operational
+application paths, atomic Recipe/receipt writes and locked movement-backed inventory
+corrections. Only minimal exact inventory balance arithmetic exists in domain;
+public business APIs, authentication and computation engines remain absent. See
 [identity/store verification](docs/features/STORE_IDENTITY.md) and
 [catalog/recipe verification](docs/features/CATALOG_RECIPE.md) and
 [S1.3 verification](docs/runbooks/S13_VERIFICATION.md). ADR-008 freezes import
-idempotency/corrections; ADR-009 freezes audited lot mutations. Import and mutation
-services are not implemented by this schema slice.
+idempotency/corrections; ADR-009 freezes audited lot mutations. S1.7 enforces its
+receipt/correction paths at the application boundary; no Import engine exists.
+See [application contracts](docs/features/APPLICATION_CONTRACTS.md) and
+[S1.7 verification](docs/runbooks/S17_VERIFICATION.md).
 
 **ACCEPTED DECISION — future pipeline:** operational data → forecast → BOM/recipe
 expansion → ingredient demand → inventory/FEFO → supplier/business constraints →
@@ -104,11 +108,11 @@ S1.4 implements ForecastRun/ForecastPrediction/DecisionRun storage and ADR-011
 historical policy. Forecast/Decision Engines and public business APIs
 remain NOT STARTED. Sixteen tables are inspectable locally; no pipeline/engine demo
 is claimed. See docs/features/FORECAST.md, docs/features/DECISION_RUN.md and
-docs/runbooks/S14_VERIFICATION.md. S1 overall remains IN PROGRESS.
+docs/runbooks/S14_VERIFICATION.md. S1 overall status is in CURRENT_STATE/ROADMAP.
 
 S1.5 provides [persistence access](docs/features/PERSISTENCE_ACCESS.md): explicit
 Store scope, domain-specific insert/read/lifecycle methods and caller-owned synchronous
 transactions. Repositories never commit/rollback. Forecast/Decision writers guard
-RUNNING-only transitions and prediction append; operational inventory audit and
-full application validation remain future work. Targeted verification:
+RUNNING-only transitions and prediction append. S1.6/S1.7 application paths provide
+operational validation and atomic inventory audit; engines/auth remain future. Targeted verification:
 `.\.venv\Scripts\python.exe -m pytest tests/integration/test_repositories.py -q`.

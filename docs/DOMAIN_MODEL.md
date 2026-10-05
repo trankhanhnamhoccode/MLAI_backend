@@ -1,8 +1,9 @@
 # Domain model
 
 ACCEPTED DECISION: boundaries and business authority below describe future behavior,
-not implemented services. CURRENT FACT: plain Python domain packages remain empty,
-but S1.1 User/Store/StoreMembership and S1.2 Product/Ingredient/Recipe/RecipeLine
+not implemented engines. CURRENT FACT: plain Python domain implements only exact
+nonnegative inventory balance arithmetic (S1.7); other domain engines remain empty.
+S1.1 User/Store/StoreMembership and S1.2 Product/Ingredient/Recipe/RecipeLine
 persistence models exist. S1.3 adds Supplier, SupplierTerm, SalesDaily, InventoryLot,
 InventoryMovement and BusinessConstraint. Their storage contracts are accepted in DATABASE_SCHEMA;
 S1.4 adds ForecastRun/ForecastPrediction/DecisionRun persistence only;
@@ -187,3 +188,29 @@ repository policy. No domain computation or business semantics changed in S1.5.
 Returned ORM rows are internal persistence objects, never domain computation inputs.
 What-if stays non-persistent by default; LLM cannot select recommendation or facts.
 See FORECAST, DECISION_RUN and DATABASE_SCHEMA for actual contracts/limitations.
+
+## S1.6 internal application boundary -- CURRENT FACT
+
+The preceding schema-slice descriptions of future application invariants are
+historical where superseded by [APPLICATION_CONTRACTS](features/APPLICATION_CONTRACTS.md).
+Product creation/scoped read, canonical Sales insertion/history and dated Recipe
+selection now have typed validated paths. Forecast completion validates same-store
+Products, inclusive horizon and RUNNING lifecycle; Decision requires a completed
+same-store Forecast and stores supplied metadata/snapshot/package atomically.
+Outputs are by-value contracts rather than tracked ORM. Full engine/package business
+validation, audited inventory mutations, correction workflows and authorization
+remain future. No computation has been added to the plain Python domain packages.
+
+## S1.7 operational boundary -- CURRENT FACT
+
+S1.7 supersedes earlier empty-domain and absent inventory/Ingredient/Recipe writer
+claims for its authorized paths. Store/Ingredient and SupplierTerm create/read,
+atomic Recipe version+lines, receipt lot+RECEIPT and locked movement-backed
+corrections now use typed internal application contracts. The plain Python balance
+function adds exact Decimal deltas and rejects negative results; no other domain
+engine is implemented. Ingredient units match exactly and money inherits
+Store.currency without conversion/rounding. Business DATE facts stay explicit;
+aware inventory event timestamps are UTC. Unknown receipt stays NULL; tracked
+Ingredients require expiry. New version/movement corrections leave accepted history
+untouched. Full Sales correction, importing, auth and all computation engines remain
+future work. See APPLICATION_CONTRACTS and S17_VERIFICATION for precise boundaries.
