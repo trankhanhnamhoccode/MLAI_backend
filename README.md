@@ -6,9 +6,10 @@ balancing shortages, waste and capital. The owner/manager makes the final decisi
 
 **CURRENT FACT:** S0 infrastructure is complete and S1 is in progress. The backend
 runs a typed health endpoint with PostgreSQL/Alembic infrastructure. S1.1 implements
-only User/Store/StoreMembership persistence; no public business APIs, repositories,
+User/Store/StoreMembership; S1.2 adds Product/Ingredient/Recipe/RecipeLine persistence; no public business APIs, repositories,
 authentication or computation exists. See
-[identity/store verification](docs/features/STORE_IDENTITY.md).
+[identity/store verification](docs/features/STORE_IDENTITY.md) and
+[catalog/recipe verification](docs/features/CATALOG_RECIPE.md).
 
 **ACCEPTED DECISION — future pipeline:** operational data → forecast → BOM/recipe
 expansion → ingredient demand → inventory/FEFO → supplier/business constraints →
@@ -41,7 +42,7 @@ configures the URL, credentials and test URL. Native PostgreSQL installation is
 unnecessary. Alembic uses Settings and `.env` as the
 configuration source; `alembic.ini` records the default URL for reference.
 The original baseline creates only Alembic's revision table; current head
-`0002_identity_store` adds users/stores/store_memberships. Application import,
+`0003_catalog_recipe` contains seven business tables across S1.1/S1.2. Application import,
 startup and health checks do not initialize/connect to the DB, create directories
 or contact OpenRouter. No provider key is required.
 
@@ -82,7 +83,7 @@ Upload/artifact folders are reserved; no storage service exists yet.
 - [Architecture](docs/ARCHITECTURE.md): target modular monolith and authority boundaries.
 - [API contract](docs/API_CONTRACT.md): implemented public contract.
 - [Domain model](docs/DOMAIN_MODEL.md): boundaries, relationships and invariants.
-- [Database schema](docs/DATABASE_SCHEMA.md): implemented identity/store cluster and remaining Schema v1 proposals.
+- [Database schema](docs/DATABASE_SCHEMA.md): implemented identity/store and catalog/recipe clusters and remaining Schema v1 proposals.
 - [Roadmap](docs/ROADMAP.md): vertical slices and acceptance gates.
 - [Testing](docs/TESTING.md): verification layers and future golden scenarios.
 

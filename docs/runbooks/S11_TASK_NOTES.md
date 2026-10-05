@@ -1,5 +1,8 @@
 # S1.1 Identity + Store schema cluster
 
+HISTORICAL INFORMATION: observations and verification below describe S1.1 before
+S1.2. The S1.1 contract remains accepted; current global head/state is in CURRENT_STATE.
+
 Classification: ACCEPTED DECISION for the storage contract frozen in this authorized
 slice; CURRENT FACT for pre-edit observations. No additional architecture ADR needed:
 this slice implements ADR-002/007 persistence and future membership relationships.

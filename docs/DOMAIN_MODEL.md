@@ -2,8 +2,9 @@
 
 ACCEPTED DECISION: boundaries and business authority below describe future behavior,
 not implemented services. CURRENT FACT: plain Python domain packages remain empty,
-but S1.1 persistence models User, Store and StoreMembership now exist. Their storage
-contract is accepted in DATABASE_SCHEMA; all other entity details remain PROPOSAL.
+but S1.1 User/Store/StoreMembership and S1.2 Product/Ingredient/Recipe/RecipeLine
+persistence models exist. Their storage contracts are accepted in DATABASE_SCHEMA;
+all other entity details remain PROPOSAL.
 
 ## IMPLEMENTED — Identity / Authorization + Store persistence subset
 
@@ -22,13 +23,36 @@ No role, membership or active flag currently authorizes an application operation
 See [DATABASE_SCHEMA](DATABASE_SCHEMA.md) for exact accepted storage invariants and
 [STORE_IDENTITY](features/STORE_IDENTITY.md) for persistence/manual verification.
 
+## IMPLEMENTED — Catalog + Recipe persistence subset
+
+Store owns Products and canonical Ingredients. Product owns dated Recipe versions;
+Recipe owns RecipeLines pointing to Ingredients in the same Store. Store-scoped,
+case-sensitive nullable SKUs are unique when present; names are not unique.
+Product price is optional, nonnegative finite Decimal in store currency.
+
+Recipe version is a positive integer unique per Product. Period boundaries are
+inclusive DATEs; NULL effective_to means unbounded future. At D, active means
+effective_from <= D and (effective_to IS NULL or D <= effective_to). PostgreSQL
+exclusion guarantees at most one matching version, even for direct/concurrent SQL.
+It can yield no recipe. Same-day periods are valid; shared boundary days overlap.
+
+yield_quantity is finite >0 and represents total output in Product.selling_unit.
+Each line quantity is finite >0 for that whole yield. process_loss_rate is recipe-level,
+defaults zero and is in [0,1). Future BOM uses theoretical/(1-loss); computation is
+NOT IMPLEMENTED. Units are nonblank exact labels with no conversion engine.
+One Ingredient appears at most once per Recipe, and line.unit equals base_unit.
+Composite FKs, including RecipeLine.store_id as an integrity witness, enforce
+same-store graphs and exact units on inserts/updates. These are persistence
+relationships, not application authorization. Definitions are mutable; no historical
+snapshot immutability is claimed. See [CATALOG_RECIPE](features/CATALOG_RECIPE.md).
+
 ## Boundaries and relationships
 
 | Boundary | Entities / value concepts | Responsibility and dependencies |
 | --- | --- | --- |
 | Identity / Authorization | User, StoreMembership, OWNER, STAFF, delegated permissions | CURRENT FACT: User/membership persistence exists; permissions reserved empty. FUTURE: authorize store-scoped reads/simulation/mutation separately at application entry. |
 | Import / Mapping | ImportJob, MappingProfile, canonical fields | Validate operational inputs; approved profiles and rules first; bounded LLM suggestion only for ambiguity; human approval where required. |
-| Catalog / Recipe | Store, Product, Ingredient, Recipe, RecipeLine; units, recipe version | CURRENT FACT: Store context persistence only. FUTURE: catalog/recipe definitions and deterministic expansion inputs, no LLM facts. |
+| Catalog / Recipe | Store, Product, Ingredient, Recipe, RecipeLine; units, recipe version | CURRENT FACT: S1.2 persistence and DB integrity exist. FUTURE: APIs/resolution/BOM computation; no LLM facts. |
 | Operational Data | SalesDaily; store business date, cutoff | Validated historical sales feed Forecasting; cutoff separates observed inputs from future demand. |
 | Forecasting | ForecastRun, ForecastPrediction, P25/P50/P75 | Deterministic model/baseline outputs with input/model versions; consumes sales and product catalog. |
 | Ingredient Demand | Ingredient quantity over time | Expands forecast using catalog/recipe versions; does not select procurement strategy. |

@@ -41,10 +41,10 @@ def test_schema_exact_tables_constraints_indexes_and_metadata(engine: Engine) ->
 
     inspector = inspect(engine)
     assert sorted(inspector.get_table_names(schema="public")) == [
-        "alembic_version", "store_memberships", "stores", "users",
+        "alembic_version", "ingredients", "products", "recipe_lines", "recipes", "store_memberships", "stores", "users",
     ]
-    assert set(Base.metadata.tables) == {"users", "stores", "store_memberships"}
-    for table in Base.metadata.tables:
+    assert set(Base.metadata.tables) == {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines"}
+    for table in ("users", "stores", "store_memberships"):
         assert inspector.get_pk_constraint(table)["constrained_columns"] == ["id"]
         columns = {column["name"]: column for column in inspector.get_columns(table)}
         assert not any(column["nullable"] for column in columns.values())
@@ -63,7 +63,7 @@ def test_schema_exact_tables_constraints_indexes_and_metadata(engine: Engine) ->
     ]
     with engine.connect() as connection:
         assert connection.scalar(text("SELECT current_database()")) == "shelfcash_test"
-        assert connection.scalar(text("SELECT version_num FROM public.alembic_version")) == "0002_identity_store"
+        assert connection.scalar(text("SELECT version_num FROM public.alembic_version")) == "0003_catalog_recipe"
         assert compare_metadata(MigrationContext.configure(connection, opts={"compare_server_default": True}), Base.metadata) == []
 
 

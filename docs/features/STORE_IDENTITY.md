@@ -5,7 +5,7 @@
 CURRENT FACT: User, Store and StoreMembership models/schema implemented. Scope is
 persistence only. **No public Store/User/Membership API exists yet.** Repositories,
 application services, authentication and authorization enforcement are NOT IMPLEMENTED.
-No later Schema v1 entity is present. Slice acceptance evidence is in CURRENT_STATE.
+S1.2 catalog/recipe persistence is documented separately in CATALOG_RECIPE. Slice acceptance evidence is in CURRENT_STATE.
 
 ## Purpose, entities and relevant ADRs
 
@@ -65,9 +65,10 @@ docker compose up -d --wait --wait-timeout 90 postgres
 .\scripts\db_status.ps1
 ```
 
-Expected: healthy PostgreSQL, revision `0002_identity_store (head)`, targeted/full
+Expected: healthy PostgreSQL, revision `0003_catalog_recipe (head)`, targeted/full
 tests pass, development status reachable/at_head true, tables/row counts exactly
-`alembic_version: 1`, `users: 0`, `stores: 0`, `store_memberships: 0`.
+`alembic_version: 1`, `users: 0`, `stores: 0`, `store_memberships: 0`,
+`products: 0`, `ingredients: 0`, `recipes: 0`, `recipe_lines: 0`.
 Tests write only shelfcash_test, so development tables remain empty after testing.
 
 Inspect columns/defaults and named constraints without a GUI or host psql:
@@ -78,7 +79,7 @@ Inspect columns/defaults and named constraints without a GUI or host psql:
 
 Expected: native uuid IDs/FKs, timestamp with time zone columns, JSONB delegated
 permissions, defaults described above, unique email/pair, role/permission checks,
-and two RESTRICT FKs. Exactly these three business tables; no future tables.
+and two RESTRICT FKs. These three identity tables plus four S1.2 catalog/recipe tables; no S1.3+ tables.
 
 For persisted record verification use the targeted tests: they commit and close
 the writer Session, then independently reload/assert actual stored fields and

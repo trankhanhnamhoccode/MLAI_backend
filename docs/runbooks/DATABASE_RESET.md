@@ -42,7 +42,9 @@ sh scripts/db_status.sh
 
 Omit `-Seed`/`--seed` for reset+migration only. Seed writes no business data.
 Expected persisted result: database `shelfcash`, schema `public`, `alembic_version`
-with one row `0002_identity_store`, plus empty `users`, `stores`, `store_memberships`.
+with one row `0003_catalog_recipe`, plus empty `users`, `stores`, `store_memberships`,
+`products`, `ingredients`, `recipes`, `recipe_lines`. Migration installs btree_gist
+for recipe exclusion; normal reset recreates public and reinstalls its extension objects.
 Alembic current is at head. Reset destroys any existing rows in that public schema.
 
 For an explicit test-database reset in PowerShell:

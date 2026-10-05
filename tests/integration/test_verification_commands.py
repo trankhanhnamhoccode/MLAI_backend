@@ -33,8 +33,8 @@ def test_seed_and_status_verify_fresh_persisted_baseline(database_settings: Sett
     state = json.loads(result.stdout)
     assert state["reachable"] is True
     assert state["database"] == "shelfcash_test"
-    assert state["revisions"] == ["0002_identity_store"]
-    assert state["tables"] == {"alembic_version": 1, "users": 0, "stores": 0, "store_memberships": 0}
+    assert state["revisions"] == ["0003_catalog_recipe"]
+    assert state["tables"] == {"alembic_version": 1, "users": 0, "stores": 0, "store_memberships": 0, "products": 0, "ingredients": 0, "recipes": 0, "recipe_lines": 0}
     assert state["at_head"] is True
     engine = create_database_engine(database_settings)
     try:
@@ -61,7 +61,7 @@ def test_reset_seed_repeat_and_unsafe_target_guard(database_settings: Settings) 
             assert result.returncode == 0, result.stderr
             assert "No business seed data" in result.stdout
             with engine.connect() as fresh:
-                assert fresh.scalar(text("SELECT version_num FROM public.alembic_version")) == "0002_identity_store"
+                assert fresh.scalar(text("SELECT version_num FROM public.alembic_version")) == "0003_catalog_recipe"
                 assert fresh.scalar(text("SELECT to_regclass('public.disposable')")) is None
     finally:
         engine.dispose()
@@ -76,7 +76,7 @@ def test_status_unmigrated_database_is_reachable(database_settings: Settings) ->
         assert result.returncode == 0, result.stderr
         state = json.loads(result.stdout)
         assert state["reachable"] and not state["at_head"]
-        assert state["tables"] == {"users": 0, "stores": 0, "store_memberships": 0}
+        assert state["tables"] == {"users": 0, "stores": 0, "store_memberships": 0, "products": 0, "ingredients": 0, "recipes": 0, "recipe_lines": 0}
         assert run_command(database_settings, "status").returncode != 0
         with engine.connect() as fresh:
             assert fresh.scalar(text("SELECT to_regclass('public.alembic_version')")) is None

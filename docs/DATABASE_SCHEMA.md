@@ -1,8 +1,9 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
-**CURRENT FACT:** S1.1 implements only `users`, `stores` and `store_memberships`.
+**CURRENT FACT:** S1.1 implements `users`, `stores`, `store_memberships`; S1.2 adds
+`products`, `ingredients`, `recipes`, `recipe_lines`.
 **ACCEPTED DECISION:** the storage semantics below are frozen for this authorized
-cluster. All other Schema v1 entities remain PROPOSAL; each requires its own accepted
+clusters. All other Schema v1 entities remain PROPOSAL; each requires its own accepted
 slice before models/migrations are implemented. No hidden aggregate is implied.
 
 **ACCEPTED DECISION (ADR-007):** PostgreSQL is the Competition database, with
@@ -11,7 +12,8 @@ Compose PostgreSQL with a named volume. Reset between versions is
 acceptable. Alembic makes schema state/evolution explicit; long-lived backwards-compatible
 migration support is not a current requirement. The initial empty revision creates
 only `public.alembic_version`; the next migration `0002_identity_store` creates the
-three identity/store tables and is now head. No other business model is implemented.
+three identity/store tables. Current head `0003_catalog_recipe` adds only four
+catalog/recipe tables. No other business model is implemented.
 Tests own separate `shelfcash_test`; development
 uses `shelfcash`. Reset recreates only the guarded target's `public` schema.
 
@@ -101,10 +103,122 @@ does NOT grant runtime authorization in S1.1.
 Verification: [STORE_IDENTITY](features/STORE_IDENTITY.md), targeted real PostgreSQL
 tests `tests/integration/test_identity_store_schema.py`, and
 [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md). Reset leaves these three tables empty
-and one `alembic_version` row `0002_identity_store`; seed writes no entities.
+and the four S1.2 tables empty, with one `alembic_version` row `0003_catalog_recipe`;
+seed writes no entities.
 
 Implementation references: [PostgreSQL date/time types](https://www.postgresql.org/docs/17/datatype-datetime.html)
 and [SQLAlchemy defaults/onupdate](https://docs.sqlalchemy.org/en/20/core/defaults.html).
+
+## IMPLEMENTED — S1.2 Catalog + Recipe storage contract
+
+Models: `app/models/product.py`, `ingredient.py`, `recipe.py`, `recipe_line.py`.
+Migration `0003_catalog_recipe`, parent `0002_identity_store`. All columns NOT NULL
+except `products.sku`, `products.price`, `ingredients.sku`, `recipes.effective_to`.
+All four have UUID PK `id` default `gen_random_uuid()` and `created_at TIMESTAMPTZ`
+default `now()`. Products/ingredients/recipes also have `updated_at TIMESTAMPTZ`
+with the same insert/ORM-update semantics as S1.1. Raw SQL updates set it explicitly.
+These are editable versioned definitions/current catalog, not immutable execution
+snapshots. No historical snapshot immutability trigger or computation is implemented.
+
+### products
+
+| Column | Type | Rule/default |
+| --- | --- | --- |
+| store_id | UUID | FK stores.id, RESTRICT deletion |
+| sku | VARCHAR(64), nullable | Case-sensitive, nonblank if present; unique within store |
+| name | VARCHAR(200) | Nonblank; not unique |
+| selling_unit | VARCHAR(32) | Nonblank exact unit label |
+| price | NUMERIC, nullable | Finite >= 0; store currency; NULL means unspecified |
+| active | BOOLEAN | Default true; stored flag only |
+
+PK id; `fk_products_store`; `uq_products_store_sku` (store_id,sku).
+PostgreSQL NULL-distinct uniqueness permits multiple missing SKUs in one store.
+No SKU normalization or global uniqueness. `uq_products_id_store` (id,store_id)
+is the required target for recipe's same-store FK. Checks:
+`ck_products_name_nonblank`, `ck_products_sku_nonblank`,
+`ck_products_selling_unit_nonblank`, `ck_products_price` (rejects NaN/infinities).
+The store/SKU index covers store catalog lookup; no redundant store_id index.
+
+### ingredients
+
+| Column | Type | Rule/default |
+| --- | --- | --- |
+| store_id | UUID | FK stores.id, RESTRICT deletion |
+| sku | VARCHAR(64), nullable | Same case-sensitive store-scoped/null rules as Product |
+| name | VARCHAR(200) | Nonblank, not unique; canonical stored label |
+| base_unit | VARCHAR(32) | Nonblank, exact case-sensitive unit, no conversion |
+| expiry_tracking | BOOLEAN | Default false; flag only, no inventory behavior |
+| active | BOOLEAN | Default true |
+
+PK id; `fk_ingredients_store`; `uq_ingredients_store_sku` (store_id,sku).
+`uq_ingredients_id_store_unit` (id,store_id,base_unit) supports the line integrity FK.
+Checks `ck_ingredients_name_nonblank`, `ck_ingredients_sku_nonblank`,
+`ck_ingredients_base_unit_nonblank`. Store/SKU uniqueness covers store lookup.
+Unit vocabulary is not a conversion/validation catalog (e.g. ml and L differ).
+
+### recipes
+
+| Column | Type | Rule/default |
+| --- | --- | --- |
+| store_id | UUID | FK stores.id and same-store product FK |
+| product_id | UUID | Composite FK (product_id,store_id) -> products(id,store_id) |
+| version | INTEGER | Required > 0, unique per product |
+| effective_from | DATE | Required inclusive start |
+| effective_to | DATE, nullable | Inclusive end >= start; NULL means unbounded future |
+| yield_quantity | NUMERIC | Finite > 0; total product output in Product.selling_unit |
+| process_loss_rate | NUMERIC | Default 0; 0 <= rate < 1, recipe-level loss |
+
+PK id; FKs `fk_recipes_store`, `fk_recipes_product_store`, both ON DELETE RESTRICT.
+Unique `uq_recipes_product_version` (product_id,version), `uq_recipes_id_store`
+(id,store_id) supports lines. Checks `ck_recipes_version`, `ck_recipes_period`,
+`ck_recipes_yield`, `ck_recipes_loss`.
+
+`ex_recipes_product_period` uses GiST exclusion:
+`product_id WITH =, daterange(effective_from,effective_to,'[]') WITH &&`.
+Migration enables standard PostgreSQL `btree_gist` for UUID equality. The database
+rejects overlapping inserts/updates, including concurrent transactions. Shared end/start
+day overlaps; the next version can begin the following day. Same-day recipes are valid.
+An unbounded version blocks all later overlapping versions. Different products can
+share periods. At day D resolve using `effective_from <= D AND (effective_to IS NULL
+OR D <= effective_to)` to obtain 0/1 row. Product.active does not bypass exclusion.
+No resolver repository is implemented. Unique product/version supports product queries;
+exclusion supplies its GiST index; no speculative date-only index.
+
+NUMERIC maps to Decimal, with no fixed scale or implicit business rounding; price,
+yield and line quantity reject NaN/infinities. PostgreSQL NUMERIC implementation limits
+still apply. Loss is at Recipe level, not per Ingredient. Future BOM formula is
+`actual_requirement = theoretical_requirement / (1 - process_loss_rate)`;
+800 ml over yield 10 cups means theoretical 80 ml/cup. With loss 0.05 this becomes
+80/0.95 (~84.21 ml). **BOM computation is NOT IMPLEMENTED.**
+
+### recipe_lines
+
+| Column | Type | Rule |
+| --- | --- | --- |
+| store_id | UUID | Required integrity witness shared by both composite FKs |
+| recipe_id | UUID | FK (recipe_id,store_id) -> recipes(id,store_id) |
+| ingredient_id | UUID | FK (ingredient_id,store_id,unit) -> ingredients(id,store_id,base_unit) |
+| quantity | NUMERIC | Finite > 0 for the entire recipe yield |
+| unit | VARCHAR(32) | Must exactly equal Ingredient.base_unit |
+
+PK id; `uq_recipe_lines_recipe_ingredient` (recipe_id,ingredient_id),
+`ck_recipe_lines_quantity`. FKs `fk_recipe_lines_recipe_store` and
+`fk_recipe_lines_ingredient_store_unit`, ON DELETE RESTRICT / default NO ACTION
+on update. store_id is intentional redundant integrity data; unit is retained as
+requested. Both enable declarative database checks without services or triggers.
+Ingredient base-unit changes and parent-store changes cannot invalidate referenced
+lines/recipes. Parent deletion is blocked while referenced. No implicit cascading
+business deletion. Recipe/ingredient duplicates must be combined by a future caller.
+Unique recipe/ingredient covers recipe lookup. Explicit `ix_recipe_lines_ingredient_id`
+supports reverse ingredient usage and referential checks; no redundant recipe_id index.
+
+Verification: [CATALOG_RECIPE](features/CATALOG_RECIPE.md), actual PostgreSQL tests
+`tests/integration/test_catalog_recipe_schema.py`. Downgrade to 0002 drops only
+these four tables/rows; btree_gist is retained because it may be shared/preexisting.
+Normal reset recreates public (including its extension objects), then upgrades head.
+The Compose role can install the extension. No new public API or repository exists.
+References: [PostgreSQL btree_gist](https://www.postgresql.org/docs/17/btree-gist.html),
+[range exclusion](https://www.postgresql.org/docs/17/rangetypes.html).
 
 ## Remaining Schema v1 — PROPOSAL / FUTURE
 
@@ -124,10 +238,6 @@ Indexes below are candidates for real queries, not a command to create unused in
 | --- | --- | --- | --- | --- |
 | ImportJob | Trace ingestion: id, store_id, source reference/digest, status, mapping_profile_id, created_at, validation summary | Store; optional MappingProfile; provenance for imported rows | Store/date index; validated status transitions; immutable source reference; file/row errors separate from accepted data | Historical import execution/status record |
 | MappingProfile | Approved store mapping: id, store_id, profile version, canonical schema version, file fingerprint, field mapping, approval actor/time, status | Store, approving User/Membership; ImportJobs | Unique (store_id, profile key, version); mapping targets restricted to canonical fields; approved versions immutable | Versioned approved mapping snapshot, with explicit current active selection |
-| Product | Saleable item: id, store_id, code, name, active flag | Store; Recipes, SalesDaily, ForecastPrediction | Unique (store_id, code); store-scoped relations | Current catalog; relevant version/data preserved in history |
-| Ingredient | Procurement/consumption item: id, store_id, code, name, base_unit, active flag | Store; RecipeLine, InventoryLot, SupplierTerm | Unique (store_id, code); valid unit; no implicit incompatible conversions | Current catalog; historical units/identities captured in runs |
-| Recipe | Versioned expansion definition: id, store_id, product_id, version, effective_from, effective_to, yield quantity/unit | Product; RecipeLines | Unique (product_id, version); positive yield; effective range validation and unambiguous version selection | Versioned recipe snapshot; referenced versions cannot silently change |
-| RecipeLine | Ingredient amount per recipe yield: id, recipe_id, ingredient_id, quantity, unit | Recipe → Ingredient in same store | Positive quantity; index recipe_id; conversion into ingredient base unit must be explicit; duplicate-line policy deferred | Belongs to immutable recipe version |
 | Supplier | Supplier identity: id, store_id, code, name, active flag | Store; SupplierTerms | Unique (store_id, code); index store_id | Current supplier metadata; historical relevant terms captured separately |
 | SupplierTerm | Ordering inputs: id, store_id, supplier_id, ingredient_id, unit price/currency, pack_size, MOQ, lead_time_days, valid_from/to, version | Supplier and Ingredient in same Store | pack_size > 0; MOQ ≥ 0; price ≥ 0; lead time ≥ 0; valid ranges; index supplier/ingredient/date; term version uniqueness | Versioned term; chosen values copied into DecisionRun |
 | SalesDaily | Observed daily sales: id, store_id, product_id, business_date, quantity, import_job_id | Store, Product; optional ImportJob | Unique (store_id, product_id, business_date) for daily aggregate; index store/date; quantity validation and correction policy must be frozen | Historical observation, potentially corrected explicitly; run captures exact used data/version |

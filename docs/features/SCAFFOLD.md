@@ -5,8 +5,8 @@
 CURRENT FACT: S0 scaffold with S0.2 persistence correction; runtime acceptance
 evidence/status is in CURRENT_STATE. Provides typed liveness, OpenAPI metadata,
 PostgreSQL/Alembic infrastructure and local verification commands. The original S0
-baseline was empty; S1.1 now adds only the
-[identity/store schema](STORE_IDENTITY.md). No business APIs, authentication,
+baseline was empty; S1.1/S1.2 add the
+[identity/store](STORE_IDENTITY.md) and [catalog/recipe](CATALOG_RECIPE.md) schemas. No business APIs, authentication,
 imports or computation are implemented.
 
 ## Invariants and relevant ADRs
@@ -23,7 +23,7 @@ See [API_CONTRACT](../API_CONTRACT.md). `GET /health` returns HTTP 200 and
 `{"status":"ok","service":"shelfcash-backend"}` by default. `/openapi.json`
 has only `/health` in paths. Interactive documentation remains disabled.
 Health reads/writes no tables. Alembic writes `public.alembic_version`, one row
-`0002_identity_store` at current head (`0001_scaffold` is historical baseline).
+`0003_catalog_recipe` at current head (`0001_scaffold` is historical baseline).
 Status/seed read it through a fresh PostgreSQL read-only transaction.
 Seed reports no business data and writes no rows.
 
@@ -32,8 +32,9 @@ Seed reports no business data and writes no rows.
 Follow [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md): start Compose, await health,
 check reachability, reset/migrate/seed, run tests, start FastAPI, assert health and
 OpenAPI, then inspect persisted PostgreSQL state through status and direct SQL.
-Expected `public` tables: `alembic_version` (one row `0002_identity_store`) plus
-empty `users`, `stores`, `store_memberships` after reset. No later tables exist.
+Expected `public` tables: `alembic_version` (one row `0003_catalog_recipe`) plus
+empty `users`, `stores`, `store_memberships`, `products`, `ingredients`, `recipes`,
+`recipe_lines` after reset. No S1.3+ tables exist.
 No manual Docker exec or host database client is needed for inspection.
 
 ## Failure paths and reset/retry

@@ -27,13 +27,26 @@ recreates `public`, then upgrades to Alembic head. Status opens a fresh read-onl
 PostgreSQL transaction, reports reachability, database/server version/revision,
 migration head and table counts. Unreachable databases fail; unmigrated databases
 fail unless reachability-only behavior is explicitly selected. No state is created
-by inspection. Seed verifies the current identity/store table set at head and writes
+by inspection. Seed verifies the current identity/store and catalog/recipe table set at head and writes
 no data; demo seeding is not implemented. Normal workflows require no hosted notebook
-or provider. After reset all three business tables are empty.
+or provider. After reset all seven business tables are empty.
 
 See [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) for fresh setup, live HTTP checks,
 SQL inspection and exact expected state; [SCAFFOLD](features/SCAFFOLD.md) describes
 implemented feature verification and limitations.
+
+S1.2 targeted schema verification:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_catalog_recipe_schema.py -q
+```
+
+POSIX: `.venv/bin/python -m pytest tests/integration/test_catalog_recipe_schema.py -q`.
+These isolated PostgreSQL tests verify all four fresh-session round trips, SKU/null
+semantics, exact NUMERIC, version/period/overlap, yield/loss, line quantity/uniqueness,
+unit and cross-store composite FKs, parent mutations and downgrade/re-upgrade.
+See [CATALOG_RECIPE](features/CATALOG_RECIPE.md) for fixtures and SQL inspection.
+Migration installs btree_gist via the local role; no host DB package is required.
 
 S1.1 targeted schema verification:
 

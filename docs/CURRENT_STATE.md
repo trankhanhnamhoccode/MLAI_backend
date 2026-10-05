@@ -4,11 +4,13 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
 
 - Project phase: **S1 — IN PROGRESS**; S0/S0.2 remain complete.
 - Completed: **S1.1 — Identity + Store Schema Cluster** (persistence only).
+- Completed: **S1.2 — Catalog + Recipe Schema Cluster** (persistence only).
 - Greenfield Competition Edition; no legacy backend was imported.
 - Current database: **PostgreSQL**, SQLAlchemy 2.x with psycopg and synchronous
   Session. ADR-007 is ACCEPTED; ADR-003 is SUPERSEDED. The empty Alembic
-  baseline is `0001_scaffold`; current head is `0002_identity_store`.
-- Implemented business tables/models: `users`, `stores`, `store_memberships` only.
+  baseline is `0001_scaffold`; current head is `0003_catalog_recipe`.
+- Implemented business tables/models: `users`, `stores`, `store_memberships`,
+  `products`, `ingredients`, `recipes`, `recipe_lines` only.
   Identity/store membership persistence exists; authentication/authorization does not.
   Plain Python domain packages remain empty. Repository/application service layers
   and public business APIs: not started. Remaining Schema v1 is PROPOSAL.
@@ -34,14 +36,38 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
 - [Full test flow](runbooks/FULL_TEST_FLOW.md) and
   [scaffold feature guide](features/SCAFFOLD.md) provide manual HTTP and persisted
   DB verification. All execution/testing/demo preparation remains local; no Kaggle
-  or hosted notebook dependency. Only the S1.1 schema cluster is implemented; all
+  or hosted notebook dependency. Only S1.1/S1.2 schema clusters are implemented; all
   later business features remain unimplemented. Seed verifies schema, writes no rows.
 - Integration tests own only separate `shelfcash_test`, created if absent by the
   local role. Tests run sequentially and never reset normal development state.
 
 ## Verification
 
-S1.1 verified on Windows/Python 3.11.9, 2026-10-05:
+S1.2 verified on Windows/Python 3.11.9, 2026-10-05:
+- Targeted `test_catalog_recipe_schema.py`: **51 passed** on shelfcash_test. Covers
+  four-model commit/close/fresh-session reload, exact Decimal/defaults, scoped SKUs
+  and nullable semantics, PK/FK/check/exclusion, inclusive/open-ended dates, version,
+  yield/loss, quantities, duplicate lines, unit/cross-store integrity and parent updates.
+- `./scripts/test.ps1 all`: **93 passed** (14 unit, 77 integration, 2 API), one
+  existing upstream Starlette/AnyIO warning, no skips. S1.1 regressions preserved;
+  metadata comparison passes. Fresh reset/upgrade and 0003->0002->head pass; bootstrap
+  also downgrades through 0001/base and re-upgrades. Tests own only shelfcash_test.
+- `docker compose config --quiet`, up, up --wait and ps succeed: PostgreSQL 17.11
+  healthy. Development reset, upgrade/current, seed and status succeed. Head is
+  0003_catalog_recipe; one revision row and seven empty business tables. Direct
+  SQL inspection confirms constraints; no future tables exist.
+- App/model/domain imports succeed with psycopg connection forbidden. OpenAPI
+  matches the saved pre-S1.1 schema exactly; live /health HTTP 200 payload unchanged,
+  live /openapi.json identical, verification server stopped afterward.
+- `pip check` passes. Diff/status/scope reviewed, whitespace check passes. API_CONTRACT,
+  public API code, domain code, repository layer, accepted ADRs/dependencies unchanged.
+  No commit; no remaining S1.2 blocker. No BOM, API, auth or S1.3 implementation.
+- PowerShell workflow runtime-verified. POSIX wrappers unchanged; historical syntax
+  validation only, no POSIX runtime verification claimed for this slice.
+
+### S1.1 acceptance — HISTORICAL INFORMATION
+
+S1.1 verified on Windows/Python 3.11.9, 2026-10-05 (state before S1.2):
 - Targeted `test_identity_store_schema.py`: **22 passed**, real shelfcash_test,
   covering metadata/migration agreement, fresh-session round trips, PostgreSQL
   constraints/defaults and UTC timestamp semantics. Development reset/upgrade/head,
@@ -125,9 +151,9 @@ an exact transitive lockfile is not part of this scaffold.
 
 ## Next recommended slice — PROPOSAL
 
-S1.2 — Catalog + Recipe Schema Cluster. Freeze that cluster's storage semantics,
-relationships and persistence acceptance tests first. Do not add public CRUD APIs
-or begin S1.2 automatically; completion of S1.1 authorizes no next slice.
+S1.3 — Supplier + Operational + Constraints Schema. Freeze that cluster's storage
+semantics and persistence acceptance tests first. Do not begin S1.3 automatically;
+completion of S1.2 authorizes no next slice.
 
 ## Known unresolved decisions — PROPOSAL
 
@@ -135,7 +161,8 @@ or begin S1.2 automatically; completion of S1.1 authorizes no next slice.
   timezone/currency defaults are frozen; public identifier/payload contracts are not.
 - Authentication/bootstrap and minimum store isolation needed before data exposure.
 - Currency precision/rounding, units/conversions and Vietnam business-date cutoff.
-- Recipe version selection, forecast baseline/quantile calibration and simulator
+- Recipe resolver/API behavior beyond frozen inclusive date selection; forecast
+  baseline/quantile calibration and simulator
   time granularity, objectives/tie breaks and constraint infeasibility policy.
 - Decision package structure beyond required schema version 1 and historical context.
 - Mapping confidence thresholds and human approval rules.
