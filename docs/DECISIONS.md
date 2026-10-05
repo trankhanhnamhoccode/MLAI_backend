@@ -21,6 +21,11 @@ belongs in CURRENT_STATE; report drift rather than hiding it by editing decision
 | ADR-005 | DecisionRun is an auditable versioned snapshot | ACCEPTED | Self-contained historical context; package_schema_version starts at 1 | [ADR-005](adr/ADR-005-decision-run-snapshot.md) |
 | ADR-006 | What-if is hypothetical and non-persistent by default | ACCEPTED | Deterministic baseline-plus-mutation recomputation; no silent real-state persistence | [ADR-006](adr/ADR-006-hypothetical-what-if.md) |
 | ADR-007 | PostgreSQL Persistence Baseline | ACCEPTED | PostgreSQL/psycopg, synchronous SQLAlchemy 2.x, Alembic, local Compose named volume and guarded resets | [ADR-007](adr/ADR-007-postgresql-persistence-baseline.md) |
+| ADR-008 | Import Idempotency and Correction Policy | ACCEPTED | Content/business identity, no duplicate/replace-all writes; domain-specific corrections and provenance; import remains future | [ADR-008](adr/ADR-008-import-idempotency-correction-policy.md) |
+| ADR-009 | Inventory Mutation and Audit Policy | ACCEPTED | Received lot current balance + justified movement history; future atomic audited mutations, not Event Sourcing | [ADR-009](adr/ADR-009-inventory-mutation-audit-policy.md) |
+| ADR-010 | Data Completeness and Missing Business Facts Policy | ACCEPTED | No invented facts; explicit completeness/origins/readiness; unknown receipt dates remain NULL | [ADR-010](adr/ADR-010-data-completeness-and-missing-business-facts.md) |
 
 Preserve accepted ADR intent. Gather evidence and propose a linked replacement when
 intent should change; do not quietly modify an accepted decision to simplify coding.
+
+ADR-008/009 remain unchanged. See ADR-010 for missing/ambiguous source facts and incomplete inventory data.

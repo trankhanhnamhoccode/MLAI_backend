@@ -3,7 +3,8 @@
 ACCEPTED DECISION: boundaries and business authority below describe future behavior,
 not implemented services. CURRENT FACT: plain Python domain packages remain empty,
 but S1.1 User/Store/StoreMembership and S1.2 Product/Ingredient/Recipe/RecipeLine
-persistence models exist. Their storage contracts are accepted in DATABASE_SCHEMA;
+persistence models exist. S1.3 adds Supplier, SupplierTerm, SalesDaily, InventoryLot,
+InventoryMovement and BusinessConstraint. Their storage contracts are accepted in DATABASE_SCHEMA;
 all other entity details remain PROPOSAL.
 
 ## IMPLEMENTED — Identity / Authorization + Store persistence subset
@@ -46,18 +47,53 @@ same-store graphs and exact units on inserts/updates. These are persistence
 relationships, not application authorization. Definitions are mutable; no historical
 snapshot immutability is claimed. See [CATALOG_RECIPE](features/CATALOG_RECIPE.md).
 
+## IMPLEMENTED — Supplier / Operational / Constraints persistence
+
+Supplier belongs to Store; names are not unique. SupplierTerm links Supplier and
+Ingredient in the same Store, many-to-many. Pack size in Ingredient.base_unit,
+minimum whole packs, pack cost in Store currency, lead/shelf-life days and positive
+version are explicit. Retained unit is a DB integrity witness, not conversion logic.
+Terms/constraints have inclusive DATE bounds, NULL open end and active flags;
+partial GiST exclusion gives at most one active version per logical key at a day.
+Inactive overlaps are allowed but activation is checked. Changes should preserve
+history with new versions; SQL immutability is not enforced by these models.
+
+SalesDaily is one finite nonnegative quantity per Store/Product/sales_date.
+Source is not identity. ADR-008 freezes future NEW/UNCHANGED/CHANGED/INVALID/CONFLICT
+classification, no additive duplicates, default replace-all or generic upsert,
+domain-specific corrections, provenance and explicit modes. Import/correction
+implementation remains absent. Changed total 100->105 never implies 205.
+
+InventoryLot stores current actually received lot balance, not incoming stock.
+Ingredient/optional supplier/store/unit must agree; balance finite >=0, optional
+expiry >=receipt when both dates are known. InventoryMovement links the exact lot/store/ingredient, constrained
+reason/type and signed nonzero finite delta, occurred time and optional source hooks.
+ADR-009: current balance + movement history, not Event Sourcing. Expired lots retained
+but unusable for future demand. Future application must atomically create movement
+and update balance; unexplained overwrite is forbidden policy. No balance trigger,
+FEFO, expiry computation, immutable SQL ledger or mutation workflow exists. Tracked
+ingredients' mandatory expiry remains future application validation.
+
+BusinessConstraint registry is only STORE/BUDGET_LIMIT (NULL scope_id) and
+INGREDIENT/MIN_SAFETY_STOCK (required same-store Ingredient and exact base unit).
+Value finite >=0; version unique even for NULL STORE scope. No arbitrary text/JSON,
+other scopes/types or Budget aggregate. Budget currency shape is DB checked; exact
+Store.currency matching is future application validation. Planning computation is
+absent. See SUPPLIER, OPERATIONAL_DATA, INVENTORY and BUSINESS_CONSTRAINTS feature
+docs for actual persistence tests and manual inspection.
+
 ## Boundaries and relationships
 
 | Boundary | Entities / value concepts | Responsibility and dependencies |
 | --- | --- | --- |
 | Identity / Authorization | User, StoreMembership, OWNER, STAFF, delegated permissions | CURRENT FACT: User/membership persistence exists; permissions reserved empty. FUTURE: authorize store-scoped reads/simulation/mutation separately at application entry. |
-| Import / Mapping | ImportJob, MappingProfile, canonical fields | Validate operational inputs; approved profiles and rules first; bounded LLM suggestion only for ambiguity; human approval where required. |
+| Import / Mapping | ImportJob, MappingProfile, canonical fields | ACCEPTED: ADR-008 policy. CURRENT FACT: no import implementation. FUTURE: validated idempotent domain corrections, profiles/rules and bounded ambiguity suggestions. |
 | Catalog / Recipe | Store, Product, Ingredient, Recipe, RecipeLine; units, recipe version | CURRENT FACT: S1.2 persistence and DB integrity exist. FUTURE: APIs/resolution/BOM computation; no LLM facts. |
-| Operational Data | SalesDaily; store business date, cutoff | Validated historical sales feed Forecasting; cutoff separates observed inputs from future demand. |
+| Operational Data | SalesDaily; store business date, cutoff | CURRENT FACT: canonical daily persistence. FUTURE: import/correction and sales feed to Forecasting. |
 | Forecasting | ForecastRun, ForecastPrediction, P25/P50/P75 | Deterministic model/baseline outputs with input/model versions; consumes sales and product catalog. |
 | Ingredient Demand | Ingredient quantity over time | Expands forecast using catalog/recipe versions; does not select procurement strategy. |
-| Inventory / FEFO | InventoryLot; usable quantity, expiry, arrival | Supplies deterministic lot availability/allocation to simulator using demand and dates. |
-| Procurement | Supplier, SupplierTerm, BusinessConstraint; packs, MOQ, lead time, candidate strategy | Generates exactly LEAN/BALANCED/PROTECTED candidates from demand, inventory and constraints. |
+| Inventory / FEFO | InventoryLot, InventoryMovement; usable quantity, expiry, arrival | CURRENT FACT: lot/movement schema; ADR-009 policy. FUTURE: atomic audited mutations and FEFO/availability/allocation. |
+| Procurement | Supplier, SupplierTerm, BusinessConstraint; packs, MOQ, lead time, candidate strategy | CURRENT FACT: versioned input persistence. FUTURE: exactly LEAN/BALANCED/PROTECTED candidates; no procurement computation yet. |
 | Decision | DecisionRun, versioned package, simulation metrics, warnings, risks, recommendation, hypothetical comparison | Simulates each candidate, compares deterministically and preserves evidence; human owns final decision. |
 
 Dependencies follow the business pipeline: operational truth/catalog → forecast →
@@ -94,3 +130,33 @@ Use explicit quantities/units, monetary amounts, dates, cutoff, recipe/model ver
 strategy identifiers and evidence references as needed. Precision, pack conversions,
 tie breaking and scenario selection are unresolved. No additional aggregates,
 generic services or speculative inheritance are authorized by this document.
+
+## Data completeness -- ACCEPTED DECISION (ADR-010)
+
+REQUIRED missing facts invalidate a record. CONDITIONAL_REQUIRED inputs block only
+their specified use case when unknown. OPTIONAL_WARNING permits a meaningful record
+with an explicit lost-capability warning; OPTIONAL absence has no current-use-case
+impact or warning. Strict canonical SupplierTerm still requires effective date and
+procurement inputs; incomplete source data stays unresolved outside canonical terms.
+
+### Source fact classification
+
+SOURCE_EXPLICIT is stated evidence; DETERMINISTIC_DERIVED requires proven inputs
+and units plus explainable/testable arithmetic; SYSTEM_ASSIGNED is backend metadata;
+UNKNOWN lacks established facts; AMBIGUOUS has multiple plausible meanings. MISSING
+is absence, distinct from AMBIGUOUS. Missing never becomes zero, false, upload date,
+snapshot date or a fabricated business default. Suggestions cannot establish facts.
+
+### Computation readiness
+
+Valid canonical data is not necessarily ready for every computation. Unknown receipt
+date permits stock representation, but blocks inventory-age analysis; future FEFO
+depends on expiry evidence. Unknown lead time blocks delivery feasibility. No fake
+fallbacks, readiness service or persisted readiness status exists in this slice.
+
+### Canonical vs import boundary
+
+Canonical holds sufficiently established entity facts, with allowed optional NULLs.
+Future mapping retains raw/unknown/ambiguous values, decisions, warnings and conflicts.
+Future warnings require code, severity, field, entity and impact. No warning API,
+parser or staging tables exist. See ADR-010 and IMPORT_MAPPING for accepted policy.

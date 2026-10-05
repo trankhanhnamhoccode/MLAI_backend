@@ -1,6 +1,6 @@
 # Vertical-slice roadmap
 
-CURRENT FACT: S0 is complete; S1 is in progress with S1.1 identity/store and S1.2 catalog/recipe schemas
+CURRENT FACT: S0 is complete; S1 is in progress with S1.1/S1.2/S1.3 persistence schemas
 implemented (acceptance status recorded in CURRENT_STATE). Future slices are PROPOSAL, not permission to
 implement them or an accepted public contract. Every slice must freeze precise
 contracts, acceptance tests, rollback scope and affected BE/FE/ML/Data/demo behavior
@@ -23,12 +23,13 @@ needed by any earlier slice. No unprotected real business data exposure is impli
 
 | Slice | Status | Scope |
 | --- | --- | --- |
-| S1.1 — Identity + Store | COMPLETE; 22 targeted; current full suite 93 passes | Only users/stores/store_memberships, storage constraints, direct Session tests and manual inspection; no APIs/repos/auth |
-| S1.2 — Catalog + Recipe | COMPLETE; 51 targeted / 93 full tests, usable manual guide | Only products/ingredients/recipes/recipe_lines; scoped SKU, dated nonoverlap, yield/loss, exact unit/same-store constraints; no APIs/repos/BOM |
-| S1.3 — Supplier / Operational / Constraints | PROPOSAL | Supplier/terms, sales/inventory and planning settings after contracts freeze |
+| S1.1 — Identity + Store | COMPLETE; 22 targeted; current full suite 182 passes | Only users/stores/store_memberships, storage constraints, direct Session tests and manual inspection; no APIs/repos/auth |
+| S1.2 — Catalog + Recipe | COMPLETE; 51 targeted; current full suite 182 passes, usable manual guide | Only products/ingredients/recipes/recipe_lines; scoped SKU, dated nonoverlap, yield/loss, exact unit/same-store constraints; no APIs/repos/BOM |
+| S1.3 — Supplier / Operational / Constraints | COMPLETE; 80 targeted / 182 current full passes, usable manual guide | Exactly suppliers/terms, canonical sales, received lots/movement history, registry constraints; ADR-008/009 accepted; no import/mutation/FEFO/API/repos |
+| S1.3.1 -- Data Completeness & Source Semantics | COMPLETE; 9 targeted / 182 full passes | ADR-010; unknown receipt date nullable without default; strict supplier dates/per-pack costs unchanged; no import/readiness implementation |
 | S1.4 — Forecast / Decision persistence | PROPOSAL | Provenance/snapshot storage after package/quantile semantics freeze; does not implement computation |
 
-Next proposed slice: S1.3 — Supplier + Operational + Constraints Schema. These future clusters
+Next proposed slice: S1.4 — Forecast + Decision Persistence Schema. These future clusters
 are planning scope, not implementation permission; none is started automatically.
 Repositories, public APIs, auth and computation need separately authorized slices.
 
@@ -38,7 +39,7 @@ CURRENT FACT: S0 includes categorized repository test runners, guarded PostgreSQ
 reset/migration, explicit no-op schema-verification seed, read-only DB inspection, a
 [scaffold feature guide](features/SCAFFOLD.md) and
 [fresh-environment runbook](runbooks/FULL_TEST_FLOW.md). Business seeds and e2e
-scenarios are not implemented. S1.1/S1.2 add seven persistence tables; S1 as a
+scenarios are not implemented. S1.1/S1.2/S1.3 add thirteen persistence tables; S1 as a
 whole is not complete.
 
 ACCEPTED DECISION: future major slices are complete only with automated tests,

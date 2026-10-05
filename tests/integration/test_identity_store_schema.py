@@ -41,9 +41,9 @@ def test_schema_exact_tables_constraints_indexes_and_metadata(engine: Engine) ->
 
     inspector = inspect(engine)
     assert sorted(inspector.get_table_names(schema="public")) == [
-        "alembic_version", "ingredients", "products", "recipe_lines", "recipes", "store_memberships", "stores", "users",
+        "alembic_version", "business_constraints", "ingredients", "inventory_lots", "inventory_movements", "products", "recipe_lines", "recipes", "sales_daily", "store_memberships", "stores", "supplier_terms", "suppliers", "users",
     ]
-    assert set(Base.metadata.tables) == {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines"}
+    assert set(Base.metadata.tables) == {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints"}
     for table in ("users", "stores", "store_memberships"):
         assert inspector.get_pk_constraint(table)["constrained_columns"] == ["id"]
         columns = {column["name"]: column for column in inspector.get_columns(table)}
@@ -63,7 +63,7 @@ def test_schema_exact_tables_constraints_indexes_and_metadata(engine: Engine) ->
     ]
     with engine.connect() as connection:
         assert connection.scalar(text("SELECT current_database()")) == "shelfcash_test"
-        assert connection.scalar(text("SELECT version_num FROM public.alembic_version")) == "0003_catalog_recipe"
+        assert connection.scalar(text("SELECT version_num FROM public.alembic_version")) == "0005_data_semantics_correction"
         assert compare_metadata(MigrationContext.configure(connection, opts={"compare_server_default": True}), Base.metadata) == []
 
 

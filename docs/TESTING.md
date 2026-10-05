@@ -27,13 +27,30 @@ recreates `public`, then upgrades to Alembic head. Status opens a fresh read-onl
 PostgreSQL transaction, reports reachability, database/server version/revision,
 migration head and table counts. Unreachable databases fail; unmigrated databases
 fail unless reachability-only behavior is explicitly selected. No state is created
-by inspection. Seed verifies the current identity/store and catalog/recipe table set at head and writes
+by inspection. Seed verifies the current S1.1/S1.2/S1.3 table set at head and writes
 no data; demo seeding is not implemented. Normal workflows require no hosted notebook
-or provider. After reset all seven business tables are empty.
+or provider. After reset all thirteen business tables are empty.
 
 See [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) for fresh setup, live HTTP checks,
 SQL inspection and exact expected state; [SCAFFOLD](features/SCAFFOLD.md) describes
 implemented feature verification and limitations.
+
+S1.3 targeted schema verification:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_supplier_operational_constraints.py -q
+```
+
+POSIX: `.venv/bin/python -m pytest tests/integration/test_supplier_operational_constraints.py -q`.
+Actual isolated PostgreSQL: six-model commit/close/fresh-session reads, many-to-many
+terms/version/partial overlap, canonical sales key, lot/unit/Store integrity, movement
+types/signs/lot consistency and controlled constraint scope/type/version/period.
+Tests include NULL STORE uniqueness, inactive activation, exact Decimal/boundaries,
+schema-only limitations and fresh/downgrade/re-upgrade. No ledger balance service,
+import correction or FEFO coverage is claimed. See
+[S13_VERIFICATION](runbooks/S13_VERIFICATION.md) and the four domain feature docs.
+Current Windows verification: S1.3 80 targeted, S1.3.1 9 targeted / 182 full tests pass; one existing upstream
+warning. Full suite requires healthy local PostgreSQL, with no integration skips.
 
 S1.2 targeted schema verification:
 
@@ -147,3 +164,17 @@ Record only implemented feature contracts; do not create speculative feature doc
 
 These scenarios/invariants are specifications for future implementation, not claims
 that forecast, FEFO, procurement, simulation or authorization works in this scaffold.
+
+## S1.3.1 verification -- CURRENT FACT
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_data_semantics_correction.py -q
+.\scripts\test.ps1 all
+```
+
+POSIX equivalent: `.venv/bin/python -m pytest tests/integration/test_data_semantics_correction.py -q`.
+Nine regressions cover ORM/raw SQL unknown receipt without defaults, strict supplier
+inputs, exact per-pack price and clean/refused downgrade behavior. All use isolated
+shelfcash_test, fresh sessions and actual PostgreSQL. No importer/readiness test oracle
+is fabricated. See [S131_VERIFICATION](runbooks/S131_VERIFICATION.md). PowerShell
+runtime verified; unchanged POSIX wrappers retain historical syntax-only status.

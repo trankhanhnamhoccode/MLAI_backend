@@ -64,9 +64,10 @@ docker compose up -d --wait --wait-timeout 90 postgres
 .\scripts\db_status.ps1
 ```
 
-Expected: postgres healthy; head `0003_catalog_recipe`; targeted/full tests pass.
+Expected: postgres healthy; head `0005_data_semantics_correction`; targeted/full tests pass.
 Status: reachable true, database shelfcash, at_head true, alembic_version count 1;
-users, stores, store_memberships, products, ingredients, recipes, recipe_lines all
+users, stores, store_memberships, products, ingredients, recipes, recipe_lines and `suppliers`, `supplier_terms`, `sales_daily`, `inventory_lots`,
+`inventory_movements`, `business_constraints` all
 count 0 after reset/tests. Tests write only shelfcash_test, not development state.
 
 Inspect columns and actual DB constraint definitions without GUI/host psql:
@@ -93,5 +94,6 @@ btree_gist is retained on downgrade because it may be preexisting/shared. Reset 
 recreates its extension objects through migration; local Compose role has permission.
 Alembic metadata comparison is not a complete exclusion-constraint oracle; targeted
 tests inspect pg_constraint and exercise actual rejection behavior.
-No repositories, application services, CRUD, BOM, auth or S1.3+ schema.
+No repositories, application services, CRUD, BOM or auth. S1.3 persistence is
+documented separately; S1.4+ schema remains absent.
 Future API is PROPOSAL; no public payload/endpoint contracts are frozen here.

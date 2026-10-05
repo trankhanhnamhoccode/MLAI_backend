@@ -71,8 +71,8 @@ def require_head(state: dict[str, object]) -> None:
 def seed_demo(settings: Settings) -> None:
     state = inspect_database(settings)
     require_head(state)
-    if set(state["tables"]) != {"alembic_version", "users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines"}:
-        raise ValueError("Seed expects the current Identity/Store + Catalog/Recipe schema clusters")
+    if set(state["tables"]) != {"alembic_version", "users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints"}:
+        raise ValueError("Seed expects the current S1.1/S1.2/S1.3 schema clusters")
     print("No business seed data: seeding is not implemented. Migrated schema verified; no rows written.")
 
 

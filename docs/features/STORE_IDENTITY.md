@@ -65,10 +65,12 @@ docker compose up -d --wait --wait-timeout 90 postgres
 .\scripts\db_status.ps1
 ```
 
-Expected: healthy PostgreSQL, revision `0003_catalog_recipe (head)`, targeted/full
+Expected: healthy PostgreSQL, revision `0005_data_semantics_correction (head)`, targeted/full
 tests pass, development status reachable/at_head true, tables/row counts exactly
 `alembic_version: 1`, `users: 0`, `stores: 0`, `store_memberships: 0`,
-`products: 0`, `ingredients: 0`, `recipes: 0`, `recipe_lines: 0`.
+`products: 0`, `ingredients: 0`, `recipes: 0`, `recipe_lines: 0`,
+`suppliers: 0`, `supplier_terms: 0`, `sales_daily: 0`, `inventory_lots: 0`,
+`inventory_movements: 0`, `business_constraints: 0`.
 Tests write only shelfcash_test, so development tables remain empty after testing.
 
 Inspect columns/defaults and named constraints without a GUI or host psql:
@@ -79,7 +81,7 @@ Inspect columns/defaults and named constraints without a GUI or host psql:
 
 Expected: native uuid IDs/FKs, timestamp with time zone columns, JSONB delegated
 permissions, defaults described above, unique email/pair, role/permission checks,
-and two RESTRICT FKs. These three identity tables plus four S1.2 catalog/recipe tables; no S1.3+ tables.
+and two RESTRICT FKs. These three identity tables, four S1.2 and six S1.3 tables; no S1.4+ tables.
 
 For persisted record verification use the targeted tests: they commit and close
 the writer Session, then independently reload/assert actual stored fields and
@@ -99,4 +101,5 @@ Reset retry/guards are in [DATABASE_RESET](../runbooks/DATABASE_RESET.md). Downg
 to 0001_scaffold drops these three tables and their rows, so it is destructive.
 No automatic soft-delete, owner-count, active-parent, timezone-catalog, email provider,
 credential security or permission-engine policy is supplied by these models.
-Future API contracts, auth/authorization and later clusters remain PROPOSAL.
+Future API contracts and auth/authorization remain PROPOSAL; S1.2/S1.3 persistence
+is documented separately, S1.4+ remains future.

@@ -1,5 +1,8 @@
 # S1.2 task contract
 
+HISTORICAL INFORMATION: observations/results below describe S1.2 before S1.3.
+Its contract remains accepted; current global state/head is in CURRENT_STATE.
+
 ACCEPTED DECISION for this authorized slice: persist only Product, Ingredient,
 Recipe and RecipeLine. PostgreSQL remains governed by ADR-007; the old SQLite
 instruction is superseded. Before editing, the working tree was clean. S1.1 uses

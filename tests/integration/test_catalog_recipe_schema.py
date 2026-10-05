@@ -52,11 +52,11 @@ def recipe(engine, **changes):
 
 
 def test_fresh_schema_and_downgrade_reupgrade(engine):
-    tables = {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines"}
+    tables = {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints"}
     assert set(inspect(engine).get_table_names()) == tables | {"alembic_version"}
     with engine.connect() as fresh:
         assert fresh.scalar(text("SELECT current_database()")) == "shelfcash_test"
-        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0003_catalog_recipe"
+        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0005_data_semantics_correction"
         assert fresh.scalar(text("SELECT count(*) FROM pg_constraint WHERE conname = 'ex_recipes_product_period' AND contype = 'x'")) == 1
     command.downgrade(migration_config(), "0002_identity_store")
     assert set(inspect(engine).get_table_names()) == {"alembic_version", "users", "stores", "store_memberships"}

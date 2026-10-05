@@ -1,9 +1,12 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
 **CURRENT FACT:** S1.1 implements `users`, `stores`, `store_memberships`; S1.2 adds
-`products`, `ingredients`, `recipes`, `recipe_lines`.
-**ACCEPTED DECISION:** the storage semantics below are frozen for this authorized
-clusters. All other Schema v1 entities remain PROPOSAL; each requires its own accepted
+`products`, `ingredients`, `recipes`, `recipe_lines`. S1.3 adds `suppliers`,
+`supplier_terms`, `sales_daily`, `inventory_lots`, `inventory_movements`,
+`business_constraints` — thirteen business tables total.
+**ACCEPTED DECISION:** the storage semantics below are frozen for these authorized
+clusters. ADR-008/009 freeze import correction/inventory audit policy, not runtime
+import/mutation services. All other Schema v1 entities remain PROPOSAL; each requires its own accepted
 slice before models/migrations are implemented. No hidden aggregate is implied.
 
 **ACCEPTED DECISION (ADR-007):** PostgreSQL is the Competition database, with
@@ -12,8 +15,10 @@ Compose PostgreSQL with a named volume. Reset between versions is
 acceptable. Alembic makes schema state/evolution explicit; long-lived backwards-compatible
 migration support is not a current requirement. The initial empty revision creates
 only `public.alembic_version`; the next migration `0002_identity_store` creates the
-three identity/store tables. Current head `0003_catalog_recipe` adds only four
-catalog/recipe tables. No other business model is implemented.
+three identity/store tables. `0003_catalog_recipe` adds four catalog/recipe tables;
+`0004_supplier_ops_constraints` adds six S1.3 tables; current head
+`0005_data_semantics_correction` makes received_date nullable and clarifies its date check. No other business
+model is implemented. This shorter revision fits Alembic's 32-character version field.
 Tests own separate `shelfcash_test`; development
 uses `shelfcash`. Reset recreates only the guarded target's `public` schema.
 
@@ -103,7 +108,7 @@ does NOT grant runtime authorization in S1.1.
 Verification: [STORE_IDENTITY](features/STORE_IDENTITY.md), targeted real PostgreSQL
 tests `tests/integration/test_identity_store_schema.py`, and
 [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md). Reset leaves these three tables empty
-and the four S1.2 tables empty, with one `alembic_version` row `0003_catalog_recipe`;
+and the S1.2/S1.3 tables empty, with one `alembic_version` row `0005_data_semantics_correction`;
 seed writes no entities.
 
 Implementation references: [PostgreSQL date/time types](https://www.postgresql.org/docs/17/datatype-datetime.html)
@@ -220,6 +225,195 @@ The Compose role can install the extension. No new public API or repository exis
 References: [PostgreSQL btree_gist](https://www.postgresql.org/docs/17/btree-gist.html),
 [range exclusion](https://www.postgresql.org/docs/17/rangetypes.html).
 
+## IMPLEMENTED — S1.3 Supplier / Operational / Constraints storage contract
+
+Migration `alembic/versions/0004_supplier_operational_constraints.py`, revision
+`0004_supplier_ops_constraints`, parent `0003_catalog_recipe`. Typed models are
+`app/models/supplier.py`, `supplier_term.py`, `sales_daily.py`, `inventory_lot.py`,
+`inventory_movement.py`, `business_constraint.py`. No repository/service/API exists.
+Every table has UUID PK `id`, database `gen_random_uuid()` default, and `created_at
+TIMESTAMPTZ DEFAULT now()`. All except movements have `updated_at TIMESTAMPTZ` with
+the S1.1 insert/ORM-update convention; raw SQL updates must set it explicitly.
+All columns required unless marked nullable. NUMERIC maps to Decimal, without fixed
+scale/business rounding; NaN/infinities are rejected. Store currency governs costs;
+currency conversion/change and money rounding remain future application contracts.
+All FKs below use ON DELETE RESTRICT, default NO ACTION on updates. No cascade,
+timestamp, inventory-balance, expiry or ledger immutability trigger is introduced.
+
+### suppliers
+
+Purpose: store-owned supplier identity, not global supplier directory.
+
+| Column | Type | Rule/default |
+| --- | --- | --- |
+| store_id | UUID | FK stores.id |
+| name | VARCHAR(200) | Nonblank; NOT unique within/across stores |
+| active | BOOLEAN | true |
+
+PK id; `fk_suppliers_store`; `uq_suppliers_id_store` (id,store_id) is the required
+composite FK target. `ck_suppliers_name_nonblank`; explicit `ix_suppliers_store_id`
+supports listing suppliers in a store (the id-leading unique index cannot do that).
+Current mutable identity state; no source codes, contacts or supplier CRUD invented.
+
+### supplier_terms
+
+Purpose: versioned pack purchasing inputs for Supplier ↔ Ingredient (many-to-many).
+Changes should create a new version, adjusting periods explicitly; SQL rows remain
+editable and no historical immutability service is implemented. Snapshot consumers
+must preserve used values under ADR-005 when implemented.
+
+| Column | Type | Rule/default |
+| --- | --- | --- |
+| store_id | UUID | Same-store integrity witness for supplier/ingredient |
+| supplier_id | UUID | FK (supplier_id,store_id) -> suppliers(id,store_id) |
+| ingredient_id | UUID | FK (ingredient_id,store_id,unit) -> ingredients(id,store_id,base_unit) |
+| unit | VARCHAR(32) | Exact base-unit witness, prevents reinterpretation after unit edits |
+| version | INTEGER | >0, required |
+| effective_from | DATE | Inclusive start |
+| effective_to | DATE nullable | Inclusive end >= start, NULL unbounded |
+| pack_size_base_quantity | NUMERIC | Finite >0, Ingredient.base_unit per pack |
+| minimum_order_packs | INTEGER | >=1, minimum whole packs when an order is placed |
+| pack_cost | NUMERIC | Finite >=0, Store currency per pack |
+| lead_time_days | INTEGER | >=0 |
+| shelf_life_days | INTEGER nullable | >=0 when provided; unspecified when NULL |
+| active | BOOLEAN | true; only active rows participate in overlap exclusion |
+
+PK id; `fk_supplier_terms_supplier_store`, `fk_supplier_terms_ingredient_store_unit`.
+`uq_supplier_terms_pair_version` (supplier_id,ingredient_id,version) across active
+and inactive rows. Checks `ck_supplier_terms_version`, `ck_supplier_terms_period`,
+`ck_supplier_terms_pack_size`, `ck_supplier_terms_minimum_packs`,
+`ck_supplier_terms_pack_cost`, `ck_supplier_terms_lead_time`, `ck_supplier_terms_shelf_life`.
+`ex_supplier_terms_pair_period`: GiST supplier_id =, ingredient_id =,
+daterange(from,to,'[]') && WHERE active, reusing parent btree_gist. Concurrent SQL
+inserts/updates/activation cannot produce two active terms for the pair on one day.
+Inactive overlapping drafts are allowed; duplicate version is still rejected.
+At D select active AND from<=D AND (to IS NULL OR D<=to); zero/one result.
+Shared boundary day overlaps; next-day adjacency and single-day periods are valid.
+Unique pair/version covers supplier-term lookup; explicit
+`ix_supplier_terms_ingredient_id` supports finding suppliers for an ingredient.
+No redundant effective-date or supplier index.
+
+Example: Milk base_unit ml; 12 x 1L pack is normalized externally to 12000 ml,
+minimum packs 2, pack_cost 360000 VND. Two packs cost 720000 VND. This specifies
+inputs only, not an implemented procurement/unit-conversion calculation.
+
+### sales_daily
+
+Purpose: one canonical daily sales total, not additive source observations.
+
+| Column | Type | Rule |
+| --- | --- | --- |
+| store_id | UUID | Same-store product witness |
+| product_id | UUID | FK (product_id,store_id) -> products(id,store_id) |
+| sales_date | DATE | Canonical business sales day; timezone cutoff conversion not implemented |
+| quantity | NUMERIC | Finite >=0 in Product.selling_unit |
+
+PK id; `fk_sales_daily_product_store`, `uq_sales_daily_store_product_date`
+(store_id,product_id,sales_date), `ck_sales_daily_quantity`. Unique index supports
+store/product/day lookup; no source/import/filename in identity. No unnecessary
+revenue/promotion fields. A source quantity 100 changed to 105 is CHANGED under
+ADR-008, not a second row or total 205. Correction workflow/audit remains future;
+direct persisted state is mutable, not a Sales correction implementation.
+
+### inventory_lots
+
+Purpose: current balance for actually received lots (ADR-009), not inbound orders.
+
+| Column | Type | Rule |
+| --- | --- | --- |
+| store_id | UUID | Same-store ingredient/supplier witness |
+| ingredient_id | UUID | FK (ingredient_id,store_id,unit) -> ingredients(id,store_id,base_unit) |
+| supplier_id | UUID nullable | FK (supplier_id,store_id) -> suppliers(id,store_id); unknown allowed |
+| lot_code | VARCHAR(128) nullable | Nonblank when present; no invented uniqueness/import identity |
+| received_date | DATE nullable, no default | Known actual receipt day, or NULL (OPTIONAL_WARNING); never snapshot/upload date |
+| expiry_date | DATE nullable | >= received_date when both dates are known |
+| on_hand_quantity | NUMERIC | Current materialized finite balance >=0 |
+| unit | VARCHAR(32) | Exactly Ingredient.base_unit |
+| unit_cost | NUMERIC nullable | Finite >=0 in store currency per one Ingredient.base_unit; unknown allowed |
+
+PK id; `fk_inventory_lots_ingredient_store_unit`, `fk_inventory_lots_supplier_store`.
+Default MATCH SIMPLE skips optional supplier FK when supplier_id is NULL; required
+ingredient/store/unit FK still protects the store. `uq_inventory_lots_id_store_ingredient`
+(id,store_id,ingredient_id) supports movements. Checks `ck_inventory_lots_on_hand`,
+`ck_inventory_lots_expiry`, `ck_inventory_lots_unit_cost`, `ck_inventory_lots_code_nonblank`.
+`ix_inventory_lots_store_ingredient_expiry` supports store/ingredient lot inspection
+ordered by expiry; no FEFO algorithm is claimed. Ingredient.expiry_tracking=true
+will require expiry_date at future receipt/application boundaries; this conditional
+cross-table rule is NOT DB-enforced in S1.3. Tracked lots with NULL expiry can be
+inserted directly; tests/documentation expose that limit. Expired lots are retained,
+but future usable quantity is zero. Expiry-day cutoff/FEFO is not implemented.
+
+### inventory_movements
+
+Purpose: quantity change history explaining lot balance, not Event Sourcing.
+
+| Column | Type | Rule |
+| --- | --- | --- |
+| store_id | UUID | Must match referenced lot |
+| lot_id | UUID | Composite FK (lot_id,store_id,ingredient_id) -> inventory_lots(id,store_id,ingredient_id) |
+| ingredient_id | UUID | Must equal lot ingredient; quantity uses its base unit |
+| movement_type | VARCHAR(24) | RECEIPT, USAGE, WASTE, EXPIRED, COUNT_CORRECTION, MANUAL_ADJUSTMENT |
+| quantity_delta | NUMERIC | Finite, nonzero; positive increase/negative decrease |
+| occurred_at | TIMESTAMPTZ | Required aware event instant; distinct from created_at |
+| reference_type | VARCHAR(64) nullable | Opaque nonblank trace hook, paired with reference_id |
+| reference_id | TEXT nullable | Opaque nonblank source/reference identifier, not ImportJob FK |
+| note | TEXT nullable | Optional explanation; future correction boundary validates required reasons |
+
+PK id; `fk_inventory_movements_lot_store_ingredient` blocks cross-store/ingredient
+movement and deleting referenced lots. Checks `ck_inventory_movements_type`,
+`ck_inventory_movements_delta`, `ck_inventory_movements_sign`,
+`ck_inventory_movements_reference_pair` (both NULL or both nonblank).
+RECEIPT positive; USAGE/WASTE/EXPIRED negative; count/manual corrections either sign.
+`ix_inventory_movements_lot_occurred` supports per-lot chronological audit inspection.
+No balance-trigger or ledger-sum constraint: inserting movement does not update lot.
+Future service must create movement + change balance atomically with concurrency
+protection. Unexplained overwrite is forbidden application policy, but direct SQL
+can still edit balances/movements. Mandatory initial receipt, append-only history,
+actor/provenance enforcement and reconciliation are NOT IMPLEMENTED.
+
+### business_constraints
+
+Purpose: controlled, versioned numeric planning inputs. Budget belongs here, not
+Store settings or a separate aggregate. No arbitrary JSON/text values or LLM types.
+
+| Column | Type | Rule/default |
+| --- | --- | --- |
+| store_id | UUID | FK stores.id |
+| scope_type | VARCHAR(10) | STORE or INGREDIENT only |
+| scope_id | UUID nullable | STORE: NULL; INGREDIENT: required same-store Ingredient |
+| constraint_type | VARCHAR(24) | STORE/BUDGET_LIMIT or INGREDIENT/MIN_SAFETY_STOCK only |
+| numeric_value | NUMERIC | Finite >=0 |
+| unit | VARCHAR(32) | Budget: uppercase currency shape; safety: exact Ingredient.base_unit |
+| version | INTEGER | >0 |
+| effective_from | DATE | Inclusive start |
+| effective_to | DATE nullable | Inclusive end >=start, NULL unbounded |
+| active | BOOLEAN | true |
+
+PK id; `fk_business_constraints_store`; `fk_business_constraints_ingredient_scope_unit`
+(scope_id,store_id,unit) -> ingredients(id,store_id,base_unit). For STORE NULL scope_id
+skips this FK; required scope/type CHECK ensures this is intentional.
+`uq_business_constraints_scope_version` on (store_id,scope_type,scope_id,constraint_type,
+version), PostgreSQL NULLS NOT DISTINCT: even NULL STORE identities cannot duplicate
+versions. Checks `ck_business_constraints_registry_scope`,
+`ck_business_constraints_numeric_value`, `ck_business_constraints_version`,
+`ck_business_constraints_period`. `ex_business_constraints_scope_period` uses GiST
+store_id =, scope_type =, coalesce(scope_id,store_id) =, constraint_type =,
+daterange(from,to,'[]') && WHERE active. No NULL hole for STORE overlap; scope_type
+separates STORE from INGREDIENT even if UUIDs happen to coincide. Unique/GiST indexes
+cover store/logical-scope/version/period lookup; no speculative extra index.
+Inactive overlap allowed, activation validated; active resolution follows the same
+inclusive predicate as SupplierTerm. Budget value is in unit currency; matching
+Store.currency is a future application validation, NOT conditional DB enforcement.
+No multi-currency computation, spent/reserved/rollover, MAX_STORAGE or other scopes.
+
+Verification: [SUPPLIER](features/SUPPLIER.md), [OPERATIONAL_DATA](features/OPERATIONAL_DATA.md),
+[INVENTORY](features/INVENTORY.md), [BUSINESS_CONSTRAINTS](features/BUSINESS_CONSTRAINTS.md),
+`tests/integration/test_supplier_operational_constraints.py` and FULL_TEST_FLOW.
+Normal reset leaves thirteen empty business tables plus one current revision row;
+seed writes no rows. Downgrade 0004->0003 drops only six new tables/rows, keeping
+all S1.1/S1.2 schema and btree_gist. No Import/Forecast/Decision/Order tables exist.
+Reference: [PostgreSQL NULLS NOT DISTINCT and exclusion](https://www.postgresql.org/docs/17/ddl-constraints.html).
+
 ## Remaining Schema v1 — PROPOSAL / FUTURE
 
 ### Common conventions — PROPOSAL
@@ -238,11 +432,6 @@ Indexes below are candidates for real queries, not a command to create unused in
 | --- | --- | --- | --- | --- |
 | ImportJob | Trace ingestion: id, store_id, source reference/digest, status, mapping_profile_id, created_at, validation summary | Store; optional MappingProfile; provenance for imported rows | Store/date index; validated status transitions; immutable source reference; file/row errors separate from accepted data | Historical import execution/status record |
 | MappingProfile | Approved store mapping: id, store_id, profile version, canonical schema version, file fingerprint, field mapping, approval actor/time, status | Store, approving User/Membership; ImportJobs | Unique (store_id, profile key, version); mapping targets restricted to canonical fields; approved versions immutable | Versioned approved mapping snapshot, with explicit current active selection |
-| Supplier | Supplier identity: id, store_id, code, name, active flag | Store; SupplierTerms | Unique (store_id, code); index store_id | Current supplier metadata; historical relevant terms captured separately |
-| SupplierTerm | Ordering inputs: id, store_id, supplier_id, ingredient_id, unit price/currency, pack_size, MOQ, lead_time_days, valid_from/to, version | Supplier and Ingredient in same Store | pack_size > 0; MOQ ≥ 0; price ≥ 0; lead time ≥ 0; valid ranges; index supplier/ingredient/date; term version uniqueness | Versioned term; chosen values copied into DecisionRun |
-| SalesDaily | Observed daily sales: id, store_id, product_id, business_date, quantity, import_job_id | Store, Product; optional ImportJob | Unique (store_id, product_id, business_date) for daily aggregate; index store/date; quantity validation and correction policy must be frozen | Historical observation, potentially corrected explicitly; run captures exact used data/version |
-| InventoryLot | Stock by lot: id, store_id, ingredient_id, lot code, received/available date, expiry date, remaining quantity, unit, import_job_id | Ingredient, Store; optional ImportJob | Quantity ≥ 0; index store/ingredient/expiry; date consistency; same-store links; expired/future arrivals excluded from availability | Current lot balance; historical usable balances/availability copied into decisions |
-| BusinessConstraint | Explicit planning settings: id, store_id, version, effective range, budget, planning horizon, target service level, allowed supplier references | Store; validated Supplier references if used | Typed important fields; budget ≥ 0, valid horizon/target/range; index store/effective date; backend validates unsupported constraints | Versioned settings with current selection; exact used values in run snapshot |
 | ForecastRun | Forecast provenance: id, store_id, cutoff date/time, horizon, input snapshot/digest, model/baseline identifier and version, parameters, status, created_at | Store; ForecastPredictions; DecisionRuns consume this run | Cutoff/horizon contract; store/cutoff index; completed outputs immutable; input references/digest alone insufficient if source mutates—retain used input content/artifact | Historical execution/input/model snapshot |
 | ForecastPrediction | Explicit demand quantiles: id, forecast_run_id, product_id, business_date, p25, p50, p75 | ForecastRun and same-store Product | Unique (forecast_run_id, product_id, business_date); 0 ≤ p25 ≤ p50 ≤ p75; future date strictly after cutoff; index run/date | Historical forecast output, explicit modeled quantile columns, never arbitrary JSON |
 | DecisionRun | Main auditable decision aggregate: id, store_id, forecast_run_id, cutoff/horizon, created_at, actor reference, package_schema_version, decision_package JSON | Store; ForecastRun; other provenance by copied facts/versioned references in package | package_schema_version ≥ 1, initially 1; backend validates versioned Pydantic package; index store/created_at; completed decisions immutable; recommendation must match evaluated candidates | Self-contained historical snapshot; no reinterpretation using current state |
@@ -269,7 +458,27 @@ and separately authorized; this proposal does not introduce a WhatIf aggregate/t
 
 ## Deferred choices — PROPOSAL
 
-Freeze deletion/retention policy, unit/money representation, corrections, login handling,
+Freeze remaining deletion/retention workflows, unit/money conversion/rounding,
+domain correction implementation under ADR-008/009, login handling,
 delegated permission storage, forecast input artifact retention and exact package schema
 in affected slices. Choose schema evolution for clarity and reproducibility, without
 legacy compatibility scaffolding or an unrequested database engine.
+
+## IMPLEMENTED -- S1.3.1 source-semantics correction
+
+ADR-010 is ACCEPTED. Migration 0005 changes only inventory_lots.received_date
+nullability and ck_inventory_lots_expiry to `received_date IS NULL OR expiry_date
+IS NULL OR expiry_date >= received_date`. No date default or new table is added.
+Unknown receipt remains NULL; stock is meaningful, expiry-based FEFO readiness
+depends on known expiry, and inventory age cannot be computed. Downgrade refuses
+NULL receipt rows rather than inventing dates; confirmed source resolution or explicit
+development reset is needed. All remaining constraints/indexes are unchanged.
+
+SupplierTerm price is UNCHANGED: pack_cost is Store-currency cost per complete pack,
+not cost per base unit. Known 15 kg and 28,000 VND/kg normalize to 420,000 VND/pack
+(15,000 g when Ingredient.base_unit is g). Future normalization must prove units.
+SupplierTerm effective_from is UNCHANGED, NOT NULL with no default, as are strict
+canonical procurement inputs including lead_time_days. Unknown source effective date
+cannot be promoted into an active canonical term; upload date is not evidence.
+Internal version may be system-assigned; business facts must be established.
+No import/staging/readiness column or computation exists.

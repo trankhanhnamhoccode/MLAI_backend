@@ -2,7 +2,7 @@
 
 CURRENT FACT: no canonical demo seed exists. Tests use fixed health
 values and the separate local PostgreSQL `shelfcash_test` database with revision
-`0003_catalog_recipe`. Destructive fixtures own only its `public` schema. S1.1
+`0005_data_semantics_correction`. Destructive fixtures own only its `public` schema. S1.1
 schema tests create isolated User/Store/Membership records with fixed fields;
 explicit IDs are deterministic where needed, generated UUID identity is otherwise
 asserted by type/default. No production password/credential fixture is supplied.
@@ -13,7 +13,19 @@ quantity/loss values. Generated UUIDs represent relationships rather than expect
 business facts. Each test resets its isolated schema; no canonical demo seed or
 BOM/golden computation scenario is supplied.
 
+S1.3 fixtures use two stores, Milk ml/Coffee g, multiple same-name suppliers,
+12000 ml pack / minimum 2 / cost 360000 / lead 3, inclusive Jan-Mar 2026 terms,
+Oct 1 sales 10.125, received Milk lot balance 50 and receipt +50/usage -20,
+STORE budget 7000000 VND and ingredient safety stock 10000 ml. Exact Decimal
+values and audit references are asserted after closing writer sessions. No
+import/mutation/FEFO business flow is implied by these schema fixtures.
+
 PROPOSAL: add versioned deterministic fixture inputs and independently specified
 expected business facts with the relevant feature slice. NORMAL_WEEK,
 PROMOTION_SPIKE, LOW_BUDGET, SUPPLIER_DELAY and EXPIRY_RISK are future scenarios;
 they are not currently executable.
+
+S1.3.1 fixtures explicitly distinguish unknown received_date=None from snapshot
+2026-10-05. Known expiry is 2026-10-07, balance 50 ml. Canonical supplier fixture
+stores 15000 g per pack / 420000 VND per pack (source example 15 kg at 28000 VND/kg).
+No importer or unit-conversion implementation is implied by those known fixtures.

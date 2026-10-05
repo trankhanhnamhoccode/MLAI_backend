@@ -6,10 +6,15 @@ balancing shortages, waste and capital. The owner/manager makes the final decisi
 
 **CURRENT FACT:** S0 infrastructure is complete and S1 is in progress. The backend
 runs a typed health endpoint with PostgreSQL/Alembic infrastructure. S1.1 implements
-User/Store/StoreMembership; S1.2 adds Product/Ingredient/Recipe/RecipeLine persistence; no public business APIs, repositories,
+User/Store/StoreMembership; S1.2 adds Product/Ingredient/Recipe/RecipeLine; S1.3 adds
+Supplier/SupplierTerm/SalesDaily/InventoryLot/InventoryMovement/BusinessConstraint
+persistence. No public business APIs, repositories,
 authentication or computation exists. See
 [identity/store verification](docs/features/STORE_IDENTITY.md) and
-[catalog/recipe verification](docs/features/CATALOG_RECIPE.md).
+[catalog/recipe verification](docs/features/CATALOG_RECIPE.md) and
+[S1.3 verification](docs/runbooks/S13_VERIFICATION.md). ADR-008 freezes import
+idempotency/corrections; ADR-009 freezes audited lot mutations. Import and mutation
+services are not implemented by this schema slice.
 
 **ACCEPTED DECISION — future pipeline:** operational data → forecast → BOM/recipe
 expansion → ingredient demand → inventory/FEFO → supplier/business constraints →
@@ -42,7 +47,7 @@ configures the URL, credentials and test URL. Native PostgreSQL installation is
 unnecessary. Alembic uses Settings and `.env` as the
 configuration source; `alembic.ini` records the default URL for reference.
 The original baseline creates only Alembic's revision table; current head
-`0003_catalog_recipe` contains seven business tables across S1.1/S1.2. Application import,
+`0005_data_semantics_correction` contains thirteen business tables across S1.1/S1.2/S1.3. Application import,
 startup and health checks do not initialize/connect to the DB, create directories
 or contact OpenRouter. No provider key is required.
 
@@ -83,9 +88,13 @@ Upload/artifact folders are reserved; no storage service exists yet.
 - [Architecture](docs/ARCHITECTURE.md): target modular monolith and authority boundaries.
 - [API contract](docs/API_CONTRACT.md): implemented public contract.
 - [Domain model](docs/DOMAIN_MODEL.md): boundaries, relationships and invariants.
-- [Database schema](docs/DATABASE_SCHEMA.md): implemented identity/store and catalog/recipe clusters and remaining Schema v1 proposals.
+- [Database schema](docs/DATABASE_SCHEMA.md): implemented S1.1/S1.2/S1.3 clusters and remaining Schema v1 proposals.
 - [Roadmap](docs/ROADMAP.md): vertical slices and acceptance gates.
 - [Testing](docs/TESTING.md): verification layers and future golden scenarios.
 
 Development PostgreSQL schemas may be reset between versions. Alembic still records
 schema evolution; long-lived compatible migrations are not a current requirement.
+
+S1.3.1 / ADR-010 accepts explicit completeness and source-fact policies. Unknown lot
+receipt dates remain NULL; strict supplier dates and per-pack costs are unchanged.
+No import engine or business API exists. See docs/runbooks/S131_VERIFICATION.md.

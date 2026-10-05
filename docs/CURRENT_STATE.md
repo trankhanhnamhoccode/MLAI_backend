@@ -5,12 +5,21 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
 - Project phase: **S1 — IN PROGRESS**; S0/S0.2 remain complete.
 - Completed: **S1.1 — Identity + Store Schema Cluster** (persistence only).
 - Completed: **S1.2 — Catalog + Recipe Schema Cluster** (persistence only).
+- Completed: **S1.3 — Supplier + Operational + Constraints Schema** (persistence only).
+- Completed: **S1.3.1 -- Data Completeness & Source Semantics Correction**.
+  Schema changed: only unknown inventory receipt dates become nullable (no default),
+  with an explicit both-known expiry check. Supplier price/effective date unchanged.
+  ADR-010 Data Completeness and Missing Business Facts Policy is ACCEPTED.
 - Greenfield Competition Edition; no legacy backend was imported.
 - Current database: **PostgreSQL**, SQLAlchemy 2.x with psycopg and synchronous
   Session. ADR-007 is ACCEPTED; ADR-003 is SUPERSEDED. The empty Alembic
-  baseline is `0001_scaffold`; current head is `0003_catalog_recipe`.
+  baseline is `0001_scaffold`; current head is `0005_data_semantics_correction`.
 - Implemented business tables/models: `users`, `stores`, `store_memberships`,
-  `products`, `ingredients`, `recipes`, `recipe_lines` only.
+  `products`, `ingredients`, `recipes`, `recipe_lines`, `suppliers`, `supplier_terms`,
+  `sales_daily`, `inventory_lots`, `inventory_movements`, `business_constraints` only.
+  ADR-008 Import Idempotency and Correction Policy and ADR-009 Inventory Mutation
+  and Audit Policy are ACCEPTED. Import/correction/mutation/FEFO behavior is not
+  implemented by these storage models. No balance/expiry/audit trigger exists.
   Identity/store membership persistence exists; authentication/authorization does not.
   Plain Python domain packages remain empty. Repository/application service layers
   and public business APIs: not started. Remaining Schema v1 is PROPOSAL.
@@ -24,7 +33,7 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
 - Runtime directories are reserved for uploads and model artifacts.
   No upload/storage feature, Session dependency or repository is implemented yet.
 - Canonical documents created: AGENTS, README, architecture, domain model, Schema v1
-  proposal, API contract, decisions/ADRs 001–007, roadmap and testing guide.
+  proposal, API contract, decisions/ADRs 001–010, roadmap and testing guide.
 - Local verification tooling: PowerShell/POSIX test, reset, seed and DB status
   scripts. Reset is restricted to development/test, local hosts and explicit
   `shelfcash`/`shelfcash_test` databases; test permits only the latter. It recreates
@@ -36,14 +45,66 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
 - [Full test flow](runbooks/FULL_TEST_FLOW.md) and
   [scaffold feature guide](features/SCAFFOLD.md) provide manual HTTP and persisted
   DB verification. All execution/testing/demo preparation remains local; no Kaggle
-  or hosted notebook dependency. Only S1.1/S1.2 schema clusters are implemented; all
+  or hosted notebook dependency. Only S1.1/S1.2/S1.3 schema clusters are implemented; all
   later business features remain unimplemented. Seed verifies schema, writes no rows.
 - Integration tests own only separate `shelfcash_test`, created if absent by the
   local role. Tests run sequentially and never reset normal development state.
 
 ## Verification
 
-S1.2 verified on Windows/Python 3.11.9, 2026-10-05:
+S1.3.1 verified on Windows/Python 3.11.9, 2026-10-05:
+- Targeted test_data_semantics_correction.py: **9 passed**, actual isolated
+  shelfcash_test. ORM NULL/raw SQL omitted/NULL receipt persistence via fresh sessions,
+  no fabricated snapshot date/default, strict supplier NULL rejection, exact pack cost,
+  known-row downgrade/re-upgrade and transactional refusal with unknown receipt dates.
+- `./scripts/test.ps1 all`: **182 passed** (14 unit, 166 integration, 2 API),
+  one existing Starlette/AnyIO deprecation warning, no skips. All S1.1/S1.2/S1.3
+  regressions and metadata/migration agreement pass. Fresh upgrade and downgrade/
+  re-upgrade on isolated PostgreSQL pass. No tests mutate normal development state.
+- Compose config/up --wait/ps pass; PostgreSQL 17.11 healthy. Development reset,
+  upgrade/current/status/seed pass at 0005_data_semantics_correction; thirteen empty
+  business tables and one Alembic row. Read-only inspection confirms received_date
+  nullable/no default, strict supplier columns nonnullable/no defaults and expiry check.
+- Application/model/domain imports with psycopg connection forbidden pass. Generated
+  and live OpenAPI exactly match saved pre-S1.1 baseline. Live /health is HTTP 200
+  with unchanged payload; verification server stopped. pip check passes.
+- Scope/diff/status/whitespace reviewed. Pre-task hashes prove all prior models except
+  InventoryLot, all migrations including 0004, accepted ADRs including 008/009 and
+  API_CONTRACT preserved byte-for-byte. No new tables, services, repositories, import
+  implementation or public endpoints. Existing S1.3 WIP preserved; no commit.
+- PowerShell runtime verified; POSIX wrappers unchanged, historical syntax-only
+  verification retained. No POSIX runtime claim. No remaining acceptance blocker.
+
+### S1.3 acceptance -- HISTORICAL INFORMATION
+
+S1.3 verified on Windows/Python 3.11.9, 2026-10-05:
+- Targeted `test_supplier_operational_constraints.py`: **80 passed**, actual isolated
+  shelfcash_test. Six-model commit/close/fresh-session reload, many-to-many terms,
+  version/active overlap, pack/minimum/cost/lead/shelf-life, canonical sales identity,
+  lot expiry/unit/store, movement type/sign/reference/lot consistency, controlled
+  scope/registry and NULL STORE uniqueness tested. Boundaries/limits explicit.
+- `./scripts/test.ps1 all`: **173 passed** (14 unit, 157 integration, 2 API), one
+  existing Starlette/AnyIO deprecation warning, no skips. All prior S1.1/S1.2 tests
+  remain passing; metadata/migration comparison passes. Fresh reset/upgrade and
+  0004->0003->head succeed on shelfcash_test; bootstrap reaches scaffold/base and
+  re-upgrades. No test mutates ordinary development state.
+- Compose config/up --wait/ps pass; PostgreSQL 17.11 healthy. Development reset,
+  upgrade/current, seed/status pass at 0004_supplier_ops_constraints. Exactly thirteen
+  empty business tables and one Alembic revision row. S13_VERIFICATION's actual
+  read-only inspection commands execute successfully, including columns/constraints
+  and six domain row queries returning []. No S1.4/import/order tables present.
+- App/model/domain import with psycopg connection forbidden passes; generated
+  OpenAPI exactly matches saved pre-S1.1 baseline. Live /health HTTP 200 unchanged;
+  live /openapi.json identical, verification server stopped afterward.
+- pip check passes. Diff/status/scope/whitespace reviewed; prior business models and
+  migrations, API_CONTRACT, API/domain/repository code and dependencies unchanged.
+  ADR-008/009 indexed ACCEPTED, no commit, no remaining S1.3 acceptance blocker.
+- PowerShell workflow runtime-verified; POSIX wrappers unchanged, previous syntax
+  checks only. No POSIX runtime verification claimed for this slice.
+
+### S1.2 acceptance — HISTORICAL INFORMATION
+
+S1.2 verified on Windows/Python 3.11.9, 2026-10-05 (state before S1.3):
 - Targeted `test_catalog_recipe_schema.py`: **51 passed** on shelfcash_test. Covers
   four-model commit/close/fresh-session reload, exact Decimal/defaults, scoped SKUs
   and nullable semantics, PK/FK/check/exclusion, inclusive/open-ended dates, version,
@@ -151,9 +212,22 @@ an exact transitive lockfile is not part of this scaffold.
 
 ## Next recommended slice — PROPOSAL
 
-S1.3 — Supplier + Operational + Constraints Schema. Freeze that cluster's storage
-semantics and persistence acceptance tests first. Do not begin S1.3 automatically;
-completion of S1.2 authorizes no next slice.
+S1.4 — Forecast + Decision Persistence Schema. Freeze provenance/quantile/snapshot
+contracts and tests first; no computation is implied. Do not begin S1.4 automatically;
+completion of S1.3.1 authorizes no next slice.
+
+## Current schema-only limitations — CURRENT FACT
+
+- Inventory balance and ledger are independently stored. Atomic audited mutation,
+  mandatory receipt movement, append-only enforcement/reconciliation and actor/source
+  validation are future service work governed by ADR-009. No unexplained overwrite
+  is authorized application behavior, but privileged SQL is not prevented by triggers.
+- Mandatory expiry for expiry_tracking ingredients, confirmed receipt/future-date
+  validation and exact budget unit matching Store.currency remain future application
+  checks. DB does enforce expiry order when both dates are known, same-store/exact ingredient units,
+  numeric ranges and controlled scope/type registry.
+- No import parser/hash/classification/mode/correction/provenance engine, mutation
+  service, FEFO, Forecast or Decision computation. No repository or public business API.
 
 ## Known unresolved decisions — PROPOSAL
 

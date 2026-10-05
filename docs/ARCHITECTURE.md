@@ -1,7 +1,7 @@
 # Target Competition MVP architecture
 
 This document describes **target architecture**, not runtime implementation.
-ACCEPTED DECISION sections derive from active ADRs 001, 002, 004–007. Layout details and future
+ACCEPTED DECISION sections derive from active ADRs 001, 002, 004–010. Layout details and future
 contracts are PROPOSAL until their slice accepts them. See CURRENT_STATE for reality.
 
 ## System context — ACCEPTED DECISION
@@ -78,11 +78,29 @@ flowchart TD
     SQLAlchemy --> PostgreSQL[(PostgreSQL)]
 ```
 
-CURRENT FACT: health performs no persistence operation. S1.1/S1.2 implement ORM
-User/Store/StoreMembership and Product/Ingredient/Recipe/RecipeLine persistence; application/business API paths in the diagram
+CURRENT FACT: health performs no persistence operation. S1.1/S1.2/S1.3 implement
+thirteen ORM tables: identity/store, catalog/recipe, supplier/terms, canonical sales,
+lot/movement and controlled planning constraints. Application/business API paths in the diagram
 remain future work. Only migrations,
 developer commands and integration tests currently connect. PROPOSAL: a backend
 container may later use Compose host `postgres`; it is not part of this slice.
+
+## Import correction and inventory audit — ACCEPTED DECISION (ADR-008/009)
+
+Future import uses content/business identity, not filename. UNCHANGED performs no
+business write; NEW validates before insert; CHANGED follows domain correction
+policy; INVALID/CONFLICT are explicit. No generic upsert/replace-all; missing source
+rows are not automatically deleted. Preserve provenance and explicit import mode.
+CURRENT FACT: no import/hash/parser/classification/mode/correction code exists.
+
+Inventory uses actually received lot current state + movement history, not Event
+Sourcing. Future services create movement and change materialized balance in one
+protected transaction; no unexplained overwrite or expired-lot deletion. Incoming
+stock is not InventoryLot; expired lots have no usable future-demand quantity.
+CURRENT FACT: S1.3 stores/constraints these relationships and signs, but no mutation
+service, balance trigger, immutable ledger enforcement, expiry logic or FEFO exists.
+Mandatory expiry for tracked ingredients and exact budget currency matching remain
+future application validation; no framework/trigger was introduced to fake them.
 
 ## Business pipeline — ACCEPTED DECISION, future behavior
 
@@ -140,3 +158,11 @@ forced strategy are future mutations, not implemented APIs.
 Future simple RBAC uses OWNER/STAFF plus delegated permissions, always enforced
 by backend. Permission to simulate a budget differs from permission to change it.
 Authorization details and public endpoints await accepted slice contracts.
+
+## Source completeness boundary -- ACCEPTED DECISION (ADR-010)
+
+Canonical facts must not be invented to fill missing source values. Future mapping
+retains unknown/ambiguous evidence and evaluates computation readiness per use case.
+Current S1.3.1 schema permits unknown lot receipt date without date defaults; strict
+SupplierTerm procurement inputs remain required. No import/readiness service, public
+warning API, staging table or new application layer is implemented.
