@@ -1,25 +1,120 @@
-# Schema v1 proposal
+# Database schema — implemented cluster and Schema v1 proposals
 
-**PROPOSAL:** all business entities below are conceptual; no business tables exist
-in the scaffold. Field names/types, constraints and indexes must be accepted for each
-vertical slice before migrations/models are implemented. No hidden aggregate is implied.
+**CURRENT FACT:** S1.1 implements only `users`, `stores` and `store_memberships`.
+**ACCEPTED DECISION:** the storage semantics below are frozen for this authorized
+cluster. All other Schema v1 entities remain PROPOSAL; each requires its own accepted
+slice before models/migrations are implemented. No hidden aggregate is implied.
 
 **ACCEPTED DECISION (ADR-007):** PostgreSQL is the Competition database, with
 SQLAlchemy 2.x, psycopg and synchronous Session. Local infrastructure is Docker
 Compose PostgreSQL with a named volume. Reset between versions is
 acceptable. Alembic makes schema state/evolution explicit; long-lived backwards-compatible
 migration support is not a current requirement. The initial empty revision creates
-only `public.alembic_version`, containing `0001_scaffold` at head.
-**CURRENT FACT:** no business schema/model or real business data is implemented.
-The tables below remain PROPOSAL. Tests own separate `shelfcash_test`; development
+only `public.alembic_version`; the next migration `0002_identity_store` creates the
+three identity/store tables and is now head. No other business model is implemented.
+Tests own separate `shelfcash_test`; development
 uses `shelfcash`. Reset recreates only the guarded target's `public` schema.
 
-## Common conventions — PROPOSAL
+## IMPLEMENTED — S1.1 storage contract
+
+Models: `app/models/user.py`, `store.py`, `store_membership.py`. Migration:
+`alembic/versions/0002_identity_store.py`, parent `0001_scaffold`. All columns below
+are NOT NULL. Tables represent mutable current state, not audit snapshots. No
+repository, authentication/authorization enforcement or business API exists yet.
+
+### Shared columns
+
+| Column | PostgreSQL type | Default / semantics |
+| --- | --- | --- |
+| id | UUID PK | `gen_random_uuid()` database-generated v4; explicit UUID allowed |
+| active | BOOLEAN | `true`; stored lifecycle flag, no access enforcement |
+| created_at | TIMESTAMPTZ | `now()` at insertion; no automatic later change |
+| updated_at | TIMESTAMPTZ | `now()` on insert; SQLAlchemy UPDATE uses `now()` |
+
+Database engine sessions use UTC; outputs are aware instants. PostgreSQL TIMESTAMPTZ
+stores an instant rather than a store-local naive datetime. Raw SQL updates must
+explicitly set `updated_at`; no timestamp trigger is installed. `now()` is the
+transaction timestamp. No timestamp/user-lifecycle service is implemented.
+
+### users
+
+Purpose: stored human identity only. Password processing/login semantics deferred.
+
+| Column | Type | Storage rule |
+| --- | --- | --- |
+| email | VARCHAR(320) | Unique canonical email; nonempty, `email = lower(email)`, no POSIX whitespace |
+| password_hash | TEXT | Opaque nonblank hash value; algorithm/verification not implemented |
+| display_name | VARCHAR(200) | Must contain a non-whitespace character |
+
+Constraints: PK `id`; `uq_users_email`; `ck_users_email_canonical`,
+`ck_users_password_hash_nonblank`, `ck_users_display_name_nonblank`.
+No FKs. The unique email constraint supplies its lookup index; no redundant email
+index is added. Canonicalization is a storage requirement: callers supply lowercase
+values without whitespace. PostgreSQL rejects uppercase/whitespace input, never
+silently rewrites it. Its `lower()`/POSIX whitespace definitions govern this check;
+RFC validation, Unicode case-folding, mailbox-provider equivalence, verification
+and a normalization/login application workflow are NOT IMPLEMENTED.
+
+### stores
+
+Purpose: mutable F&B store/business context and future tenancy boundary.
+
+| Column | Type | Storage rule / default |
+| --- | --- | --- |
+| name | VARCHAR(200) | Nonblank, explicitly NOT unique |
+| timezone | VARCHAR(64) | Nonblank; default `Asia/Ho_Chi_Minh` frozen in S1.1 |
+| currency | VARCHAR(3) | Uppercase three-letter shape; default `VND` frozen in S1.1 |
+
+Constraints: PK `id`; `ck_stores_name_nonblank`, `ck_stores_timezone_nonblank`,
+`ck_stores_currency_shape`. No FKs, unique name rule or additional indexes.
+Timezone/currency defaults were previously unresolved and are accepted only for
+this storage cluster. IANA timezone/ISO currency catalog validation, financial
+precision/conversion and business-date cutoff remain future contracts.
+
+### store_memberships
+
+Purpose: persisted User ↔ Store relationship, not permission enforcement.
+
+| Column | Type | Storage rule |
+| --- | --- | --- |
+| store_id | UUID FK → stores.id | Existing store; `ON DELETE RESTRICT` |
+| user_id | UUID FK → users.id | Existing user; `ON DELETE RESTRICT` |
+| role | VARCHAR(5) | Required `OWNER` or `STAFF`; no default |
+| delegated_permissions | JSONB | Default `[]`; must equal `[]` in S1.1 |
+
+Constraints: PK `id`; FKs `fk_store_memberships_store` and
+`fk_store_memberships_user`; `uq_store_memberships_store_user` on (store_id,user_id);
+`ck_store_memberships_role` and `ck_store_memberships_permissions_reserved`.
+Constrained string avoids a separate enum lifecycle while preserving role integrity.
+The unique pair's index covers store-to-member lookup, so no redundant store_id index
+is added. Explicit `ix_store_memberships_user_id` supports reverse user-to-store
+membership lookup. Parent deletion is rejected while memberships exist; no implicit
+cascade or real-state deletion workflow. A user can belong to several stores and a
+store can have several users, with at most one row per pair. No sole-owner/minimum-owner
+or active-parent rule is invented.
+
+`delegated_permissions` is an empty reserved list. Nonempty lists, objects and JSON
+null are rejected; no arbitrary permission vocabulary is accepted. Opening that
+vocabulary needs a later explicit contract/migration. Membership presence/role/active
+does NOT grant runtime authorization in S1.1.
+
+Verification: [STORE_IDENTITY](features/STORE_IDENTITY.md), targeted real PostgreSQL
+tests `tests/integration/test_identity_store_schema.py`, and
+[FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md). Reset leaves these three tables empty
+and one `alembic_version` row `0002_identity_store`; seed writes no entities.
+
+Implementation references: [PostgreSQL date/time types](https://www.postgresql.org/docs/17/datatype-datetime.html)
+and [SQLAlchemy defaults/onupdate](https://docs.sqlalchemy.org/en/20/core/defaults.html).
+
+## Remaining Schema v1 — PROPOSAL / FUTURE
+
+### Common conventions — PROPOSAL
 
 Each entity has a primary `id`. Store-owned records use `store_id` with enforced
 foreign keys and application authorization. Cross-store relationships must be
 rejected by the backend; composite keys/FKs may enforce them when appropriate.
-Identifier encoding, timestamp storage and currency/quantity precision are unresolved.
+S1.1 UUID/timestamp/store defaults above are accepted for that cluster only;
+remaining identifiers and currency/quantity precision are unresolved.
 Do not rely on floating point for exact financial truth: choose an explicit
 money representation/rounding contract in the first affected slice.
 Business-date boundaries use an explicitly agreed store timezone/cutoff policy.
@@ -27,9 +122,6 @@ Indexes below are candidates for real queries, not a command to create unused in
 
 | Entity | Purpose and key fields | Relationships | Important constraints / indexes | Current state or historical snapshot |
 | --- | --- | --- | --- | --- |
-| User | Human identity: id, login identifier, display name, authentication reference, active flag | Memberships connect users to stores | Unique normalized login identifier; no plaintext secrets; auth mechanism deferred | Current identity; historical decisions cannot rely on mutable display name for meaning |
-| Store | Business scope: id, name, timezone, active flag | Parent of memberships and store-owned operational data | Required name/timezone; store isolation across relations | Current store settings, relevant values copied into decision history |
-| StoreMembership | Access: id, user_id, store_id, role, delegated permissions, active flag | User ↔ Store | Unique (store_id, user_id); role restricted to OWNER/STAFF; explicit permission vocabulary; index user_id | Current authorization; audited actor context may be captured in runs |
 | ImportJob | Trace ingestion: id, store_id, source reference/digest, status, mapping_profile_id, created_at, validation summary | Store; optional MappingProfile; provenance for imported rows | Store/date index; validated status transitions; immutable source reference; file/row errors separate from accepted data | Historical import execution/status record |
 | MappingProfile | Approved store mapping: id, store_id, profile version, canonical schema version, file fingerprint, field mapping, approval actor/time, status | Store, approving User/Membership; ImportJobs | Unique (store_id, profile key, version); mapping targets restricted to canonical fields; approved versions immutable | Versioned approved mapping snapshot, with explicit current active selection |
 | Product | Saleable item: id, store_id, code, name, active flag | Store; Recipes, SalesDaily, ForecastPrediction | Unique (store_id, code); store-scoped relations | Current catalog; relevant version/data preserved in history |

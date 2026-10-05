@@ -1,6 +1,7 @@
 # Vertical-slice roadmap
 
-CURRENT FACT: only S0 is implemented. Future slices are PROPOSAL, not permission to
+CURRENT FACT: S0 is complete; S1 is in progress with the S1.1 identity/store schema
+implemented (acceptance status recorded in CURRENT_STATE). Future slices are PROPOSAL, not permission to
 implement them or an accepted public contract. Every slice must freeze precise
 contracts, acceptance tests, rollback scope and affected BE/FE/ML/Data/demo behavior
 before implementation. Preserve unrelated WIP; no batches of backend layers.
@@ -18,17 +19,27 @@ before implementation. Preserve unrelated WIP; no batches of backend layers.
 S6 hardens authorization; it is not permission to postpone minimum access enforcement
 needed by any earlier slice. No unprotected real business data exposure is implied.
 
-Next phase — PROPOSAL: S1 — Domain Model + Database Schema v1. Next smallest
-implementation slice: Store create/read only, after its contract and minimum
-isolation/bootstrap are agreed. Do not implement the full S1 chain at once.
+## S1 schema clusters
+
+| Slice | Status | Scope |
+| --- | --- | --- |
+| S1.1 — Identity + Store | COMPLETE; 22 targeted / 42 full tests, usable manual guide | Only users/stores/store_memberships, storage constraints, direct Session tests and manual inspection; no APIs/repos/auth |
+| S1.2 — Catalog + Recipe | PROPOSAL | Product, Ingredient, Recipe, RecipeLine persistence after semantics freeze |
+| S1.3 — Supplier / Operational / Constraints | PROPOSAL | Supplier/terms, sales/inventory and planning settings after contracts freeze |
+| S1.4 — Forecast / Decision persistence | PROPOSAL | Provenance/snapshot storage after package/quantile semantics freeze; does not implement computation |
+
+Next proposed slice: S1.2 — Catalog + Recipe Schema Cluster. These future clusters
+are planning scope, not implementation permission; none is started automatically.
+Repositories, public APIs, auth and computation need separately authorized slices.
 
 ## Local verification gate
 
 CURRENT FACT: S0 includes categorized repository test runners, guarded PostgreSQL
-reset/migration, explicit empty-baseline seed, read-only DB inspection, a
+reset/migration, explicit no-op schema-verification seed, read-only DB inspection, a
 [scaffold feature guide](features/SCAFFOLD.md) and
 [fresh-environment runbook](runbooks/FULL_TEST_FLOW.md). Business seeds and e2e
-scenarios are not implemented. This tooling slice does not start or complete S1.
+scenarios are not implemented. S1.1 adds only three persistence tables; S1 as a
+whole is not complete.
 
 ACCEPTED DECISION: future major slices are complete only with automated tests,
 relevant integration/persistence coverage, usable manual verification, deterministic

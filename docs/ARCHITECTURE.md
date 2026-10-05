@@ -78,8 +78,9 @@ flowchart TD
     SQLAlchemy --> PostgreSQL[(PostgreSQL)]
 ```
 
-CURRENT FACT: S0 health performs no persistence operation; the application and ORM
-business layers in the diagram are target paths for future slices. Only migrations,
+CURRENT FACT: health performs no persistence operation. S1.1 implements only ORM
+User/Store/StoreMembership persistence; application/business API paths in the diagram
+remain future work. Only migrations,
 developer commands and integration tests currently connect. PROPOSAL: a backend
 container may later use Compose host `postgres`; it is not part of this slice.
 

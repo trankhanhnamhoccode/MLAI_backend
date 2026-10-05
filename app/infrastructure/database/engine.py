@@ -8,5 +8,5 @@ def create_database_engine(settings: Settings) -> Engine:
     return create_engine(
         settings.database_url,
         pool_pre_ping=True,
-        connect_args={"connect_timeout": 5},
+        connect_args={"connect_timeout": 5, "options": "-c timezone=UTC"},
     )

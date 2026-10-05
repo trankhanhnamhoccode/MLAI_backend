@@ -1,7 +1,8 @@
 # S0.2 persistence correction task notes
 
-Classification: ACCEPTED DECISION scope authorized explicitly by the S0.2 request;
-observations below are CURRENT FACT before editing.
+Classification: HISTORICAL INFORMATION for the completed S0.2 correction. The
+authorized scope/observations below preceded S1.1; later identity/store schema
+implementation is documented in S11_TASK_NOTES and CURRENT_STATE.
 
 - Observed state: clean working tree; S0 scaffold and local verification harness,
   no business models/tables/data, empty `0001_scaffold`, no backend Dockerfile.
@@ -25,7 +26,7 @@ observations below are CURRENT FACT before editing.
   runner, status/reset/seed/Alembic, import/OpenAPI/live health, pip check, diff review.
   Native POSIX execution must not be claimed from shell syntax validation alone.
 
-## Final verification — CURRENT FACT
+## Final S0.2 verification — HISTORICAL INFORMATION
 
 S0.2 acceptance gates passed on Windows/Python 3.11.9 on 2026-10-05.
 

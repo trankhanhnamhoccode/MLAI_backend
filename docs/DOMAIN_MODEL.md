@@ -1,16 +1,34 @@
 # Domain model
 
 ACCEPTED DECISION: boundaries and business authority below describe future behavior,
-not implemented services. Entity details are PROPOSAL under Schema v1. CURRENT FACT:
-only empty domain packages exist; no computation, entities or aggregates exist in code.
+not implemented services. CURRENT FACT: plain Python domain packages remain empty,
+but S1.1 persistence models User, Store and StoreMembership now exist. Their storage
+contract is accepted in DATABASE_SCHEMA; all other entity details remain PROPOSAL.
+
+## IMPLEMENTED — Identity / Authorization + Store persistence subset
+
+User stores UUID identity, canonical unique email, opaque password_hash, display name,
+active flag and aware timestamps. Store stores UUID business context, nonunique name,
+timezone/currency (defaults Asia/Ho_Chi_Minh / VND), active flag and aware timestamps.
+StoreMembership links existing User and Store UUIDs, uniquely per pair, with constrained
+OWNER/STAFF role and reserved empty delegated_permissions JSONB. Parent deletion is
+restricted while referenced. These are mutable persistence rows, not domain services.
+
+Relationship: User → many StoreMembership rows ← Store; a user may belong to multiple
+stores and a store may have multiple users. Membership persistence exists.
+Authorization enforcement, login/password verification, permissions, repositories,
+application services and public User/Store/Membership APIs are NOT IMPLEMENTED.
+No role, membership or active flag currently authorizes an application operation.
+See [DATABASE_SCHEMA](DATABASE_SCHEMA.md) for exact accepted storage invariants and
+[STORE_IDENTITY](features/STORE_IDENTITY.md) for persistence/manual verification.
 
 ## Boundaries and relationships
 
 | Boundary | Entities / value concepts | Responsibility and dependencies |
 | --- | --- | --- |
-| Identity / Authorization | User, StoreMembership, OWNER, STAFF, delegated permissions | Authorize store-scoped reads, simulation and mutation separately; all other boundaries enforce permissions at application entry. |
+| Identity / Authorization | User, StoreMembership, OWNER, STAFF, delegated permissions | CURRENT FACT: User/membership persistence exists; permissions reserved empty. FUTURE: authorize store-scoped reads/simulation/mutation separately at application entry. |
 | Import / Mapping | ImportJob, MappingProfile, canonical fields | Validate operational inputs; approved profiles and rules first; bounded LLM suggestion only for ambiguity; human approval where required. |
-| Catalog / Recipe | Store, Product, Ingredient, Recipe, RecipeLine; units, recipe version | Define saleable products, ingredients and deterministic expansion inputs; no LLM facts. |
+| Catalog / Recipe | Store, Product, Ingredient, Recipe, RecipeLine; units, recipe version | CURRENT FACT: Store context persistence only. FUTURE: catalog/recipe definitions and deterministic expansion inputs, no LLM facts. |
 | Operational Data | SalesDaily; store business date, cutoff | Validated historical sales feed Forecasting; cutoff separates observed inputs from future demand. |
 | Forecasting | ForecastRun, ForecastPrediction, P25/P50/P75 | Deterministic model/baseline outputs with input/model versions; consumes sales and product catalog. |
 | Ingredient Demand | Ingredient quantity over time | Expands forecast using catalog/recipe versions; does not select procurement strategy. |

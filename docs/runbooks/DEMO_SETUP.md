@@ -1,7 +1,8 @@
 # Local scaffold demo setup
 
-CURRENT FACT: S0 demonstrates health/OpenAPI and PostgreSQL migration/inspection
-only. No business demo entities, imports, forecasting or decisions exist yet.
+CURRENT FACT: local setup demonstrates health/OpenAPI and PostgreSQL migration/
+inspection, including S1.1's three empty identity/store tables. No public business
+API, demo seed entities, imports, forecasting or decisions exist yet.
 ACCEPTED DECISION: local Compose PostgreSQL and native backend/venv (ADR-007).
 
 Follow [FULL_TEST_FLOW](FULL_TEST_FLOW.md) for first-time Python/Docker setup, then
@@ -20,7 +21,8 @@ Stop existing backend/DB clients before reset. Seed reports no business data; st
 must show reachable `shelfcash`, `at_head: true` and `alembic_version: 1`.
 In a second terminal use the runbook's HTTP assertions and persisted SQL queries:
 health payload is `{"status":"ok","service":"shelfcash-backend"}`, OpenAPI paths
-contain only `/health`, and PostgreSQL contains only revision `0001_scaffold`.
+contain only `/health`, and PostgreSQL contains revision `0002_identity_store`
+alongside empty `users`, `stores`, `store_memberships` after reset.
 Ctrl+C stops FastAPI; `docker compose stop postgres` stops PostgreSQL while retaining
 the named volume. No provider credential or hosted notebook is required.
 

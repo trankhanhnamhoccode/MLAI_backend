@@ -71,9 +71,9 @@ def require_head(state: dict[str, object]) -> None:
 def seed_demo(settings: Settings) -> None:
     state = inspect_database(settings)
     require_head(state)
-    if state["tables"] != {"alembic_version": 1}:
-        raise ValueError("S0 seed expects only the empty scaffold revision table")
-    print("No business seed data: S0 has no business tables. Migrated baseline verified; no rows written.")
+    if set(state["tables"]) != {"alembic_version", "users", "stores", "store_memberships"}:
+        raise ValueError("Seed expects the current Identity + Store schema cluster")
+    print("No business seed data: seeding is not implemented. Migrated schema verified; no rows written.")
 
 
 def reset_database(settings: Settings, seed: bool) -> None:
@@ -110,7 +110,7 @@ def reset_database(settings: Settings, seed: bool) -> None:
 def run_tests(category: str) -> int:
     target = ROOT / "tests" if category == "all" else ROOT / "tests" / category
     if category != "all" and not list(target.rglob("test_*.py")):
-        print(f"No {category} tests implemented in S0; no tests ran.")
+        print(f"No {category} tests implemented; no tests ran.")
         return 0
     return subprocess.run([sys.executable, "-m", "pytest", str(target)], cwd=ROOT).returncode
 

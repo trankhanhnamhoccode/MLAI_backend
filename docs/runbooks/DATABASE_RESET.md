@@ -40,9 +40,10 @@ sh scripts/db_status.sh
 .venv/bin/alembic current
 ```
 
-Omit `-Seed`/`--seed` for reset+migration only. S0 seed writes no business data.
-Expected persisted result: database `shelfcash`, schema `public`, exactly one table
-`alembic_version` and one row `0001_scaffold`; Alembic current is at head.
+Omit `-Seed`/`--seed` for reset+migration only. Seed writes no business data.
+Expected persisted result: database `shelfcash`, schema `public`, `alembic_version`
+with one row `0002_identity_store`, plus empty `users`, `stores`, `store_memberships`.
+Alembic current is at head. Reset destroys any existing rows in that public schema.
 
 For an explicit test-database reset in PowerShell:
 

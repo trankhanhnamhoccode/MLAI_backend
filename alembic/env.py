@@ -3,6 +3,7 @@ from alembic import context
 from app.config import Settings
 from app.infrastructure.database.base import Base
 from app.infrastructure.database.engine import create_database_engine
+import app.models  # Register the accepted persistence tables in Base.metadata.
 
 
 target_metadata = Base.metadata

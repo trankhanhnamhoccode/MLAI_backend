@@ -1,7 +1,8 @@
 # Full local verification flow
 
-CURRENT FACT: this runbook verifies the S0 PostgreSQL scaffold on repository-local
-infrastructure. No business schema/scenarios exist. ACCEPTED DECISION: ADR-007 uses
+CURRENT FACT: this runbook verifies the PostgreSQL scaffold and S1.1 identity/store
+schema on repository-local infrastructure. No business API/scenarios or demo seed
+entities exist. ACCEPTED DECISION: ADR-007 uses
 Docker Compose PostgreSQL, psycopg, synchronous SQLAlchemy and explicit Alembic.
 Prerequisites: Python 3.11+, Docker with Linux containers/Compose, and Docker running.
 No host PostgreSQL installation, hosted notebook or provider credential is needed.
@@ -44,10 +45,11 @@ Expected results:
   On first startup: `at_head: false`, revisions `[]`, tables `{}`. The optional
   `-AllowUnmigrated` flag permits this; default status requires migration head.
 - Reset recreates guarded local `public` and runs migrations. `alembic current`
-  prints `0001_scaffold (head)`; repeated upgrade is safe.
-- Status after reset reports `at_head: true`, revisions `["0001_scaffold"]`, tables
-  `{"alembic_version": 1}`. No business tables/data exist.
-- Seed says `No business seed data`, verifies the baseline and writes no rows.
+  prints `0002_identity_store (head)`; repeated upgrade is safe.
+- Status after reset reports `at_head: true`, revisions `["0002_identity_store"]`,
+  tables `{"alembic_version": 1, "users": 0, "stores": 0, "store_memberships": 0}`.
+  Exactly three business tables exist; no real/demo business data is seeded.
+- Seed says `No business seed data`, verifies the current schema and writes no rows.
   Optional `.\scripts\reset_db.ps1 -Seed` combines reset/migration/seed.
 - All automated tests pass. Integration tests create/own only `shelfcash_test`,
   never reset `shelfcash`; missing PostgreSQL causes failure, not a silent skip.
@@ -70,7 +72,8 @@ if (($schema.paths.PSObject.Properties.Name -join ',') -ne '/health') { throw 'U
 .\.venv\Scripts\python.exe -c "from app.config import Settings; from app.infrastructure.database.engine import create_database_engine; from sqlalchemy import text; e=create_database_engine(Settings()); c=e.connect(); print(c.execute(text('SELECT version_num FROM public.alembic_version')).all()); print(c.execute(text('SELECT tablename FROM pg_tables WHERE schemaname = :schema ORDER BY tablename'), {'schema':'public'}).all()); c.close(); e.dispose()"
 ```
 
-Expected SQL output: `[('0001_scaffold',)]` and `[('alembic_version',)]`.
+Expected SQL output: `[('0002_identity_store',)]` and
+`[('alembic_version',), ('store_memberships',), ('stores',), ('users',)]`.
 Status before/after HTTP calls is identical; health is liveness and writes no DB
 state. Interactive documentation routes remain disabled. Stop FastAPI with Ctrl+C.
 
@@ -106,7 +109,7 @@ In a second terminal at `backend/`:
 set -eu
 .venv/bin/python -c 'import json, urllib.request; h=json.load(urllib.request.urlopen("http://127.0.0.1:8000/health")); assert h == {"status":"ok","service":"shelfcash-backend"}; s=json.load(urllib.request.urlopen("http://127.0.0.1:8000/openapi.json")); assert set(s["paths"]) == {"/health"}; print("HTTP contracts verified")'
 sh scripts/db_status.sh
-.venv/bin/python -c 'from app.config import Settings; from app.infrastructure.database.engine import create_database_engine; from sqlalchemy import text; e=create_database_engine(Settings()); c=e.connect(); assert c.execute(text("SELECT version_num FROM public.alembic_version")).all() == [("0001_scaffold",)]; assert c.execute(text("SELECT tablename FROM pg_tables WHERE schemaname = :schema"), {"schema":"public"}).all() == [("alembic_version",)]; c.close(); e.dispose(); print("Persisted baseline verified")'
+.venv/bin/python -c 'from app.config import Settings; from app.infrastructure.database.engine import create_database_engine; from sqlalchemy import text; e=create_database_engine(Settings()); c=e.connect(); assert c.execute(text("SELECT version_num FROM public.alembic_version")).all() == [("0002_identity_store",)]; assert c.execute(text("SELECT tablename FROM pg_tables WHERE schemaname = :schema ORDER BY tablename"), {"schema":"public"}).all() == [("alembic_version",), ("store_memberships",), ("stores",), ("users",)]; c.close(); e.dispose(); print("Persisted schema verified")'
 ```
 
 Expected results match Windows; `sh scripts/reset_db.sh --seed` is the combined

@@ -2,12 +2,16 @@
 
 Classification: CURRENT FACT unless explicitly marked otherwise.
 
-- Project phase: **S0 — COMPLETE**, including **S0.2 — COMPLETE**.
+- Project phase: **S1 — IN PROGRESS**; S0/S0.2 remain complete.
+- Completed: **S1.1 — Identity + Store Schema Cluster** (persistence only).
 - Greenfield Competition Edition; no legacy backend was imported.
 - Current database: **PostgreSQL**, SQLAlchemy 2.x with psycopg and synchronous
   Session. ADR-007 is ACCEPTED; ADR-003 is SUPERSEDED. The empty Alembic
-  baseline is `0001_scaffold`; only `alembic_version` is created by upgrade.
-- Business implementation status: **not started**. Domain packages are empty.
+  baseline is `0001_scaffold`; current head is `0002_identity_store`.
+- Implemented business tables/models: `users`, `stores`, `store_memberships` only.
+  Identity/store membership persistence exists; authentication/authorization does not.
+  Plain Python domain packages remain empty. Repository/application service layers
+  and public business APIs: not started. Remaining Schema v1 is PROPOSAL.
 - Runtime: FastAPI app factory, Pydantic v2 settings and typed health schema.
   `GET /health` is the only API operation. `/openapi.json` is framework schema
   metadata. Interactive documentation routes are disabled.
@@ -30,11 +34,36 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
 - [Full test flow](runbooks/FULL_TEST_FLOW.md) and
   [scaffold feature guide](features/SCAFFOLD.md) provide manual HTTP and persisted
   DB verification. All execution/testing/demo preparation remains local; no Kaggle
-  or hosted notebook dependency. Business schema and business features: not started.
+  or hosted notebook dependency. Only the S1.1 schema cluster is implemented; all
+  later business features remain unimplemented. Seed verifies schema, writes no rows.
 - Integration tests own only separate `shelfcash_test`, created if absent by the
   local role. Tests run sequentially and never reset normal development state.
 
 ## Verification
+
+S1.1 verified on Windows/Python 3.11.9, 2026-10-05:
+- Targeted `test_identity_store_schema.py`: **22 passed**, real shelfcash_test,
+  covering metadata/migration agreement, fresh-session round trips, PostgreSQL
+  constraints/defaults and UTC timestamp semantics. Development reset/upgrade/head,
+  seed and table-count inspection pass at `0002_identity_store` with empty tables.
+- `./scripts/test.ps1 all`: **42 passed** (14 unit, 26 integration, 2 API), one
+  existing upstream Starlette/AnyIO deprecation warning; no skips. Integration
+  writes/downgrades/resets own only shelfcash_test. Downgrade through the original
+  scaffold and re-upgrade to head pass; model/migration comparison has no drift.
+- Docker Compose up/ps: PostgreSQL 17.11 healthy. The feature guide's direct SQL
+  column/constraint inspection command succeeds. Development status after tests/HTTP
+  remains `alembic_version: 1`, `users: 0`, `stores: 0`, `store_memberships: 0`.
+- App/model/domain imports with psycopg connection forbidden succeed; OpenAPI
+  matches the pre-S1.1 schema exactly. Live `/health` returns unchanged HTTP 200
+  payload, and `/openapi.json` adds no business operations; server stopped afterward.
+- `pip check`: no broken requirements. Diff/status/scope and whitespace reviewed;
+  API_CONTRACT, app API/schemas, dependencies, domain packages and repository layer
+  untouched; no commit. No remaining S1.1 acceptance blocker.
+- Storage semantics/known limits are recorded in DATABASE_SCHEMA and
+  [STORE_IDENTITY](features/STORE_IDENTITY.md). POSIX scripts unchanged; prior syntax
+  verification only, no native POSIX runtime verification claimed.
+
+### S0.2 acceptance — HISTORICAL INFORMATION
 
 S0.2 verified on Windows/Python 3.11.9, 2026-10-05:
 - `docker compose config`, `docker compose up -d postgres`, `docker compose ps`:
@@ -96,14 +125,14 @@ an exact transitive lockfile is not part of this scaffold.
 
 ## Next recommended slice — PROPOSAL
 
-S1 — Domain Model + Database Schema v1: begin with one Store create/read path
-through API → application → PostgreSQL, with
-explicit Pydantic schemas, one migration, store isolation groundwork and acceptance
-tests. Freeze the precise contract first. This does not authorize starting S1.
+S1.2 — Catalog + Recipe Schema Cluster. Freeze that cluster's storage semantics,
+relationships and persistence acceptance tests first. Do not add public CRUD APIs
+or begin S1.2 automatically; completion of S1.1 authorizes no next slice.
 
 ## Known unresolved decisions — PROPOSAL
 
-- S1 Store API fields, identifier format, validation and error contract.
+- Future Store API fields, validation and error contract. S1.1 UUID storage and
+  timezone/currency defaults are frozen; public identifier/payload contracts are not.
 - Authentication/bootstrap and minimum store isolation needed before data exposure.
 - Currency precision/rounding, units/conversions and Vietnam business-date cutoff.
 - Recipe version selection, forecast baseline/quantile calibration and simulator

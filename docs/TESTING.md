@@ -1,6 +1,6 @@
 # Testing
 
-## CURRENT FACT — scaffold verification
+## CURRENT FACT — local verification
 
 Supported full verification command from `backend/`: `./scripts/test.ps1 all` on
 Windows PowerShell, or `sh scripts/test.sh all` on POSIX. Both use the repository
@@ -27,12 +27,26 @@ recreates `public`, then upgrades to Alembic head. Status opens a fresh read-onl
 PostgreSQL transaction, reports reachability, database/server version/revision,
 migration head and table counts. Unreachable databases fail; unmigrated databases
 fail unless reachability-only behavior is explicitly selected. No state is created
-by inspection. S0 seed verifies the empty baseline;
-no business data exists yet. Normal workflows require no hosted notebook or provider.
+by inspection. Seed verifies the current identity/store table set at head and writes
+no data; demo seeding is not implemented. Normal workflows require no hosted notebook
+or provider. After reset all three business tables are empty.
 
 See [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) for fresh setup, live HTTP checks,
 SQL inspection and exact expected state; [SCAFFOLD](features/SCAFFOLD.md) describes
 implemented feature verification and limitations.
+
+S1.1 targeted schema verification:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_identity_store_schema.py -q
+```
+
+POSIX equivalent: `.venv/bin/python -m pytest tests/integration/test_identity_store_schema.py -q`.
+These tests exercise actual UUID PKs, email/pair uniqueness, role/FK/check constraints,
+defaults, metadata/migration agreement and fresh-session User/Store/Membership reads.
+UTC engine sessions and ORM updated_at semantics are tested; raw SQL timestamp
+maintenance remains caller responsibility. See
+[STORE_IDENTITY](features/STORE_IDENTITY.md) for exact manual inspection and limitations.
 
 From `backend/`: `.\.venv\Scripts\python.exe -m pytest` on Windows, or
 `.venv/bin/python -m pytest` on POSIX. Smoke tests verify import, health payload and
