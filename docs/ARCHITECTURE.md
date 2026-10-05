@@ -1,7 +1,7 @@
 # Target Competition MVP architecture
 
 This document describes **target architecture**, not runtime implementation.
-ACCEPTED DECISION sections derive from ADRs 001–006. Layout details and future
+ACCEPTED DECISION sections derive from active ADRs 001, 002, 004–007. Layout details and future
 contracts are PROPOSAL until their slice accepts them. See CURRENT_STATE for reality.
 
 ## System context — ACCEPTED DECISION
@@ -18,7 +18,7 @@ flowchart LR
     Human[Owner / manager / authorized staff] --> UI[Future frontend]
     UI --> BE[ShelfCash FastAPI modular monolith]
     Files[Operational data / Excel] --> BE
-    BE --> DB[(SQLite)]
+    BE --> DB[(PostgreSQL)]
     BE --> Storage[Local uploads / model artifacts]
     BE -. optional semantic or wording tasks .-> LLM[Bounded LLM gateway]
     BE --> Human
@@ -34,7 +34,7 @@ flowchart TD
     Infra[Infrastructure implementations] -. implements .-> Ports
     Composition[Application composition] --> Infra
     Composition --> App
-    Infra --> SQLite[SQLAlchemy / synchronous Session / SQLite]
+    Infra --> PostgreSQL[SQLAlchemy / synchronous Session / psycopg / PostgreSQL]
     Infra --> Local[Local storage]
     Infra --> Gateway[Optional bounded LLM gateway]
 ```
@@ -51,9 +51,37 @@ event sourcing, CQRS or generic agent framework.
 
 Routes handle transport and validated schemas. Application coordinates authorization,
 transactions and use cases. Domain owns plain Python business rules. Repositories
-persist/query; ORM models encode persistence, not business computation. SQLite and
+persist/query; ORM models encode persistence, not business computation. PostgreSQL and
 local storage are infrastructure. ML artifacts are local files in the future, with
 versions captured in decision provenance. No repository abstraction is implemented yet.
+
+## Local persistence topology — ACCEPTED DECISION (ADR-007)
+
+CURRENT FACT: `compose.yaml` defines PostgreSQL 17 with a `pg_isready` healthcheck,
+localhost port 5432 (configurable), and a named `shelfcash-postgres-data` volume.
+Native backend/venv development is supported; no backend Dockerfile exists.
+Runtime verification evidence is recorded in CURRENT_STATE.
+
+```text
+Developer machine
+├── backend / Python venv (FastAPI, SQLAlchemy, psycopg)
+└── Docker Compose
+    └── PostgreSQL
+        └── shelfcash-postgres-data named volume
+```
+
+```mermaid
+flowchart TD
+    Client[Client / Developer] --> FastAPI
+    FastAPI --> Application
+    Application --> SQLAlchemy[SQLAlchemy / synchronous Session / psycopg]
+    SQLAlchemy --> PostgreSQL[(PostgreSQL)]
+```
+
+CURRENT FACT: S0 health performs no persistence operation; the application and ORM
+business layers in the diagram are target paths for future slices. Only migrations,
+developer commands and integration tests currently connect. PROPOSAL: a backend
+container may later use Compose host `postgres`; it is not part of this slice.
 
 ## Business pipeline — ACCEPTED DECISION, future behavior
 

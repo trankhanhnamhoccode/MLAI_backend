@@ -1,7 +1,8 @@
 # Fixtures
 
 CURRENT FACT: S0 has no business input fixtures or seed rows. Tests use fixed health
-values and isolated temporary SQLite databases with revision `0001_scaffold`.
+values and the separate local PostgreSQL `shelfcash_test` database with revision
+`0001_scaffold`. Destructive fixtures own only its `public` schema.
 
 PROPOSAL: add versioned deterministic fixture inputs and independently specified
 expected business facts with the relevant feature slice. NORMAL_WEEK,

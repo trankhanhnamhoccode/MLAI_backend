@@ -19,13 +19,15 @@ Developer commands:
 | Reset + migrations + seed | `./scripts/reset_db.ps1 -Seed` | `sh scripts/reset_db.sh --seed` |
 | Seed/check baseline | `./scripts/seed_demo.ps1` | `sh scripts/seed_demo.sh` |
 | Inspect persisted state | `./scripts/db_status.ps1` | `sh scripts/db_status.sh` |
+| Reachability before migration | `./scripts/db_status.ps1 -AllowUnmigrated` | `sh scripts/db_status.sh --allow-unmigrated` |
 
-Reset is intentionally limited to `ENVIRONMENT=development` and the canonical
-`runtime/shelfcash.db` file. Stop database users beforehand. It rejects linked
-targets/SQLite sidecars, deletes only that DB, and upgrades to Alembic head.
-Status uses a fresh read-only connection, verifies integrity, foreign keys and
-revision against migration head, and prints table counts. Missing/unmigrated DBs
-fail rather than being silently created. S0 seed verifies the empty baseline;
+Reset permits only local `shelfcash`/`shelfcash_test`, environment development/test;
+test permits only the latter. Stop DB users beforehand. Reset transactionally
+recreates `public`, then upgrades to Alembic head. Status opens a fresh read-only
+PostgreSQL transaction, reports reachability, database/server version/revision,
+migration head and table counts. Unreachable databases fail; unmigrated databases
+fail unless reachability-only behavior is explicitly selected. No state is created
+by inspection. S0 seed verifies the empty baseline;
 no business data exists yet. Normal workflows require no hosted notebook or provider.
 
 See [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) for fresh setup, live HTTP checks,
@@ -35,16 +37,43 @@ implemented feature verification and limitations.
 From `backend/`: `.\.venv\Scripts\python.exe -m pytest` on Windows, or
 `.venv/bin/python -m pytest` on POSIX. Smoke tests verify import, health payload and
 Pydantic/OpenAPI agreement, exact route inventory and domain import without transport,
-ORM or infrastructure. A temporary SQLite integration test upgrades/downgrades the
-empty Alembic baseline, checks revision state/foreign-key enforcement and uses a
-synchronous SQLAlchemy Session. No external HTTP call or provider credential is needed.
+ORM or infrastructure. Unit tests assert config/driver and forbid eager DB connection
+on engine construction/import/startup/health. API tests require no database. Integration
+tests execute actual PostgreSQL queries, migrate up/down, use synchronous Session,
+assert durable state through fresh connections, and exercise reset/seed/status/error
+behavior across processes. No external HTTP call or provider credential is needed.
+
+## PostgreSQL dependency and isolation — CURRENT FACT
+
+Start Docker, then `docker compose up -d postgres` and
+`docker compose up -d --wait --wait-timeout 90 postgres` from `backend/`.
+`docker compose ps` must show healthy. The default native URL is
+`postgresql+psycopg://shelfcash:shelfcash@127.0.0.1:5432/shelfcash`.
+`TEST_DATABASE_URL` defaults to the same local role/server and database
+`shelfcash_test`. Configure it in `.env` when port/credentials differ.
+
+Integration fixtures create `shelfcash_test` if absent through the `postgres`
+maintenance DB, then own/reset only its public schema before/after each test.
+The official Compose role has the required local permissions. Unsafe test targets
+are rejected before connection. Tests never destructively operate on `shelfcash`.
+Run suites sequentially; concurrent test/reset clients against the same test DB
+are unsupported. Missing PostgreSQL is an integration failure, not a skipped test.
+`test unit`/`test api` work without a live DB; `test integration`/`test all` require it.
+
+## Platform verification
+
+Windows PowerShell commands are runtime-verified when recorded in CURRENT_STATE.
+POSIX `.sh` scripts are provided with the same shared Python implementation.
+In this Windows session they are shell-syntax checked with Git Bash `bash -n`
+only; native POSIX runtime execution has not been verified. Syntax validation
+must not be described as successful runtime verification.
 
 ## ACCEPTED DECISION — layers for future slices
 
 1. Domain invariant unit tests: plain Python quantities/dates and rules, no DB/server/LLM.
 2. Application/use-case tests: orchestration, permission boundaries, failure behavior,
    transaction scope and deterministic output with explicit dependencies.
-3. Repository/infrastructure integration tests: temporary SQLite, migrations, same-store
+3. Repository/infrastructure integration tests: isolated PostgreSQL, migrations, same-store
    relations, round trips, constraints and actual query behavior; isolate file artifacts.
 4. API contract tests: Pydantic/OpenAPI request/response shape, status/errors, access checks;
    use in-process ASGI client, compare schema when public operations change.

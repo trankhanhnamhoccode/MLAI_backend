@@ -17,7 +17,7 @@ import sys
 
 class RejectInfrastructure:
     def find_spec(self, fullname, path=None, target=None):
-        if fullname.split('.')[0] in {'sqlalchemy', 'sqlite3', 'fastapi', 'httpx'}:
+        if fullname.split('.')[0] in {'sqlalchemy', 'psycopg', 'fastapi', 'httpx'}:
             raise AssertionError('Domain imported external infrastructure: ' + fullname)
         if fullname.startswith(('app.infrastructure', 'app.models', 'app.api')):
             raise AssertionError('Domain imported application infrastructure: ' + fullname)

@@ -4,11 +4,15 @@
 in the scaffold. Field names/types, constraints and indexes must be accepted for each
 vertical slice before migrations/models are implemented. No hidden aggregate is implied.
 
-**CURRENT FACT / ACCEPTED DECISION (ADR-003):** SQLite is the current Competition
-database, with SQLAlchemy 2.x and synchronous Session. Reset between versions is
+**ACCEPTED DECISION (ADR-007):** PostgreSQL is the Competition database, with
+SQLAlchemy 2.x, psycopg and synchronous Session. Local infrastructure is Docker
+Compose PostgreSQL with a named volume. Reset between versions is
 acceptable. Alembic makes schema state/evolution explicit; long-lived backwards-compatible
 migration support is not a current requirement. The initial empty revision creates
-only `alembic_version`. There is no DecisionRun ORM model yet.
+only `public.alembic_version`, containing `0001_scaffold` at head.
+**CURRENT FACT:** no business schema/model or real business data is implemented.
+The tables below remain PROPOSAL. Tests own separate `shelfcash_test`; development
+uses `shelfcash`. Reset recreates only the guarded target's `public` schema.
 
 ## Common conventions — PROPOSAL
 
@@ -16,7 +20,7 @@ Each entity has a primary `id`. Store-owned records use `store_id` with enforced
 foreign keys and application authorization. Cross-store relationships must be
 rejected by the backend; composite keys/FKs may enforce them when appropriate.
 Identifier encoding, timestamp storage and currency/quantity precision are unresolved.
-Do not rely on SQLite floating point for exact financial truth: choose an explicit
+Do not rely on floating point for exact financial truth: choose an explicit
 money representation/rounding contract in the first affected slice.
 Business-date boundaries use an explicitly agreed store timezone/cutoff policy.
 Indexes below are candidates for real queries, not a command to create unused indexes.

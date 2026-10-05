@@ -5,7 +5,7 @@ help a store decide what ingredients to buy, how much, when and under which stra
 balancing shortages, waste and capital. The owner/manager makes the final decision.
 
 **CURRENT FACT:** this project is a scaffold only. It runs a typed health endpoint
-and has SQLite/Alembic infrastructure. Business features have not been implemented.
+and has PostgreSQL/Alembic infrastructure. Business features have not been implemented.
 
 **ACCEPTED DECISION — future pipeline:** operational data → forecast → BOM/recipe
 expansion → ingredient demand → inventory/FEFO → supplier/business constraints →
@@ -15,20 +15,27 @@ Deterministic backend code owns business truth. LLMs never compute or select dec
 
 ## Setup and run
 
-Python 3.11+ is required. From this repository's workspace root, in PowerShell:
+Python 3.11+, Docker with Linux containers and Docker Compose are required.
+PostgreSQL runs in Compose; the backend stays native Python/venv. From this
+repository's workspace root, in PowerShell:
 
 ```powershell
 cd backend
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e '.[dev]'
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+docker compose up -d postgres
+docker compose up -d --wait --wait-timeout 90 postgres
+.\scripts\db_status.ps1 -AllowUnmigrated
 .\.venv\Scripts\alembic.exe upgrade head
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
 
 On POSIX use `.venv/bin/python` and `.venv/bin/alembic`; copy `.env.example` with `cp`.
-Run commands from `backend/`. Relative configured paths resolve against `backend/`,
-including `sqlite:///runtime/shelfcash.db`. Alembic uses Settings and `.env` as the
+Run commands from `backend/`. The local default is
+`postgresql+psycopg://shelfcash:shelfcash@127.0.0.1:5432/shelfcash`; environment/.env
+configures the URL, credentials and test URL. Native PostgreSQL installation is
+unnecessary. Alembic uses Settings and `.env` as the
 configuration source; `alembic.ini` records the default URL for reference.
 The initial migration creates only Alembic's revision table. Application import,
 startup and health checks do not initialize/connect to the DB, create directories
@@ -41,13 +48,21 @@ or contact OpenRouter. No provider key is required.
 ```
 
 For a clean development database, stop the backend/database clients, then run
-`.\scripts\reset_db.ps1 -Seed`. This deletes only the canonical development SQLite
-file and reapplies migrations. S0 has no business seed rows; the seed command
+`.\scripts\reset_db.ps1 -Seed`. This recreates the guarded local PostgreSQL `public`
+schema and reapplies migrations. S0 has no business seed rows; the seed command
 verifies the empty baseline explicitly. POSIX equivalents are
 `sh scripts/test.sh all`, `sh scripts/db_status.sh` and
 `sh scripts/reset_db.sh --seed`. See the
 [full local verification runbook](docs/runbooks/FULL_TEST_FLOW.md) for fresh setup,
 expected HTTP results and direct persisted database checks.
+
+Compose binds PostgreSQL to `127.0.0.1:5432` by default (`POSTGRES_PORT` is configurable)
+and persists it in named volume `shelfcash-postgres-data`. Restart/recreation retains
+data; normal reset keeps the volume. Integration tests own only separate
+`shelfcash_test`, creating it when needed; Docker must be healthy for `test all`.
+Unit/API categories need no live database. See
+[database reset](docs/runbooks/DATABASE_RESET.md) and
+[demo setup](docs/runbooks/DEMO_SETUP.md) for safeguards and expected state.
 
 `GET /health` returns `{"status":"ok","service":"shelfcash-backend"}` by default.
 `GET /openapi.json` exposes the schema; interactive documentation is disabled.
@@ -67,5 +82,5 @@ Upload/artifact folders are reserved; no storage service exists yet.
 - [Roadmap](docs/ROADMAP.md): vertical slices and acceptance gates.
 - [Testing](docs/TESTING.md): verification layers and future golden scenarios.
 
-SQLite databases may be reset between development versions. Alembic still records
+Development PostgreSQL schemas may be reset between versions. Alembic still records
 schema evolution; long-lived compatible migrations are not a current requirement.

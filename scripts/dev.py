@@ -1,12 +1,10 @@
-"""Repository-local verification commands; never imported by the application."""
+"""Repository-local PostgreSQL verification commands, outside application runtime."""
 from __future__ import annotations
 
 import argparse
-from contextlib import closing
 import json
 import os
 from pathlib import Path
-import sqlite3
 import subprocess
 import sys
 
@@ -16,70 +14,95 @@ sys.path.insert(0, str(ROOT))
 from alembic import command
 from alembic.config import Config
 from alembic.script import ScriptDirectory
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import make_url
 
 from app.config import Settings
+from app.infrastructure.database.engine import create_database_engine
 
 
 def migration_config() -> Config:
-    configuration = Config(str(ROOT / "alembic.ini"))
-    configuration.set_main_option("script_location", str(ROOT / "alembic"))
-    return configuration
+    return Config(str(ROOT / "alembic.ini"))
 
 
-def database_path(settings: Settings) -> Path:
+def validate_reset_target(settings: Settings) -> None:
+    """Explicit allowlist: never reset arbitrary databases or remote hosts."""
+    if settings.environment not in {"development", "test"}:
+        raise ValueError("Reset requires ENVIRONMENT=development or test")
     url = make_url(settings.database_url)
-    if not url.database or url.database == ":memory:" or url.query:
-        raise ValueError("Commands require a file-backed SQLite URL without query parameters")
-    path = Path(url.database)
-    return (path if path.is_absolute() else ROOT / path).resolve()
+    if url.host not in {"localhost", "127.0.0.1", "::1", "postgres"} or url.query:
+        raise ValueError("Reset only permits local PostgreSQL hosts without URL query overrides")
+    if url.database not in {"shelfcash", "shelfcash_test"}:
+        raise ValueError("Reset only permits shelfcash or shelfcash_test")
+    if settings.environment == "test" and url.database != "shelfcash_test":
+        raise ValueError("Test resets only permit shelfcash_test")
 
 
 def inspect_database(settings: Settings) -> dict[str, object]:
-    path = database_path(settings)
-    if not path.is_file():
-        raise ValueError(f"Database does not exist: {path}. Run reset_db first.")
-    # mode=ro prevents inspection from creating a DB or modifying business state.
-    with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)) as connection:
-        connection.execute("PRAGMA foreign_keys=ON")
-        integrity = connection.execute("PRAGMA integrity_check").fetchone()[0]
-        tables = {}
-        for (name,) in connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
-        ).fetchall():
-            quoted_name = '"' + name.replace('"', '""') + '"'
-            tables[name] = connection.execute(f"SELECT COUNT(*) FROM {quoted_name}").fetchone()[0]
-        revisions = [row[0] for row in connection.execute("SELECT version_num FROM alembic_version")] if "alembic_version" in tables else []
-        violations = connection.execute("PRAGMA foreign_key_check").fetchall()
-    heads = ScriptDirectory.from_config(migration_config()).get_heads()
-    if integrity != "ok" or violations or sorted(revisions) != sorted(heads):
-        raise ValueError(f"Database verification failed: integrity={integrity}, foreign_key_violations={violations}, revisions={revisions}, expected={heads}")
-    return {"database": str(path), "integrity_check": integrity,
-            "foreign_key_violations": violations, "revisions": revisions, "tables": tables}
+    engine = create_database_engine(settings)
+    try:
+        with engine.connect() as connection, connection.begin():
+            connection.execute(text("SET TRANSACTION READ ONLY"))
+            database = connection.scalar(text("SELECT current_database()"))
+            version = connection.scalar(text("SHOW server_version"))
+            tables: dict[str, int] = {}
+            for name in inspect(connection).get_table_names(schema="public"):
+                quoted = connection.dialect.identifier_preparer.quote_identifier(name)
+                tables[name] = connection.scalar(text(f'SELECT COUNT(*) FROM public.{quoted}'))
+            revisions = (
+                list(connection.scalars(text("SELECT version_num FROM public.alembic_version")))
+                if "alembic_version" in tables else []
+            )
+        heads = ScriptDirectory.from_config(migration_config()).get_heads()
+        return {
+            "reachable": True, "database": database, "server_version": version,
+            "schema": "public", "revisions": revisions, "expected_heads": heads,
+            "at_head": sorted(revisions) == sorted(heads), "tables": tables,
+        }
+    finally:
+        engine.dispose()
+
+
+def require_head(state: dict[str, object]) -> None:
+    if not state["at_head"]:
+        raise ValueError(f"Database is not at Alembic head: {state['revisions']}; expected {state['expected_heads']}")
 
 
 def seed_demo(settings: Settings) -> None:
     state = inspect_database(settings)
+    require_head(state)
     if state["tables"] != {"alembic_version": 1}:
         raise ValueError("S0 seed expects only the empty scaffold revision table")
     print("No business seed data: S0 has no business tables. Migrated baseline verified; no rows written.")
 
 
 def reset_database(settings: Settings, seed: bool) -> None:
-    if settings.environment != "development":
-        raise ValueError("Reset requires ENVIRONMENT=development")
-    path = database_path(settings)
-    canonical = ROOT / "runtime" / "shelfcash.db"
-    if canonical.parent.is_symlink() or canonical.is_symlink():
-        raise ValueError("Reset refuses linked runtime/database paths")
-    if path != canonical or path.parent.resolve() != ROOT / "runtime":
-        raise ValueError("Reset only permits backend/runtime/shelfcash.db")
-    if any(Path(str(path) + suffix).exists() for suffix in ("-wal", "-shm", "-journal")):
-        raise ValueError("Reset refuses SQLite sidecars; stop database users and close/checkpoint the database first")
-    if path.exists():
-        path.unlink()
-    command.upgrade(migration_config(), "head")
-    print(json.dumps(inspect_database(settings), indent=2))
+    validate_reset_target(settings)
+    engine = create_database_engine(settings)
+    try:
+        # PostgreSQL DDL is transactional: lock/permission errors roll back this reset.
+        with engine.begin() as connection:
+            if connection.scalar(text("SELECT current_database()")) != make_url(settings.database_url).database:
+                raise ValueError("Connected database does not match the guarded target")
+            connection.execute(text("SET LOCAL lock_timeout = '5s'"))
+            connection.execute(text("SET LOCAL statement_timeout = '15s'"))
+            connection.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
+            connection.execute(text("CREATE SCHEMA public AUTHORIZATION CURRENT_USER"))
+    finally:
+        engine.dispose()
+    # Alembic must use the exact validated URL, including when invoked by a test.
+    previous_url = os.environ.get("DATABASE_URL")
+    os.environ["DATABASE_URL"] = settings.database_url
+    try:
+        command.upgrade(migration_config(), "head")
+    finally:
+        if previous_url is None:
+            os.environ.pop("DATABASE_URL", None)
+        else:
+            os.environ["DATABASE_URL"] = previous_url
+    state = inspect_database(settings)
+    require_head(state)
+    print(json.dumps(state, indent=2))
     if seed:
         seed_demo(settings)
 
@@ -100,7 +123,8 @@ def main() -> int:
     reset = commands.add_parser("reset")
     reset.add_argument("--seed", action="store_true")
     commands.add_parser("seed")
-    commands.add_parser("status")
+    status = commands.add_parser("status")
+    status.add_argument("--allow-unmigrated", action="store_true")
     arguments = parser.parse_args()
     os.chdir(ROOT)
     if arguments.command == "test":
@@ -112,7 +136,10 @@ def main() -> int:
         elif arguments.command == "seed":
             seed_demo(settings)
         else:
-            print(json.dumps(inspect_database(settings), indent=2))
+            state = inspect_database(settings)
+            print(json.dumps(state, indent=2))
+            if not arguments.allow_unmigrated:
+                require_head(state)
         return 0
     except Exception as error:
         print(f"ERROR: {error}", file=sys.stderr)

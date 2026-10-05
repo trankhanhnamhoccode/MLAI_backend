@@ -1,6 +1,8 @@
 # Local verification tooling slice
 
-Classification: CURRENT FACT for observed scope; ACCEPTED DECISION references below.
+Classification: HISTORICAL INFORMATION. These notes describe the earlier local
+verification tooling slice under the then-accepted persistence decision; S0.2
+supersedes its persistence assumptions. See S02_TASK_NOTES for active scope.
 
 - Authorized scope: repository test/reset/seed/status commands and reproducible S0
   verification documentation. No S1 business implementation is authorized.

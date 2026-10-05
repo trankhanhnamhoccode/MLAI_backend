@@ -7,8 +7,8 @@ before implementation. Preserve unrelated WIP; no batches of backend layers.
 
 | Slice | End-to-end behavior | Acceptance gate before implementation |
 | --- | --- | --- |
-| S0 — Scaffold + architecture freeze | App/settings → health/OpenAPI → SQLite migration bootstrap → canonical docs | Import works; typed health HTTP 200; only intended routes; domains import without DB/infrastructure; empty migration upgrades/downgrades; docs and ADR links verified. CURRENT FACT: implemented, verification recorded in CURRENT_STATE. |
-| S1 — Operational truth | Store → Product → Ingredient → Recipe → Sales → Inventory Lot → Supplier Term | Split into small create/read/validate/persist vertical paths. Define Pydantic contracts, store boundaries, units/money/date rules and corrections. Assert validated persistence/retrieval, same-store relations, rejected invalid data and reproducible clean DB migrations. |
+| S0 — Scaffold + architecture freeze | App/settings → health/OpenAPI → PostgreSQL migration bootstrap → canonical docs | Includes S0.2 persistence correction: healthy Compose, named volume, isolated real PostgreSQL tests, guarded reset/status/seed, migration head and unchanged API. Completion evidence/status is recorded in CURRENT_STATE. |
+| S1 — Domain Model + Database Schema v1 / Operational truth | Store → Product → Ingredient → Recipe → Sales → Inventory Lot → Supplier Term | Split into small create/read/validate/persist vertical paths. Define Pydantic contracts, store boundaries, units/money/date rules and corrections. Assert validated persistence/retrieval, same-store relations, rejected invalid data and reproducible clean DB migrations. |
 | S2 — Forecast | Sales → model/baseline → ForecastRun → P25/P50/P75 | Freeze cutoff, horizon, baseline/model, quantile semantics and data contract. Assert future dates, ordered nonnegative quantiles, reproducible controlled-input output, input/model provenance and no LLM dependence. |
 | S3 — Decision MVP | Forecast → BOM → ingredient demand → inventory/FEFO → three candidates → exact simulation → comparison → recommendation → DecisionRun | Freeze units, simulator granularity, objective/tie break, infeasibility and package schema. Assert demand/pack/MOQ/expiry/arrival invariants, exactly three evaluated strategies, deterministic selection, preserved schema-versioned snapshot, all golden scenarios and provider-outage operation. |
 | S4 — Explanation + What-if | Authorized facts → wording; baseline + mutation → recomputation → comparison | Freeze allowed tools/mutations and permissions. Assert fact fidelity, deterministic recomputation, authorized facts only, no real-state mutation, simulation vs mutation distinction and useful provider-unavailable behavior. |
@@ -18,12 +18,13 @@ before implementation. Preserve unrelated WIP; no batches of backend layers.
 S6 hardens authorization; it is not permission to postpone minimum access enforcement
 needed by any earlier slice. No unprotected real business data exposure is implied.
 
-Next smallest slice: S1 Store create/read only, after its contract and minimum
+Next phase — PROPOSAL: S1 — Domain Model + Database Schema v1. Next smallest
+implementation slice: Store create/read only, after its contract and minimum
 isolation/bootstrap are agreed. Do not implement the full S1 chain at once.
 
 ## Local verification gate
 
-CURRENT FACT: S0 now includes categorized repository test runners, guarded SQLite
+CURRENT FACT: S0 includes categorized repository test runners, guarded PostgreSQL
 reset/migration, explicit empty-baseline seed, read-only DB inspection, a
 [scaffold feature guide](features/SCAFFOLD.md) and
 [fresh-environment runbook](runbooks/FULL_TEST_FLOW.md). Business seeds and e2e

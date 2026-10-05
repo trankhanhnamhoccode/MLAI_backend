@@ -2,31 +2,63 @@
 
 Classification: CURRENT FACT unless explicitly marked otherwise.
 
-- Project phase: **SCAFFOLD / ARCHITECTURE FREEZE** (S0).
+- Project phase: **S0 — COMPLETE**, including **S0.2 — COMPLETE**.
 - Greenfield Competition Edition; no legacy backend was imported.
-- Current database: **SQLite**, synchronous SQLAlchemy 2.x. The empty Alembic
+- Current database: **PostgreSQL**, SQLAlchemy 2.x with psycopg and synchronous
+  Session. ADR-007 is ACCEPTED; ADR-003 is SUPERSEDED. The empty Alembic
   baseline is `0001_scaffold`; only `alembic_version` is created by upgrade.
 - Business implementation status: **not started**. Domain packages are empty.
 - Runtime: FastAPI app factory, Pydantic v2 settings and typed health schema.
   `GET /health` is the only API operation. `/openapi.json` is framework schema
   metadata. Interactive documentation routes are disabled.
 - Import/startup/health do not initialize the database or contact external services.
-- Runtime directories are reserved for SQLite, uploads and model artifacts.
+- Local DB: Docker Compose official PostgreSQL 17, native `pg_isready` healthcheck,
+  loopback port 5432 and persistent named volume `shelfcash-postgres-data`.
+  Backend remains native Python/venv; no host PostgreSQL install is needed.
+- Runtime directories are reserved for uploads and model artifacts.
   No upload/storage feature, Session dependency or repository is implemented yet.
 - Canonical documents created: AGENTS, README, architecture, domain model, Schema v1
-  proposal, API contract, decisions/ADRs 001–006, roadmap and testing guide.
+  proposal, API contract, decisions/ADRs 001–007, roadmap and testing guide.
 - Local verification tooling: PowerShell/POSIX test, reset, seed and DB status
-  scripts. Reset is restricted to development and canonical `runtime/shelfcash.db`,
-  applies migrations and optionally checks the seed baseline. Status verifies
-  integrity/foreign keys/revision and table counts via a fresh read-only connection.
+  scripts. Reset is restricted to development/test, local hosts and explicit
+  `shelfcash`/`shelfcash_test` databases; test permits only the latter. It recreates
+  `public`, migrates and optionally checks the seed baseline. Status reports
+  reachability/database/server/revision/head and table counts via a fresh read-only
+  transaction. `AllowUnmigrated` permits inspection before migration.
 - Tests are organized into unit/integration/api/e2e/fixtures; no e2e/business seed
   or golden business scenarios exist yet. Seed reports no business rows written.
 - [Full test flow](runbooks/FULL_TEST_FLOW.md) and
   [scaffold feature guide](features/SCAFFOLD.md) provide manual HTTP and persisted
   DB verification. All execution/testing/demo preparation remains local; no Kaggle
-  or hosted notebook dependency. Accepted SQLite ADR-003 is unchanged.
+  or hosted notebook dependency. Business schema and business features: not started.
+- Integration tests own only separate `shelfcash_test`, created if absent by the
+  local role. Tests run sequentially and never reset normal development state.
 
 ## Verification
+
+S0.2 verified on Windows/Python 3.11.9, 2026-10-05:
+- `docker compose config`, `docker compose up -d postgres`, `docker compose ps`:
+  succeed; service healthy, named volume mounted. PostgreSQL server is 17.11.
+- PowerShell status/reset/seed and Alembic upgrade/current succeed against fresh
+  PostgreSQL. Persisted public state is only revision `0001_scaffold`, one row.
+- `.venv/Scripts/python.exe -m pytest` and `./scripts/test.ps1 all`:
+  **20 passed** each (14 unit, 4 integration, 2 API), one existing upstream
+  Starlette/AnyIO deprecation warning. No skips; real PostgreSQL integration tests.
+- `pip check` passes; psycopg/psycopg-binary 3.3.6 installed. App import and exact
+  saved-before/generated-after OpenAPI comparison pass. Live Uvicorn `/health`
+  returns unchanged HTTP 200 payload; `/openapi.json` is identical. Server stopped.
+- `docker compose up -d --force-recreate --wait --wait-timeout 90 postgres`:
+  healthy; subsequent fresh status retained revision/table state in the named volume.
+  Reset without seed, upgrade/current, standalone seed and final status also pass.
+- All five POSIX wrappers pass Git Bash `bash -n`: syntax-checked only, no native
+  POSIX runtime verification. PowerShell workflow is runtime-verified.
+- Diff/status reviewed, whitespace check passes; public API/migration/business
+  model surface unchanged, no commit created. Remaining old persistence references
+  are classified in [cleanup audit](runbooks/S02_SQLITE_AUDIT.md) as historical only.
+- No remaining S0.2 acceptance blocker. Native URL defaults use explicit loopback
+  to avoid this Windows machine's hostname/IPv6 fallback delay. URL remains configurable.
+
+### Earlier local verification slice — HISTORICAL INFORMATION
 
 Local verification tooling slice verified on 2026-10-05 (Windows/Python 3.11.9):
 - `./scripts/test.ps1 all`: **13 passed**, one existing upstream Starlette/AnyIO
@@ -64,7 +96,8 @@ an exact transitive lockfile is not part of this scaffold.
 
 ## Next recommended slice — PROPOSAL
 
-Begin S1 with one Store create/read path through API → application → SQLite, with
+S1 — Domain Model + Database Schema v1: begin with one Store create/read path
+through API → application → PostgreSQL, with
 explicit Pydantic schemas, one migration, store isolation groundwork and acceptance
 tests. Freeze the precise contract first. This does not authorize starting S1.
 

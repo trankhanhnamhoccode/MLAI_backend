@@ -16,10 +16,11 @@ belongs in CURRENT_STATE; report drift rather than hiding it by editing decision
 | --- | --- | --- | --- | --- |
 | ADR-001 | Backend owns business authority | ACCEPTED | Deterministic backend owns facts, feasibility, risk and recommendation; LLM only approved semantics/wording | [ADR-001](adr/ADR-001-backend-business-authority.md) |
 | ADR-002 | Modular Monolith for Competition MVP | ACCEPTED | One FastAPI modular monolith; no distributed infrastructure without concrete need | [ADR-002](adr/ADR-002-modular-monolith.md) |
-| ADR-003 | SQLite persistence for Competition Edition | ACCEPTED | Synchronous SQLAlchemy 2.x/SQLite; resets acceptable; explicit Alembic evolution | [ADR-003](adr/ADR-003-sqlite-persistence.md) |
+| ADR-003 | SQLite persistence for Competition Edition | SUPERSEDED | Historical scaffold decision; superseded by ADR-007 before business schema/data | [ADR-003](adr/ADR-003-sqlite-persistence.md) |
 | ADR-004 | Bounded LLM responsibilities | ACCEPTED | Only ambiguous Excel semantics and authorized summary/copilot wording | [ADR-004](adr/ADR-004-bounded-llm.md) |
 | ADR-005 | DecisionRun is an auditable versioned snapshot | ACCEPTED | Self-contained historical context; package_schema_version starts at 1 | [ADR-005](adr/ADR-005-decision-run-snapshot.md) |
 | ADR-006 | What-if is hypothetical and non-persistent by default | ACCEPTED | Deterministic baseline-plus-mutation recomputation; no silent real-state persistence | [ADR-006](adr/ADR-006-hypothetical-what-if.md) |
+| ADR-007 | PostgreSQL Persistence Baseline | ACCEPTED | PostgreSQL/psycopg, synchronous SQLAlchemy 2.x, Alembic, local Compose named volume and guarded resets | [ADR-007](adr/ADR-007-postgresql-persistence-baseline.md) |
 
 Preserve accepted ADR intent. Gather evidence and propose a linked replacement when
 intent should change; do not quietly modify an accepted decision to simplify coding.
