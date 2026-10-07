@@ -53,8 +53,10 @@ default. Avoid generic base services, excessive inheritance, service locators,
 implicit global mutable state, arbitrary dictionary API contracts, unused wrappers,
 and speculative abstractions. Empty domain packages are preferable to fake services.
 
-Keep SQLite, local storage and one process architecture. Do not add PostgreSQL,
-MongoDB, microservices, Kubernetes, Kafka, Celery, brokers, generic agent frameworks,
+Keep PostgreSQL via SQLAlchemy 2.x synchronous Session/psycopg (ADR-007), local
+storage and one backend process. Local PostgreSQL runs through Docker Compose with
+a named volume. Do not add MongoDB, microservices, Kubernetes, Kafka, Celery,
+brokers, generic agent frameworks,
 enterprise IAM, event sourcing, CQRS or unnecessary repository abstractions.
 Add ML, spreadsheet or provider dependencies only for an authorized vertical slice.
 
@@ -76,3 +78,15 @@ update `docs/API_CONTRACT.md` only for an explicitly accepted contract change.
 Do not modify an accepted ADR to ease implementation. If it appears wrong, gather
 evidence and propose a replacement/superseding ADR rather than silently violating it.
 Do not start the next slice without authorization.
+
+## Reproducible local verification
+
+Major slices require automated tests, relevant integration/persistence coverage,
+deterministic inputs where practical, usable manual verification and canonical
+feature documentation. Assert committed state through a fresh session alongside
+application/API results. HTTP 2xx alone is not persistence evidence.
+Use the supported test/reset/seed/db-status scripts and FULL_TEST_FLOW runbook;
+integration tests own only `shelfcash_test`, never the development database.
+Reset is permitted during Competition development, guarded to local development/test
+targets; explicit Alembic schema evolution remains required. Do not add speculative
+business seed entities, and do not depend on hosted notebooks for local workflows.

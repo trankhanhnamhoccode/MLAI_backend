@@ -2,66 +2,71 @@
 
 ## Status and purpose
 
-CURRENT FACT: implemented S0. Provides typed liveness, OpenAPI metadata and an empty
-SQLite/Alembic baseline, plus local verification commands. No business features,
-authentication, imports or computation are implemented.
+CURRENT FACT: S0 scaffold with S0.2 persistence correction; runtime acceptance
+evidence/status is in CURRENT_STATE. Provides typed liveness, OpenAPI metadata,
+PostgreSQL/Alembic infrastructure and local verification commands. The original S0
+baseline was empty; S1.1/S1.2/S1.3 add the
+[identity/store](STORE_IDENTITY.md) and [catalog/recipe](CATALOG_RECIPE.md) schemas plus
+[S1.3 supplier/operational/constraints](../runbooks/S13_VERIFICATION.md). No business APIs, authentication,
+imports or computation are implemented.
 
 ## Invariants and relevant ADRs
 
-ACCEPTED DECISION: [ADR-002](../adr/ADR-002-modular-monolith.md) retains one modular
-monolith; [ADR-003](../adr/ADR-003-sqlite-persistence.md) retains synchronous SQLite
-and explicit migrations. [ADR-001](../adr/ADR-001-backend-business-authority.md)
-keeps future business truth independent of LLM. CURRENT FACT: import/startup/health
-do not connect to the database or providers. Reset requires development environment
-and the canonical `backend/runtime/shelfcash.db` path; linked paths and SQLite
-sidecars are refused. Stop database users before reset.
+ACCEPTED DECISION: ADR-002 retains one modular monolith; ADR-007 retains PostgreSQL,
+psycopg, synchronous SQLAlchemy, Alembic and Compose named volume. ADR-001 keeps
+future business truth independent of LLM. CURRENT FACT: import/startup/health do
+not connect to the DB or providers. Guarded reset affects only local `public` in
+`shelfcash`/`shelfcash_test`; test environment permits only the latter.
 
 ## API contract and persistence
 
-See [API_CONTRACT](../API_CONTRACT.md). `GET /health` returns HTTP 200 with
-`{"status":"ok","service":"shelfcash-backend"}` under default configuration.
-`GET /openapi.json` has only `/health` in `paths`. Health writes/reads no tables.
-Alembic upgrade writes `alembic_version`, with one row `0001_scaffold`.
-Status/seed read it through a fresh read-only SQLite connection. Seed writes no
-rows and explicitly reports that business seed data does not yet exist.
+See [API_CONTRACT](../API_CONTRACT.md). `GET /health` returns HTTP 200 and
+`{"status":"ok","service":"shelfcash-backend"}` by default. `/openapi.json`
+has only `/health` in paths. Interactive documentation remains disabled.
+Health reads/writes no tables. Alembic writes `public.alembic_version`, one row
+`0006_forecast_decision_persist` at current head (`0001_scaffold` is historical baseline).
+Status/seed read it through a fresh PostgreSQL read-only transaction.
+Seed reports no business data and writes no rows.
 
-## Happy path and manual verification
+## Happy path, inspection and expected state
 
-Follow [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md): reset with seed, inspect
-revision/integrity/table counts, run tests, start backend and assert health/OpenAPI,
-then inspect database again. Expected persisted state is exactly
-`alembic_version: 1`; there are no business tables. The runbook includes direct SQL
-inspection through Python's built-in sqlite3, so no separate database client is needed.
+Follow [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md): start Compose, await health,
+check reachability, reset/migrate/seed, run tests, start FastAPI, assert health and
+OpenAPI, then inspect persisted PostgreSQL state through status and direct SQL.
+Expected `public` tables: `alembic_version` (one row `0006_forecast_decision_persist`) plus
+empty `users`, `stores`, `store_memberships`, `products`, `ingredients`, `recipes`,
+`recipe_lines`, `suppliers`, `supplier_terms`, `sales_daily`, `inventory_lots`,
+`inventory_movements`, `business_constraints`, `forecast_runs`, `forecast_predictions`, `decision_runs` after reset. S1.4 run tables also exist; no Import/Order/What-if tables.
+No manual Docker exec or host database client is needed for inspection.
 
 ## Failure paths and reset/retry
 
-- Missing database, stale revision, integrity or foreign-key violations: status
-  exits nonzero. Health may still succeed because it is liveness only.
-- Invalid category, invalid configuration, migration failure or missing virtual
-  environment: commands fail with a nonzero exit and error message.
-- Non-development or noncanonical reset target: reset fails before deletion.
-- SQLite sidecar present: close database users, resolve/checkpoint the database,
-  then retry. Do not manually delete active sidecars.
-- Reset deletes the canonical development DB, then migrates it. Migration failure
-  may leave a partial database; correct the error and retry reset. Preserve a backup
-  beforehand if local state is needed. Uploads/model artifacts remain untouched.
+Connection failures, unsafe reset targets, migration failures, invalid category,
+missing environment or stale revisions return nonzero with an error message.
+Reachable unmigrated status needs the explicit `AllowUnmigrated` option; seed
+always requires head. HTTP health can succeed while PostgreSQL is unavailable.
+See [DATABASE_RESET](../runbooks/DATABASE_RESET.md) for target guards, lock timeout,
+transaction rollback, retry behavior and named-volume retention. Stop concurrent
+DB users before reset; save local state first if needed.
 
 ## Automated tests and fixtures
 
-`tests/unit/test_smoke.py`: application import and domain independence.
-`tests/api/test_health.py`: health schema, routes and OpenAPI contract.
-`tests/integration/test_database_bootstrap.py`: upgrade/downgrade, revision and
-foreign-key enforcement with synchronous Session.
-`tests/integration/test_verification_commands.py`: process-level rejection/status/
-seed checks, fresh persisted reads, repeat reset and sidecar protection.
-Fixtures use temporary SQLite and fixed expected values; no hosted notebook,
-provider, random data or credentials are required.
+- Unit: application/domain independence, config/driver, lazy engine/import/health,
+  reset-target guards and invalid category.
+- API: original typed health/OpenAPI/route inventory contract.
+- Integration: actual local `shelfcash_test` connect/query/synchronous Session,
+  migration up/down, fresh persisted reads, repeat reset/seed, rejection without
+  data loss and reachable unmigrated status without state creation.
+
+No fake DB replaces PostgreSQL integration checks. Fixtures are fixed/isolated and
+never reset `shelfcash`. Tests run sequentially and own the test DB's public schema.
+No hosted notebook, LLM oracle or business input fixture is needed for S0.
 
 ## Known limitations
 
-CURRENT FACT: no business seed, representative business API flow or e2e suite exists.
-PROPOSAL: business fixtures and golden scenarios arrive with their authorized slices.
-PowerShell scripts use `.venv/Scripts/python.exe`; POSIX scripts use `.venv/bin/python`.
-Reset supports only the canonical development file; status can inspect another
-configured file-backed SQLite database. Database health is verified by status, not
-the HTTP health endpoint. Stop concurrent processes; reset is a local offline workflow.
+No business seed, business API flow or e2e suite exists. PROPOSAL: business fixtures
+and golden scenarios arrive with their authorized slices. PowerShell uses
+`.venv/Scripts/python.exe`; POSIX uses `.venv/bin/python`. Runtime verification for
+POSIX must be distinguished from syntax validation (see TESTING/CURRENT_STATE).
+Only dedicated local default database names/hosts support reset. No backend Docker
+image or DB HTTP administration endpoint is introduced.

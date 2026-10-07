@@ -1,15 +1,38 @@
+# Python environments, bytecode and package build output
 .venv/
+venv/
 __pycache__/
 *.py[cod]
 *.egg-info/
-.pytest_cache/
-.coverage
-htmlcov/
 dist/
 build/
+
+# Test, type-checker and formatter caches/reports
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Local secrets; keep the documented configuration template
 .env
 .env.*
 !.env.example
+.envrc
+.secrets/
+/secrets/
+/credentials*.json
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Generated uploads, model artifacts, evaluation outputs and local DB exports
 runtime/*
 !runtime/.gitkeep
 !runtime/uploads/
@@ -18,3 +41,38 @@ runtime/uploads/*
 runtime/model_artifacts/*
 !runtime/uploads/.gitkeep
 !runtime/model_artifacts/.gitkeep
+/model_artifacts/
+/uploads/
+/db_backups/
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+
+# Personal editor/OS files and temporary logs
+.idea/
+.vs/
+*.code-workspace
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Local context exports for external review; canonical source/docs live above.
+/backendContext/
+/backendContext.zip
+/shelfcash_*.zip

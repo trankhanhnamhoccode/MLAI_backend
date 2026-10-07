@@ -1,7 +1,15 @@
 # ADR-003 — SQLite persistence for Competition Edition
 
 ## Status
-ACCEPTED
+SUPERSEDED by [ADR-007 — PostgreSQL Persistence Baseline](ADR-007-postgresql-persistence-baseline.md).
+
+SQLite was accepted during the initial scaffold. The explicit S0.2 correction
+superseded it before any business schema or real business data was implemented.
+PostgreSQL is now the Competition Edition persistence baseline. SQLite is no
+longer an active application persistence backend.
+
+The original decision below is preserved as HISTORICAL INFORMATION, not active
+architectural authority.
 
 ## Context
 Competition development/demo values clarity and reproducible state over long-lived
