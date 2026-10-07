@@ -1,5 +1,49 @@
 # Testing
 
+## S2.3 retained execution ? CURRENT FACT
+
+Targeted tests: tests/unit/test_forecast_serialization.py and
+tests/integration/test_forecast_execution_flow.py, plus S2.1/S2.2 and S1 lifecycle
+regressions. Capture/flush/commit/replay/integrity assertions use real shelfcash_test
+and fresh Sessions. Schema/head assertions now include forecast_run_inputs / 0007.
+Runnable manual verification: [S23_VERIFICATION](runbooks/S23_VERIFICATION.md).
+No development reset; full regression once at final gate after targeted green.
+Results and limitations: S23_TASK_NOTES/CURRENT_STATE.
+
+## S2.2 baseline verification — CURRENT FACT
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_forecast_execution.py tests/unit/test_forecast_baseline.py tests/integration/test_forecast_execution_s1_regression.py tests/integration/test_application_paths.py tests/integration/test_repositories.py -q
+# Full regression once at final gate, after targeted green:
+.\scripts\test.ps1 all
+```
+
+Core baseline/readiness tests are pure unit tests: per-Product empty/single/mixed
+history, all no-history IDs before prediction math, sparse zero, known exact Decimal
+interpolation with small ambient precision/exponent bounds, no caller mutation,
+deterministic ordering/metadata and mandatory canonical output rejection. Existing
+PostgreSQL application/repository/empty-completion regressions own only shelfcash_test;
+no fake baseline DB test or development reset. Manual in-memory computation/example,
+errors and limitations: [FORECAST_EXECUTION](features/FORECAST_EXECUTION.md).
+Final outcomes/counts: CURRENT_STATE and [S22_TASK_NOTES](runbooks/S22_TASK_NOTES.md).
+No baseline evaluation/backtesting or ForecastRun execution E2E is claimed.
+
+## S2.1 execution contract verification — CURRENT FACT
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_forecast_execution.py tests/unit/test_application_contracts.py tests/integration/test_forecast_execution_s1_regression.py tests/integration/test_application_paths.py -q
+# After targeted green, full regression once at final acceptance:
+.\scripts\test.ps1 all
+```
+
+Synthetic pure tests cover explicit scope, Store-local date horizon, sparse zero,
+canonical observations/units, finite exact quantiles, full output keys, immutable
+capture, actual metadata and deterministic order. New integration regression proves
+S1 empty supplied completion and terminal guards through fresh committed reads on
+shelfcash_test; no execution E2E or model/readiness algorithm is claimed. No dev reset.
+Manual example/errors/deferred choices: [FORECAST_EXECUTION](features/FORECAST_EXECUTION.md).
+Exact outcomes/platform/OpenAPI checks: CURRENT_STATE and S21_TASK_NOTES.
+
 ## CURRENT FACT — local verification
 
 Supported full verification command from `backend/`: `./scripts/test.ps1 all` on
@@ -29,7 +73,7 @@ migration head and table counts. Unreachable databases fail; unmigrated database
 fail unless reachability-only behavior is explicitly selected. No state is created
 by inspection. Seed verifies the current S1.1/S1.2/S1.3 table set at head and writes
 no data; demo seeding is not implemented. Normal workflows require no hosted notebook
-or provider. After reset all sixteen business tables are empty.
+or provider. After an explicitly requested reset all seventeen business tables are empty.
 
 See [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) for fresh setup, live HTTP checks,
 SQL inspection and exact expected state; [SCAFFOLD](features/SCAFFOLD.md) describes
@@ -280,3 +324,19 @@ Supported full regression **508 passed** (119 unit, 387 integration, 2 API), no 
 one existing upstream warning; **one full regression run**, after targeted green.
 PostgreSQL, reset/upgrade/status, Alembic/pip checks, protected WIP hashes and exact
 generated/live OpenAPI/health pass. No native POSIX runtime claim.
+
+
+## S2.4-S2.7 trained forecast -- CURRENT FACT
+
+Unit mechanics: test_forecast_model_contracts, test_forecast_trained,
+test_forecast_evaluation and test_forecast_artifacts. Pure causality/missing-zero,
+Decimal/model boundary, temporal paired-target selection, zero/missing metrics,
+artifact integrity/version/write/cleanup tests use SYNTHETIC data, no real quality claim.
+PostgreSQL: test_forecast_trained_execution exercises fresh-session persisted actual
+model/key/metadata/output, retained old artifact replay after live corrections, no
+transaction during I/O/inference, atomic start/completion failure and conservative
+commit/error outcomes. Existing S1/baseline/corrective cases remain regressions.
+Migration roundtrip/autogenerate equality is checked against model metadata by existing
+S2.3 tests. Integration fixtures own only shelfcash_test; never migrate development.
+Manual no-reset verification: python -m scripts.verify_forecast_trained.
+Full checks and exact counts: runbooks/S2_TRAINED_TASK_NOTES.md. Public OpenAPI unchanged.

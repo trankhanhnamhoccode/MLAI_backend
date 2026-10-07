@@ -2,7 +2,41 @@
 
 Classification: CURRENT FACT unless explicitly marked otherwise.
 
-- Project phase: **S1 — COMPLETE**; S0/S0.2 remain complete.
+- Project phase: **S2 — implementation complete / real-data evaluation pending**; S1 and S0/S0.2 remain complete.
+- S2.4–S2.7: causal trained LightGBM, rolling-origin evaluation, immutable trusted local
+  artifacts, purpose-specific execution metadata and retained exact-artifact replay
+  implemented under ADR-015. See [trained forecast](features/FORECAST_TRAINED.md)
+  and [task notes](runbooks/S2_TRAINED_TASK_NOTES.md). S3 has not started.
+- S2 final verification (2026-10-07): **767 passed in 325.76s**, no skips, one existing
+  Starlette/AnyIO warning. First full attempt had one expected-table ordering failure,
+  corrected; targeted schema check passed before the second full gate. No code changes
+  followed the green gate. New coverage: 38 unit and 22 PostgreSQL cases; total
+  308 unit / 457 PostgreSQL / 2 API. OpenAPI equals pre-edit snapshot.
+- Guarded SYNTHETIC trained demo and CLI pure/persisted replay verified through fresh
+  Sessions: three distinct COMPLETED UUIDs, three retained inputs/metadata, 42 predictions,
+  same input/artifact despite corrected live sales/unit values. Development DB remains
+  0006, unmodified; test DB migrated to 0008. Details/IDs/commands in task notes.
+- Quality on suitable real observed-sales data: **NOT EVALUATED**. LightGBM superiority
+  and predictive calibration on real data: **UNPROVEN**. Synthetic comparison proves
+  mechanics only; see [comparison report](reports/S2_SYNTHETIC_COMPARISON.md).
+- Completed: **S2.3 -- Internal baseline execution end-to-end + retained input**.
+  Final verification below. Trusted internal capture/atomic JSONB start,
+  versioned SHA-256, transaction-free baseline computation, validated completion
+  and retained replay exist under ADR-014. Trained/evaluation extension is documented separately under ADR-015; no public API/S3.
+- Completed: **S2.1 — Forecast execution contract and semantic validation**.
+  Internal typed observed-sales execution contracts and pure
+  semantic validation; verification/status below. ADR-012 accepts Store-local D,
+  explicit Product scope, D+1..D+7, sparse captured sales and exact full coverage.
+  HISTORICAL INFORMATION: S2.1 introduced no computation/readiness policy;
+  S2.2 below added only baseline readiness/math; S2.3 now adds internal DB execution.
+  ADR-013 records future accepted import direction, not implemented mapping/auth.
+  Canonical guide: [FORECAST_EXECUTION](features/FORECAST_EXECUTION.md).
+- Completed: **S2.2 — Forecast Readiness + Deterministic Quantile Baseline**.
+  Baseline-specific per-Product readiness and deterministic
+  Historical Quantile Baseline using exact Decimal interpolation exist; acceptance
+  status below. Safe internal entrypoints revalidate capture, reject all no-history
+  Products before math and always validate complete output. HISTORICAL INFORMATION (S2.2): no ForecastRun wiring; S2.3 adds it. No
+  legacy adapter or public API. HISTORICAL INFORMATION: trained models/evaluation/artifact storage were absent in S2.2; ADR-015 now adds them.
 - Completed: **S1.1 — Identity + Store Schema Cluster** (persistence only).
 - Completed: **S1.2 — Catalog + Recipe Schema Cluster** (persistence only).
 - Completed: **S1.3 — Supplier + Operational + Constraints Schema** (persistence only).
@@ -12,7 +46,8 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
   ADR-010 Data Completeness and Missing Business Facts Policy is ACCEPTED.
 - Completed: **S1.4 -- Forecast + Decision Persistence Schema** (storage only).
   ADR-011 Historical Run Immutability and Snapshot Policy is ACCEPTED.
-  Forecast computation: NOT STARTED. Decision computation: NOT STARTED.
+  HISTORICAL INFORMATION (S1.4): forecast/decision computation had not started.
+  CURRENT FACT: S2.2 added in-memory baseline math; S2.3 now persists execution; Decision computation absent.
   Repository layer: implemented by S1.5 (see below). Public business API: NONE.
   S1.6/S1.7 now cover the authorized operational application/Pydantic flow;
   S1.7 final acceptance closes the canonical S1 operational gates.
@@ -45,18 +80,21 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
 - Greenfield Competition Edition; no legacy backend was imported.
 - Current database: **PostgreSQL**, SQLAlchemy 2.x with psycopg and synchronous
   Session. ADR-007 is ACCEPTED; ADR-003 is SUPERSEDED. The empty Alembic
-  baseline is `0001_scaffold`; current head is `0006_forecast_decision_persist`.
+  baseline is `0001_scaffold`; repository head is `0008_forecast_execution_meta`; development DB is not automatically migrated.
 - Implemented business tables/models: `users`, `stores`, `store_memberships`,
   `products`, `ingredients`, `recipes`, `recipe_lines`, `suppliers`, `supplier_terms`,
   `sales_daily`, `inventory_lots`, `inventory_movements`, `business_constraints`,
-  `forecast_runs`, `forecast_predictions`, `decision_runs` -- sixteen business tables.
+  `forecast_runs`, `forecast_predictions`, `decision_runs`, `forecast_run_inputs`,
+  `forecast_execution_metadata` -- eighteen business tables.
   ADR-008 Import Idempotency and Correction Policy and ADR-009 Inventory Mutation
   and Audit Policy are ACCEPTED. S1.7 enforces atomic audited receipt/corrections
   at the trusted internal application boundary. Import/FEFO and full Sales correction
   remain absent. No balance/expiry/audit trigger exists.
   Identity/store membership persistence exists; authentication/authorization does not.
-  Plain Python domain implements only exact nonnegative inventory balance arithmetic;
-  other domain engines remain absent. S1.5 concrete repositories cover all sixteen
+  Plain Python domain implements exact nonnegative inventory balance arithmetic
+  and S2.1 forecast semantic validation plus S2.2 baseline readiness/quantiles;
+  trained model computation/evaluation exists in infrastructure/application; Decision computation remains absent.
+  S1.5 concrete repositories cover all sixteen
   tables. S1.6/S1.7 internal application use cases exist;
   public business APIs remain not started.
   Remaining Schema v1 is PROPOSAL.
@@ -67,11 +105,11 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
 - Local DB: Docker Compose official PostgreSQL 17, native `pg_isready` healthcheck,
   loopback port 5432 and persistent named volume `shelfcash-postgres-data`.
   Backend remains native Python/venv; no host PostgreSQL install is needed.
-- Runtime directories are reserved for uploads and model artifacts.
-  No upload/storage feature or API Session dependency is implemented yet.
+- Runtime has trusted immutable local model artifact storage.
+  No upload feature or public API Session dependency is implemented.
   Repositories receive a caller-owned synchronous Session.
 - Canonical documents created: AGENTS, README, architecture, domain model, Schema v1
-  proposal, API contract, decisions/ADRs 001–011, roadmap and testing guide.
+  proposal, API contract, decisions/ADRs 001–013, roadmap and testing guide.
 - Local verification tooling: PowerShell/POSIX test, reset, seed and DB status
   scripts. Reset is restricted to development/test, local hosts and explicit
   `shelfcash`/`shelfcash_test` databases; test permits only the latter. It recreates
@@ -84,12 +122,161 @@ Classification: CURRENT FACT unless explicitly marked otherwise.
   [scaffold feature guide](features/SCAFFOLD.md) provide manual HTTP and persisted
   DB verification. All execution/testing/demo preparation remains local; no Kaggle
   or hosted notebook dependency. S1.1/S1.2/S1.3/S1.4 schema clusters are implemented; all
-  later computation/public business features remain unimplemented; S1.5/S1.6/S1.7 provide
+  S2.3 adds internal retained baseline persistence/replay; public business APIs remain absent;
+  S1.5/S1.6/S1.7 provide
   internal persistence/application paths. Seed verifies schema, writes no rows.
 - Integration tests own only separate `shelfcash_test`, created if absent by the
   local role. Tests run sequentially and never reset normal development state.
 
 ## Verification
+
+### S2.3 corrective patch - CURRENT FACT, 2026-10-07
+
+Explicitly authorized fix for two review P2 findings only. Baseline/contracts/schema/
+retention/API unchanged; accepted ADR-014 intent clarified, not expanded.
+- Narrow SQLAlchemy/psycopg commit classifier uses types/SQLSTATE/disconnect evidence;
+  programming/integrity/known transaction failures cannot reconcile into success.
+- Owned-Session rollback/close/invalidation preserves primary errors; secondary failures
+  remain notes/trusted logs. Fresh-Session reconciliation reports run ID/actual state,
+  preserves durable COMPLETED after bugs and keeps original execution cause when
+  recording/verification also fails. S1 source unchanged.
+- 35 new regression cases; initial targeted **200 passed in33.33s**, no skips. Fresh
+  PostgreSQL Sessions assert durable state; actual after_commit callbacks and server
+  40001 tested. Transport lost-ack scenarios use typed fault injection, not real network
+  interruption. Classifier scope/unsupported cases: FORECAST_EXECUTION.
+- First full gate 706 passed/1 failed in312.48s: architecture assertion rejected direct
+  application close. Moved only concrete cleanup/diagnostics to infrastructure, keeping
+  the assertion unchanged; follow-up targeted **238 passed in33.13s**. Second supported
+  full gate **707 passed in283.16s**, zero skips, one existing Starlette/AnyIO warning;
+  270 unit /435 integration /2 API. Two full attempts because the first failed.
+  No development reset/migration, commit or
+  next slice. Historical original S2.3 gate below remains separate evidence.
+- Read-only development status still shelfcash/0006, sixteen empty business tables;
+  no automatic upgrade to0007. Generated OpenAPI unchanged. Pre-edit hash audit shows
+  eight files modified, two added, none deleted; all other WIP/backendContext preserved.
+  Corrective patch COMPLETE; no remaining blocker found in the two authorized P2 paths.
+
+
+### S2.3 original acceptance - HISTORICAL INFORMATION
+
+S2.3 COMPLETE; S2 overall IN PROGRESS. Windows/Python 3.11.9, 2026-10-07:
+- 40 new tests: 10 canonical serialization units +30 real PostgreSQL execution tests.
+  Final targeted 165 passed in 20.29s; expanded targeted 494 passed/1 bootstrap table
+  expectation failure, then exact fix and bootstrap targeted pass. No runtime gate failure.
+- Supported `./scripts/test.ps1 all`: 672 passed in 273.90s, zero skips, one existing
+  Starlette/AnyIO deprecation warning; 252 unit /418 integration /2 API. Full run count 1.
+- Actual snapshot isolation/read-only flags and concurrent committed corrections between
+  SELECTs preserve captured timezone/units/sales; all requested Products incl inactive,
+  sparse zero and inclusive window remain. Preflight no history creates no run.
+- Fresh Sessions assert exact 14 prediction keys/Decimal values/actual metadata and
+  retained JSONB/digest. Start rollback after flush and before commit leaves no aggregate.
+  Completion downstream CHECK after 14 actual prediction flush leaves no partial rows;
+  FAILED retains input/sanitized summary. Commit acknowledgment loss reconciles true
+  state, verified COMPLETED is not failed; unavailable state reports UNKNOWN with run ID.
+  Programming errors after commit are not converted to success; failed failure recording
+  reports actual known state. No DB transaction or ForecastRun lock spans computation.
+- Replay ignores corrected operational values; persisted replay creates new UUID/same
+  digest and preserves old run. Pure replay still works with removed Products; persisted
+  replay rejects missing identity. Missing S1 retention/corruption/version mismatch reject.
+- Guarded shelfcash_test migration roundtrip preserves runs/predictions and demonstrates
+  retained-input loss on downgrade. Alembic check no new operations; current/head 0007.
+  pip check passes; runnable isolated manual execution/replay verifies fresh persisted rows.
+- Development db-status read-only: shelfcash stays 0006, sixteen empty business tables,
+  revision count1; expected repository head0007/at_head=false. No development reset,
+  migration or seed. Deploying internal execution on development requires explicit upgrade.
+- Generated/live full OpenAPI equal pre-edit, /health only, exact live health200/payload;
+  own hidden verifier stopped. 194 pre-edit files preserved; all prior accepted ADRs,
+  S1 lifecycle/contracts, S2.1 source/tests, S2.2 math tests and backendContext unchanged.
+  S2.2 source shares identity constants only. Seven older tests update schema/head
+  assertions only. AST/local doc links/diff reviewed. No commit or native POSIX claim.
+- ADR-014 records user-authorized retention/execution decisions; empty warnings marked
+  CURRENT FACT, stale computation/lifecycle statements corrected. No evaluated/calibrated
+  predictive quality, historical unit reconstruction, point-in-time availability,
+  trained model/adapter/artifact service, public API/RBAC/import/worker/TTL or S3.
+- Rollback code/docs/tests +0007 structure only. Downgrade destroys retained inputs,
+  leaves run/prediction history; export/backup before real-history downgrade.
+
+
+### S2.2 final acceptance — HISTORICAL INFORMATION
+
+S2.2 COMPLETE; S2 overall IN PROGRESS. Windows/Python 3.11.9, 2026-10-07:
+- Frozen new acceptance tests first failed collection with expected missing baseline
+  module. New baseline unit coverage: **42 passed**. Combined S2.1/S2.2 units:
+  **123 passed**, no DB required for computation/readiness.
+- Final targeted command in FORECAST_EXECUTION: **233 passed in 169.82s**
+  (123 unit, 110 actual PostgreSQL application/repository/S1 empty-completion
+  regressions). No new fake baseline integration/persistence test.
+- Supported `./scripts/test.ps1 all`: **632 passed in 503.27s** (242 unit,
+  388 integration, 2 API), no skips; one existing Starlette/AnyIO warning.
+  Exactly **one full regression run**, after targeted green; no failure/rerun.
+- Baseline-specific empty history reports NOT_READY_NO_HISTORY, count 0, no first/
+  last dates; >=1 observation including zero is READY. Mixed scope reports every
+  missing-history Product in UUID order and rejects before any prediction math.
+- Exact known linear quantiles, zero/repeated/outlier participation, sparse missing
+  days, unsorted quantities without input mutation and ambient Decimal precision/
+  exponent-bound independence pass. Same input yields identical result/metadata.
+  Exact 14-key coverage and date-then-UUID ordering pass; mandatory final canonical
+  validator rejects missing/duplicate/wrong Product/unordered corrupted output.
+  Public internal entrypoints revalidate malformed prepared instances first.
+- Baseline identity is historical_quantile_baseline / 1, artifact None, no metrics/
+  evaluation/trained metadata. Frozen readiness values and plain domain computation
+  import without application/Pydantic/ORM/HTTP dependencies. No DB query/write.
+- Both canonical-doc examples execute; actual sparse Mon=10/Wed=0 baseline yields
+  2.5/5/7.5 for seven dates 2026-09-12..2026-09-18, count 2, no Tuesday zero.
+  These are mathematical fixtures, not measured accuracy.
+- Supported Compose up/wait healthy; PostgreSQL 17.11. Alembic check: No new upgrade
+  operations detected; current/head unchanged 0006_forecast_decision_persist.
+  pip check passes. Tests own only shelfcash_test; no development reset/seed.
+  Read-only development db-status remains one revision row and sixteen empty tables.
+- Entire generated/live OpenAPI equal pre-S2.2 baseline, only /health; live exact
+  HTTP 200/payload unchanged, own verifier stopped. Saved 190-file pre-edit hashes
+  preserve existing S1/S2.1 source/tests/schema/migrations/ADRs/dependencies and WIP,
+  including backendContext folder/zip. Only six existing docs changed for S2.2;
+  four new slice files. Syntax, 39 local docs links, diff/whitespace reviewed.
+- SHA 10197895255af393607514266aaee95703d725fd unchanged, no commit; S2.1 WIP
+  preserved. Native POSIX runtime not checked/claimed. No architecture change or
+  new/modified ADR; explicitly user-authorized baseline policy documented separately
+  from historical ADR-012 deferral. No S2.3 scope is frozen in canonical ROADMAP.
+- No persistence integration/ForecastRun completion, public business API, LightGBM,
+  legacy adapter, features, metrics/backtesting/model comparison, durable input/
+  artifact retention, hashing or S2.3 implementation. Rollback only new S2.2 modules/
+  tests and its precise docs edits; no DB/API/migration downgrade.
+
+### S2.1 final acceptance — HISTORICAL INFORMATION
+
+S2.1 COMPLETE; S2 overall IN PROGRESS. Windows/Python 3.11.9, 2026-10-07:
+- Frozen acceptance tests first produced the expected missing-module collection
+  error before implementation. New S2.1 unit coverage: **81 passed**.
+- Final targeted command in FORECAST_EXECUTION: **164 passed** (119 unit, 45 actual
+  PostgreSQL integration including 1 new S1 empty-completion regression), 25.70s.
+- Supported `./scripts/test.ps1 all`: **590 passed** (200 unit, 388 integration,
+  2 API), no skips; existing Starlette/AnyIO deprecation warning, 233.05s.
+  Exactly **one full regression run**, after targeted green; no failure/rerun.
+- Explicit request scope/window, Store-local D+1..D+7, month/year/leap-date edges,
+  timezone boundary rejection, immutable sparse zero capture, canonical Store/
+  Product/unit/date checks, exact finite ordered Decimal and deterministic ordering
+  pass. Exact 14-key output accepted; empty/duplicate/missing/extra/wrong-scope/date
+  outputs rejected. No integer rounding or fake facts/model metadata.
+- S1 code/tests unchanged; new PostgreSQL regression verifies committed empty
+  completion with supplied start metadata, read autobegin and terminal rejection
+  through fresh Sessions. S2 coverage does not tighten S1 lifecycle.
+- Initial Docker engine unavailable; installed Docker Desktop started, supported
+  Compose up/wait succeeded. PostgreSQL 17.11 healthy. Integration owns only
+  shelfcash_test; no development reset. Read-only development db-status remains
+  head 0006_forecast_decision_persist, sixteen empty business tables, one revision row.
+- Executable canonical-doc example produces 14 keys for 2026-09-12..2026-09-18
+  from two requested Products, preserving one explicit zero observation.
+  Entire generated and live OpenAPI equal original baseline; live health exact
+  HTTP 200/payload, verifier stopped. Only /health remains a public operation.
+- Original tracked source/tests/schema/migrations/accepted ADRs/API_CONTRACT/
+  dependencies match saved hashes; only precise existing docs changed. Unrelated
+  backendContext folder/zip preserved. Syntax, 60 local doc links, diff and whitespace
+  reviewed. No commit; no native POSIX runtime verification claimed.
+- Canonical docs and ADR-012/013 distinguish implemented validation, accepted
+  observed-sales/future import direction and deferred model/readiness/retention/
+  evaluation/recovery. No computation, orchestration, execution persistence, public
+  business API, import/auth implementation, schema/migration/dependency or next slice.
+  Rollback only new S2.1 modules/tests and precise docs; no DB downgrade.
 
 ### S1.7 final acceptance -- CURRENT FACT
 
@@ -418,28 +605,30 @@ an exact transitive lockfile is not part of this scaffold.
 
 ## Next slice -- PROPOSAL
 
-S1.7 implements the remaining authorized S1 operational contracts and writes.
-S1.7 and S1 are COMPLETE after final acceptance; no canonical operational S1
-gate remains open. The next canonical phase is
-**S2 -- Forecast**, PROPOSAL / NOT STARTED. Freeze forecast cutoff/horizon,
-baseline/quantile behavior and provenance with separately authorized work.
-No next slice, business API or engine starts automatically.
+S1.7 and S1 are COMPLETE; no canonical operational S1 gate remains open.
+S2.1 implements execution values/semantic validation under ADR-012; S2.2 adds the
+explicitly authorized baseline-specific readiness and historical quantile computation.
+S2.3 retained execution and S2.4–S2.7 trained/evaluation/artifact integration are
+authorized and implemented. Remaining real-data quality evaluation needs suitable
+observed sales/correction provenance. S3 remains a proposal, not started; no public
+business API or subsequent slice starts automatically.
 
-## Current schema-only limitations — CURRENT FACT
+## Current limitations — CURRENT FACT
 
 - Repository writers guard RUNNING-only transitions and prediction append.
   Direct tracked ORM/SQL mutation can bypass these guards. S1.6 validates prediction
   horizon membership and completed forecast consumption in its application paths.
-  Full package/evaluation validation, sanitization
-  and authorized snapshot capture remain future service responsibilities (ADR-011).
+  Full Decision package/evaluation validation and actor authorization remain future
+  responsibilities; S2.3 now captures and retains baseline input and sanitizes failure summaries.
   DB enforces local state/shape/FKs but has no immutability/horizon triggers.
 - S1.5 repositories expose explicit insert/read/lifecycle primitives, no arbitrary
   completed-row update/delete writer. Reads are tracked mutable ORM rows; direct
   Session/SQL can bypass policy. S1.6 returns by-value outputs and guards its lifecycle
   paths; wider immutable application boundaries remain future.
-- Standalone forecast input retention, artifact service, deterministic hashing and
-  full versioned algorithm/package schemas remain future engine slice requirements.
-  Fingerprint alone is not captured training content or a replay guarantee.
+- S2.3 provides retained forecast input and deterministic SHA-256; S2.7 adds verified
+  immutable trained artifacts and typed execution metadata. Full Decision package
+  schemas remain future requirements. Fingerprint alone is not a replay guarantee;
+  retained input and exact available artifact are required for trained replay.
 
 - Inventory balance and ledger are independently stored. S1.7 receipt/correction
   paths require movement and balance in one locked application transaction and
@@ -452,7 +641,8 @@ No next slice, business API or engine starts automatically.
   All supplied money inherits Store.currency; no budget writer is in this slice.
   Future budget boundaries must enforce the unchanged budget unit=Store.currency rule.
 - No import parser/hash/classification/mode/correction/provenance engine, full Sales
-  correction, FEFO, Forecast or Decision computation. No public business API.
+  correction, FEFO, trained Forecast model or Decision computation. S2.2 baseline
+  computation remains pure; S2.3 persists internal execution, no business API.
   Internal persistence access is documented in features/PERSISTENCE_ACCESS.md.
 
 ## Known unresolved decisions — PROPOSAL
@@ -460,14 +650,19 @@ No next slice, business API or engine starts automatically.
 - Future public Store API fields, validation and transport error contract. S1.1 UUID storage and
   timezone/currency defaults are frozen; public identifier/payload contracts are not.
 - Authentication/bootstrap and minimum store isolation needed before data exposure.
-- Engine-specific currency rounding, explicit unit conversions and Vietnam
-  forecast/expiry business-day cutoff. S1.7 already freezes exact Decimal,
+- Engine-specific currency rounding, explicit unit conversions and expiry
+  business-day cutoff. ADR-012 freezes forecast Store-local D and D+1..D+7;
+  S1.7 already freezes exact Decimal,
   Store.currency inheritance, exact units and separate DATE/aware UTC instants.
-- Recipe resolver/API behavior beyond frozen inclusive date selection; forecast
-  baseline/quantile calibration and simulator
+- Recipe resolver/API behavior beyond frozen inclusive date selection; future forecast
+  model/quantile calibration (S2.2 weak historical baseline is frozen) and simulator
   time granularity, objectives/tie breaks and constraint infeasibility policy.
 - Decision package structure beyond required schema version 1 and historical context.
-- Mapping confidence thresholds and human approval rules.
+- Mapping confidence thresholds, atomic/partial import contract and detailed
+  permission matrix. ADR-013 accepts future mapping self-approval by an authorized
+  mapper, immutable reviewed versions and mapping approval distinct from import
+  confirmation; none is implemented. Mapping remains S5; hardening S6 must not defer
+  minimum access enforcement when a public operation needs it.
 
 No known technical debt is recorded in the initial scaffold. These unresolved choices
 are not accepted architecture and must not be silently treated as implementation facts.

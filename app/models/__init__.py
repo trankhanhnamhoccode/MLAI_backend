@@ -15,9 +15,11 @@ from app.models.business_constraint import BusinessConstraint
 from app.models.forecast_run import ForecastRun
 from app.models.forecast_prediction import ForecastPrediction
 from app.models.decision_run import DecisionRun
+from app.models.forecast_run_input import ForecastRunInput
+from app.models.forecast_execution_metadata import ForecastExecutionMetadata
 
 __all__ = [
     "User", "Store", "StoreMembership", "Product", "Ingredient", "Recipe", "RecipeLine",
     "Supplier", "SupplierTerm", "SalesDaily", "InventoryLot", "InventoryMovement", "BusinessConstraint",
-    "ForecastRun", "ForecastPrediction", "DecisionRun",
+    "ForecastRun", "ForecastPrediction", "DecisionRun", "ForecastRunInput", "ForecastExecutionMetadata",
 ]

@@ -1,5 +1,20 @@
 # Full local verification flow
 
+CURRENT FACT (S2.3): isolated baseline persistence/replay checks and manual inspection
+are in [S23_VERIFICATION](S23_VERIFICATION.md). No development reset is needed.
+Historical setup/reset instructions below remain explicit destructive workflows, not
+a prerequisite to running this slice against an existing development database.
+
+## S2.1 contract-only verification — CURRENT FACT
+
+After local PostgreSQL is healthy, run the targeted command in
+[FORECAST_EXECUTION](../features/FORECAST_EXECUTION.md), its executable synthetic
+example and full `./scripts/test.ps1 all` once at the final gate. Existing integration
+fixtures plus the S1 empty-completion regression own only shelfcash_test and assert
+fresh-session state. No development reset is needed for S2.1; fresh setup below is
+unchanged. There is no forecast computation/end-to-end execution or business HTTP
+operation. See CURRENT_STATE for exact acceptance evidence.
+
 CURRENT FACT: this runbook verifies the PostgreSQL scaffold and S1.1/S1.2/S1.3/S1.4 persistence
 schema on repository-local infrastructure. No business API/scenarios or demo seed
 entities exist. ACCEPTED DECISION: ADR-007 uses
@@ -162,3 +177,14 @@ first and full regression once at the final gate (repeat only after fixing a ful
 suite failure). S1.7 implements atomic receipt/corrections and Recipe version writes;
 earlier schema-slice absence statements are HISTORICAL INFORMATION where superseded.
 No Import/Forecast/Decision/FEFO computation or public business API is implemented.
+
+
+## S2 trained evaluation/artifact/replay -- CURRENT FACT
+
+Install declared pinned ML dependencies with the normal editable setup. Run
+`python -m scripts.forecast_model --help` for pure synthetic/backtest/train/infer and
+internal capture/execute/replay commands; see ../features/FORECAST_TRAINED.md.
+`python -m scripts.verify_forecast_trained` is a labelled synthetic PostgreSQL demo,
+only shelfcash_test, requires already-current head, never resets/migrates. Leaves
+fixtures/artifacts for inspection. Development schema need not be upgraded for tests.
+Quality on real observations remains NOT EVALUATED; test passing is not accuracy.

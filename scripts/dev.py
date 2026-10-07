@@ -71,8 +71,8 @@ def require_head(state: dict[str, object]) -> None:
 def seed_demo(settings: Settings) -> None:
     state = inspect_database(settings)
     require_head(state)
-    if set(state["tables"]) != {"alembic_version", "users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints", "forecast_runs", "forecast_predictions", "decision_runs"}:
-        raise ValueError("Seed expects the current S1.1/S1.2/S1.3/S1.4 schema clusters")
+    if set(state["tables"]) != {"alembic_version", "users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints", "forecast_runs", "forecast_predictions", "decision_runs", "forecast_run_inputs", "forecast_execution_metadata"}:
+        raise ValueError("Seed expects the current S1 schema and S2.3 retention table")
     print("No business seed data: seeding is not implemented. Migrated schema verified; no rows written.")
 
 

@@ -18,3 +18,8 @@ runtime/uploads/*
 runtime/model_artifacts/*
 !runtime/uploads/.gitkeep
 !runtime/model_artifacts/.gitkeep
+
+# Local context exports for external review; canonical source/docs live above.
+/backendContext/
+/backendContext.zip
+/shelfcash_*.zip

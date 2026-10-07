@@ -1,5 +1,31 @@
 # Target Competition MVP architecture
 
+## Current S2 trained extension -- CURRENT FACT
+
+ADR-015 adds concrete infrastructure LightGBM/storage and application rolling evaluation/
+trained execution. Plain domain contains only causal features/metrics/baseline/validation.
+A concrete trained use case shares S2.3 capture/recovery; no engine registry. Snapshot,
+start and completion Sessions close before model/artifact work. Purpose-specific
+metadata stores selection/warnings; metrics_json remains evaluation only. S1 and fixed
+baseline semantics are preserved. See features/FORECAST_TRAINED.md.
+
+## Retained baseline and historical slice boundaries
+
+CURRENT FACT (S2.3): trusted Engine-composed internal orchestration owns short read-only
+REPEATABLE READ capture and atomic start/completion Sessions; domain computation runs
+with no DB transaction. Prepared inputs are retained as separate PostgreSQL JSONB
+records with versioned SHA-256 and replay integrity checks (ADR-014). No public API,
+auth framework, model service or recovery worker. The S2.2 pure functions below remain
+unchanged in semantics; their earlier lack of persistence wiring is historical.
+
+HISTORICAL INFORMATION (S2.2 slice boundary): a small internal application boundary revalidates S2.1 captured
+input, calls pure domain per-Product baseline readiness/Decimal quantiles, then
+validates complete output. No Session, DB lookup/write, trained model, provider,
+artifact/evaluation service or public API. See
+[FORECAST_EXECUTION](features/FORECAST_EXECUTION.md). This supersedes earlier
+forecast-computation absence statements only for the in-memory historical baseline;
+it changes no accepted architecture/ADR or S1 lifecycle.
+
 This document describes **target architecture**, not runtime implementation.
 ACCEPTED DECISION sections derive from active ADRs 001, 002, 004–011. Layout details and future
 contracts are PROPOSAL until their slice accepts them. See CURRENT_STATE for reality.
@@ -52,7 +78,7 @@ event sourcing, CQRS or generic agent framework.
 Routes handle transport and validated schemas. Application coordinates authorization,
 transactions and use cases. Domain owns plain Python business rules. Repositories
 persist/query; ORM models encode persistence, not business computation. PostgreSQL and
-local storage are infrastructure. ML artifacts are local files in the future, with
+local storage are infrastructure. Trained ML artifacts are immutable local files, with
 versions captured in decision provenance. CURRENT FACT: S1.5 concrete repositories
 in app/repositories take a caller-owned synchronous Session; no generic abstraction.
 See [persistence access](features/PERSISTENCE_ACCESS.md) for the accepted internal contract.
@@ -185,8 +211,9 @@ from that exact snapshot and persists versioned results. Completed runs are hist
 reruns create new UUIDs. Historical interpretation uses copied values/versions, not
 current mutable joins. Future services enforce immutability and package validation;
 no trigger or generic immutable framework exists. CURRENT FACT: three typed models
-and migrations implement persistence only. Forecast/Decision computation, snapshot
-builder, hashing/artifact service and business APIs remain NOT STARTED.
+and migrations implement persistence only. Forecast now implements captured-input hashing, baseline/trained computation and
+immutable artifact/retained replay under ADR-014/015. Decision computation and public
+business APIs remain NOT STARTED. Earlier schema-only statements are historical.
 CURRENT FACT: S1.5 inserts new run aggregates and reads history through scoped
 repositories. Minimal RUNNING -> COMPLETED/FAILED and RUNNING-only prediction
 append guards now exist in repository writers. Direct tracked ORM/SQL mutation can
@@ -237,6 +264,8 @@ event instants. Corrections use new Recipe/term versions and append inventory
 movements; Sales canonical duplicates stay conflicts. No version auto-close,
 absolute balance setter, public business API, schema/ADR/dependency or infrastructure
 change. Actor/provenance authorization, source importing, full Sales correction,
-Forecast/Decision computations and engine-specific cutoffs remain future slices.
+HISTORICAL INFORMATION (S1.7): Forecast computation was deferred. CURRENT FACT:
+S2 now implements baseline/trained Forecast and its Store-local date cutoff;
+Decision computation remains future.
 This section supersedes historical operational-service absence statements only for
 these paths. See APPLICATION_CONTRACTS and CURRENT_STATE for verified boundaries.

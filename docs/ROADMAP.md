@@ -70,6 +70,61 @@ identity creation remains an explicit S1.5 repository prerequisite, as authorize
 Future budget/constraint writers, actor authorization, full Sales correction,
 source conversion, engine-specific currency rounding/day cutoffs and public APIs
 are deliberately outside S1.7 and are not newly invented S1 completion gates.
-Next canonical phase: **S2 -- Forecast**, PROPOSAL / NOT STARTED. Freeze cutoff,
-horizon, baseline/model, quantiles and provenance in a separately authorized slice.
-This update authorizes no next slice or API.
+Current phase: **S2 -- Forecast**, IN PROGRESS. S2.1 contracts/validation and S2.2
+baseline/readiness and S2.3 retained execution exist; the explicit remaining-S2 task
+authorizes trained models/evaluation/artifact integration. No S3 or public API is authorized.
+
+## S2 implementation slices — CURRENT FACT / PROPOSAL
+
+| Slice | Status | Scope |
+| --- | --- | --- |
+| S2.1 — Forecast execution contract and semantic validation | COMPLETE; 81 new unit + 1 new PostgreSQL regression; 164 targeted / 590 full passed, one final full run | Typed execution/prepared/result values, pure validation, complete Product x 7-date output, canonical docs; S1/schema/API unchanged; no model/readiness policy or execution persistence |
+| S2.2 — Forecast Readiness + Deterministic Quantile Baseline | COMPLETE; 42 new unit; 233 targeted / 632 full passed, one final full run | Baseline-specific per-Product >=1 observation readiness, all-or-nothing no-history rejection, exact historical Decimal quantiles, seven dates and mandatory S2.1 result gate; no persistence/evaluation/model dependencies |
+| S2.3 -- Internal baseline execution end-to-end + retained input | COMPLETE; 40 new tests /165 final targeted /672 full passed; one full run | Explicitly user-authorized snapshot loader, separate JSONB retention, versioned SHA-256, atomic baseline persistence and new-UUID replay; no trained model/evaluation/S3 |
+
+S2.1 adds typed execution requests, immutable prepared observed-sales values and
+pure semantic validation. Verification/status is recorded in CURRENT_STATE.
+See [FORECAST_EXECUTION](features/FORECAST_EXECUTION.md) and accepted ADR-012:
+Store-local D, explicit Products, D+1..D+7 and complete Product/date output. S1's
+supplied-prediction lifecycle, including empty completion, is unchanged.
+
+S2.2 implements the explicitly authorized weak Historical Quantile Baseline and its
+own >=1 observation readiness rule; this is not general/LightGBM readiness. Exact
+policy and callable verification are in FORECAST_EXECUTION; no existing ADR changed.
+S2.4-S2.7 are explicitly authorized by the remaining-S2 task. ADR-015 freezes
+provisional readiness, causal pooled direct-horizon LightGBM, validation-only selection,
+postprocessing, immutable artifact identity and retained execution metadata/replay.
+**S2 implementation complete / real-data evaluation pending**. Final gate: 767 passed,
+fresh-session persistence/retained exact-artifact replay and guarded manual CLI verified.
+No real dataset is available; synthetic checks prove mechanics, not quality/superiority.
+S3 remains PLANNED and has not started; this task does not authorize S3.
+
+| Slice | Status | Scope |
+| --- | --- | --- |
+| S2.4 | COMPLETE; 85 targeted | Policy and immutable typed contracts, ADR-015 |
+| S2.5 | COMPLETE; 56 targeted | Causal features, three fixed deterministic quantile boosters, Decimal postprocessing |
+| S2.6 | COMPLETE; 21 targeted | Chronological paired-target evaluation, validation/holdout, selection and metrics |
+| S2.7 | COMPLETE implementation; final 767 passed, fresh-session + CLI manual verified | Immutable artifacts, atomic input/run/metadata, validated completion/read/replay, migration 0008, CLI/manual verification |
+
+See [trained forecast](features/FORECAST_TRAINED.md) and
+[task notes](runbooks/S2_TRAINED_TASK_NOTES.md) for exact final evidence.
+
+## Future import direction — ACCEPTED DECISION, not implemented
+
+[ADR-013](adr/ADR-013-future-store-mapping-approval-direction.md) records Store-scoped
+OWNER/STAFF with delegated actions; authorized mappers may approve their own mapping.
+Profiles are per source/report type; reviewed versions are immutable; approved mapping
+runs deterministically; approval differs from import confirmation; audit retains
+the version used. Mapping stays S5, authorization hardening S6 and ordering unchanged.
+Minimum access enforcement cannot wait when a public operation needs it.
+Atomic/partial import and detailed permissions remain unfrozen. No import implementation.
+
+
+CURRENT FACT (2026-10-07): S2.3 corrective patch is limited to commit-error classification
+and primary-error-preserving cleanup; 35 added regression cases, 238 targeted passed
+including existing architecture assertions. First full gate had one direct-close
+architecture failure, fixed by placing concrete cleanup in infrastructure; second full
+gate **707 passed in283.16s**, zero skips, one existing warning. Corrective patch COMPLETE;
+two full attempts due to the initial failure. Original slice counts above are historical verification.
+No baseline/contract/schema/retention scope change or authorization for another slice.
+See CURRENT_STATE and S23_TASK_NOTES for final corrective verification.

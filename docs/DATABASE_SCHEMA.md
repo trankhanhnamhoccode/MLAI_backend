@@ -4,7 +4,8 @@
 `products`, `ingredients`, `recipes`, `recipe_lines`. S1.3 adds `suppliers`,
 `supplier_terms`, `sales_daily`, `inventory_lots`, `inventory_movements`,
 `business_constraints`; S1.4 adds `forecast_runs`, `forecast_predictions`,
-`decision_runs` -- sixteen business tables total.
+`decision_runs`; S2.3 adds `forecast_run_inputs`; S2.7 adds
+`forecast_execution_metadata` -- eighteen business tables total.
 **ACCEPTED DECISION:** the storage semantics below are frozen for these authorized
 clusters. ADR-008/009 freeze import correction/inventory audit policy, not runtime
 import/mutation services. All other Schema v1 entities remain PROPOSAL; each requires its own accepted
@@ -19,8 +20,9 @@ only `public.alembic_version`; the next migration `0002_identity_store` creates 
 three identity/store tables. `0003_catalog_recipe` adds four catalog/recipe tables;
 `0004_supplier_ops_constraints` adds six S1.3 tables;
 `0005_data_semantics_correction` makes received_date nullable and clarifies its date check.
-Current head `0006_forecast_decision_persist` adds the three run tables. No other business
-model is implemented. This shorter revision fits Alembic's 32-character version field.
+Revision `0006_forecast_decision_persist` adds the three run tables;
+`0007_forecast_input_retention` adds retained forecast inputs; current head
+`0008_forecast_execution_meta` adds purpose-specific execution metadata. This shorter revision fits Alembic's 32-character version field.
 Tests own separate `shelfcash_test`; development
 uses `shelfcash`. Reset recreates only the guarded target's `public` schema.
 
@@ -126,7 +128,9 @@ All four have UUID PK `id` default `gen_random_uuid()` and `created_at TIMESTAMP
 default `now()`. Products/ingredients/recipes also have `updated_at TIMESTAMPTZ`
 with the same insert/ORM-update semantics as S1.1. Raw SQL updates set it explicitly.
 These are editable versioned definitions/current catalog, not immutable execution
-snapshots. No historical snapshot immutability trigger or computation is implemented.
+snapshots. No historical snapshot immutability trigger exists. Forecast computation
+and captured/artifact provenance are application/infrastructure behavior under S2,
+not computation in these catalog ORM models.
 
 ### products
 
@@ -412,7 +416,7 @@ No multi-currency computation, spent/reserved/rollover, MAX_STORAGE or other sco
 Verification: [SUPPLIER](features/SUPPLIER.md), [OPERATIONAL_DATA](features/OPERATIONAL_DATA.md),
 [INVENTORY](features/INVENTORY.md), [BUSINESS_CONSTRAINTS](features/BUSINESS_CONSTRAINTS.md),
 `tests/integration/test_supplier_operational_constraints.py` and FULL_TEST_FLOW.
-Normal reset leaves sixteen empty business tables plus one current revision row;
+Normal reset at current head leaves eighteen empty business tables plus one current revision row;
 seed writes no rows. Downgrade 0004->0003 drops only six new tables/rows, keeping
 all S1.1/S1.2 schema and btree_gist. S1.4 run tables are documented below; no Import/Order/What-if tables exist.
 Reference: [PostgreSQL NULLS NOT DISTINCT and exclusion](https://www.postgresql.org/docs/17/ddl-constraints.html).
@@ -486,7 +490,8 @@ SupplierTerm effective_from is UNCHANGED, NOT NULL with no default, as are stric
 canonical procurement inputs including lead_time_days. Unknown source effective date
 cannot be promoted into an active canonical term; upload date is not evidence.
 Internal version may be system-assigned; business facts must be established.
-No import/staging/readiness column or computation exists.
+No import/staging/readiness column or procurement computation was added in S1.3.1.
+Forecast-specific readiness/computation now exists separately under S2.
 
 ## IMPLEMENTED — S1.4 Forecast + Decision persistence
 
@@ -615,3 +620,31 @@ time/lifecycle and atomic supplied completion; see APPLICATION_CONTRACTS. Earlie
 references to future horizon/readiness enforcement above describe the schema's limits,
 not missing checks in those implemented application paths. Direct SQL still bypasses
 them; full business package/provenance validation remains future.
+
+## IMPLEMENTED ? S2.3 retained forecast input
+
+ACCEPTED DECISION: ADR-014. Table forecast_run_inputs has forecast_run_id UUID PK,
+store_id UUID required; same-Store composite FK to forecast_runs(id,store_id), RESTRICT.
+prepared_json JSONB required/object CHECK; serialization_version INTEGER >0; digest
+VARCHAR(64) lowercase hexadecimal SHA-256 shape CHECK; created_at TIMESTAMPTZ now().
+One record/run, digest nonunique, no update/delete repository, no triggers or binary
+artifacts. Positive future versions may store, but current loader accepts only v1.
+Old S1 runs need no row. Execution start writes run/input in one transaction. Digests
+are validated against versioned canonical prepared values, not JSONB rendered text.
+Downgrade 0007 removes inputs only and destroys replay history; export/backup first.
+Development may remain at 0006 until explicitly migrated; test verification owns only
+shelfcash_test. No automatic startup migration or development reset is performed.
+
+
+## IMPLEMENTED ? S2.7 purpose-specific execution metadata (ADR-015)
+
+`forecast_execution_metadata`: PK forecast_run_id; store_id required, composite
+same-Store ForecastRun FK ON DELETE RESTRICT; details_json JSONB object with required
+numeric schema_version=1. Application validates typed selection_reason, candidate
+artifact identity, postprocessing_version, raw crossing/negative counts and structured
+warnings. Run/input/initial details start atomically; completion-only guarded update
+commits with predictions/status. No terminal update/delete repository, no immutability
+trigger. S1 and S2.3 runs need no row. Model binary/text stays local; run.artifact_key
+is actual immutable model identity, metrics_json is not warning/provenance storage.
+Downgrade 0008 drops this table only, losing warning/selection audit; export first.
+Development DB is not automatically migrated. Tests own only shelfcash_test.

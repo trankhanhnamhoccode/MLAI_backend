@@ -11,8 +11,10 @@ Supplier/SupplierTerm/SalesDaily/InventoryLot/InventoryMovement/BusinessConstrai
 persistence. S1.4 adds Forecast/Decision run storage; S1.5 adds concrete typed
 repositories covering all sixteen tables. S1.6/S1.7 add typed internal operational
 application paths, atomic Recipe/receipt writes and locked movement-backed inventory
-corrections. Only minimal exact inventory balance arithmetic exists in domain;
-public business APIs, authentication and computation engines remain absent. See
+corrections. Domain has exact inventory arithmetic and causal forecast features/metrics/baseline.
+S2 has internal LightGBM training/evaluation, immutable artifacts and retained execution/
+replay; real-data quality is NOT EVALUATED. Public business APIs/auth and Decision
+computation remain absent. See [trained forecast](docs/features/FORECAST_TRAINED.md). See
 [identity/store verification](docs/features/STORE_IDENTITY.md) and
 [catalog/recipe verification](docs/features/CATALOG_RECIPE.md) and
 [S1.3 verification](docs/runbooks/S13_VERIFICATION.md). ADR-008 freezes import
@@ -52,7 +54,7 @@ configures the URL, credentials and test URL. Native PostgreSQL installation is
 unnecessary. Alembic uses Settings and `.env` as the
 configuration source; `alembic.ini` records the default URL for reference.
 The original baseline creates only Alembic's revision table; current head
-`0006_forecast_decision_persist` contains sixteen business tables across S1.1/S1.2/S1.3/S1.4. Application import,
+`0008_forecast_execution_meta` contains eighteen business tables across S1 and S2. Application import,
 startup and health checks do not initialize/connect to the DB, create directories
 or contact OpenRouter. No provider key is required.
 
@@ -83,7 +85,7 @@ Unit/API categories need no live database. See
 `GET /openapi.json` exposes the schema; interactive documentation is disabled.
 Health is liveness, not a database or business readiness probe.
 Runtime data, local credentials and virtual environments are ignored by Git.
-Upload/artifact folders are reserved; no storage service exists yet.
+Trusted immutable local LightGBM artifact storage exists; upload storage remains reserved.
 
 ## Canonical documents
 
@@ -105,14 +107,14 @@ receipt dates remain NULL; strict supplier dates and per-pack costs are unchange
 No import engine or business API exists. See docs/runbooks/S131_VERIFICATION.md.
 
 S1.4 implements ForecastRun/ForecastPrediction/DecisionRun storage and ADR-011
-historical policy. Forecast/Decision Engines and public business APIs
-remain NOT STARTED. Sixteen tables are inspectable locally; no pipeline/engine demo
-is claimed. See docs/features/FORECAST.md, docs/features/DECISION_RUN.md and
+historical policy. Internal Forecast baseline/trained execution now exists; Decision
+Engine and public business APIs remain NOT STARTED. Eighteen tables are implemented;
+see the labelled synthetic manual forecast verification, not a decision pipeline demo. See docs/features/FORECAST.md, docs/features/DECISION_RUN.md and
 docs/runbooks/S14_VERIFICATION.md. S1 overall status is in CURRENT_STATE/ROADMAP.
 
 S1.5 provides [persistence access](docs/features/PERSISTENCE_ACCESS.md): explicit
 Store scope, domain-specific insert/read/lifecycle methods and caller-owned synchronous
 transactions. Repositories never commit/rollback. Forecast/Decision writers guard
 RUNNING-only transitions and prediction append. S1.6/S1.7 application paths provide
-operational validation and atomic inventory audit; engines/auth remain future. Targeted verification:
+operational validation and atomic inventory audit; Decision engine/auth remain future. Targeted verification:
 `.\.venv\Scripts\python.exe -m pytest tests/integration/test_repositories.py -q`.

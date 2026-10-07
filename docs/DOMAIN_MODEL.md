@@ -1,13 +1,17 @@
 # Domain model
 
 ACCEPTED DECISION: boundaries and business authority below describe future behavior,
-not implemented engines. CURRENT FACT: plain Python domain implements only exact
-nonnegative inventory balance arithmetic (S1.7); other domain engines remain empty.
+not implemented engines. CURRENT FACT: plain Python domain implements exact
+nonnegative inventory balance arithmetic (S1.7) and forecast semantic validation
+(S2.1), plus baseline-specific readiness and historical quantile computation (S2.2).
+S2.4–S2.7 add causal domain features/metrics and trained Forecast models in infrastructure,
+with application evaluation/retained artifact replay; other domain engines remain absent.
 S1.1 User/Store/StoreMembership and S1.2 Product/Ingredient/Recipe/RecipeLine
 persistence models exist. S1.3 adds Supplier, SupplierTerm, SalesDaily, InventoryLot,
 InventoryMovement and BusinessConstraint. Their storage contracts are accepted in DATABASE_SCHEMA;
 S1.4 adds ForecastRun/ForecastPrediction/DecisionRun persistence only;
-Forecast/Decision Engines remain NOT IMPLEMENTED. All other entity details remain PROPOSAL.
+S2.3 adds internal retained baseline execution/replay; Decision Engine remains absent.
+All other entity details remain PROPOSAL.
 
 ## IMPLEMENTED — Identity / Authorization + Store persistence subset
 
@@ -92,7 +96,7 @@ docs for actual persistence tests and manual inspection.
 | Import / Mapping | ImportJob, MappingProfile, canonical fields | ACCEPTED: ADR-008 policy. CURRENT FACT: no import implementation. FUTURE: validated idempotent domain corrections, profiles/rules and bounded ambiguity suggestions. |
 | Catalog / Recipe | Store, Product, Ingredient, Recipe, RecipeLine; units, recipe version | CURRENT FACT: S1.2 persistence and DB integrity exist. FUTURE: APIs/resolution/BOM computation; no LLM facts. |
 | Operational Data | SalesDaily; store business date, cutoff | CURRENT FACT: canonical daily persistence. FUTURE: import/correction and sales feed to Forecasting. |
-| Forecasting | ForecastRun, ForecastPrediction, P25/P50/P75 | CURRENT FACT: persistence exists. FUTURE: deterministic model/baseline outputs with input/model versions; consumes sales and product catalog. |
+| Forecasting | ForecastRun, ForecastPrediction, P25/P50/P75 | CURRENT FACT: persistence, S2.1 contracts and S2.2 pure historical baseline exist. S2.3 adds retained baseline persistence/replay. FUTURE: trained model and evaluation. |
 | Ingredient Demand | Ingredient quantity over time | Expands forecast using catalog/recipe versions; does not select procurement strategy. |
 | Inventory / FEFO | InventoryLot, InventoryMovement; usable quantity, expiry, arrival | CURRENT FACT: lot/movement schema; ADR-009 policy. FUTURE: atomic audited mutations and FEFO/availability/allocation. |
 | Procurement | Supplier, SupplierTerm, BusinessConstraint; packs, MOQ, lead time, candidate strategy | CURRENT FACT: versioned input persistence. FUTURE: exactly LEAN/BALANCED/PROTECTED candidates; no procurement computation yet. |
@@ -199,7 +203,8 @@ Products, inclusive horizon and RUNNING lifecycle; Decision requires a completed
 same-store Forecast and stores supplied metadata/snapshot/package atomically.
 Outputs are by-value contracts rather than tracked ORM. Full engine/package business
 validation, audited inventory mutations, correction workflows and authorization
-remain future. No computation has been added to the plain Python domain packages.
+remain future in that S1.6 slice. HISTORICAL INFORMATION: S1.6 added no domain
+computation; S1.7/S2 later add inventory arithmetic, forecast baseline/features/metrics.
 
 ## S1.7 operational boundary -- CURRENT FACT
 
@@ -207,10 +212,10 @@ S1.7 supersedes earlier empty-domain and absent inventory/Ingredient/Recipe writ
 claims for its authorized paths. Store/Ingredient and SupplierTerm create/read,
 atomic Recipe version+lines, receipt lot+RECEIPT and locked movement-backed
 corrections now use typed internal application contracts. The plain Python balance
-function adds exact Decimal deltas and rejects negative results; no other domain
-engine is implemented. Ingredient units match exactly and money inherits
+function adds exact Decimal deltas and rejects negative results. S2 later adds
+forecast baseline/features/metrics and the infrastructure trained model. Ingredient units match exactly and money inherits
 Store.currency without conversion/rounding. Business DATE facts stay explicit;
 aware inventory event timestamps are UTC. Unknown receipt stays NULL; tracked
 Ingredients require expiry. New version/movement corrections leave accepted history
-untouched. Full Sales correction, importing, auth and all computation engines remain
-future work. See APPLICATION_CONTRACTS and S17_VERIFICATION for precise boundaries.
+untouched. Full Sales correction, importing, auth and Decision computation remain
+future work. Forecast's S2 extension is documented separately. See APPLICATION_CONTRACTS and S17_VERIFICATION for precise boundaries.

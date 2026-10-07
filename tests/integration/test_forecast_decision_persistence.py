@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from scripts.dev import migration_config
 from test_supplier_operational_constraints import engine, parents
 
-HEAD = "0006_forecast_decision_persist"
+HEAD = "0008_forecast_execution_meta"
 TABLES = {"forecast_runs", "forecast_predictions", "decision_runs"}
 STARTED = datetime(2026, 10, 1, 0, tzinfo=timezone.utc)
 FINISHED = datetime(2026, 10, 1, 1, tzinfo=timezone.utc)
@@ -58,14 +58,14 @@ def decision_values(ids, run_id, **changes):
 
 def test_fresh_migration_exact_tables_and_downgrade(engine):
     before = set(inspect(engine).get_table_names())
-    assert len(before) == 17 and TABLES <= before
+    assert len(before) == 19 and TABLES <= before
     assert not {"import_jobs", "mapping_profiles", "purchase_orders", "what_if_runs"} & before
     with engine.connect() as fresh:
         assert fresh.scalar(text("SELECT current_database()")) == "shelfcash_test"
         assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == HEAD
         assert fresh.scalar(text("SELECT count(*) FROM pg_trigger WHERE NOT tgisinternal AND tgrelid IN ('forecast_runs'::regclass,'forecast_predictions'::regclass,'decision_runs'::regclass)")) == 0
     command.downgrade(migration_config(), "0005_data_semantics_correction")
-    assert set(inspect(engine).get_table_names()) == before - TABLES
+    assert set(inspect(engine).get_table_names()) == before - TABLES - {"forecast_run_inputs", "forecast_execution_metadata"}
     command.upgrade(migration_config(), "head")
     assert set(inspect(engine).get_table_names()) == before
 

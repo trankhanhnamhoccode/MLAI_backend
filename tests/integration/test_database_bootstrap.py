@@ -22,9 +22,9 @@ def test_empty_alembic_baseline_and_synchronous_session(database_settings: Setti
             assert fresh.scalar(text("SELECT COUNT(*) FROM public.alembic_version")) == 0
         command.upgrade(migration_config(), "head")
         assert set(inspect(engine).get_table_names(schema="public")) == {
-            "alembic_version", "users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints", "forecast_runs", "forecast_predictions", "decision_runs",
+            "alembic_version", "users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints", "forecast_runs", "forecast_predictions", "decision_runs", "forecast_run_inputs", "forecast_execution_metadata",
         }
         with Session(engine) as fresh:
-            assert fresh.scalar(text("SELECT version_num FROM public.alembic_version")) == "0006_forecast_decision_persist"
+            assert fresh.scalar(text("SELECT version_num FROM public.alembic_version")) == "0008_forecast_execution_meta"
     finally:
         engine.dispose()

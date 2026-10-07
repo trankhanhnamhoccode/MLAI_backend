@@ -10,7 +10,7 @@ from app.infrastructure.database.base import Base
 
 
 class ForecastRun(Base):
-    """Forecast provenance storage; computation/lifecycle enforcement is future work."""
+    """Forecast provenance storage; application/repository enforce lifecycle writes."""
 
     __tablename__ = "forecast_runs"
     __table_args__ = (
