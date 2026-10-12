@@ -30,6 +30,13 @@ reuse, phát hiện drift, giữ Owner approval và atomic commit. Provider th�
 duyệt model/dữ liệu/giới hạn calls/chi phí riêng trước khi gửi dữ liệu. Không sửa
 FE, triển khai ngoài import hoặc deploy trong phạm vi này.
 
+CURRENT FACT: v1.0 đã push; nhánh import riêng đã có header/preamble discovery,
+controlled aliases/candidates/reasons, full-spec Owner review và scoped drift notice.
+Reuse không học từ proposal chưa duyệt. Numeric Excel dates, version `v1.2`, MOQ/
+pricing basis và per-serving recipe semantics vẫn cần dữ liệu/quyết định rõ ràng;
+consumption, purchase history, calendar/weather và tabular business rules chưa có
+writer import. Đưa các workflow này vào import là slice riêng, chưa được thực hiện.
+
 ## PROPOSAL / ngoài phạm vi đã duyệt
 
 - Dashboard D01/prototype screens and draft PO remain proposals unless separately

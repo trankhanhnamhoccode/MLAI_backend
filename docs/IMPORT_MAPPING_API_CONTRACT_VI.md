@@ -106,11 +106,32 @@ Retained audit/receipt không bị viết lại. Mỗi import mới, kể cả r
 và confirmation riêng; S4.5 consume/recheck current permissions/read-set trước
 atomic write. Confirmation không guarantee operational facts không đổi sau read.
 
-Qwen qwen/qwen3.5-9b chỉ proposals indexed type/targets; approved exact unique Store
-profile reuse không gọi provider; rule trước, unresolved/ambiguous/low-coverage mới
-optional model. No-key/timeout/invalid output giữ manual flow. Không dùng filename
-làm source-system authority, không rows rewrite/entities/conversions/catalog gửi LLM.
-Runtime limits/evidence/task status trong feature và task notes, không live-quality claim.
+CURRENT FACT: Qwen adapter cố định `qwen/qwen3.5-9b`, chỉ proposals indexed type/
+targets. Cần `IMPORT_LLM_SUGGESTIONS_ENABLED=true` và key; mặc định OFF. Approved
+exact unique Store profile reuse không gọi provider; rule trước, phần chưa gán mới
+có thể dùng model. Không thay type/target rules đã xác định hoặc duplicate ambiguity;
+không gửi sample cells của target rules đã biết. Off/no-key/timeout/invalid output
+giữ manual flow. Tối đa hai sheet/batch, hai transport attempts/sheet; không live
+provider/cost/quality claim. Trước khi bật thật phải duyệt model/dữ liệu/calls/chi phí.
+Không dùng filename làm source-system authority, không rows rewrite/entities/
+conversions/catalog gửi LLM. Chi tiết ở [feature](features/IMPORT_STAGING_PREVIEW.md).
+
+ACCEPTED DECISION theo phạm vi import người dùng duyệt: auto-proposal khác approval.
+Owner đọc toàn spec qua M01 `include_profile_details=true`, toàn cột qua M02
+`review_only=false`, rồi N5 `approve_activate` với revision/reason. Không cần M04
+riêng từng cột RULE không mơ hồ khi proposal đủ required fields, source context,
+classification và identity/conversion/blockers. QWEN, duplicate, unknown target,
+date convention chưa rõ và missing facts vẫn cần M04; không điểm confidence nào
+miễn điều kiện này. Staff có thể đề xuất theo grants nhưng N5 vẫn Owner-only.
+
+CURRENT FACT: M01/I04 SheetInfo thêm header_row/preamble_rows/preamble_samples;
+samples tối đa1000 ký tự/dòng để review cùng source file, raw đầy đủ giữ staging.
+M02 MappingIssue thêm
+suggestion_reason/candidate_targets, giữ indices/status/routes. Header detection
+chỉ tìm trong tám dòng đầu, không vượt qua dòng đa cột để bỏ dữ liệu. Raw preamble
+giữ riêng trong staging; dữ liệu không bị sửa. Scope đã khai báo có active profile
+nhưng structure hoặc semantics không khớp sẽ báo PROFILE_STRUCTURE_OR_SEMANTICS_DRIFT;
+không bind sai version hoặc sửa profile cũ. Numeric Excel serial chưa được convert.
 
 <a id="flow"></a>
 ## 2. Policy đã chốt và luồng khách dùng

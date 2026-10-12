@@ -27,11 +27,16 @@ See [the runbook](runbooks/FULL_TEST_FLOW.md).
 
 CURRENT FACT: người dùng đã thử FE thật thành công ít nhất tới mapping lần đầu.
 Điều này chưa chứng minh toàn browser flow import/planning end-to-end thành công.
-v1.0 có rules canonical keys/aliases, approved-profile reuse và adapter OpenRouter
-tùy chọn, không provider call lúc startup. Discovery hiện lấy dòng đầu làm header;
-workbook có title/ghi chú trước headers chưa được xử lý đúng. Mapping/identity/
-context lần đầu còn thủ công; task release không gọi LLM thật. Cải tiến import
-được tách sau tag v1.0, không lẫn vào source của mốc này.
+HISTORICAL INFORMATION: tag `v1.0` tại `cf6732e` giữ discovery lấy dòng đầu làm
+header, đã push cùng nhánh `feat/from_forecast_to_decision_run`.
+CURRENT FACT trên `feat/import_mapping_rules`: discovery nhận diện header trong
+tám dòng đầu sau preamble đơn cột, giữ raw preamble/header và số dòng vật lý;
+controlled aliases, indexed candidates/reasons, Owner full-spec group review,
+approved-profile reuse và cảnh báo drift theo scope đã khai báo. Lần đầu vẫn cần
+nguồn/định danh/conventions và xử lý mọi cột mơ hồ/ngoài phạm vi. Không auto-approval.
+Adapter OpenRouter cần opt-in mặc định OFF và key; không provider call thật trong
+task. Unknown/unsupported không tự IGNORE; atomic commit và permissions giữ nguyên.
+Chi tiết/giới hạn tại [Import feature](features/IMPORT_STAGING_PREVIEW.md).
 
 HISTORICAL INFORMATION: prior S4.11 verification recorded API/native-worker/fresh-
 session/PDF/restart gates and twelve current-screen Edge gates. Those are previous

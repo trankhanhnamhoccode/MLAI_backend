@@ -122,6 +122,14 @@ và operator credential; không chạy để thử mapping hay gửi thư thật
    rõ với reason/ack; không map receipt thành kiểm kê lô. Lần đầu cần Owner duyệt
    toàn profile. Profile reuse vẫn không thay confirmation của batch.
 
+   CURRENT FACT trên nhánh import sau tag v1.0: Owner đọc toàn spec và mappings,
+   có thể duyệt nhóm RULE đủ điều kiện bằng N5 mà không xác nhận riêng từng cột.
+   M01 `include_profile_details=true`, M02 `review_only=false` cho xem đầy đủ;
+   candidates/reason/header_row/preamble_samples hỗ trợ review. Cột mơ hồ, ngoài
+   schema và required facts thiếu vẫn phải xử lý trước. FE chưa được sửa/kiểm chứng
+   cho cách duyệt nhóm này; nếu UI vẫn buộc từng cột, dùng workflow hiện hành hoặc
+   các API trên theo [Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md).
+
    Số items review không phải số cột nghiệp vụ bắt buộc: còn classification,
    source context, identity và conversion issues. M03 mô tả requiredness theo
    từng schema; required-nullable vẫn cần giá trị/null rõ, không tự bỏ field.

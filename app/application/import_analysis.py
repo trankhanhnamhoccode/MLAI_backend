@@ -3,11 +3,34 @@
 from uuid import uuid4
 from app.application.contracts import import_mapping as dto
 from app.application.contracts.import_domains import SOURCE_MODELS
-from app.application.contracts.import_source import ParsedFile
+from app.application.contracts.import_source import ParsedFile, SourceRow
 from app.application.import_identity import content_digest
 
 
-from app.application.import_descriptors import options, rule_classification
+from app.application.import_descriptors import (
+    options, rule_classification, column_candidates, unsupported_sheet_reason,
+    semantic_review_candidate,
+)
+
+
+def header_index(rows: tuple[SourceRow, ...]) -> int:
+    """Bounded title/preamble detection. Never skip a populated multi-column row."""
+    for index, row in enumerate(rows[:8]):
+        populated = [c for c in row.cells if c.raw not in (None, "")]
+        if len(populated) >= 3 and all(c.kind == "text" and not c.formula for c in populated):
+            return index
+        if len(populated) > 1:
+            return 0
+    return 0
+
+
+def source_row(row: SourceRow) -> dict:
+    return dict(
+        row_number=row.row_number, record_number=row.record_number,
+        line_start=row.line_start, line_end=row.line_end,
+        cells=[dict(column_index=c.column_index, raw=c.raw, kind=c.kind, formula=c.formula)
+               for c in row.cells],
+    )
 
 
 def discover(file_id, parsed: ParsedFile):
@@ -17,8 +40,12 @@ def discover(file_id, parsed: ParsedFile):
     for sheet in parsed.sheets:
         if len(sheet.rows) <= 1:
             continue
-        header = sheet.rows[0]
-        width = max((c.column_index + 1 for c in header.cells), default=0)
+        index = header_index(sheet.rows)
+        header = sheet.rows[index]
+        body = sheet.rows[index + 1:]
+        # Styled empty cells do not create columns; populated unlabelled data does.
+        width = max((c.column_index + 1 for row in sheet.rows[index:]
+                     for c in row.cells if c.raw not in (None, "")), default=0)
         headers = tuple(
             next((c.raw or "" for c in header.cells if c.column_index == i), "")
             for i in range(width)
@@ -27,7 +54,7 @@ def discover(file_id, parsed: ParsedFile):
             sorted(
                 {
                     c.kind
-                    for row in sheet.rows[1:]
+                    for row in body
                     for c in row.cells
                     if c.column_index == i and c.kind != "empty"
                 }
@@ -45,8 +72,12 @@ def discover(file_id, parsed: ParsedFile):
                 sheet_id=sid,
                 name=sheet.name,
                 schema_signature=signature,
-                row_count=max(0, len(sheet.rows) - 1),
+                row_count=len(body),
                 headers=headers,
+                header_row=header.row_number,
+                preamble_rows=tuple(r.row_number for r in sheet.rows[:index]),
+                preamble_samples=tuple(" | ".join(c.raw or "" for c in r.cells
+                    if c.raw not in (None, ""))[:1000] for r in sheet.rows[:index]),
                 profile_id=None,
                 selected_type=selected,
                 suggested_type=selected,
@@ -63,6 +94,9 @@ def discover(file_id, parsed: ParsedFile):
                     "SHEET_TYPE_PROPOSED"
                     if selected
                     else "UNSUPPORTED_OR_UNRESOLVED_SHEET"
+                ),
+                suggestion_reason=unsupported_sheet_reason(headers) or (
+                    "SCHEMA_HEADER_EVIDENCE" if selected else "NO_UNIQUE_SCHEMA_EVIDENCE"
                 ),
                 status="needs_confirmation" if selected else "unmatched",
                 source_location=dto.SourceLocation(file_id=file_id, sheet_id=sid),
@@ -84,8 +118,19 @@ def discover(file_id, parsed: ParsedFile):
         )
         unsupported = {o.key for o in options() if o.support == "unsupported"}
         for i, h in enumerate(headers):
-            # Only exact canonical descriptor keys are proposed, never silently bound.
             target = proposals[i]
+            candidates = column_candidates(h, selected) if selected else ()
+            reason = "EXACT_CANONICAL_HEADER" if target == h else "CONTROLLED_HEADER_ALIAS"
+            if not target:
+                reason = ("DUPLICATE_OR_AMBIGUOUS_TARGET" if candidates else
+                          unsupported_sheet_reason(headers) or "NO_SUPPORTED_TARGET")
+                semantic = semantic_review_candidate(h, selected)
+                if not candidates and semantic:
+                    candidates = (semantic[0],)
+                    reason = semantic[1]
+            if target and target.endswith((".sales_date", ".effective_from", ".effective_to")):
+                if any(c.column_index == i and c.kind == "numeric" for r in body for c in r.cells):
+                    reason += ";DATE_CONVENTION_REVIEW: numeric lexical value is not an approved date format"
             issues.append(
                 dto.MappingIssue(
                     mapping_id=uuid4(),
@@ -97,21 +142,24 @@ def discover(file_id, parsed: ParsedFile):
                         else (
                             "OWNER_MAPPING_APPROVAL_REQUIRED"
                             if target
-                            else "UNKNOWN_SOURCE_FIELD"
+                            else "AMBIGUOUS_TARGET" if candidates else "UNKNOWN_SOURCE_FIELD"
                         )
                     ),
-                    status="needs_confirmation" if target else "unmatched",
+                    status="needs_confirmation" if target else ("ambiguous" if candidates else "unmatched"),
                     source_location=dto.SourceLocation(
                         file_id=file_id, sheet_id=sid, source_column_index=i
                     ),
                     source_header=h,
                     target_field=target,
+                    suggested_target_field=target,
+                    candidate_targets=candidates,
+                    suggestion_reason=reason,
                     samples=tuple(
                         (
                             next((c.raw for c in r.cells if c.column_index == i), None)
                             or ""
                         )[:200]
-                        for r in sheet.rows[1:6]
+                        for r in body[:5]
                     ),
                     resolution_origin="UNRESOLVED",
                     suggestion_origin="RULE" if target else "NONE",
@@ -122,24 +170,9 @@ def discover(file_id, parsed: ParsedFile):
             dict(
                 sheet_id=str(sid),
                 file_id=str(file_id),
-                rows=[
-                    dict(
-                        row_number=r.row_number,
-                        record_number=r.record_number,
-                        line_start=r.line_start,
-                        line_end=r.line_end,
-                        cells=[
-                            dict(
-                                column_index=c.column_index,
-                                raw=c.raw,
-                                kind=c.kind,
-                                formula=c.formula,
-                            )
-                            for c in r.cells
-                        ],
-                    )
-                    for r in sheet.rows[1:]
-                ],
+                preamble=[source_row(r) for r in sheet.rows[:index]],
+                header=source_row(header),
+                rows=[source_row(r) for r in body],
             )
         )
     return sheets, issues, sources
@@ -256,10 +289,15 @@ def build_spec(
         if i.issue_type == "classification" and i.status not in {
             "resolved",
             "auto_mapped",
-        }:
+        } and not (i.status == "needs_confirmation" and i.suggestion_origin == "RULE"
+                   and sheet.selected_type == sheet.suggested_type):
             missing.append("sheet_type_review")
     for i in cols:
-        if i.status not in {"resolved", "auto_mapped"}:
+        if i.status not in {"resolved", "auto_mapped"} and not (
+            i.status == "needs_confirmation" and i.suggestion_origin == "RULE"
+            and i.target_field and i.candidate_targets == (i.target_field,)
+            and i.suggestion_reason in {"EXACT_CANONICAL_HEADER", "CONTROLLED_HEADER_ALIAS"}
+        ):
             missing.append("column:" + str(i.source_location.source_column_index))
     for i in own:
         if i.issue_type in {

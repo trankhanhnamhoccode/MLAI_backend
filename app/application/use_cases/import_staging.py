@@ -1114,6 +1114,25 @@ class ImportStaging:
                         candidates = []
                 if len(candidates) > 1:
                     raise AuthError("PROFILE_MATCH_AMBIGUOUS", 409)
+                scoped_versions = s.scalars(
+                    select(ImportProfileVersion).join(
+                        ImportProfile, ImportProfile.id == ImportProfileVersion.profile_id
+                    ).where(
+                        ImportProfileVersion.store_id == b.store_id,
+                        ImportProfileVersion.source_system_key == context.source_system_key,
+                        ImportProfileVersion.report_type == context.report_type,
+                        ImportProfileVersion.retired.is_(False),
+                        ImportProfile.active_version == ImportProfileVersion.version,
+                    )
+                ).all()
+                if scoped_versions and not candidates:
+                    analysis = dict(b.analysis_json)
+                    location = dto.SourceLocation(file_id=sheet.file_id, sheet_id=sheet.sheet_id)
+                    warning = notice("PROFILE_STRUCTURE_OR_SEMANTICS_DRIFT", location, True)
+                    retained = [n for n in analysis.get("warnings", [])
+                                if not (n["code"] == warning.code and n.get("source_location") == location.model_dump(mode="json"))]
+                    analysis["warnings"] = retained + [warning.model_dump(mode="json")]
+                    b.analysis_json = analysis
                 if (
                     len(candidates) == 1
                     and issue.issue_type == "source_context"
@@ -1988,6 +2007,19 @@ class ImportStaging:
                             for r in analysis["bindings"]
                             if r["sheet_id"] != str(p.sheet_id)
                         ] + [ref.model_dump(mode="json")]
+                        # N5 approves the displayed complete spec as a group.
+                        analysis["issues"] = [
+                            dto.MappingIssue.model_validate(item).model_copy(update={
+                                "status": "auto_mapped", "resolution_origin": "APPROVED_PROFILE",
+                                "profile_ref": ref, "resolved_by": actor.user_id,
+                            }).model_dump(mode="json")
+                            if item["sheet_id"] == str(p.sheet_id)
+                            and item["status"] == "needs_confirmation"
+                            and item.get("suggestion_origin") == "RULE"
+                            and item["issue_type"] in {"classification", "column"}
+                            else item
+                            for item in analysis["issues"]
+                        ]
                         b.analysis_json = analysis
                         b.mapping_revision = rev()
                         b.revision = rev()
@@ -2630,6 +2662,7 @@ class ImportStaging:
                 from app.infrastructure.import_suggestions import suggest_sheet
                 from app.application.import_descriptors import rule_classification
 
+                provider_sheets = 0
                 for index, sheet in enumerate(sheets):
                     if sheet.schema_signature in matching_signatures:
                         continue
@@ -2638,6 +2671,12 @@ class ImportStaging:
                     )
                     if not low_quality:
                         continue
+                    if self.settings.import_llm_suggestions_enabled:
+                        if provider_sheets >= 2:
+                            warnings.append(notice("LLM_CALL_LIMIT", dto.SourceLocation(
+                                file_id=sheet.file_id, sheet_id=sheet.sheet_id), True))
+                            continue
+                        provider_sheets += 1
                     rawsheet = next(
                         raw for raw in sources if raw["sheet_id"] == str(sheet.sheet_id)
                     )
@@ -2654,7 +2693,7 @@ class ImportStaging:
                     )
                     filename = file_names[sheet.file_id]
                     suggestion, unavailable = suggest_sheet(
-                        self.settings, sheet, rawsheet, filename, rule
+                        self.settings, sheet, rawsheet, filename, rule, sheet.selected_type
                     )
                     if unavailable:
                         warnings.append(
@@ -2675,7 +2714,7 @@ class ImportStaging:
                             "classification_origin": "QWEN",
                             "confidence": suggestion.confidence,
                         }
-                    )
+                    ) if sheet.selected_type is None else sheet
                     issues = [
                         (
                             item.model_copy(
@@ -2687,6 +2726,7 @@ class ImportStaging:
                                         item.source_location.source_column_index
                                     ].target_field,
                                     "suggestion_origin": "QWEN",
+                                    "suggestion_reason": "MODEL_SEMANTIC_PROPOSAL_REQUIRES_REVIEW",
                                     "confidence": proposals[
                                         item.source_location.source_column_index
                                     ].confidence,
@@ -2701,6 +2741,8 @@ class ImportStaging:
                             )
                             if item.sheet_id == sheet.sheet_id
                             and item.issue_type == "column"
+                            and item.target_field is None
+                            and item.status != "ambiguous"
                             else (
                                 item.model_copy(
                                     update={
@@ -2715,6 +2757,7 @@ class ImportStaging:
                                 )
                                 if item.sheet_id == sheet.sheet_id
                                 and item.issue_type == "classification"
+                                and sheet.selected_type is None
                                 else item
                             )
                         )

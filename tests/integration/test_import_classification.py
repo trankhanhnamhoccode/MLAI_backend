@@ -580,7 +580,7 @@ def test_valid_qwen_proposal_requires_human_type_and_mapping_review(imp, monkeyp
     from pydantic import SecretStr
 
     imp[2].settings = imp[2].settings.model_copy(
-        update={"openrouter_api_key": SecretStr("SYNTHETIC-ONLY")}
+        update={"openrouter_api_key": SecretStr("SYNTHETIC-ONLY"), "import_llm_suggestions_enabled": True}
     )
     called = []
 
@@ -624,8 +624,10 @@ def test_valid_qwen_proposal_requires_human_type_and_mapping_review(imp, monkeyp
     summary = (
         imp[0][5].get("/api/v1/imports/" + ident + "/mapping-summary").json()["data"]
     )
-    assert len(called) == 1 and summary["sheets"][0]["classification_origin"] == "QWEN"
-    assert summary["sheets"][0]["confidence"] == 1 and not summary["can_preview"]
+    # The model fills only the unknown column; it cannot replace deterministic type evidence.
+    assert len(called) == 1 and summary["sheets"][0]["classification_origin"] == "RULE"
+    assert summary["sheets"][0]["confidence"] == 0.8 and not summary["can_preview"]
+    assert all(c['source_column_index'] == 2 for row in called[0]['sample_rows'] for c in row['cells'])
     quantity = next(
         i for i in listing(imp, ident) if i["source_header"] == "alien header"
     )

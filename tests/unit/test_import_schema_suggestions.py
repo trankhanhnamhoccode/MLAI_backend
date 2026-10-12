@@ -177,7 +177,8 @@ def test_payload_is_bounded_indexed_and_does_not_send_unrelated_facts():
     raw[0]["catalog"] = "SECRET-CATALOG-SHOULD-NOT-BE-SENT"
     raw[0]["actor"] = "SECRET-SESSION"
     payload = gateway.sheet_payload(sheets[0], raw[0], "display.csv", {}, None)
-    assert [c["source_column_index"] for c in payload["columns"]] == [0, 1, 2]
+    # The fixture has two extra populated cells: preserve unlabelled data columns.
+    assert [c["source_column_index"] for c in payload["columns"]] == [0, 1, 2, 3, 4]
     assert payload["columns"][0]["header"] == payload["columns"][1]["header"]
     assert len(payload["sample_rows"]) <= 8
     assert "SECRET" not in json.dumps(payload)
@@ -233,7 +234,7 @@ def test_invalid_output_rejected_wholly(fault, monkeypatch):
             )
 
     monkeypatch.setattr(gateway, "build_opener", lambda *a: Transport())
-    settings = Settings(_env_file=None, openrouter_api_key=SecretStr("SYNTHETIC-ONLY"))
+    settings = Settings(_env_file=None, import_llm_suggestions_enabled=True, openrouter_api_key=SecretStr("SYNTHETIC-ONLY"))
     assert gateway.suggest_sheet(settings, sheets[0], raw[0], "sales.csv", {}) == (
         None,
         "LLM_INVALID_OUTPUT",
@@ -271,7 +272,7 @@ def test_valid_output_missing_key_and_timeout_keep_manual_flow(monkeypatch):
             )
 
     monkeypatch.setattr(gateway, "build_opener", lambda *a: Transport())
-    settings = Settings(_env_file=None, openrouter_api_key=SecretStr("SYNTHETIC-ONLY"))
+    settings = Settings(_env_file=None, import_llm_suggestions_enabled=True, openrouter_api_key=SecretStr("SYNTHETIC-ONLY"))
     value, error = gateway.suggest_sheet(settings, sheets[0], raw[0], "x", {}, "sales")
     assert value == SheetSuggestion.model_validate(output()) and error is None
 

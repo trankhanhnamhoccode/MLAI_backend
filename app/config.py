@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     upload_directory: Path = Path("runtime/uploads")
     model_artifact_directory: Path = Path("runtime/model_artifacts")
     openrouter_api_key: SecretStr | None = None
+    import_llm_suggestions_enabled: bool = False
     openrouter_model: str | None = None
     openrouter_mapping_model: Literal["qwen/qwen3.5-9b"] = "qwen/qwen3.5-9b"
     import_worker_enabled: bool = False

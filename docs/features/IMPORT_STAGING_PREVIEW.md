@@ -82,12 +82,37 @@ alone never determines type. Structural ties remain ambiguous; high confidence
 never bypasses required columns, duplicates, context conflicts or Owner approval.
 Physical sheet name may be empty; canonical entity names still cannot be empty.
 
+CURRENT FACT: discovery tìm header trong tối đa tám dòng đầu sau các dòng trống/
+đơn cột (title/ghi chú), chỉ nhận candidate có ít nhất ba ô text không formula.
+Không vượt qua dòng đa cột; không ghép nhiều dòng thành header. SheetInfo hiển thị
+header_row/preamble_rows/preamble_samples (≤1000 ký tự/dòng, review cùng source file),
+raw preamble và header giữ trong staging; body giữ số dòng
+vật lý/cached formula/lexical cells. Styled empty trailing cells không tạo cột giả;
+ô dữ liệu có nội dung ngoài header vẫn tạo cột không nhãn cần review.
+
+Aliases normalize Unicode/case/diacritics/spacing/punctuation chỉ cho header hints,
+không đổi values/units/identities. M02 suggestion_reason/candidate_targets giải thích
+exact key, controlled alias, duplicate hoặc semantic review. Generic unit/name/
+currency không đủ phân loại workflow; headers consumption/receipt/calendar/tabular
+business rules được nhận diện ngoài schema hiện hành, không auto-IGNORE hay ép sang
+sales/count. `SLX`, `MOQ`, giá mua theo đơn vị, lượng mỗi serving, version `v1.2`
+và ngày kiểm kê không timezone phải review; không tạo loss/fee/unit/source identity.
+Numeric Excel dates có target vẫn có DATE_CONVENTION_REVIEW và không tự convert.
+
 M01 exposes selected_type/suggested_type/classification_origin/confidence/ignored/
 ignore_reason. M02 review_only=false exposes all indexed column mappings, including
 successful reused pairs and explicit ignored fields. RULE confidence is required-
 field coverage heuristic; QWEN confidence self-score. MANUAL/REUSED confidence=null,
 not fake1. Null target is UNRESOLVED until an explicit ignore resolution is retained.
 Duplicate headers remain separate indices; duplicate targets are rejected.
+
+N5 Owner có thể duyệt whole displayed spec khi RULE classification/target duy nhất,
+không có pending ambiguity/missing fields/identity/conversion/schema blockers.
+Các đề xuất này vẫn needs_confirmation trước N5; complete proposal không can_preview.
+N5 thành công mới đánh dấu approved profile và bind version. Unknown/ignored cần
+explicit M04/reason; QWEN cần review riêng. Full profile + review_only=false vẫn cho
+Owner đọc toàn mappings trước quyết định. Staff không activate, preview/commit và
+per-import confirmation giữ permissions/atomic semantics hiện hành.
 
 M04 classification issue: select sheet_type or explicitly ignore whole sheet with
 acknowledgment/reason. Type change removes invalid targets and incompatible derived
@@ -103,10 +128,19 @@ Profile reuse remains Store + declared stable source/report + schema/structure,
 not filename inference or unapproved learning. Ambiguous/context-conflicting profiles
 do not auto-select. New structure is review-required, not a new auto-activated version.
 Unchanged approved parsing/conversion rules and manual/IGNORE origin are retained.
+Khi M04 khai báo scope có active profile nhưng cấu trúc/semantics không khớp,
+PROFILE_STRUCTURE_OR_SEMANTICS_DRIFT hiện warning; không auto-bind version. Scope
+khác/cross-Store không được dùng làm memory. Signature có raw headers, observed
+column kinds và physical header row; đổi layout/type/header cần review lại.
 
 ### Provider payload and failure boundary
 
 OPENROUTER_MAPPING_MODEL fixed qwen/qwen3.5-9b; backend Settings SecretStr API key.
+IMPORT_LLM_SUGGESTIONS_ENABLED mặc định false; key không tự bật provider. Chưa gọi
+thật trong task; trước khi bật cần duyệt model/dữ liệu/calls/chi phí. Adapter xử lý
+phần chưa gán; output thay RULE type/targets bị từ chối, duplicate ambiguity giữ
+review. Known unsupported sheets không gọi model. Hai eligible sheet/batch tối đa,
+mỗi sheet hai transport attempts; vượt cap có LLM_CALL_LIMIT và manual fallback.
 temperature0, reasoning.enabled=false, strict response_format JSON Schema,
 provider.require_parameters=true. No fallback to another model/API provider or schema
 weakening. OpenRouter upstream routing is not pinned to a particular inference vendor.
@@ -117,7 +151,9 @@ were checked; this is documentation evidence, not a live provider test.
 
 Payload sheet_profile/1: display filename/sheet name≤200 chars (hints only), stable
 source-column indices, lexical kind hints, at most8 evenly sampled rows with first/
-last where available, each cell≤200 chars, current descriptors and rule suggestion.
+last where available, each cell≤200 chars, chỉ samples của columns chưa có RULE
+target, current descriptors và rule suggestion. Headers/indices vẫn giữ đầy đủ
+để validate whole output, known target samples không gửi.
 Optional selected type limits adapter targets; no separate remap/provider endpoint
 was added. Source facts are never normalized/imputed by the model. No raw workbook,
 catalog, actor/session/token, Settings contents or operational read-set is sent.
@@ -319,9 +355,11 @@ macro/external relationships/encryption/malformed coordinates rejected.20MiB/fil
 declared slash; numeric Excel serial dates/styles/epoch không tự đoán, phải cung cấp
 representation supported. Near-limit CPU/memory/latency chưa benchmark.
 
-Optional configured OpenRouter chỉ≤20 headers×200 chars, không raw rows/operational
-facts;1000tokens/15s/64KiB, no credential-forwarding redirects. Allowlisted unapproved
-suggestions only; missing config/outage LLM_UNAVAILABLE, manual/reuse hoạt động.
+Optional OpenRouter theo provider boundary phía trên: default OFF, bounded indexed
+semantic samples, không raw workbook/catalog/operational snapshot/credentials.
+Allowlisted unapproved suggestions only; missing config/outage LLM_UNAVAILABLE,
+manual/reuse hoạt động. Các giới hạn20headers/1000tokens/15s là HISTORICAL INFORMATION
+của adapter nền tảng trước classification extension, không cấu hình hiện hành.
 Offline provider tests không live model proof. Không browser FE/load/SLA/security
 certification/production recovery/backup. Không S4.5/canonical histories/configuration
 commit/readiness/forecast/DecisionRun trong slice này.

@@ -19,6 +19,8 @@ def sheet_payload(sheet, rawsheet, filename, rule, selected_type=None):
     if len(sheet.headers) > 32:
         raise ValueError("LLM_COLUMN_LIMIT")
     rows = rawsheet["rows"]
+    fixed = {c["source_column_index"]: c["target_field"]
+             for c in rule.get("columns", ()) if c.get("target_field")}
     # Evenly spaced observations, including first/last; no mutation or imputation.
     indices = sorted({i * (len(rows) - 1) // 7 for i in range(8)}) if rows else []
     columns = [
@@ -51,6 +53,7 @@ def sheet_payload(sheet, rawsheet, filename, rule, selected_type=None):
                     )
                     for c in rows[index]["cells"]
                     if c["column_index"] < len(columns)
+                    and c["column_index"] not in fixed
                 ]
             )
             for index in indices
@@ -71,7 +74,7 @@ def suggest_sheet(settings, sheet, rawsheet, filename, rule, selected_type=None)
     from app.application.import_descriptors import options
     from pydantic import ValidationError
 
-    if not settings.openrouter_api_key:
+    if not settings.import_llm_suggestions_enabled or not settings.openrouter_api_key:
         return None, "LLM_UNAVAILABLE"
     try:
         payload = sheet_payload(sheet, rawsheet, filename, rule, selected_type)
@@ -154,6 +157,11 @@ def suggest_sheet(settings, sheet, rawsheet, filename, rule, selected_type=None)
             ):
                 return None, "LLM_INVALID_OUTPUT"
             if selected_type is not None and suggestion.sheet_type != selected_type:
+                return None, "LLM_INVALID_OUTPUT"
+            fixed = {c["source_column_index"]: c["target_field"]
+                     for c in rule.get("columns", ()) if c.get("target_field")}
+            if any(c.source_column_index in fixed and c.target_field != fixed[c.source_column_index]
+                   for c in suggestion.columns):
                 return None, "LLM_INVALID_OUTPUT"
             allowed = {o.key for o in options(suggestion.sheet_type) if o.available}
             if any(

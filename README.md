@@ -16,12 +16,20 @@ Người dùng đã thử FE thật tới mapping lần đầu. Toàn luồng br
 chưa kiểm chứng; S4.11 còn PARTIAL, UI lịch sử Planning/PDF chưa hoàn thiện.
 Xem [trạng thái](docs/CURRENT_STATE.md).
 
-Giới hạn v1.0: rules gợi ý canonical key/alias trong descriptors nhưng chưa bao
-phủ headers demo; lần đầu vẫn cần review, khai báo nguồn và nối định danh. Owner
-duyệt profile riêng với xác nhận commit. Profile đã duyệt có thể reuse khi cấu
-trúc khớp; từng batch vẫn cần preview và xác nhận riêng. Có adapter OpenRouter
-tùy chọn; không gọi lúc startup. Rules/profile/manual flow không cần LLM; task
-release không gọi provider thật.
+HISTORICAL INFORMATION: tag `v1.0` giữ bản trước nâng cấp header/rules. CURRENT FACT
+trên nhánh import: nhận diện dòng header sau tiêu đề/ghi chú đơn cột, giữ vị trí
+nguồn, aliases có kiểm soát và lý do đề xuất. Owner có thể duyệt toàn profile khi
+mọi đề xuất rules rõ nghĩa và đủ dữ liệu; không phải bấm xác nhận từng cột trước
+quyết định duyệt. Cột mơ hồ/không hỗ trợ vẫn phải giải quyết rõ ràng. Khai báo nguồn,
+định danh, unit/date và dữ liệu bắt buộc không được đoán.
+
+Profile đã duyệt reuse trong cùng Store khi scope/cấu trúc khớp; mỗi batch vẫn
+preview và xác nhận commit riêng. Drift cần review và Owner duyệt profile mới.
+Adapter OpenRouter mặc định tắt (`IMPORT_LLM_SUGGESTIONS_ENABLED=false`), kể cả có
+key. Chưa gọi provider thật; cần duyệt model/dữ liệu/calls/chi phí trước khi bật.
+Rules/profile/manual flow hoạt động khi provider không có. Xem
+[Import contract](docs/IMPORT_MAPPING_API_CONTRACT_VI.md) và
+[giới hạn parser/mapping](docs/features/IMPORT_STAGING_PREVIEW.md).
 
 ## Cài đặt development
 

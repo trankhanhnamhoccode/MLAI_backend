@@ -71,18 +71,29 @@ LABELS = {
 }
 ALIASES = {
     "sales.quantity": ("Số lượng bán", "SL", "quantity sold"),
-    "sales.sales_date": ("Ngày bán", "Ngày", "sales date"),
-    "inventory_count.on_hand": ("Số tồn kiểm kê", "on hand"),
+    "sales.sales_date": ("Ngày bán", "Ngày", "sales date", "Ngày GD"),
+    "sales.unit": ("ĐVT", "ĐV"),
+    "inventory_count.unit": ("ĐVT", "ĐV"),
+    "inventory_count.on_hand": ("Số tồn kiểm kê", "on hand", "SL cuối ngày"),
     "inventory_count.observed_at": ("Thời điểm kiểm kê", "count timestamp"),
     "recipes.quantity": ("Định lượng nguyên liệu",),
-    "recipes.yield_quantity": ("Sản lượng toàn mẻ",),
-    "sales.product_id": ("Tên món", "Mã món", "Món", "product name", "product code"),
-    "recipes.product_id": ("Tên món", "Mã món", "product name", "product code"),
-    "inventory_count.ingredient_id": ("Tên nguyên liệu", "Mã nguyên liệu"),
-    "recipes.ingredient_id": ("Tên nguyên liệu", "Mã nguyên liệu"),
-    "supplier_terms.ingredient_id": ("Tên nguyên liệu", "Mã nguyên liệu"),
-    "supplier_terms.supplier_id": ("Tên nhà cung cấp", "Mã nhà cung cấp"),
-    "inventory_count.lot_id": ("Mã lô đã định danh",),
+    "sales.product_id": ("Tên món", "Mã món", "Món", "product name", "product code", "Tên món / SKU"),
+    "recipes.product_id": ("Tên món", "Mã món", "product name", "product code", "Món bán"),
+    "inventory_count.ingredient_id": ("Tên nguyên liệu", "Mã nguyên liệu", "Mặt hàng tồn"),
+    "recipes.ingredient_id": ("Tên nguyên liệu", "Mã nguyên liệu", "Thành phần"),
+    "recipes.unit": ("Đơn vị NL",),
+    "recipes.yield_quantity": ("Sản lượng toàn mẻ", "Yield"),
+    "recipes.yield_unit": ("Đơn vị SP",),
+    "recipes.effective_from": ("Áp dụng từ",),
+    "supplier_terms.ingredient_id": ("Tên nguyên liệu", "Mã nguyên liệu", "Material"),
+    "supplier_terms.supplier_id": ("Tên nhà cung cấp", "Mã nhà cung cấp", "Vendor"),
+    "supplier_terms.pack_size_base_quantity": ("Pack Size",),
+    "supplier_terms.unit": ("Base UOM",),
+    "supplier_terms.lead_time_days": ("Lead time (days)",),
+    "inventory_count.lot_id": ("Mã lô đã định danh", "Mã lô"),
+    "products.source_business_key": ("Mã món",),
+    "products.name": ("Tên món / Combo",),
+    "products.selling_unit": ("ĐVT",),
 }
 UNSUPPORTED = (
     "payable_fees.tax_percent",
@@ -94,9 +105,45 @@ UNSUPPORTED = (
 
 def normalized_hint(value):
     # Only proposal matching. Never normalize canonical labels/identities/units.
-    return " ".join(
-        unicodedata.normalize("NFKC", value).casefold().replace("_", " ").split()
-    )
+    text = unicodedata.normalize("NFKD", value).casefold().replace("đ", "d")
+    return " ".join("".join(
+        c if c.isalnum() else " " for c in text if not unicodedata.combining(c)
+    ).split())
+
+
+def unsupported_sheet_reason(headers):
+    """Known unsupported workflows, identified by headers rather than filename."""
+    present = {normalized_hint(h) for h in headers}
+    for code, markers in (
+        ("ACTUAL_CONSUMPTION_UNSUPPORTED", ("Ngày sử dụng", "Lượng thực dùng")),
+        ("PURCHASE_RECEIPT_UNSUPPORTED", ("NCT", "SLN", "Giá nhập")),
+        ("CALENDAR_CONTEXT_UNSUPPORTED", ("Date", "Weekend", "Holiday")),
+        ("TABULAR_BUSINESS_RULES_UNSUPPORTED", ("Loại điều kiện", "Áp dụng cho NL")),
+    ):
+        if {normalized_hint(h) for h in markers} <= present:
+            return code
+    return None
+
+
+def column_candidates(header, schema):
+    fields = [o for o in options(schema) if o.available]
+    exact = tuple(o.key for o in fields if header == o.key)
+    return exact or tuple(o.key for o in fields
+                         if normalized_hint(header) in {normalized_hint(a) for a in o.aliases})
+
+
+def semantic_review_candidate(header, schema):
+    """Possible targets are review hints, never bindings or inferred values."""
+    candidates = {
+        ("sales", "SLX"): ("sales.quantity", "ABBREVIATION_MEANING_REVIEW"),
+        ("inventory_count", "Ngày kiểm kê"): ("inventory_count.observed_at", "COUNT_TIME_AND_TIMEZONE_REQUIRED"),
+        ("recipes", "Lượng / 1 SP"): ("recipes.quantity", "PER_SERVING_VS_WHOLE_YIELD_REVIEW"),
+        ("recipes", "Ver"): ("recipes.version", "INTEGER_VERSION_REQUIRED"),
+        ("supplier_terms", "MOQ"): ("supplier_terms.minimum_order_packs", "MOQ_PACK_VS_BASE_UNIT_REVIEW"),
+        ("supplier_terms", "Giá mua"): ("supplier_terms.pack_cost", "PER_PACK_VS_UNIT_PRICE_REVIEW"),
+    }
+    return next((value for (kind, name), value in candidates.items()
+                 if kind == schema and normalized_hint(name) == normalized_hint(header)), None)
 
 
 def options(schema=None):
@@ -230,6 +277,8 @@ def descriptors():
 
 
 def rule_classification(headers, sheet_name, selected=None):
+    if selected is None and unsupported_sheet_reason(headers):
+        return None, tuple(None for _ in headers), None, False
     ranked = []
     for name in SOURCE_MODELS:
         if selected is not None and name != selected:
@@ -237,18 +286,19 @@ def rule_classification(headers, sheet_name, selected=None):
         fields = [o for o in options(name) if o.available]
         proposals = []
         for header in headers:
-            exact = [o.key for o in fields if header == o.key]
-            aliases = [
-                o.key
-                for o in fields
-                if normalized_hint(header) in {normalized_hint(a) for a in o.aliases}
-            ]
-            candidates = exact or aliases
+            candidates = column_candidates(header, name)
             proposals.append(candidates[0] if len(candidates) == 1 else None)
         # Duplicate headers/aliases cannot silently overwrite the same target.
         duplicates = {p for p in proposals if p and proposals.count(p) > 1}
         proposals = tuple(None if p in duplicates else p for p in proposals)
         present = {p for p in proposals if p}
+        # Generic unit/name/currency alone cannot establish a business workflow.
+        canonical = any(h.startswith(name + ".") and h in {o.key for o in fields} for h in headers)
+        distinctive = present - {
+            name + "." + k for k in ("unit", "name", "currency", "active", "price", "product_id", "ingredient_id", "supplier_id")
+        }
+        if selected is None and not canonical and (len(present) < 2 or not distinctive):
+            continue
         required = {o.key for o in fields if o.requiredness == "required"}
         coverage = len(present & required) / max(1, len(required))
         hint = normalized_hint(sheet_name) in {
@@ -257,6 +307,8 @@ def rule_classification(headers, sheet_name, selected=None):
         }
         ranked.append((len(present), coverage, bool(hint), name, proposals))
     ranked.sort(reverse=True)
+    if not ranked:
+        return None, tuple(None for _ in headers), None, True
     best = ranked[0]
     ambiguous = len(ranked) > 1 and best[:2] == ranked[1][:2]
     if best[0] == 0 or ambiguous:

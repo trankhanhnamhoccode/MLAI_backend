@@ -554,6 +554,9 @@ class MappingIssue(DTO):
     confidence: Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)] | None = None
     ignored: bool = False
 
+    suggestion_reason: str | None = None
+    candidate_targets: tuple[str, ...] = ()
+
 
 class SheetInfo(DTO):
     file_id: UUID
@@ -562,6 +565,9 @@ class SheetInfo(DTO):
     schema_signature: str
     row_count: int
     headers: tuple[str, ...]
+    header_row: int = 1
+    preamble_rows: tuple[int, ...] = ()
+    preamble_samples: tuple[str, ...] = ()
     profile_id: UUID | None
     selected_type: Schema | None = None
     suggested_type: Schema | None = None
