@@ -1,0 +1,207 @@
+{
+  "data": {
+    "store_id": "10000000-0000-0000-0000-000000000001",
+    "as_of_date": "2026-10-11",
+    "evaluated_at": "2026-10-11T02:00:00Z",
+    "data_version": "sha256:55a63600995e458da41a51c3076608e18dedbf45184d5c883a1b90ad2fd578d8",
+    "evaluated_forecast_start_date": "2026-10-11",
+    "cutoff_date": "2026-10-10",
+    "actions": [
+      {
+        "action": "import",
+        "availability": "ready",
+        "can_execute": true,
+        "data_status": "valid",
+        "execution_status": "available",
+        "blockers": [],
+        "warnings": [],
+        "result_assessment": "NOT_ASSESSED"
+      },
+      {
+        "action": "menu",
+        "availability": "ready",
+        "can_execute": true,
+        "data_status": "valid",
+        "execution_status": "available",
+        "blockers": [],
+        "warnings": [
+          {
+            "code": "MENU_EMPTY",
+            "source": "catalog",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          }
+        ],
+        "result_assessment": "NOT_ASSESSED"
+      },
+      {
+        "action": "inventory",
+        "availability": "ready",
+        "can_execute": true,
+        "data_status": "valid",
+        "execution_status": "available",
+        "blockers": [],
+        "warnings": [
+          {
+            "code": "STOCK_COMPLETENESS_UNKNOWN",
+            "source": "inventory",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          }
+        ],
+        "result_assessment": "NOT_ASSESSED"
+      },
+      {
+        "action": "forecast",
+        "availability": "blocked",
+        "can_execute": false,
+        "data_status": "incomplete",
+        "execution_status": "available",
+        "blockers": [
+          {
+            "code": "NO_ACTIVE_PRODUCTS",
+            "source": "catalog",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "NO_COMPUTABLE_PRODUCTS",
+            "source": "catalog",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "MODEL_CONFIGURATION_UNKNOWN",
+            "source": "configuration",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          }
+        ],
+        "warnings": [],
+        "result_assessment": "NOT_ASSESSED"
+      },
+      {
+        "action": "planning",
+        "availability": "blocked",
+        "can_execute": false,
+        "data_status": "incomplete",
+        "execution_status": "unavailable",
+        "blockers": [
+          {
+            "code": "NO_ACTIVE_PRODUCTS",
+            "source": "catalog",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "NO_COMPUTABLE_PRODUCTS",
+            "source": "catalog",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "EXECUTION_UNAVAILABLE",
+            "source": "runtime",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "PLANNING_WORKFLOW_UNAVAILABLE",
+            "source": "runtime",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "BUDGET_CEILING_UNKNOWN",
+            "source": "configuration",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "LIMIT_CONFIGURATION_UNKNOWN",
+            "source": "constraints",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "COMMITTED_INBOUND_UNKNOWN",
+            "source": "constraints",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "PAYABLE_FEE_COVERAGE_UNKNOWN",
+            "source": "fees",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "MODEL_CONFIGURATION_UNKNOWN",
+            "source": "configuration",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          },
+          {
+            "code": "DEFAULT_CONFIGURATION_UNAVAILABLE",
+            "source": "configuration",
+            "scope": "STORE",
+            "entity_id": null,
+            "affected_dates": [],
+            "details": {}
+          }
+        ],
+        "warnings": [],
+        "result_assessment": "NOT_ASSESSED"
+      }
+    ],
+    "source_versions": {
+      "catalog": "sha256:737059038521db16c754fa59b8ba6afb0bef101e68553ce36765307b871f2f99",
+      "recipes": "sha256:f5d6ff264ae00a9260e003b9b554e6aa88c10e775290538a781527a46788cabf",
+      "inventory": "sha256:e8ce8aae07a40be9fdec928a683acf79973dc8e96c5c2be9fede1efb4ff9d10b",
+      "sales": "sha256:810b9ad2e2142d435ece9c8f75c7aebef086bdaf3fdc0fbbdabd211768aece57",
+      "suppliers": "sha256:a3084707d09797930cc54e0da077e5a22001c62c9266e6ae5fe0598e0568d6a9",
+      "fees": "sha256:1a71d8152ebdd65c769c7a2112a5d7110908f0b09c8852de097d0a8039f48bd9",
+      "declarations": "sha256:cf9518ea98f3dac3f32b3b78a51dabb1a1018412da1591af489357446443e428",
+      "planning_config": "sha256:b53436305acda88d6bbe76ce18fca37f3e43f31ff73ff8a626440e26a66fa80a",
+      "model_config": null
+    },
+    "scope_estimate": {
+      "menu_product_count": 0,
+      "estimated_computable_product_count": 0,
+      "excluded_products": []
+    },
+    "history_watermark": null
+  },
+  "meta": {
+    "request_id": "SYNTHETIC-DTO-example"
+  },
+  "error": null
+}

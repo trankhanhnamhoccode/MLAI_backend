@@ -33,8 +33,8 @@ def test_seed_and_status_verify_fresh_persisted_baseline(database_settings: Sett
     state = json.loads(result.stdout)
     assert state["reachable"] is True
     assert state["database"] == "shelfcash_test"
-    assert state["revisions"] == ["0008_forecast_execution_meta"]
-    assert state["tables"] == {"alembic_version": 1, "users": 0, "stores": 0, "store_memberships": 0, "products": 0, "ingredients": 0, "recipes": 0, "recipe_lines": 0, "suppliers": 0, "supplier_terms": 0, "sales_daily": 0, "inventory_lots": 0, "inventory_movements": 0, "business_constraints": 0, "forecast_runs": 0, "forecast_predictions": 0, "decision_runs": 0, "forecast_run_inputs": 0, "forecast_execution_metadata": 0}
+    assert state["revisions"] == ["0017_planning_exports"]
+    assert state["tables"] == {"alembic_version": 1, "users": 0, "stores": 0, "store_memberships": 0, "products": 0, "ingredients": 0, "recipes": 0, "recipe_lines": 0, "suppliers": 0, "supplier_terms": 0, "sales_daily": 0, "inventory_lots": 0, "inventory_movements": 0, "business_constraints": 0, "forecast_runs": 0, "forecast_predictions": 0, "decision_runs": 0, "forecast_run_inputs": 0, "forecast_execution_metadata": 0, "planning_runs": 0, "auth_accounts": 0, "auth_sessions": 0, "credential_tokens": 0, "membership_grants": 0, "auth_audit": 0, "staff_invitations": 0, "permission_events": 0, "invitation_events": 0, "staff_request_receipts": 0, "invitation_delivery_intents": 0, "auth_rate_limits": 0, "public_read_revisions": 0, "import_batches": 0, "import_blobs": 0, "import_files": 0, "import_profiles": 0, "import_profile_versions": 0, "import_source_contexts": 0, "import_jobs": 0, "import_previews": 0, "import_receipts": 0, "import_audit": 0, "supplier_source_records": 0, "term_source_records": 0, "payable_fee_records": 0, "scope_declaration_records": 0, "inventory_receipt_records": 0, "inventory_thresholds": 0, "stock_request_receipts": 0, "inventory_audit": 0, "recipe_schedule_changes": 0, "recipe_schedule_request_receipts": 0, 'forecast_serving_identities': 0, 'model_serving_configurations': 0, 'planning_budgets': 0, 'planning_configuration_events': 0, 'planning_configuration_receipts': 0, 'planning_configuration_revisions': 0, 'planning_defaults': 0, 'saved_requirements': 0, 'planning_exports': 0}
     assert state["at_head"] is True
     engine = create_database_engine(database_settings)
     try:
@@ -61,7 +61,7 @@ def test_reset_seed_repeat_and_unsafe_target_guard(database_settings: Settings) 
             assert result.returncode == 0, result.stderr
             assert "No business seed data" in result.stdout
             with engine.connect() as fresh:
-                assert fresh.scalar(text("SELECT version_num FROM public.alembic_version")) == "0008_forecast_execution_meta"
+                assert fresh.scalar(text("SELECT version_num FROM public.alembic_version")) == "0017_planning_exports"
                 assert fresh.scalar(text("SELECT to_regclass('public.disposable')")) is None
     finally:
         engine.dispose()
@@ -76,7 +76,7 @@ def test_status_unmigrated_database_is_reachable(database_settings: Settings) ->
         assert result.returncode == 0, result.stderr
         state = json.loads(result.stdout)
         assert state["reachable"] and not state["at_head"]
-        assert state["tables"] == {"users": 0, "stores": 0, "store_memberships": 0, "products": 0, "ingredients": 0, "recipes": 0, "recipe_lines": 0, "suppliers": 0, "supplier_terms": 0, "sales_daily": 0, "inventory_lots": 0, "inventory_movements": 0, "business_constraints": 0, "forecast_runs": 0, "forecast_predictions": 0, "decision_runs": 0, "forecast_run_inputs": 0, "forecast_execution_metadata": 0}
+        assert state["tables"] == {"users": 0, "stores": 0, "store_memberships": 0, "products": 0, "ingredients": 0, "recipes": 0, "recipe_lines": 0, "suppliers": 0, "supplier_terms": 0, "sales_daily": 0, "inventory_lots": 0, "inventory_movements": 0, "business_constraints": 0, "forecast_runs": 0, "forecast_predictions": 0, "decision_runs": 0, "forecast_run_inputs": 0, "forecast_execution_metadata": 0, "planning_runs": 0, "auth_accounts": 0, "auth_sessions": 0, "credential_tokens": 0, "membership_grants": 0, "auth_audit": 0, "staff_invitations": 0, "permission_events": 0, "invitation_events": 0, "staff_request_receipts": 0, "invitation_delivery_intents": 0, "auth_rate_limits": 0, "public_read_revisions": 0, "import_batches": 0, "import_blobs": 0, "import_files": 0, "import_profiles": 0, "import_profile_versions": 0, "import_source_contexts": 0, "import_jobs": 0, "import_previews": 0, "import_receipts": 0, "import_audit": 0, "supplier_source_records": 0, "term_source_records": 0, "payable_fee_records": 0, "scope_declaration_records": 0, "inventory_receipt_records": 0, "inventory_thresholds": 0, "stock_request_receipts": 0, "inventory_audit": 0, "recipe_schedule_changes": 0, "recipe_schedule_request_receipts": 0, 'forecast_serving_identities': 0, 'model_serving_configurations': 0, 'planning_budgets': 0, 'planning_configuration_events': 0, 'planning_configuration_receipts': 0, 'planning_configuration_revisions': 0, 'planning_defaults': 0, 'saved_requirements': 0, 'planning_exports': 0}
         assert run_command(database_settings, "status").returncode != 0
         with engine.connect() as fresh:
             assert fresh.scalar(text("SELECT to_regclass('public.alembic_version')")) is None

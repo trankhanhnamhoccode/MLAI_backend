@@ -2,7 +2,7 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 from pydantic import Field, model_validator
-from app.application.contracts.common import Contract, NonnegativeDecimal, PositiveDecimal, Unit
+from app.application.contracts.common import Contract, NonnegativeDecimal, MoneyDecimal, PositiveDecimal, Unit
 
 
 class CreateSupplierTermInput(Contract):
@@ -15,7 +15,7 @@ class CreateSupplierTermInput(Contract):
     effective_to: date | None = None
     pack_size_base_quantity: PositiveDecimal
     minimum_order_packs: Annotated[int, Field(ge=1, strict=True)]
-    pack_cost: NonnegativeDecimal
+    pack_cost: MoneyDecimal
     lead_time_days: Annotated[int, Field(ge=0, strict=True)]
     shelf_life_days: Annotated[int, Field(ge=0, strict=True)] | None = None
     active: bool = True
@@ -34,3 +34,4 @@ class GetSupplierTermInput(Contract):
 
 class SupplierTermResult(CreateSupplierTermInput):
     id: UUID
+    pack_cost: NonnegativeDecimal

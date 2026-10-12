@@ -25,18 +25,7 @@ class RecipeUseCases:
         require_idle_session(self.session)
         try:
             self.session.begin()
-            require_product(self.session, data.store_id, data.product_id)
-            for line in data.lines:
-                ingredient = load_ingredient(self.session, data.store_id, line.ingredient_id)
-                require_unit(ingredient.base_unit, line.unit)
-            row = Recipe(**data.model_dump(exclude={'lines'}))
-            self.recipes.add_recipe(data.store_id, row)
-            self.session.flush()
-            for line in data.lines:
-                self.recipes.add_recipe_line(data.store_id, RecipeLine(**line.model_dump(),
-                    store_id=data.store_id, recipe_id=row.id))
-            self.session.flush()
-            result = self._result(row)
+            result = self.create_in_transaction(data)
             self.session.commit()
             return result
         except IntegrityError as error:
@@ -49,6 +38,26 @@ class RecipeUseCases:
         except Exception:
             self.session.rollback()
             raise
+
+    def create_in_transaction(self, data: CreateRecipeVersionInput, *, reserved_id=None, reserved_line_ids=None) -> RecipeResult:
+        """Same invariants; caller owns transaction, no per-recipe commit."""
+        data = CreateRecipeVersionInput.model_validate(data)
+        require_product(self.session, data.store_id, data.product_id)
+        for line in data.lines:
+            ingredient = load_ingredient(self.session, data.store_id, line.ingredient_id)
+            require_unit(ingredient.base_unit, line.unit)
+        row = Recipe(**data.model_dump(exclude={'lines'}))
+        if reserved_id is not None:
+            row.id = reserved_id
+        self.recipes.add_recipe(data.store_id, row)
+        self.session.flush()
+        for line in data.lines:
+            record = RecipeLine(**line.model_dump(),store_id=data.store_id,recipe_id=row.id)
+            if reserved_line_ids is not None:
+                record.id = reserved_line_ids[line.ingredient_id]
+            self.recipes.add_recipe_line(data.store_id, record)
+        self.session.flush()
+        return self._result(row)
 
     def get_active(self, data: GetActiveRecipeInput) -> RecipeResult | None:
         data = GetActiveRecipeInput.model_validate(data)

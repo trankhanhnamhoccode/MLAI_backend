@@ -21,12 +21,16 @@ class RecipeRepository:
     def get_recipe(self, store_id: UUID, recipe_id: UUID) -> Recipe | None:
         return self._session.scalar(select(Recipe).where(Recipe.store_id == store_id, Recipe.id == recipe_id))
 
-    def list_recipe_versions(self, store_id: UUID, product_id: UUID) -> list[Recipe]:
-        return list(self._session.scalars(select(Recipe).where(Recipe.store_id == store_id, Recipe.product_id == product_id).order_by(Recipe.version, Recipe.id)))
+    def list_recipe_versions(self, store_id: UUID, product_id: UUID, *, assigned_only: bool = False) -> list[Recipe]:
+        query = select(Recipe).where(Recipe.store_id == store_id, Recipe.product_id == product_id)
+        if assigned_only:
+            query = query.where(Recipe.assigned.is_(True))
+        return list(self._session.scalars(query.order_by(Recipe.version, Recipe.id)))
 
     def get_active_recipe(self, store_id: UUID, product_id: UUID, day: date) -> Recipe | None:
         return self._session.scalars(select(Recipe).where(
             Recipe.store_id == store_id, Recipe.product_id == product_id,
+            Recipe.assigned.is_(True),
             Recipe.effective_from <= day,
             Recipe.effective_to.is_(None) | (Recipe.effective_to >= day),
         )).one_or_none()

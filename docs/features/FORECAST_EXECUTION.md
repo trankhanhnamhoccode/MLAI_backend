@@ -246,8 +246,8 @@ shelfcash_test and verify unchanged S1 empty completion using committed fresh-se
 reads and terminal guards; they are not fake execution E2E tests. No development
 reset needed. S2.2 tests assert baseline math/readiness/context independence, all-or-
 nothing scope before math, exact ordering/metadata, caller mutation and mandatory
-canonical rejection of malformed output. See [S2.1 notes](../runbooks/S21_TASK_NOTES.md),
-[S2.2 notes](../runbooks/S22_TASK_NOTES.md) and CURRENT_STATE for exact results/OpenAPI
+canonical rejection of malformed output. See [S2.1 notes](../runbooks/FULL_TEST_FLOW.md),
+[S2.2 notes](../runbooks/FULL_TEST_FLOW.md) and CURRENT_STATE for exact results/OpenAPI
 evidence. S2.2 rollback only its new modules/tests and precise docs changes; preserve
 S2.1 and S1 WIP. No DB downgrade. Stop after S2.2; S2.3+ needs separate authorization.
 
@@ -342,4 +342,4 @@ DB snapshot consistency is not historical data availability at cutoff. Domain re
 I/O-free; application performs persistence. S1 empty completion remains allowed.
 Migration 0007 adds retention only; downgrade loses inputs but leaves runs/predictions:
 export/backup first if history matters. Public OpenAPI unchanged; S2 remains IN PROGRESS.
-Runnable isolated verification: [S23_VERIFICATION](../runbooks/S23_VERIFICATION.md).
+Runnable isolated verification: [S23_VERIFICATION](../runbooks/FULL_TEST_FLOW.md).

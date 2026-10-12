@@ -89,7 +89,7 @@ not computed production forecasts. No LLM test oracle or hosted notebook is invo
 
 ## Manual verification / DB inspection / reset
 
-Use [S14_VERIFICATION](../runbooks/S14_VERIFICATION.md) for executable setup/tests
+Use [S14_VERIFICATION](../runbooks/FULL_TEST_FLOW.md) for executable setup/tests
 and read-only SQL, including columns/constraints/indexes and:
 
 ```sql

@@ -1,0 +1,163 @@
+{
+  "data": {
+    "store_id": "10000000-0000-0000-0000-000000000001",
+    "currency": "VND",
+    "timezone": "UTC",
+    "observed_at": "2026-10-11T02:00:00Z",
+    "context_version": "sha256:eddd7f2fbfb11ce65344dc13476fbf813323adfa94eef490fa3db8469c111a12",
+    "latest_business_date": null,
+    "defaults": {
+      "requirements_mode": "default",
+      "horizon_days": 7,
+      "cutoff_date": "2026-10-10",
+      "forecast_start_date": "2026-10-11"
+    },
+    "supported_horizon_days": [
+      7
+    ],
+    "supported_strategies": [
+      "lean",
+      "balanced",
+      "protected"
+    ],
+    "supported_paths": [
+      "LOW",
+      "BASE",
+      "HIGH"
+    ],
+    "default_requirements": null,
+    "default_requirements_version": null,
+    "default_requirements_updated_at": null,
+    "budget_ceiling": null,
+    "products": [],
+    "custom_requirement_fields": [
+      {
+        "field": "requirements.paths[].path",
+        "type": "path",
+        "required": true,
+        "nullable": false,
+        "constraints": {
+          "enum": [
+            "LOW",
+            "BASE",
+            "HIGH"
+          ],
+          "unique": true,
+          "max_items": 3,
+          "minimum": null,
+          "maximum": null,
+          "max_integer_digits": null,
+          "max_fraction_digits": null,
+          "unique_product_id": null
+        },
+        "inheritance": "none"
+      },
+      {
+        "field": "requirements.paths[].min_fill_rate_percent",
+        "type": "decimal_text",
+        "required": false,
+        "nullable": false,
+        "constraints": {
+          "enum": null,
+          "unique": null,
+          "max_items": null,
+          "minimum": "0",
+          "maximum": "100",
+          "max_integer_digits": null,
+          "max_fraction_digits": 32,
+          "unique_product_id": null
+        },
+        "inheritance": "same_path_default"
+      },
+      {
+        "field": "requirements.paths[].product_overrides",
+        "type": "product_override_array",
+        "required": false,
+        "nullable": false,
+        "constraints": {
+          "enum": null,
+          "unique": null,
+          "max_items": 50,
+          "minimum": null,
+          "maximum": null,
+          "max_integer_digits": null,
+          "max_fraction_digits": null,
+          "unique_product_id": true
+        },
+        "inheritance": "same_path_default_replace"
+      },
+      {
+        "field": "requirements.budget_limit",
+        "type": "decimal_text",
+        "required": false,
+        "nullable": true,
+        "constraints": {
+          "enum": null,
+          "unique": null,
+          "max_items": null,
+          "minimum": "0",
+          "maximum": null,
+          "max_integer_digits": 18,
+          "max_fraction_digits": 18,
+          "unique_product_id": null
+        },
+        "inheritance": "current_store_ceiling"
+      }
+    ],
+    "requirements_modes": [
+      {
+        "mode": "default",
+        "availability": "unavailable",
+        "reason_codes": [
+          "DEFAULT_CONFIGURATION_UNAVAILABLE"
+        ]
+      },
+      {
+        "mode": "custom",
+        "availability": "available",
+        "reason_codes": []
+      },
+      {
+        "mode": "saved",
+        "availability": "unavailable",
+        "reason_codes": [
+          "NO_SAVED_REQUIREMENTS"
+        ]
+      }
+    ],
+    "saved_requirements": [],
+    "capabilities": {
+      "winner_selection": false,
+      "saved_requirements": true,
+      "include_open_purchase_orders": false,
+      "scenario_based_planning": false
+    },
+    "readiness": {
+      "status": "not_ready",
+      "can_generate": false,
+      "reason_codes": [
+        "NO_ACTIVE_PRODUCTS",
+        "NO_COMPUTABLE_PRODUCTS",
+        "EXECUTION_UNAVAILABLE",
+        "PLANNING_WORKFLOW_UNAVAILABLE",
+        "BUDGET_CEILING_UNKNOWN",
+        "LIMIT_CONFIGURATION_UNKNOWN",
+        "COMMITTED_INBOUND_UNKNOWN",
+        "PAYABLE_FEE_COVERAGE_UNKNOWN",
+        "MODEL_CONFIGURATION_UNKNOWN",
+        "DEFAULT_CONFIGURATION_UNAVAILABLE"
+      ],
+      "evaluated_forecast_start_date": "2026-10-11",
+      "scope_estimate": {
+        "menu_product_count": 0,
+        "estimated_computable_product_count": 0,
+        "excluded_products": []
+      },
+      "history_watermark": null
+    }
+  },
+  "meta": {
+    "request_id": "SYNTHETIC-DTO-example"
+  },
+  "error": null
+}

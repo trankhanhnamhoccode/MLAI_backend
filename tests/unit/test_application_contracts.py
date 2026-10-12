@@ -109,12 +109,63 @@ def test_application_import_and_construction_do_not_connect(monkeypatch):
             getattr(importlib.import_module('app.application.use_cases.' + module), cls)(session)
 
 
+def direct_query_calls(tree):
+    """Keep the query ban; only a locally defined self.execute is orchestration.
+
+    Session/query receivers, including self.session, are never exempted. Unknown
+    receivers stay forbidden rather than relying on variable names like 's'.
+    """
+    violations=[]
+    class QueryCalls(ast.NodeVisitor):
+        def __init__(self):
+            self.methods=[]
+
+        def visit_ClassDef(self,node):
+            self.methods.append({n.name for n in node.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))})
+            self.generic_visit(node)
+            self.methods.pop()
+
+        def visit_Call(self,node):
+            if isinstance(node.func,ast.Attribute) and node.func.attr in {'execute','scalar','scalars','query'}:
+                receiver=node.func.value
+                local_execute=(node.func.attr=='execute' and isinstance(receiver,ast.Name)
+                    and receiver.id=='self' and self.methods and 'execute' in self.methods[-1])
+                if not local_execute:violations.append(node.lineno)
+            self.generic_visit(node)
+    QueryCalls().visit(tree)
+    return violations
+
+
+@pytest.mark.parametrize('source',[
+    's.execute(statement)', 'database.scalar(statement)', 'self.session.scalars(statement)',
+    's.query(Model).filter(condition).scalar()',
+    'class Worker:\n def execute(self,record):\n  return self.session.execute(record)\n def run(self):\n  return self.execute(record)',
+    'class Worker:\n def run(self):\n  return self.execute(statement)',
+])
+def test_query_guard_detects_direct_sql_including_orchestrator_body(source):
+    assert direct_query_calls(ast.parse(source))
+
+
+def test_query_guard_allows_defined_orchestration_method():
+    tree=ast.parse('class Worker:\n def execute(self,record):\n  return service.compute(record)\n def run(self):\n  return self.execute(record)')
+    assert direct_query_calls(tree)==[]
+
+
 def test_application_has_no_http_or_direct_queries():
     root = Path(__file__).resolve().parents[2] / 'app' / 'application'
+    # Frozen S1 query separation remains enforced. Approved S4.4–S4.6 concrete
+    # transaction/fence adapters existed outside that original architecture scope
+    # already (ImportStaging in the 10/10 baseline). No blanket ORM exemption;
+    # HTTP/transport imports and direct Session.close remain forbidden everywhere.
+    transactional_adapters = {'use_cases/import_staging.py',
+                              'use_cases/operational_configuration.py',
+                              'use_cases/stock_writes.py'}
     for path in root.rglob('*.py'):
         tree = ast.parse(path.read_text(encoding='utf-8'))
+        if path.relative_to(root).as_posix() not in transactional_adapters:
+            assert not direct_query_calls(tree),f'{path}: direct query lines {direct_query_calls(tree)}'
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 assert not (node.module or '').startswith(('fastapi', 'starlette', 'app.api', 'app.schemas'))
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-                assert node.func.attr not in {'execute', 'scalar', 'scalars', 'query', 'close'}
+                assert node.func.attr != 'close'

@@ -1,0 +1,1072 @@
+"""Snapshot-only normalization/preview. Retains blockers; never writes canonical data."""
+
+from datetime import date, datetime, timezone
+from decimal import Decimal
+from fractions import Fraction
+import json
+import re
+from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
+from typing import Annotated, get_args, get_origin
+from pydantic import BaseModel, ValidationError
+from app.application.contracts import import_mapping as dto
+from app.application.contracts import import_domains as domains
+
+
+class RowBlocked(Exception):
+    pass
+
+
+def exact_text(value):
+    value = Fraction(value)
+    d = value.denominator
+    a = b = 0
+    while d % 2 == 0:
+        d //= 2
+        a += 1
+    while d % 5 == 0:
+        d //= 5
+        b += 1
+    if d != 1:
+        raise RowBlocked("NON_TERMINATING_CONVERSION")
+    scale = max(a, b)
+    if scale > 1000:
+        raise RowBlocked("NUMERIC_RESOURCE_LIMIT")
+    n = value.numerator * 2 ** (scale - a) * 5 ** (scale - b)
+    sign = "-" if n < 0 else ""
+    s = str(abs(n)).rjust(scale + 1, "0")
+    s = (s[:-scale] + "." + s[-scale:]).rstrip("0").rstrip(".") if scale else s
+    return sign + s if n else "0"
+
+
+def notice(code, location, warning=False):
+    return dto.Notice(
+        code=code,
+        severity="WARNING" if warning else "ERROR",
+        message=code,
+        source_location=location,
+    )
+
+
+def metadata_equal(key, left, right):
+    if key == "price" and left is not None and right is not None:
+        return Decimal(left) == Decimal(right)
+    return left == right
+
+
+def raw_value(raw, annotation):
+    # Canonical lexical grammar only. No locale/date/unit guessing.
+    if raw is None or raw == "":
+        return None
+
+    def includes(wanted):
+        def visit(value):
+            if get_origin(value) is Annotated:
+                return visit(get_args(value)[0])
+            if value is wanted:
+                return True
+            if (
+                wanted is BaseModel
+                and isinstance(value, type)
+                and issubclass(value, BaseModel)
+            ):
+                return True
+            return any(visit(a) for a in get_args(value) if a is not type(None))
+
+        return visit(annotation)
+
+    if includes(bool):
+        if raw not in {"true", "false"}:
+            raise RowBlocked("INVALID_BOOLEAN")
+        return raw == "true"
+    if includes(int):
+        if not re.fullmatch(r"-?(0|[1-9][0-9]*)", raw):
+            raise RowBlocked("INVALID_INTEGER")
+        return int(raw)
+    if get_origin(annotation) is tuple or includes(BaseModel):
+        try:
+            return json.loads(
+                raw,
+                parse_float=lambda _: (_ for _ in ()).throw(
+                    RowBlocked("FLOAT_NOT_ALLOWED")
+                ),
+            )
+        except (ValueError, TypeError):
+            raise RowBlocked("INVALID_STRUCTURED_VALUE") from None
+    return raw
+
+
+def derived_provenance(provenance, field, rules):
+    original = next(p for p in provenance if p.field == field)
+    return original.model_copy(
+        update={"origin": "DETERMINISTIC_DERIVED", "applied_rule_ids": rules}
+    )
+
+
+def normalize(source, spec, import_values=()):
+    from app.application.contracts.import_field_values import (
+        ImportValue,
+        ProfileConstant,
+    )
+
+    spec = dto.ProfileSpec.model_validate(spec.model_dump())
+    model = domains.SOURCE_MODELS[spec.schema]
+    values = {"domain": spec.schema}
+    provenance = []
+    for bind in spec.field_bindings:
+        if bind.ignored:
+            continue
+        field = bind.target_field.split(".", 1)[1]
+        cell = next(
+            (
+                c
+                for c in source["cells"]
+                if c["column_index"] == bind.source_column_index
+            ),
+            None,
+        )
+        raw = cell["raw"] if cell else None
+        if cell and cell["kind"] == "error":
+            raise RowBlocked("SOURCE_CELL_ERROR")
+        if (
+            cell
+            and cell["kind"] == "boolean"
+            and "bool" in str(model.model_fields[field].annotation)
+        ):
+            if raw not in {"0", "1"}:
+                raise RowBlocked("INVALID_BOOLEAN")
+            raw = "true" if raw == "1" else "false"
+        identity_bound = False
+        if field.endswith("_id") and raw:
+            entity = {
+                "product_id": "product",
+                "ingredient_id": "ingredient",
+                "lot_id": "lot",
+                "supplier_id": "supplier",
+            }[field]
+            alias = next(
+                (
+                    r
+                    for r in spec.identity_rules + spec.aliases
+                    if r.entity == entity and r.source_token == raw
+                ),
+                None,
+            )
+            reserved = next(
+                (
+                    r
+                    for r in spec.entity_proposals
+                    if r.entity == entity and r.source_business_key == raw
+                ),
+                None,
+            )
+            if alias:
+                identity_bound = True
+                raw = str(alias.canonical_id)
+            elif reserved:
+                identity_bound = True
+                raw = str(reserved.reserved_canonical_id)
+        values[field] = raw_value(raw, model.model_fields[field].annotation)
+        provenance.append(
+            dto.FieldProvenance(
+                field=field,
+                origin="SOURCE_EXPLICIT",
+                value_source="IDENTITY_BINDING" if identity_bound else "SOURCE_COLUMN",
+                source_column_index=bind.source_column_index,
+            )
+        )
+    declarations = [
+        ImportValue.model_validate(v.model_dump() if isinstance(v, ImportValue) else v)
+        for v in import_values
+    ]
+    by_target = {v.target_field: v for v in declarations}
+    allowed = {
+        r.target_field for r in spec.shared_field_bindings if r.scope == "IMPORT_VALUE"
+    }
+    if len(by_target) != len(declarations) or not set(by_target) <= allowed:
+        raise RowBlocked("FIELD_SOURCE_CONFLICT")
+    for rule in spec.shared_field_bindings:
+        declaration = (
+            rule
+            if isinstance(rule, ProfileConstant)
+            else by_target.get(rule.target_field)
+        )
+        if declaration is None:
+            raise RowBlocked("MISSING_IMPORT_VALUE")
+        field = rule.target_field.split(".", 1)[1]
+        value = declaration.value
+        raw = (
+            "true"
+            if value is True
+            else (
+                "false"
+                if value is False
+                else str(value) if type(value) is int else value
+            )
+        )
+        values[field] = raw_value(raw, model.model_fields[field].annotation)
+        provenance.append(
+            dto.FieldProvenance(
+                field=field,
+                origin="SOURCE_EXPLICIT",
+                value_source=rule.scope,
+                declaration_id=declaration.declaration_id,
+            )
+        )
+    for rule in spec.normalizations:
+        if (
+            rule.kind == "exact_scale"
+            and rule.parameter == "PACK_COST_FROM_SOURCE_UNIT_PRICE"
+        ):
+            if (
+                values.get("pack_cost") is None
+                or values.get("pack_size_base_quantity") is None
+            ):
+                raise RowBlocked("MISSING_REQUIRED_VALUE")
+            values["pack_cost"] = exact_text(
+                Fraction(Decimal(values["pack_cost"]))
+                * Fraction(Decimal(values["pack_size_base_quantity"]))
+            )
+            provenance = [p for p in provenance if p.field != "pack_cost"] + [
+                derived_provenance(provenance, "pack_cost", (rule.rule_id,))
+            ]
+            continue
+        for field in rule.fields:
+            value = values.get(field)
+            if value is None:
+                continue
+            if rule.kind == "decimal_locale" and rule.parameter == "comma":
+                if not re.fullmatch(r"(0|[1-9][0-9]*)(,[0-9]+)?", value):
+                    raise RowBlocked("INVALID_DECLARED_DECIMAL")
+                values[field] = value.replace(",", ".")
+            elif rule.kind == "date_format" and rule.parameter in {
+                "DMY_SLASH",
+                "MDY_SLASH",
+            }:
+                if not re.fullmatch(r"[0-9]{2}/[0-9]{2}/[0-9]{4}", value):
+                    raise RowBlocked("INVALID_DECLARED_DATE")
+                a, b, y = map(int, value.split("/"))
+                values[field] = (
+                    date(y, b, a).isoformat()
+                    if rule.parameter == "DMY_SLASH"
+                    else date(y, a, b).isoformat()
+                )
+            elif rule.kind not in {"decimal_locale", "date_format"}:
+                raise RowBlocked("UNSUPPORTED_NORMALIZATION")
+            if values[field] != value:
+                provenance = [p for p in provenance if p.field != field] + [
+                    derived_provenance(provenance, field, (rule.rule_id,))
+                ]
+    if values.get("unit"):
+        matching = [c for c in spec.conversions if c.from_unit == values["unit"]]
+        if len(matching) > 1:
+            raise RowBlocked("AMBIGUOUS_CONVERSION")
+        if matching:
+            c = matching[0]
+            factor = Fraction(Decimal(c.factor.numerator)) / Fraction(
+                Decimal(c.factor.denominator)
+            )
+            for field in (
+                "quantity",
+                "on_hand",
+                "pack_size_base_quantity",
+                "maximum_order_base_quantity",
+            ):
+                if values.get(field) is not None:
+                    values[field] = exact_text(
+                        Fraction(Decimal(values[field])) * factor
+                    )
+                    provenance = [p for p in provenance if p.field != field] + [
+                        derived_provenance(
+                            provenance, field, ("conversion:" + c.evidence_reference,)
+                        )
+                    ]
+            values["unit"] = c.to_unit
+            provenance = [p for p in provenance if p.field != "unit"] + [
+                derived_provenance(
+                    provenance, "unit", ("conversion:" + c.evidence_reference,)
+                )
+            ]
+    try:
+        return model.model_validate(values), tuple(provenance)
+    except ValidationError as e:
+        errors = e.errors(include_input=False)
+        code = (
+            "MISSING_REQUIRED_VALUE"
+            if any(
+                x["type"] in {"missing", "string_type", "date_type", "uuid_type"}
+                and values.get(x["loc"][0]) is None
+                for x in errors
+            )
+            else "INVALID_SOURCE_VALUE"
+        )
+        raise RowBlocked(code) from None
+    except (ValueError, ArithmeticError):
+        raise RowBlocked("INVALID_SOURCE_VALUE") from None
+
+
+def make_preview(
+    sources, specs, snapshot, now, store_timezone, currency, import_values=None
+):
+    products = {r["id"]: r for r in snapshot["products"]}
+    ingredients = {r["id"]: r for r in snapshot["ingredients"]}
+    suppliers = {r["id"]: r for r in snapshot["suppliers"]}
+    lots = {r["id"]: r for r in snapshot["inventory_lots"]}
+    reservations = {}
+    for spec in specs.values():
+        for ent in spec.entity_proposals:
+            reservations[str(ent.reserved_canonical_id)] = ent
+            target = {
+                "product": products,
+                "ingredient": ingredients,
+                "supplier": suppliers,
+            }[ent.entity]
+            payload = ent.metadata.model_dump(mode="json")
+            payload["id"] = str(ent.reserved_canonical_id)
+            existing = target.get(payload["id"])
+            if existing:
+                continue
+            target[payload["id"]] = payload
+    rows = []
+    normalized = []
+    seen = set()
+    recipe_groups = {}
+    amended_terms = set()
+    today = now.astimezone(ZoneInfo(store_timezone)).date()
+    for sheet in sources:
+        spec = specs[sheet["sheet_id"]]
+        for source in sheet["rows"]:
+            location = dto.SourceLocation(
+                file_id=sheet["file_id"],
+                sheet_id=sheet["sheet_id"],
+                row_number=source["row_number"],
+                record_number=source["record_number"],
+                line_start=source["line_start"],
+                line_end=source["line_end"],
+            )
+            try:
+                value, prov = normalize(
+                    source, spec, (import_values or {}).get(str(sheet["sheet_id"]), ())
+                )
+                normalized.append((value, prov, location, spec))
+            except (RowBlocked, ArithmeticError, ValueError) as e:
+                code = str(e) if isinstance(e, RowBlocked) else "INVALID_SOURCE_VALUE"
+                rows.append(
+                    dto.PreviewRow(
+                        row_id=uuid4(),
+                        source_location=location,
+                        classification="INVALID",
+                        proposed_action="BLOCKED",
+                        entity_refs=(),
+                        before=None,
+                        after=None,
+                        provenance=(),
+                        blockers=(notice(code, location),),
+                        canonical_domain=spec.schema,
+                    )
+                )
+    for value, prov, loc, spec in normalized:
+        before = None
+        after = value
+        action = "INSERT"
+        cls = "NEW"
+        blockers = []
+        warnings = []
+        confirm = False
+        refs = []
+        data = value.model_dump(mode="json")
+
+        def block(code):
+            blockers.append(notice(code, loc))
+
+        def warn(code):
+            warnings.append(notice(code, loc, True))
+
+        if any(b.ignored for b in spec.field_bindings):
+            warn("SOURCE_ONLY_FIELD_IGNORED")
+
+        def entity(kind, ident, registry):
+            refs.append(dto.EntityRef(entity=kind, canonical_id=ident))
+            record = registry.get(str(ident))
+            if record is None:
+                block("UNKNOWN_" + kind.upper())
+            return record
+
+        if isinstance(value, domains.SalesSource):
+            product = entity("product", value.product_id, products)
+            if product and value.unit != product["selling_unit"]:
+                block("UNIT_MISMATCH")
+            if value.sales_date > today:
+                block("FUTURE_SALES_NOT_OBSERVED")
+            key = ("sales", str(value.product_id), str(value.sales_date))
+            if key in seen:
+                block("DUPLICATE_DAILY_OBSERVATION")
+            seen.add(key)
+            current = next(
+                (
+                    r
+                    for r in snapshot["sales_daily"]
+                    if r["product_id"] == str(value.product_id)
+                    and r["sales_date"] == str(value.sales_date)
+                ),
+                None,
+            )
+            from app.application.import_sales_sources import classify_sales, sources_for
+            target, action, cls, source_blocker = classify_sales(value, current, spec, snapshot)
+            after = value.model_copy(update={"quantity": target})
+            if Decimal(target) != Decimal(value.quantity):
+                prov = tuple(
+                    p.model_copy(update={
+                        "origin": "DETERMINISTIC_DERIVED",
+                        "applied_rule_ids": p.applied_rule_ids + ("sales:canonical_total_from_retained_source_revision",),
+                    }) if p.field == "quantity" else p
+                    for p in prov
+                )
+            if current:
+                before = value.model_copy(update={"quantity": current["quantity"]})
+            if source_blocker:
+                block(source_blocker)
+            confirm = action in {"REPLACE_DAILY_TOTAL", "MERGE_DISJOINT_SALES"}
+            if confirm:
+                warn("SALES_DISJOINTNESS_REQUIRES_CONFIRMATION" if action == "MERGE_DISJOINT_SALES" else "SALES_REPLACEMENT_REQUIRES_CONFIRMATION")
+            if current and not sources_for(snapshot, value.product_id, value.sales_date):
+                warn("EXISTING_SALES_SOURCE_PROVENANCE_UNKNOWN")
+        elif isinstance(value, domains.CountSource):
+            ing = entity("ingredient", value.ingredient_id, ingredients)
+            lot = entity("lot", value.lot_id, lots)
+            if ing and value.unit != ing["base_unit"]:
+                block("UNIT_MISMATCH")
+            if lot and lot["ingredient_id"] != str(value.ingredient_id):
+                block("LOT_INGREDIENT_MISMATCH")
+            if value.observed_at > now:
+                block("STALE_STOCK_OBSERVATION")
+            if lot:
+                if value.observed_at < datetime.fromisoformat(lot["updated_at"]):
+                    block("STALE_STOCK_OBSERVATION")
+                before = value.model_copy(update={"on_hand": lot["on_hand_quantity"]})
+                cls = (
+                    "UNCHANGED"
+                    if Decimal(value.on_hand) == Decimal(lot["on_hand_quantity"])
+                    else "CHANGED"
+                )
+                action = "NO_OP" if cls == "UNCHANGED" else "COUNT_CORRECTION"
+                confirm = cls != "UNCHANGED"
+            key = ("lot", str(value.lot_id))
+            if key in seen:
+                block("DUPLICATE_COUNT")
+            seen.add(key)
+        elif isinstance(value, domains.RecipeSource):
+            p = entity("product", value.product_id, products)
+            i = entity("ingredient", value.ingredient_id, ingredients)
+            if (
+                p
+                and value.yield_unit != p["selling_unit"]
+                or i
+                and value.unit != i["base_unit"]
+            ):
+                block("UNIT_MISMATCH")
+            key = (str(value.product_id), value.version)
+            group = recipe_groups.setdefault(key, [])
+            group.append((value, prov, loc, tuple(blockers)))
+            continue
+        elif isinstance(
+            value,
+            (domains.ProductSource, domains.IngredientSource, domains.SupplierSource),
+        ):
+            kind = {
+                "products": "product",
+                "ingredients": "ingredient",
+                "suppliers": "supplier",
+            }[value.domain]
+            sourcekey = (
+                value.source_supplier_key
+                if kind == "supplier"
+                else value.source_business_key
+            )
+            proposal = next(
+                (
+                    e
+                    for e in spec.entity_proposals
+                    if e.entity == kind and e.source_business_key == sourcekey
+                ),
+                None,
+            )
+            alias = next(
+                (
+                    a
+                    for a in spec.identity_rules + spec.aliases
+                    if a.entity == kind and a.source_token == sourcekey
+                ),
+                None,
+            )
+            if proposal is None and alias is None:
+                block("OWNER_ENTITY_APPROVAL_REQUIRED")
+            else:
+                ident = (
+                    proposal.reserved_canonical_id if proposal else alias.canonical_id
+                )
+                refs.append(dto.EntityRef(entity=kind, canonical_id=ident))
+                metadata = {
+                    k: v
+                    for k, v in data.items()
+                    if k not in {"domain", "source_business_key", "source_supplier_key"}
+                }
+                if proposal and any(
+                    not metadata_equal(k, metadata.get(k), v)
+                    for k, v in proposal.metadata.model_dump(mode="json").items()
+                ):
+                    block("ENTITY_METADATA_CONFLICT")
+                existing = next(
+                    (r for r in snapshot[value.domain] if r["id"] == str(ident)), None
+                )
+                if existing:
+                    if any(
+                        not metadata_equal(k, existing.get(k), v)
+                        for k, v in metadata.items()
+                    ):
+                        block("ENTITY_METADATA_CONFLICT")
+                    else:
+                        cls = "UNCHANGED"
+                elif alias and alias.reference_state == "existing":
+                    block("SOURCE_IDENTITY_CONFLICT")
+            action = "NO_OP" if cls == "UNCHANGED" else "CREATE_" + kind.upper()
+        elif isinstance(value, domains.TermSource):
+            entity("supplier", value.supplier_id, suppliers)
+            i = entity("ingredient", value.ingredient_id, ingredients)
+            if i and value.unit != i["base_unit"]:
+                block("UNIT_MISMATCH")
+            if value.currency != currency:
+                block("CURRENCY_MISMATCH")
+            for other, _, _, _ in normalized:
+                if other is value or not isinstance(other, domains.TermSource):
+                    continue
+                if (
+                    other.active
+                    and value.active
+                    and other.supplier_id == value.supplier_id
+                    and other.ingredient_id == value.ingredient_id
+                    and other.effective_from <= (value.effective_to or date.max)
+                    and value.effective_from <= (other.effective_to or date.max)
+                ):
+                    block("TERM_PERIOD_OVERLAP")
+            key = ("term", value.source_term_key)
+            if key in seen:
+                block("DUPLICATE_TERM_SOURCE")
+            seen.add(key)
+            from app.application.operational_import_facts import latest_source
+            registered = latest_source(snapshot, "term_source_records", spec.scope.source_system_key, value.source_term_key)
+            latest_term = next((r for r in snapshot["supplier_terms"] if registered and r["id"] == registered["id"]),None)
+            if latest_term and (latest_term["supplier_id"] != str(value.supplier_id) or latest_term["ingredient_id"] != str(value.ingredient_id)):
+                block("SOURCE_IDENTITY_CONFLICT")
+            if latest_term and value.effective_from < date.fromisoformat(latest_term["effective_from"]):
+                block("HISTORICAL_TERM_CORRECTION")
+            exact = []
+            for r in snapshot["supplier_terms"]:
+                numeric = ("pack_size_base_quantity", "pack_cost")
+                plain = (
+                    "supplier_id",
+                    "ingredient_id",
+                    "effective_from",
+                    "effective_to",
+                    "unit",
+                    "minimum_order_packs",
+                    "lead_time_days",
+                    "shelf_life_days",
+                    "active",
+                )
+                if registered and r["id"] != registered["id"]:
+                    continue
+                if all(r[k] == data[k] for k in plain) and all(
+                    Decimal(r[k]) == Decimal(data[k]) for k in numeric
+                ):
+                    exact.append(r)
+            if len(exact) > 1:
+                block("SOURCE_IDENTITY_CONFLICT")
+            if len(exact) == 1:
+                old = exact[0]
+                refs.append(
+                    dto.EntityRef(entity="supplier_term", canonical_id=UUID(old["id"]))
+                )
+                before = value
+                cls = "UNCHANGED"
+                known = next((m for m in snapshot.get("term_source_records", ()) if m["id"] == old["id"]),None)
+                if known and (known["source_system_key"] != spec.scope.source_system_key or known["source_record_key"] != value.source_term_key):
+                    block("SOURCE_IDENTITY_CONFLICT")
+                maximum = known["payload"]["maximum_order_base_quantity"] if known else None
+                if known and ((maximum is None) != (value.maximum_order_base_quantity is None)
+                    or maximum is not None and Decimal(maximum) != Decimal(value.maximum_order_base_quantity)):
+                    block("HISTORICAL_TERM_CORRECTION")
+                if not known:
+                    warn("EXISTING_TERM_SOURCE_PROVENANCE_UNKNOWN")
+            for r in snapshot["supplier_terms"]:
+                if len(exact) == 1 and r["id"] == exact[0]["id"]:
+                    continue
+                if (
+                    r["supplier_id"] == str(value.supplier_id)
+                    and r["ingredient_id"] == str(value.ingredient_id)
+                    and r["active"]
+                    and value.active
+                ):
+                    if date.fromisoformat(r["effective_from"]) <= (
+                        value.effective_to or date.max
+                    ) and value.effective_from <= (
+                        date.fromisoformat(r["effective_to"])
+                        if r["effective_to"]
+                        else date.max
+                    ):
+                        amendment = next(
+                            (
+                                a
+                                for a in spec.term_period_amendments
+                                if str(a.supplier_term_id) == r["id"]
+                            ),
+                            None,
+                        )
+                        if (
+                            value.effective_from <= today
+                            or value.effective_from
+                            <= date.fromisoformat(r["effective_from"])
+                        ):
+                            block("HISTORICAL_TERM_CORRECTION")
+                        elif amendment is None:
+                            block("TERM_PERIOD_OVERLAP")
+                        elif (
+                            amendment.expected_version != r["_row_version"]
+                            or amendment.effective_to
+                            != date.fromordinal(value.effective_from.toordinal() - 1)
+                            or r["effective_to"] is not None
+                            or r["id"] in amended_terms
+                        ):
+                            block("TERM_AMENDMENT_CONFLICT")
+                        else:
+                            old_values = {
+                                key: r[key]
+                                for key in domains.TermSource.model_fields
+                                if key in r
+                            }
+                            old_values.update(
+                                domain="supplier_terms",
+                                source_term_key=None,
+                                currency=currency,
+                                maximum_order_base_quantity=next((m["payload"]["maximum_order_base_quantity"] for m in snapshot.get("term_source_records", ()) if m["id"]==r["id"]),None),
+                            )
+                            previous = domains.TermValue.model_validate(old_values, context={"retained_evidence": True})
+                            changed = previous.model_copy(
+                                update={"effective_to": amendment.effective_to}
+                            )
+                            rows.append(
+                                dto.PreviewRow(
+                                    row_id=uuid4(),
+                                    source_location=loc,
+                                    classification="CHANGED",
+                                    proposed_action="AMEND_TERM_PERIOD",
+                                    entity_refs=(
+                                        dto.EntityRef(
+                                            entity="supplier_term",
+                                            canonical_id=UUID(r["id"]),
+                                        ),
+                                    ),
+                                    before=previous,
+                                    after=changed,
+                                    changes=(
+                                        dto.Change(
+                                            field="effective_to",
+                                            before=None,
+                                            after=amendment.effective_to.isoformat(),
+                                        ),
+                                    ),
+                                    provenance=(
+                                        dto.FieldProvenance(
+                                            field="effective_to",
+                                            origin="DETERMINISTIC_DERIVED",
+                                            applied_rule_ids=(
+                                                "owner_reviewed_period_amendment",
+                                            ),
+                                        ),
+                                    ),
+                                    warnings=(
+                                        notice(
+                                            "EXISTING_TERM_SOURCE_PROVENANCE_UNKNOWN",
+                                            loc,
+                                            True,
+                                        ),
+                                    ),
+                                    confirmation_required=True,
+                                    target_reserved_or_existing_id=UUID(r["id"]),
+                                    expected_version=r["_row_version"],
+                                    required_permissions=("supplier.terms.correct",),
+                                )
+                            )
+                            amended_terms.add(r["id"])
+            action = "NO_OP" if cls == "UNCHANGED" else "CREATE_SUPPLIER_TERM"
+            if exact and not any(m["id"] == exact[0]["id"] for m in snapshot.get("term_source_records", ())):
+                action, cls = "REGISTER_TERM_SOURCE", "NEW"
+            if latest_term and not exact:
+                before = domains.TermValue.model_validate({**registered["payload"],
+                    "effective_to": latest_term["effective_to"]}, context={"retained_evidence": True})
+                cls, confirm = "CHANGED", True
+                if value.effective_from <= today or value.effective_from <= date.fromisoformat(latest_term["effective_from"]):
+                    block("HISTORICAL_TERM_CORRECTION")
+            if value.maximum_order_base_quantity is None:
+                warn("SUPPLIER_LIMIT_SCOPE_REQUIRES_DECLARATION")
+            if (
+                i
+                and i.get("expiry_tracking")
+                and (
+                    value.shelf_life_days is None
+                    or spec.planned_arrival_expiry_rule is None
+                )
+            ):
+                warn("REQUIRED_ARRIVAL_EXPIRY_UNKNOWN")
+        elif isinstance(value, domains.FeeSource):
+            if value.currency != currency:
+                block("CURRENCY_MISMATCH")
+            if value.coverage == "UNKNOWN":
+                warn("FEE_COVERAGE_UNKNOWN")
+            action = "CREATE_FEE_DECLARATION"
+        elif isinstance(value, domains.DeclarationSource):
+            d = value.declaration
+            action = "SET_SCOPE_DECLARATION"
+            if isinstance(d, domains.InventoryDeclaration):
+                entity("ingredient", d.ingredient_id, ingredients)
+                for lid in d.covered_lot_ids:
+                    covered = entity("lot", lid, lots)
+                    if covered and covered["ingredient_id"] != str(d.ingredient_id):
+                        block("LOT_INGREDIENT_MISMATCH")
+                actual = {
+                    r["id"]
+                    for r in snapshot["inventory_lots"]
+                    if r["ingredient_id"] == str(d.ingredient_id)
+                }
+                if d.observed_at > now:
+                    block("STALE_STOCK_OBSERVATION")
+                if (
+                    d.state == "COMPLETE_CURRENT_LOTS"
+                    and set(map(str, d.covered_lot_ids)) != actual
+                ):
+                    block("INVENTORY_COVERAGE_INCOMPLETE")
+                if d.state == "CONFIRMED_EMPTY" and (
+                    d.covered_lot_ids
+                    or any(
+                        Decimal(r["on_hand_quantity"]) > 0
+                        for r in snapshot["inventory_lots"]
+                        if r["ingredient_id"] == str(d.ingredient_id)
+                    )
+                ):
+                    block("INVENTORY_NOT_EMPTY")
+                if any(
+                    d.observed_at < datetime.fromisoformat(r["updated_at"])
+                    for r in snapshot["inventory_lots"]
+                    if r["ingredient_id"] == str(d.ingredient_id)
+                ):
+                    block("STALE_STOCK_OBSERVATION")
+            elif isinstance(d, domains.SalesDeclaration):
+                for pid in d.product_ids:
+                    entity("product", pid, products)
+                if d.to_date < d.from_date or d.to_date > today:
+                    block("INVALID_COVERAGE_WINDOW")
+                elif d.state == "COMPLETE":
+                    days = (d.to_date - d.from_date).days + 1
+                    if days * len(d.product_ids) > 100000:
+                        block("RESOURCE_LIMIT_EXCEEDED")
+                    else:
+                        actual = {
+                            (str(x.product_id), x.sales_date)
+                            for x, _, _, _ in normalized
+                            if isinstance(x, domains.SalesSource)
+                        } | {
+                            (r["product_id"], date.fromisoformat(r["sales_date"]))
+                            for r in snapshot["sales_daily"]
+                        }
+                        if any(
+                            (
+                                str(pid),
+                                date.fromordinal(d.from_date.toordinal() + offset),
+                            )
+                            not in actual
+                            for pid in d.product_ids
+                            for offset in range(days)
+                        ):
+                            block("SALES_COVERAGE_INCOMPLETE")
+            else:
+                for c in d.capacities + d.supplier_limits:
+                    i = entity("ingredient", c.ingredient_id, ingredients)
+                    if i and c.unit != i["base_unit"]:
+                        block("UNIT_MISMATCH")
+                    if isinstance(c, domains.SupplierLimit):
+                        entity("supplier", c.supplier_id, suppliers)
+                if d.committed_inbound_state == "PRESENT_UNSUPPORTED":
+                    warn("COMMITTED_INBOUND_UNSUPPORTED")
+            if getattr(d, "state", None) == "UNKNOWN":
+                warn("DECLARATION_UNKNOWN")
+        changes = ()
+        if before:
+            bd = before.model_dump(mode="json")
+            ad = after.model_dump(mode="json")
+            changes = tuple(
+                dto.Change(
+                    field=k,
+                    before=str(bd[k]),
+                    after=str(v),
+                    delta=(
+                        exact_text(Fraction(Decimal(v)) - Fraction(Decimal(bd[k])))
+                        if k in {"quantity", "on_hand"}
+                        else None
+                    ),
+                )
+                for k, v in ad.items()
+                if bd.get(k) != v
+                and not (k in {"quantity", "on_hand"} and Decimal(bd[k]) == Decimal(v))
+            )
+        rid = uuid4()
+        target_entities = {"supplier_term"} if value.domain == "supplier_terms" else {"lot"} if value.domain == "inventory_count" else set()
+        target = next(
+            (r.canonical_id for r in refs if r.entity in target_entities),
+            (
+                rid
+                if value.domain
+                in {"supplier_terms", "payable_fees", "scope_declarations"}
+                else None
+            ),
+        )
+        rows.append(
+            dto.PreviewRow(
+                row_id=rid,
+                source_location=loc,
+                classification="CONFLICT" if blockers else cls,
+                proposed_action="BLOCKED" if blockers else action,
+                entity_refs=tuple(refs),
+                before=before,
+                after=after,
+                normalized_source_quantity=value.quantity if isinstance(value, domains.SalesSource) else None,
+                changes=changes,
+                provenance=prov,
+                blockers=tuple(blockers),
+                warnings=tuple(warnings),
+                confirmation_required=confirm,
+                target_reserved_or_existing_id=target,
+            )
+        )
+    for key, group in sorted(recipe_groups.items()):
+        first, prov, loc, _ = group[0]
+        blockers = [b for _, _, _, bs in group for b in bs]
+        fields = (
+            "effective_from",
+            "effective_to",
+            "yield_quantity",
+            "yield_unit",
+            "process_loss_rate",
+        )
+        if any(
+            any(
+                (
+                    (Decimal(getattr(v, k)) != Decimal(getattr(first, k)))
+                    if k in {"yield_quantity", "process_loss_rate"}
+                    else getattr(v, k) != getattr(first, k)
+                )
+                for k in fields
+            )
+            for v, _, _, _ in group
+        ):
+            blockers.append(notice("RECIPE_HEADER_CONFLICT", loc))
+        if len({v.ingredient_id for v, _, _, _ in group}) != len(group):
+            blockers.append(notice("DUPLICATE_RECIPE_INGREDIENT", loc))
+        after = domains.RecipeValue(
+            product_id=first.product_id,
+            version=first.version,
+            effective_from=first.effective_from,
+            effective_to=first.effective_to,
+            yield_quantity=first.yield_quantity,
+            yield_unit=first.yield_unit,
+            process_loss_rate=first.process_loss_rate,
+            lines=tuple(
+                domains.RecipeLineValue(
+                    ingredient_id=v.ingredient_id, quantity=v.quantity, unit=v.unit
+                )
+                for v, _, _, _ in sorted(group, key=lambda t: str(t[0].ingredient_id))
+            ),
+        )
+        before = None
+        for old in snapshot["recipes"]:
+            if (
+                old["product_id"] == str(first.product_id)
+                and old["version"] == first.version
+            ):
+                oldlines = [
+                    l for l in snapshot["recipe_lines"] if l["recipe_id"] == old["id"]
+                ]
+                candidate = domains.RecipeValue(
+                    product_id=first.product_id,
+                    version=old["version"],
+                    effective_from=old["effective_from"],
+                    effective_to=old["effective_to"],
+                    yield_quantity=old["yield_quantity"],
+                    yield_unit=products[str(first.product_id)]["selling_unit"],
+                    process_loss_rate=old["process_loss_rate"],
+                    lines=tuple(
+                        domains.RecipeLineValue(
+                            ingredient_id=l["ingredient_id"],
+                            quantity=l["quantity"],
+                            unit=l["unit"],
+                        )
+                        for l in sorted(oldlines, key=lambda l: l["ingredient_id"])
+                    ),
+                )
+                if (
+                    candidate.effective_from == after.effective_from
+                    and candidate.effective_to == after.effective_to
+                    and Decimal(candidate.yield_quantity)
+                    == Decimal(after.yield_quantity)
+                    and Decimal(candidate.process_loss_rate)
+                    == Decimal(after.process_loss_rate)
+                    and len(candidate.lines) == len(after.lines)
+                    and all(
+                        a.ingredient_id == b.ingredient_id
+                        and a.unit == b.unit
+                        and Decimal(a.quantity) == Decimal(b.quantity)
+                        for a, b in zip(candidate.lines, after.lines)
+                    )
+                ):
+                    before = candidate
+                    continue
+                blockers.append(notice("RECIPE_VERSION_CONFLICT", loc))
+            if (
+                old["product_id"] == str(first.product_id)
+                and old.get("assigned", True)
+                and date.fromisoformat(old["effective_from"])
+                <= (first.effective_to or date.max)
+                and first.effective_from
+                <= (
+                    date.fromisoformat(old["effective_to"])
+                    if old["effective_to"]
+                    else date.max
+                )
+            ):
+                blockers.append(notice("RECIPE_PERIOD_OVERLAP", loc))
+        for other, othergroup in recipe_groups.items():
+            otherfirst = othergroup[0][0]
+            if (
+                other != key
+                and other[0] == key[0]
+                and otherfirst.effective_from <= (first.effective_to or date.max)
+                and first.effective_from <= (otherfirst.effective_to or date.max)
+            ):
+                blockers.append(notice("RECIPE_PERIOD_OVERLAP", loc))
+        rows.append(
+            dto.PreviewRow(
+                row_id=uuid4(),
+                source_location=loc,
+                classification=(
+                    "CONFLICT" if blockers else "UNCHANGED" if before else "NEW"
+                ),
+                proposed_action=(
+                    "BLOCKED"
+                    if blockers
+                    else "NO_OP" if before else "CREATE_RECIPE_VERSION"
+                ),
+                entity_refs=(
+                    dto.EntityRef(entity="product", canonical_id=first.product_id),
+                )
+                + tuple(
+                    dto.EntityRef(entity="ingredient", canonical_id=l.ingredient_id)
+                    for l in after.lines
+                ),
+                before=before,
+                after=after,
+                provenance=prov,
+                blockers=tuple(blockers),
+                source_locations=tuple(x[2] for x in group),
+                line_provenance=tuple(
+                    dto.RecipeLineProvenance(
+                        ingredient_id=value.ingredient_id, source_location=location,
+                        provenance={p.field: dto.ProvenanceValue(**p.model_dump(exclude={"field"})) for p in provenance},
+                    )
+                    for value, provenance, location, _ in group
+                ),
+            )
+        )
+    creation_rows = []
+    for ident, ent in sorted(reservations.items()):
+        if any(
+            r.after
+            and r.after.domain in {"products", "ingredients", "suppliers"}
+            and any(str(ref.canonical_id) == ident for ref in r.entity_refs)
+            for r in rows
+        ):
+            continue
+        relevant = [
+            r
+            for r in rows
+            if any(str(ref.canonical_id) == ident for ref in r.entity_refs)
+        ]
+        if not relevant:
+            continue
+        loc = relevant[0].source_location
+        domain = {
+            "product": "products",
+            "ingredient": "ingredients",
+            "supplier": "suppliers",
+        }[ent.entity]
+        values = ent.metadata.model_dump(mode="json")
+        values[
+            "source_supplier_key" if ent.entity == "supplier" else "source_business_key"
+        ] = ent.source_business_key
+        payload = domains.SOURCE_MODELS[domain].model_validate(values)
+        old = next((r for r in snapshot[domain] if r["id"] == ident), None)
+        blockers = []
+        if old and any(
+            not metadata_equal(k, old.get(k), v)
+            for k, v in ent.metadata.model_dump(mode="json").items()
+        ):
+            blockers.append(notice("ENTITY_IDENTITY_CONFLICT", loc))
+        if values.get("sku") and any(
+            r["id"] != ident and r.get("sku") == values["sku"] for r in snapshot[domain]
+        ):
+            blockers.append(notice("ENTITY_IDENTITY_CONFLICT", loc))
+        if values.get("sku") and any(
+            e.reserved_canonical_id != ent.reserved_canonical_id
+            and e.entity == ent.entity
+            and getattr(e.metadata, "sku", None) == values["sku"]
+            for e in reservations.values()
+        ):
+            blockers.append(notice("ENTITY_IDENTITY_CONFLICT", loc))
+        creation = dto.PreviewRow(
+            row_id=uuid4(),
+            source_location=loc,
+            classification="CONFLICT" if blockers else "UNCHANGED" if old else "NEW",
+            proposed_action=(
+                "BLOCKED"
+                if blockers
+                else "NO_OP" if old else "CREATE_" + ent.entity.upper()
+            ),
+            entity_refs=(
+                dto.EntityRef(
+                    entity=ent.entity, canonical_id=ent.reserved_canonical_id
+                ),
+            ),
+            before=payload if old else None,
+            after=payload,
+            provenance=tuple(
+                dto.FieldProvenance(
+                    field=k, origin="SOURCE_EXPLICIT", value_source="IDENTITY_BINDING",
+                    applied_rule_ids=("entity_proposal:" + str(ent.proposal_id),),
+                )
+                for k in type(ent.metadata).model_fields
+            ),
+            blockers=tuple(blockers),
+            target_reserved_or_existing_id=ent.reserved_canonical_id,
+        )
+        creation_rows.append(creation)
+        rows = [
+            (
+                r.model_copy(
+                    update={"dependencies": r.dependencies + (creation.row_id,)}
+                )
+                if any(str(ref.canonical_id) == ident for ref in r.entity_refs)
+                else r
+            )
+            for r in rows
+        ]
+    rows = creation_rows + rows
+    from app.application.import_configuration_preview import finish_configurations
+    return finish_configurations(tuple(rows), specs, snapshot, normalized, now, store_timezone)

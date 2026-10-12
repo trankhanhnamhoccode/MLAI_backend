@@ -7,7 +7,7 @@ evidence/status is in CURRENT_STATE. Provides typed liveness, OpenAPI metadata,
 PostgreSQL/Alembic infrastructure and local verification commands. The original S0
 baseline was empty; S1.1/S1.2/S1.3 add the
 [identity/store](STORE_IDENTITY.md) and [catalog/recipe](CATALOG_RECIPE.md) schemas plus
-[S1.3 supplier/operational/constraints](../runbooks/S13_VERIFICATION.md). No business APIs, authentication,
+[S1.3 supplier/operational/constraints](../runbooks/FULL_TEST_FLOW.md). No business APIs, authentication,
 imports or computation are implemented.
 
 ## Invariants and relevant ADRs
@@ -45,7 +45,7 @@ Connection failures, unsafe reset targets, migration failures, invalid category,
 missing environment or stale revisions return nonzero with an error message.
 Reachable unmigrated status needs the explicit `AllowUnmigrated` option; seed
 always requires head. HTTP health can succeed while PostgreSQL is unavailable.
-See [DATABASE_RESET](../runbooks/DATABASE_RESET.md) for target guards, lock timeout,
+See [DATABASE_RESET](../runbooks/FULL_TEST_FLOW.md) for target guards, lock timeout,
 transaction rollback, retry behavior and named-volume retention. Stop concurrent
 DB users before reset; save local state first if needed.
 

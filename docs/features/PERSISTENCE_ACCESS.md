@@ -7,7 +7,7 @@ transactions, read no-autoflush and by-value results. S1.7 implements atomic
 receipt/corrections using the existing scoped lot lock/append primitives; no new
 repository extension was needed. Repository ownership and limitations stay intact.
 See [APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and
-[S17_VERIFICATION](../runbooks/S17_VERIFICATION.md). S1 completion is recorded in
+[S17_VERIFICATION](../runbooks/FULL_TEST_FLOW.md). S1 completion is recorded in
 CURRENT_STATE/ROADMAP. Earlier absence/status/count statements below are HISTORICAL
 INFORMATION where superseded by those paths; privileged SQL still bypasses policy.
 

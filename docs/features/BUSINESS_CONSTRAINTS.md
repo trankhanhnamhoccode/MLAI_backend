@@ -40,7 +40,7 @@ shelfcash_test, committed writer closed before reads.
 
 ## Manual verification and DB inspection
 
-Follow [S13_VERIFICATION](../runbooks/S13_VERIFICATION.md), which executes:
+Follow [S13_VERIFICATION](../runbooks/FULL_TEST_FLOW.md), which executes:
 
 ```sql
 SELECT store_id, scope_type, scope_id, constraint_type, numeric_value, unit,

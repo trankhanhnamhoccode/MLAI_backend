@@ -1,0 +1,165 @@
+{
+  "data": {
+    "run_id": "34b864a8-8755-4925-8cba-1f0e270dae36",
+    "result_schema_version": "operational_pipeline/2",
+    "result_digest": "7d12a23084ee10b013394fc6c14edd05c654103a45414ebd706cfda0e72e97c8",
+    "availability": "available",
+    "outcome": "recommendation_available",
+    "winner": {
+      "option_id": "cmp1_669c2b0cf63961cdd6e6f9e381ab5e6eda9ceb5b8a8037546062b30b1c47f1e5",
+      "reason_code": "WINNER_FOUND"
+    },
+    "exclusions": [],
+    "blockers": [],
+    "warnings": [],
+    "options": [
+      {
+        "option_id": "cmp1_669c2b0cf63961cdd6e6f9e381ab5e6eda9ceb5b8a8037546062b30b1c47f1e5",
+        "eligible": true,
+        "rejection_reasons": [],
+        "not_selected_reason": null,
+        "source_strategies": [
+          "lean",
+          "balanced",
+          "protected"
+        ],
+        "evidence": [
+          {
+            "strategy": "lean",
+            "construction_path": "LOW",
+            "option_id": "cmp1_669c2b0cf63961cdd6e6f9e381ab5e6eda9ceb5b8a8037546062b30b1c47f1e5",
+            "execution": "FINISHED",
+            "termination": "VALIDATED_INCUMBENT_UNPROVEN",
+            "customer_pass": true,
+            "construction_pass": true,
+            "selection_kind": "TARGET",
+            "customer_feasibility": "PASS_EXISTS",
+            "construction_feasibility": "PASS_EXISTS",
+            "proof": "UNPROVEN",
+            "proof_scope": "CAPTURED_FINITE_DOMAIN_ONLY",
+            "domain_size": "51",
+            "search_complete": false,
+            "customer_gaps": [
+              {
+                "product_id": "4382af05-11dc-4a67-bf97-c95f2dfa957a",
+                "path": "BASE",
+                "target_percent": "95",
+                "shortfall": {
+                  "numerator": "0",
+                  "denominator": "1",
+                  "decimal_view": "0"
+                },
+                "unit": "cup"
+              }
+            ],
+            "construction_gaps": [
+              {
+                "product_id": "4382af05-11dc-4a67-bf97-c95f2dfa957a",
+                "path": "LOW",
+                "target_percent": "100",
+                "shortfall": {
+                  "numerator": "0",
+                  "denominator": "1",
+                  "decimal_view": "0"
+                },
+                "unit": "cup"
+              }
+            ],
+            "diagnostic": null
+          },
+          {
+            "strategy": "balanced",
+            "construction_path": "BASE",
+            "option_id": "cmp1_669c2b0cf63961cdd6e6f9e381ab5e6eda9ceb5b8a8037546062b30b1c47f1e5",
+            "execution": "FINISHED",
+            "termination": "VALIDATED_INCUMBENT_UNPROVEN",
+            "customer_pass": true,
+            "construction_pass": true,
+            "selection_kind": "TARGET",
+            "customer_feasibility": "PASS_EXISTS",
+            "construction_feasibility": "PASS_EXISTS",
+            "proof": "UNPROVEN",
+            "proof_scope": "CAPTURED_FINITE_DOMAIN_ONLY",
+            "domain_size": "51",
+            "search_complete": false,
+            "customer_gaps": [
+              {
+                "product_id": "4382af05-11dc-4a67-bf97-c95f2dfa957a",
+                "path": "BASE",
+                "target_percent": "95",
+                "shortfall": {
+                  "numerator": "0",
+                  "denominator": "1",
+                  "decimal_view": "0"
+                },
+                "unit": "cup"
+              }
+            ],
+            "construction_gaps": [
+              {
+                "product_id": "4382af05-11dc-4a67-bf97-c95f2dfa957a",
+                "path": "BASE",
+                "target_percent": "100",
+                "shortfall": {
+                  "numerator": "0",
+                  "denominator": "1",
+                  "decimal_view": "0"
+                },
+                "unit": "cup"
+              }
+            ],
+            "diagnostic": null
+          },
+          {
+            "strategy": "protected",
+            "construction_path": "HIGH",
+            "option_id": "cmp1_669c2b0cf63961cdd6e6f9e381ab5e6eda9ceb5b8a8037546062b30b1c47f1e5",
+            "execution": "FINISHED",
+            "termination": "VALIDATED_INCUMBENT_UNPROVEN",
+            "customer_pass": true,
+            "construction_pass": true,
+            "selection_kind": "TARGET",
+            "customer_feasibility": "PASS_EXISTS",
+            "construction_feasibility": "PASS_EXISTS",
+            "proof": "UNPROVEN",
+            "proof_scope": "CAPTURED_FINITE_DOMAIN_ONLY",
+            "domain_size": "51",
+            "search_complete": false,
+            "customer_gaps": [
+              {
+                "product_id": "4382af05-11dc-4a67-bf97-c95f2dfa957a",
+                "path": "BASE",
+                "target_percent": "95",
+                "shortfall": {
+                  "numerator": "0",
+                  "denominator": "1",
+                  "decimal_view": "0"
+                },
+                "unit": "cup"
+              }
+            ],
+            "construction_gaps": [
+              {
+                "product_id": "4382af05-11dc-4a67-bf97-c95f2dfa957a",
+                "path": "HIGH",
+                "target_percent": "100",
+                "shortfall": {
+                  "numerator": "0",
+                  "denominator": "1",
+                  "decimal_view": "0"
+                },
+                "unit": "cup"
+              }
+            ],
+            "diagnostic": null
+          }
+        ]
+      }
+    ],
+    "evidence_availability": "known"
+  },
+  "meta": {
+    "request_id": "0a9f5ef3-2e37-4130-ad7d-39065da92307"
+  },
+  "error": null
+}

@@ -15,7 +15,7 @@ term overlap remains accepted. Writes own begin/flush/commit/rollback; scoped re
 never commit/autoflush. Fresh-session, rollback, ownership and commit-failure tests
 are in test_operational_paths.py. See
 [APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and
-[S17_VERIFICATION](../runbooks/S17_VERIFICATION.md).
+[S17_VERIFICATION](../runbooks/FULL_TEST_FLOW.md).
 
 ## Original schema slice -- HISTORICAL INFORMATION
 
@@ -84,7 +84,7 @@ missing/cross-store references and wrong units. Zero cost/durations and minimum 
 
 ## Manual verification, inspection and expected state
 
-Use [S13_VERIFICATION](../runbooks/S13_VERIFICATION.md): start healthy PostgreSQL,
+Use [S13_VERIFICATION](../runbooks/FULL_TEST_FLOW.md): start healthy PostgreSQL,
 reset/migrate, run targeted/full tests, inspect actual schema/rows. Expected head
 0006_forecast_decision_persist, suppliers and supplier_terms count 0 after reset;
 tests do not mutate development data. The shared runbook executes these queries:

@@ -40,7 +40,7 @@ be borrowed by another Store. Tests own only shelfcash_test.
 
 ## Manual verification and DB inspection
 
-Follow [S13_VERIFICATION](../runbooks/S13_VERIFICATION.md). Expected head
+Follow [S13_VERIFICATION](../runbooks/FULL_TEST_FLOW.md). Expected head
 0006_forecast_decision_persist; sales_daily empty after reset. Shared command executes:
 
 ```sql

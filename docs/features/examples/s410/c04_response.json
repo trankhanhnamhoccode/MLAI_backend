@@ -1,0 +1,98 @@
+{
+  "data": {
+    "run_id": "34b864a8-8755-4925-8cba-1f0e270dae36",
+    "result_digest": "7d12a23084ee10b013394fc6c14edd05c654103a45414ebd706cfda0e72e97c8",
+    "selected_option_id": "cmp1_669c2b0cf63961cdd6e6f9e381ab5e6eda9ceb5b8a8037546062b30b1c47f1e5",
+    "selection_status": "winner",
+    "items": [
+      {
+        "ingredient_id": "eaeb8ab8-1925-4c92-b19f-f9abc86257d3",
+        "unit": "ml",
+        "display_name": "Synthetic milk",
+        "name_availability": "captured",
+        "purchase_quantity": {
+          "numerator": "35",
+          "denominator": "1",
+          "decimal_view": "35"
+        },
+        "purchase_line_count": 1,
+        "path_balances": [
+          {
+            "ingredient_id": "eaeb8ab8-1925-4c92-b19f-f9abc86257d3",
+            "unit": "ml",
+            "path": "BASE",
+            "consumed": {
+              "numerator": "35",
+              "denominator": "1",
+              "decimal_view": "35"
+            },
+            "expired": {
+              "numerator": "0",
+              "denominator": "1",
+              "decimal_view": "0"
+            },
+            "ending_usable": {
+              "numerator": "0",
+              "denominator": "1",
+              "decimal_view": "0"
+            }
+          },
+          {
+            "ingredient_id": "eaeb8ab8-1925-4c92-b19f-f9abc86257d3",
+            "unit": "ml",
+            "path": "HIGH",
+            "consumed": {
+              "numerator": "35",
+              "denominator": "1",
+              "decimal_view": "35"
+            },
+            "expired": {
+              "numerator": "0",
+              "denominator": "1",
+              "decimal_view": "0"
+            },
+            "ending_usable": {
+              "numerator": "0",
+              "denominator": "1",
+              "decimal_view": "0"
+            }
+          },
+          {
+            "ingredient_id": "eaeb8ab8-1925-4c92-b19f-f9abc86257d3",
+            "unit": "ml",
+            "path": "LOW",
+            "consumed": {
+              "numerator": "35",
+              "denominator": "1",
+              "decimal_view": "35"
+            },
+            "expired": {
+              "numerator": "0",
+              "denominator": "1",
+              "decimal_view": "0"
+            },
+            "ending_usable": {
+              "numerator": "0",
+              "denominator": "1",
+              "decimal_view": "0"
+            }
+          }
+        ],
+        "issues": [],
+        "detail_available": true
+      }
+    ]
+  },
+  "meta": {
+    "request_id": "fd3c4296-d5a2-41c9-91e5-81c7be9fb802",
+    "run_id": "34b864a8-8755-4925-8cba-1f0e270dae36",
+    "result_digest": "7d12a23084ee10b013394fc6c14edd05c654103a45414ebd706cfda0e72e97c8",
+    "response_version": "ab394bc089a9c25b181c4604e53c1fb470fd86a141e1ee236638fe64e07f7ae7",
+    "pagination": {
+      "limit": 50,
+      "next_cursor": null,
+      "total_count": 1
+    }
+  },
+  "error": null
+}

@@ -11,9 +11,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from scripts.dev import migration_config
-from test_supplier_operational_constraints import engine, parents
+from tests.integration.test_supplier_operational_constraints import engine, parents
 
-HEAD = "0008_forecast_execution_meta"
+HEAD = "0017_planning_exports"
 TABLES = {"forecast_runs", "forecast_predictions", "decision_runs"}
 STARTED = datetime(2026, 10, 1, 0, tzinfo=timezone.utc)
 FINISHED = datetime(2026, 10, 1, 1, tzinfo=timezone.utc)
@@ -58,14 +58,15 @@ def decision_values(ids, run_id, **changes):
 
 def test_fresh_migration_exact_tables_and_downgrade(engine):
     before = set(inspect(engine).get_table_names())
-    assert len(before) == 19 and TABLES <= before
-    assert not {"import_jobs", "mapping_profiles", "purchase_orders", "what_if_runs"} & before
+    assert len(before) == 61 and TABLES <= before
+    assert not {"mapping_profiles", "purchase_orders", "what_if_runs"} & before
     with engine.connect() as fresh:
         assert fresh.scalar(text("SELECT current_database()")) == "shelfcash_test"
         assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == HEAD
         assert fresh.scalar(text("SELECT count(*) FROM pg_trigger WHERE NOT tgisinternal AND tgrelid IN ('forecast_runs'::regclass,'forecast_predictions'::regclass,'decision_runs'::regclass)")) == 0
     command.downgrade(migration_config(), "0005_data_semantics_correction")
-    assert set(inspect(engine).get_table_names()) == before - TABLES - {"forecast_run_inputs", "forecast_execution_metadata"}
+    before_without_exports = before - {"planning_exports"}
+    assert set(inspect(engine).get_table_names()) == before_without_exports - TABLES - {"forecast_run_inputs", "forecast_execution_metadata", "planning_runs", "auth_accounts", "auth_sessions", "credential_tokens", "membership_grants", "auth_audit", "staff_invitations", "permission_events", "invitation_events", "staff_request_receipts", "invitation_delivery_intents", "auth_rate_limits", "public_read_revisions", "import_batches", "import_blobs", "import_files", "import_profiles", "import_profile_versions", "import_source_contexts", "import_jobs", "import_previews", "import_receipts", "import_audit", "supplier_source_records", "term_source_records", "payable_fee_records", "scope_declaration_records", "inventory_receipt_records", "inventory_thresholds", "stock_request_receipts", "inventory_audit", "recipe_schedule_changes", "recipe_schedule_request_receipts", "forecast_serving_identities", "model_serving_configurations", "planning_budgets", "planning_configuration_events", "planning_configuration_receipts", "planning_configuration_revisions", "planning_defaults", "saved_requirements"}
     command.upgrade(migration_config(), "head")
     assert set(inspect(engine).get_table_names()) == before
 
@@ -154,7 +155,7 @@ def test_prediction_integrity(engine, issue):
 @pytest.mark.parametrize("strategy", ["LEAN", "BALANCED", "PROTECTED"])
 def test_decision_json_fresh_reload_rerun_and_independent_values(engine, strategy):
     from app.models import DecisionRun, InventoryLot
-    from test_supplier_operational_constraints import lot_values
+    from tests.integration.test_supplier_operational_constraints import lot_values
     ids = parents(engine)
     run_id = saved_forecast(engine, ids)
     values = decision_values(ids, run_id, recommended_strategy=strategy)

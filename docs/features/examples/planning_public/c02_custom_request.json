@@ -1,0 +1,14 @@
+{
+  "requirements_mode": "custom",
+  "forecast_start_date": "2026-10-10",
+  "requirements": {
+    "paths": [
+      {
+        "path": "BASE",
+        "min_fill_rate_percent": "95",
+        "product_overrides": []
+      }
+    ],
+    "budget_limit": null
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "data": {
+    "job_id": "7e6d3b57-02f2-4029-99ae-bb1a5f730b9a",
+    "operation": "planning_pdf_export",
+    "status": "completed",
+    "stage": "completed",
+    "progress": 1.0,
+    "created_at": "2026-10-10T02:00:00Z",
+    "started_at": "2026-10-10T02:00:00Z",
+    "completed_at": "2026-10-10T02:00:00Z",
+    "context": {
+      "store_id": "cf7f45fd-c2a1-47aa-bca3-19f0b2f97e4b",
+      "run_id": "ed58f16a-cf50-4ed5-acf1-099479c17bba",
+      "export_id": "a6822291-ae03-4536-a0d0-9095f1d54f8a"
+    },
+    "result": {
+      "resource_type": "planning_pdf_export",
+      "resource_id": "a6822291-ae03-4536-a0d0-9095f1d54f8a",
+      "run_id": "ed58f16a-cf50-4ed5-acf1-099479c17bba",
+      "option_id": "cmp1_3daf7a4095df85373e034ce9b0a827ec9fd91f7123458d60252a21ebd2d4a0c8",
+      "download_url": "/api/v1/procurement-plans/ed58f16a-cf50-4ed5-acf1-099479c17bba/exports/a6822291-ae03-4536-a0d0-9095f1d54f8a",
+      "sha256": "bde27ad99e2f2a181dd78008c1687fd43c897ccc7854af5f3202957f1f5fab48",
+      "byte_count": 88009,
+      "media_type": "application/pdf"
+    },
+    "error": null
+  },
+  "meta": {
+    "request_id": "30640568-ffc0-4423-9606-8fedb8b2e92a",
+    "warnings": [],
+    "poll_after_ms": 0,
+    "pagination": null
+  },
+  "error": null
+}

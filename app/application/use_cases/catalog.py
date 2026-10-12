@@ -17,11 +17,7 @@ class ProductUseCases:
         require_idle_session(self.session)
         try:
             self.session.begin()
-            require_store(self.session, data.store_id)
-            row = Product(**data.model_dump())
-            self.catalog.add_product(data.store_id, row)
-            self.session.flush()
-            result = ProductResult.model_validate(row)
+            result = self.create_in_transaction(data)
             self.session.commit()
             return result
         except IntegrityError as error:
@@ -33,6 +29,15 @@ class ProductUseCases:
         except Exception:
             self.session.rollback()
             raise
+
+    def create_in_transaction(self, data: CreateProductInput, *, reserved_id=None) -> ProductResult:
+        """Caller owns transaction/rollback; same typed validation as standalone create."""
+        data = CreateProductInput.model_validate(data)
+        require_store(self.session, data.store_id)
+        row = Product(**data.model_dump(), **({"id": reserved_id} if reserved_id is not None else {}))
+        self.catalog.add_product(data.store_id, row)
+        self.session.flush()
+        return ProductResult.model_validate(row)
 
     def get(self, data: GetProductInput) -> ProductResult:
         data = GetProductInput.model_validate(data)
@@ -53,11 +58,7 @@ class IngredientUseCases:
         require_idle_session(self.session)
         try:
             self.session.begin()
-            require_store(self.session, data.store_id)
-            row = Ingredient(**data.model_dump())
-            self.catalog.add_ingredient(data.store_id, row)
-            self.session.flush()
-            result = IngredientResult.model_validate(row)
+            result = self.create_in_transaction(data)
             self.session.commit()
             return result
         except IntegrityError as error:
@@ -69,6 +70,15 @@ class IngredientUseCases:
         except Exception:
             self.session.rollback()
             raise
+
+    def create_in_transaction(self, data: CreateIngredientInput, *, reserved_id=None) -> IngredientResult:
+        """Caller owns transaction/rollback; same typed validation as standalone create."""
+        data = CreateIngredientInput.model_validate(data)
+        require_store(self.session, data.store_id)
+        row = Ingredient(**data.model_dump(), **({"id": reserved_id} if reserved_id is not None else {}))
+        self.catalog.add_ingredient(data.store_id, row)
+        self.session.flush()
+        return IngredientResult.model_validate(row)
 
     def get(self, data: GetIngredientInput) -> IngredientResult:
         data = GetIngredientInput.model_validate(data)

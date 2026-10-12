@@ -86,7 +86,7 @@ results. No fake test claims DB-level completed immutability or computation corr
 
 ## Manual verification / reset / known limits
 
-[S14_VERIFICATION](../runbooks/S14_VERIFICATION.md) provides commands/inspection:
+[S14_VERIFICATION](../runbooks/FULL_TEST_FLOW.md) provides commands/inspection:
 
 ```sql
 SELECT id,store_id,status,forecast_run_id,planning_start_date,planning_end_date,

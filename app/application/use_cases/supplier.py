@@ -17,13 +17,7 @@ class SupplierTermUseCases:
         require_idle_session(self.session)
         try:
             self.session.begin()
-            require_supplier(self.session, data.store_id, data.supplier_id)
-            ingredient = load_ingredient(self.session, data.store_id, data.ingredient_id)
-            require_unit(ingredient.base_unit, data.unit)
-            row = SupplierTerm(**data.model_dump())
-            self.suppliers.add_supplier_term(data.store_id, row)
-            self.session.flush()
-            result = SupplierTermResult.model_validate(row)
+            result = self.create_in_transaction(data)
             self.session.commit()
             return result
         except IntegrityError as error:
@@ -36,6 +30,18 @@ class SupplierTermUseCases:
         except Exception:
             self.session.rollback()
             raise
+
+    def create_in_transaction(self, data: CreateSupplierTermInput, *, reserved_id=None) -> SupplierTermResult:
+        """Same validation; caller owns canonical/audit transaction."""
+        data = CreateSupplierTermInput.model_validate(data)
+        require_supplier(self.session, data.store_id, data.supplier_id)
+        ingredient = load_ingredient(self.session, data.store_id, data.ingredient_id)
+        require_unit(ingredient.base_unit, data.unit)
+        row = SupplierTerm(**data.model_dump(), **({"id":reserved_id} if reserved_id is not None else {}))
+        self.suppliers.add_supplier_term(data.store_id, row)
+        self.session.flush()
+        result = SupplierTermResult.model_validate(row)
+        return result
 
     def get(self, data: GetSupplierTermInput) -> SupplierTermResult:
         data = GetSupplierTermInput.model_validate(data)
