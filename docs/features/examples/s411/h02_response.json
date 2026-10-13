@@ -1,0 +1,25 @@
+{
+  "data": {
+    "items": [
+      {
+        "import_id": "6aaae8d0-75a7-4872-b52c-31c9a9f345fd",
+        "display_number": "IMP-6aaae8d0-75a7-4872-b52c-31c9a9f345fd",
+        "data_date": "2026-10-09",
+        "imported_at": "2026-10-09T20:00:00Z",
+        "file_count": 1,
+        "status": "in_progress"
+      }
+    ]
+  },
+  "meta": {
+    "request_id": "af2d9cc8-ca1c-4111-871d-b1372268bcf4",
+    "warnings": [],
+    "pagination": {
+      "limit": 50,
+      "next_cursor": null,
+      "total_count": 1
+    },
+    "unfiltered_date_count": 1
+  },
+  "error": null
+}

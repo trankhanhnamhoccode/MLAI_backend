@@ -17,7 +17,7 @@ no import identity/deduplication behavior is invented. Privileged SQL can bypass
 policy. Tests verify rollback after lot/movement/balance SQL flush, commit failures,
 fresh-session persisted balances, stale-cache refresh and actual PostgreSQL lock wait.
 See [APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and
-[S17_VERIFICATION](../runbooks/S17_VERIFICATION.md).
+[S17_VERIFICATION](../runbooks/FULL_TEST_FLOW.md).
 
 ## Original schema slice -- HISTORICAL INFORMATION
 
@@ -91,7 +91,7 @@ changes and deleting a referenced lot fail. All fixtures own shelfcash_test.
 
 ## Manual verification and DB inspection
 
-Use [S13_VERIFICATION](../runbooks/S13_VERIFICATION.md), which executes:
+Use [S13_VERIFICATION](../runbooks/FULL_TEST_FLOW.md), which executes:
 
 ```sql
 SELECT id, store_id, ingredient_id, received_date, expiry_date,

@@ -1,5 +1,14 @@
 # Internal trained forecast — S2.4–S2.7
 
+CURRENT FACT A1: schema-2 inputs use causal demand projection for training
+labels and lag/rolling features. Unsupported censored days and censored evaluation
+targets are excluded. Each rolling origin captures/reconstructs only its prefix.
+Artifact demand policy must match inference; schema-1 artifacts/replay retain the
+original observed-sales behavior below. See [ADR-A1](../adr/ADR-A1-observed-stockout-demand-policy.md);
+Real LightGBM execution, retained evidence and replay are verified on the owned
+Import test DB. Baseline/fallback replay regenerates captured demand warnings once;
+selection warnings remain retained. Synthetic mechanics are not real-data accuracy.
+
 Classification: CURRENT FACT for code/checks, ACCEPTED DECISION for
 [ADR-015](../adr/ADR-015-trained-observed-sales-forecast.md). Implementation and
 synthetic verification are distinct from real-data quality, which is NOT EVALUATED.
@@ -7,7 +16,7 @@ No public API/auth/import/S3/stochastic/residual/N_eff/LLM/What-if was added.
 
 ## Contract, model and causal features
 
-The frozen S2.1 observed DAILY Product-sales capture is unchanged: Store-local D,
+Historical schema-1 S2.1 observed DAILY Product-sales capture is unchanged: Store-local D,
 exact captured units, inclusive requested history, D+1..7, missing unknown, explicit
 zero observed, no duplicates, exact full Product/date output coverage. Baseline/S1
 remain callable unchanged, including S1 empty completion. Domain validation, features,

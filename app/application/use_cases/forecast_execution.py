@@ -20,6 +20,7 @@ from app.application.forecast_serialization import (
 )
 from app.application.use_cases.forecast import ForecastUseCases
 from app.application.use_cases.forecast_baseline import assess_baseline_readiness, run_historical_quantile_baseline
+from app.application.forecast_demand import demand_warnings
 from app.domain.forecasting.baseline import BASELINE_MODEL_TYPE, BASELINE_MODEL_VERSION, BaselineNotReadyError
 from app.domain.forecasting.validation import forecast_dates
 from app.infrastructure.database.forecast_execution_session import _execution_session, _note_secondary
@@ -99,8 +100,9 @@ class ForecastExecutionUseCases:
                             request.store_id, product['product_id'], request.history_start_date, request.cutoff_date):
                         observations.append({'store_id': row.store_id, 'product_id': row.product_id,
                             'sales_date': row.sales_date, 'quantity': row.quantity,
+                            'is_stockout': row.is_stockout,
                             'selling_unit': product['selling_unit']})
-                return PreparedForecastInput(request=request, timezone=store.timezone,
+                return PreparedForecastInput(schema_version=2, demand_policy='causal_stockout_v1', request=request, timezone=store.timezone,
                     products=products, observations=observations, forecast_dates=forecast_dates(request.cutoff_date))
 
     def get(self, reference: RunReferenceInput) -> ForecastRunResult:
@@ -164,7 +166,7 @@ class ForecastExecutionUseCases:
                   result: ForecastEngineResult, encoded: SerializedForecastInput) -> None:
         result = validate_engine_result(prepared, result)
         if (result.model_type != BASELINE_MODEL_TYPE or result.model_version != BASELINE_MODEL_VERSION
-                or result.artifact_identity is not None or result.warnings):
+                or result.artifact_identity is not None or result.warnings != demand_warnings(prepared)):
             raise RetainedInputError('BASELINE_IDENTITY_MISMATCH')
         with _execution_session(self.engine) as session:
             session.begin()
@@ -196,7 +198,7 @@ class ForecastExecutionUseCases:
             if actual.status != 'COMPLETED' or actual.input_fingerprint != encoded.digest or actual.metrics_json is not None:
                 raise RetainedInputError('COMPLETED_AGGREGATE_MISMATCH')
             projected = ForecastEngineResult(model_type=actual.model_type, model_version=actual.model_version,
-                artifact_identity=actual.artifact_key, predictions=[p.model_dump(include={
+                artifact_identity=actual.artifact_key, warnings=demand_warnings(prepared), predictions=[p.model_dump(include={
                     'product_id','forecast_date','p25','p50','p75'}) for p in actual.predictions])
             if validate_engine_result(prepared, projected) != expected:
                 raise RetainedInputError('COMPLETED_AGGREGATE_MISMATCH')

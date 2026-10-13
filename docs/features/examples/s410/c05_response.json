@@ -1,0 +1,1206 @@
+{
+  "data": {
+    "run_id": "34b864a8-8755-4925-8cba-1f0e270dae36",
+    "result_digest": "7d12a23084ee10b013394fc6c14edd05c654103a45414ebd706cfda0e72e97c8",
+    "ingredient_id": "eaeb8ab8-1925-4c92-b19f-f9abc86257d3",
+    "unit": "ml",
+    "selected_option_id": "cmp1_669c2b0cf63961cdd6e6f9e381ab5e6eda9ceb5b8a8037546062b30b1c47f1e5",
+    "selection_status": "winner",
+    "display_name": "Synthetic milk",
+    "name_availability": "captured",
+    "captured_stock": {
+      "captured_at": "2026-10-10T02:00:00Z",
+      "lots": [],
+      "scope_declaration": "CONFIRMED_EMPTY",
+      "provenance": "physical empty"
+    },
+    "purchases": [
+      {
+        "supplier_term_id": "f43c249e-8afd-4699-bdc5-47a6ec46093b",
+        "supplier_id": "bd886002-7467-49a5-8156-14155968f1cb",
+        "ingredient_id": "eaeb8ab8-1925-4c92-b19f-f9abc86257d3",
+        "unit": "ml",
+        "packs": 7,
+        "quantity": {
+          "numerator": "35",
+          "denominator": "1",
+          "decimal_view": "35"
+        },
+        "arrival_date": "2026-10-10",
+        "expiry_date": null,
+        "purchase_outlay": {
+          "numerator": "14",
+          "denominator": "1",
+          "decimal_view": "14"
+        },
+        "payable_fee_components": []
+      }
+    ],
+    "daily_balances": [
+      {
+        "path": "LOW",
+        "day": "2026-10-10",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "35",
+          "denominator": "1",
+          "decimal_view": "35"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "30",
+          "denominator": "1",
+          "decimal_view": "30"
+        },
+        "incoming_quantity": {
+          "numerator": "35",
+          "denominator": "1",
+          "decimal_view": "35"
+        }
+      },
+      {
+        "path": "LOW",
+        "day": "2026-10-11",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "30",
+          "denominator": "1",
+          "decimal_view": "30"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "25",
+          "denominator": "1",
+          "decimal_view": "25"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "LOW",
+        "day": "2026-10-12",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "25",
+          "denominator": "1",
+          "decimal_view": "25"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "20",
+          "denominator": "1",
+          "decimal_view": "20"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "LOW",
+        "day": "2026-10-13",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "20",
+          "denominator": "1",
+          "decimal_view": "20"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "15",
+          "denominator": "1",
+          "decimal_view": "15"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "LOW",
+        "day": "2026-10-14",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "15",
+          "denominator": "1",
+          "decimal_view": "15"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "10",
+          "denominator": "1",
+          "decimal_view": "10"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "LOW",
+        "day": "2026-10-15",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "10",
+          "denominator": "1",
+          "decimal_view": "10"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "LOW",
+        "day": "2026-10-16",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "BASE",
+        "day": "2026-10-10",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "35",
+          "denominator": "1",
+          "decimal_view": "35"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "30",
+          "denominator": "1",
+          "decimal_view": "30"
+        },
+        "incoming_quantity": {
+          "numerator": "35",
+          "denominator": "1",
+          "decimal_view": "35"
+        }
+      },
+      {
+        "path": "BASE",
+        "day": "2026-10-11",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "30",
+          "denominator": "1",
+          "decimal_view": "30"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "25",
+          "denominator": "1",
+          "decimal_view": "25"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "BASE",
+        "day": "2026-10-12",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "25",
+          "denominator": "1",
+          "decimal_view": "25"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "20",
+          "denominator": "1",
+          "decimal_view": "20"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "BASE",
+        "day": "2026-10-13",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "20",
+          "denominator": "1",
+          "decimal_view": "20"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "15",
+          "denominator": "1",
+          "decimal_view": "15"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "BASE",
+        "day": "2026-10-14",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "15",
+          "denominator": "1",
+          "decimal_view": "15"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "10",
+          "denominator": "1",
+          "decimal_view": "10"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "BASE",
+        "day": "2026-10-15",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "10",
+          "denominator": "1",
+          "decimal_view": "10"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "BASE",
+        "day": "2026-10-16",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "HIGH",
+        "day": "2026-10-10",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "35",
+          "denominator": "1",
+          "decimal_view": "35"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "30",
+          "denominator": "1",
+          "decimal_view": "30"
+        },
+        "incoming_quantity": {
+          "numerator": "35",
+          "denominator": "1",
+          "decimal_view": "35"
+        }
+      },
+      {
+        "path": "HIGH",
+        "day": "2026-10-11",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "30",
+          "denominator": "1",
+          "decimal_view": "30"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "25",
+          "denominator": "1",
+          "decimal_view": "25"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "HIGH",
+        "day": "2026-10-12",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "25",
+          "denominator": "1",
+          "decimal_view": "25"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "20",
+          "denominator": "1",
+          "decimal_view": "20"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "HIGH",
+        "day": "2026-10-13",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "20",
+          "denominator": "1",
+          "decimal_view": "20"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "15",
+          "denominator": "1",
+          "decimal_view": "15"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "HIGH",
+        "day": "2026-10-14",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "15",
+          "denominator": "1",
+          "decimal_view": "15"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "10",
+          "denominator": "1",
+          "decimal_view": "10"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "HIGH",
+        "day": "2026-10-15",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "10",
+          "denominator": "1",
+          "decimal_view": "10"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      },
+      {
+        "path": "HIGH",
+        "day": "2026-10-16",
+        "unit": "ml",
+        "requested": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "available": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "shortage": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "consumed": {
+          "numerator": "5",
+          "denominator": "1",
+          "decimal_view": "5"
+        },
+        "expired": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "other_waste": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "ending": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        },
+        "incoming_quantity": {
+          "numerator": "0",
+          "denominator": "1",
+          "decimal_view": "0"
+        }
+      }
+    ],
+    "related_products": [
+      {
+        "product_id": "4382af05-11dc-4a67-bf97-c95f2dfa957a",
+        "selling_unit": "cup",
+        "ingredient_unit": "ml",
+        "recipe_ids": [
+          "1e06ea43-b1af-46e0-a1ef-1d0c719a46b0"
+        ],
+        "affected_dates": [
+          "2026-10-10",
+          "2026-10-11",
+          "2026-10-12",
+          "2026-10-13",
+          "2026-10-14",
+          "2026-10-15",
+          "2026-10-16"
+        ],
+        "fulfilled_contributions": [
+          {
+            "path": "LOW",
+            "day": "2026-10-10",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "LOW",
+            "day": "2026-10-11",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "LOW",
+            "day": "2026-10-12",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "LOW",
+            "day": "2026-10-13",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "LOW",
+            "day": "2026-10-14",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "LOW",
+            "day": "2026-10-15",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "LOW",
+            "day": "2026-10-16",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "BASE",
+            "day": "2026-10-10",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "BASE",
+            "day": "2026-10-11",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "BASE",
+            "day": "2026-10-12",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "BASE",
+            "day": "2026-10-13",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "BASE",
+            "day": "2026-10-14",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "BASE",
+            "day": "2026-10-15",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "BASE",
+            "day": "2026-10-16",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "HIGH",
+            "day": "2026-10-10",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "HIGH",
+            "day": "2026-10-11",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "HIGH",
+            "day": "2026-10-12",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "HIGH",
+            "day": "2026-10-13",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "HIGH",
+            "day": "2026-10-14",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "HIGH",
+            "day": "2026-10-15",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          },
+          {
+            "path": "HIGH",
+            "day": "2026-10-16",
+            "quantity": {
+              "numerator": "5",
+              "denominator": "1",
+              "decimal_view": "5"
+            }
+          }
+        ]
+      }
+    ],
+    "issues": [],
+    "evidence_availability": "known"
+  },
+  "meta": {
+    "request_id": "801f0db2-f9ba-4915-a910-e097e00767cb",
+    "run_id": "34b864a8-8755-4925-8cba-1f0e270dae36",
+    "result_digest": "7d12a23084ee10b013394fc6c14edd05c654103a45414ebd706cfda0e72e97c8",
+    "response_version": "ab394bc089a9c25b181c4604e53c1fb470fd86a141e1ee236638fe64e07f7ae7"
+  },
+  "error": null
+}

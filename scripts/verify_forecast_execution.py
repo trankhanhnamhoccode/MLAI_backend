@@ -1,4 +1,4 @@
-"""Synthetic S2.3 manual verification; writes only guarded shelfcash_test, no reset."""
+"""Synthetic S2.3 manual verification; writes only a guarded test database, no reset."""
 from datetime import date
 from decimal import Decimal
 from uuid import uuid4
@@ -13,15 +13,15 @@ from app.application.contracts.common import RunReferenceInput
 from app.application.contracts.forecast_execution import ForecastExecutionInput
 from app.application.use_cases.forecast_execution import ForecastExecutionUseCases
 from app.models import Store, Product, SalesDaily, ForecastRun, ForecastRunInput, ForecastPrediction
-from scripts.dev import validate_reset_target, inspect_database, require_head
+from scripts.dev import TEST_DATABASE_NAMES, validate_reset_target, inspect_database, require_head
 
 
 def main() -> None:
     current = Settings()
     settings = Settings(_env_file=None, environment='test', database_url=current.test_database_url)
     validate_reset_target(settings)
-    if make_url(settings.database_url).database != 'shelfcash_test':
-        raise ValueError('Manual verification owns only shelfcash_test')
+    if make_url(settings.database_url).database not in TEST_DATABASE_NAMES:
+        raise ValueError('Manual verification requires an allowlisted test database')
     require_head(inspect_database(settings))
     engine = create_database_engine(settings)
     try:

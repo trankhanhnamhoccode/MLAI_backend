@@ -1,5 +1,6 @@
 """Safe internal baseline entrypoints; no Session, run lifecycle or persistence."""
 from uuid import UUID
+from app.application.forecast_demand import usable_histories, demand_warnings
 
 from app.application.contracts.forecast_execution import (
     ForecastEngineResult, ForecastExecutionPrediction, PreparedForecastInput, validate_engine_result,
@@ -14,10 +15,7 @@ from app.domain.forecasting.baseline import (
 def _validated_histories(prepared: PreparedForecastInput) -> tuple[
         PreparedForecastInput, dict[UUID, tuple[ObservedQuantity, ...]]]:
     prepared = PreparedForecastInput.model_validate(prepared)
-    histories: dict[UUID, list[ObservedQuantity]] = {p: [] for p in prepared.request.product_ids}
-    for row in prepared.observations:
-        histories[row.product_id].append((row.sales_date, row.quantity))
-    return prepared, {p: tuple(rows) for p, rows in histories.items()}
+    return prepared, usable_histories(prepared)
 
 
 def _readiness(histories: dict[UUID, tuple[ObservedQuantity, ...]]) -> tuple[BaselineProductReadiness, ...]:
@@ -42,5 +40,5 @@ def run_historical_quantile_baseline(prepared: PreparedForecastInput) -> Forecas
         p50=quantiles[p][1], p75=quantiles[p][2],
     ) for day in prepared.forecast_dates for p in prepared.request.product_ids)
     result = ForecastEngineResult(model_type=BASELINE_MODEL_TYPE, model_version=BASELINE_MODEL_VERSION,
-                                  artifact_identity=None, predictions=predictions)
+                                  artifact_identity=None, predictions=predictions, warnings=demand_warnings(prepared))
     return validate_engine_result(prepared, result)

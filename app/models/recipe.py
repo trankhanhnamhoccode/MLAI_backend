@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, ForeignKeyConstraint, Integer, Numeric, UniqueConstraint, func, text
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, ForeignKeyConstraint, Integer, Numeric, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import ExcludeConstraint, UUID as PostgreSQLUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,13 +21,14 @@ class Recipe(Base):
         CheckConstraint("effective_to IS NULL OR effective_to >= effective_from", name="ck_recipes_period"),
         CheckConstraint("yield_quantity > 0 AND yield_quantity NOT IN ('NaN'::numeric, 'Infinity'::numeric, '-Infinity'::numeric)", name="ck_recipes_yield"),
         CheckConstraint("process_loss_rate >= 0 AND process_loss_rate < 1", name="ck_recipes_loss"),
-        ExcludeConstraint(("product_id", "="), (text("daterange(effective_from, effective_to, '[]')"), "&&"), name="ex_recipes_product_period", using="gist"),
+        ExcludeConstraint(("product_id", "="), (text("daterange(effective_from, effective_to, '[]')"), "&&"), name="ex_recipes_product_period", using="gist", where=text("assigned")),
     )
 
     id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     store_id: Mapped[UUID] = mapped_column(ForeignKey("stores.id", name="fk_recipes_store", ondelete="RESTRICT"), nullable=False)
     product_id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), nullable=False)
     version: Mapped[int] = mapped_column(Integer, nullable=False)
+    assigned: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     effective_from: Mapped[date] = mapped_column(Date, nullable=False)
     effective_to: Mapped[date | None] = mapped_column(Date, nullable=True)
     yield_quantity: Mapped[Decimal] = mapped_column(Numeric(), nullable=False)

@@ -15,7 +15,7 @@ reads do not flush/commit caller work. No schema/API/unit conversion/BOM change.
 Fresh-session, atomic rollback, commit-failure, unit and ownership tests are in
 new test_operational_paths.py. See
 [APPLICATION_CONTRACTS](APPLICATION_CONTRACTS.md) and
-[S17_VERIFICATION](../runbooks/S17_VERIFICATION.md).
+[S17_VERIFICATION](../runbooks/FULL_TEST_FLOW.md).
 
 ## Original schema slice -- HISTORICAL INFORMATION
 
@@ -123,7 +123,7 @@ wrappers; syntax-only/platform runtime status is recorded in TESTING/CURRENT_STA
 
 Invalid writes fail with PostgreSQL integrity errors; malformed reversed date ranges
 may raise a range data error before CHECK evaluation. Roll back the failed transaction
-before retry. [DATABASE_RESET](../runbooks/DATABASE_RESET.md) documents guards.
+before retry. [DATABASE_RESET](../runbooks/FULL_TEST_FLOW.md) documents guards.
 Downgrade to 0002 drops only these four tables/data; re-upgrade recreates them.
 btree_gist is retained on downgrade because it may be preexisting/shared. Reset public
 recreates its extension objects through migration; local Compose role has permission.

@@ -14,6 +14,7 @@ from app.application.contracts.forecast_execution import (
 )
 from app.application.contracts.forecast_model import FEATURE_NAMES, MODEL_TYPE, MODEL_VERSION, ModelReadiness
 from app.domain.forecasting.features import feature_values
+from app.application.forecast_demand import usable_histories, demand_warnings
 
 
 class ModelNotReadyError(Exception):
@@ -46,8 +47,7 @@ def require_dependencies() -> None:
 
 
 def histories(prepared: PreparedForecastInput):
-    return {pid: tuple((r.sales_date, r.quantity) for r in prepared.observations if r.product_id == pid)
-            for pid in prepared.request.product_ids}
+    return usable_histories(prepared)
 
 
 def inference_readiness(prepared: PreparedForecastInput) -> tuple[ModelReadiness, ...]:
@@ -126,7 +126,8 @@ def require_compatible(model: QuantileModel, prepared: PreparedForecastInput) ->
     source = model.prepared
     if (source.request.store_id != prepared.request.store_id or source.products != prepared.products
             or source.timezone != prepared.timezone or source.request.product_ids != prepared.request.product_ids
-            or source.request.cutoff_date > prepared.request.cutoff_date):
+            or source.request.cutoff_date > prepared.request.cutoff_date
+            or source.demand_policy != prepared.demand_policy):
         raise ModelBoundaryError('ARTIFACT_SCOPE_OR_CUTOFF_INCOMPATIBLE')
 
 
@@ -155,7 +156,7 @@ def predict_quantiles(model: QuantileModel, prepared: PreparedForecastInput,
         negatives += negative
         outputs.append(ForecastExecutionPrediction(product_id=pid, forecast_date=day,
                        p25=values[0], p50=values[1], p75=values[2]))
-    warnings = []
+    warnings = list(demand_warnings(prepared))
     if crossing_keys or negatives:
         warnings.append(ForecastWarning(code='QUANTILE_POSTPROCESSING', severity='WARNING',
             field='predictions', entity='ForecastRun',

@@ -2,7 +2,7 @@ from datetime import date, datetime, timezone
 from typing import Annotated, Literal
 from uuid import UUID
 from pydantic import AwareDatetime, StringConstraints, field_validator, model_validator
-from app.application.contracts.common import Contract, FiniteDecimal, Metadata, Nonblank, NonnegativeDecimal, PositiveDecimal, Unit
+from app.application.contracts.common import Contract, FiniteDecimal, Metadata, Nonblank, NonnegativeDecimal, MoneyDecimal, PositiveDecimal, Unit
 
 MovementType = Literal['RECEIPT', 'USAGE', 'WASTE', 'EXPIRED', 'COUNT_CORRECTION', 'MANUAL_ADJUSTMENT']
 
@@ -34,7 +34,7 @@ class ReceiveInventoryInput(MovementMetadata):
     expiry_date: date | None = None
     quantity: PositiveDecimal
     unit: Unit
-    unit_cost: NonnegativeDecimal | None = None
+    unit_cost: MoneyDecimal | None = None
 
     @model_validator(mode='after')
     def expiry_order(self) -> 'ReceiveInventoryInput':

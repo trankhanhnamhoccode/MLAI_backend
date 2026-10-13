@@ -1,5 +1,220 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
+## CURRENT FACT — integrated head0024
+
+One head `0024_integrate_import_auth`, parents0021_import_support_history and
+0023_auth_permissions_v3, branching from0017 via Import0019 and Auth0018/0020/0022.
+Metadata registers64 application tables,65 including Alembic. Auth account/token/
+invitation models and Import history/stockout models are composed together.
+
+Both0021/0023 upgrades replace ck_membership_grants_catalogue with the identical
+43-key v3 CHECK and retain grants. Integration-only downgrade repairs walk applied
+heads and ancestry: if the companion v3 revision remains, keep v3 and its grants.
+The last v3 revision refuses downgrade with any six-key grant retained; otherwise
+restores v2. Import history retention independently blocks0021 downgrade. No stamp,
+backfill, grant deletion or historical v1.0 revision rewrite. A merge alone cannot
+fix intermediate traversal, hence only the two unreleased branch revisions receive
+this repair, only in integration; source trees stay intact.
+
+Verified0017→either head→both→0024, both orders, metadata/default parity and partial/
+final downgrade on the integration DB. [Traversal tests](../tests/integration/test_integrated_migrations.py)
+assert retained grants unchanged and v2 rejects new keys after an evidence-free rollback.
+Branch inventories below are historical; Gmail demo/Import/Auth/development/shared
+DBs are not migrated. Commands and gate results: [runbook](runbooks/FULL_TEST_FLOW.md).
+
+## HISTORICAL INFORMATION — Import126b0f2 migration0021
+
+`0021_import_support_history`, parent `0019_sales_stockout`, creates one
+purpose-specific append-only `import_history_records` table for four typed domains.
+UUID id, Store RESTRICT FK, domain/source_system_key/report_type/source_record_key,
+SHA-256 key hash, positive version, typed payload/provenance JSONB and explicit
+recorded_at are required. Unique Store/domain/source/report/hash/version prevents
+duplicate revision; JSON object/domain checks and immutable UPDATE/DELETE trigger
+protect retained evidence. Application pins the full unhashed key, verifies Store
+entity/unit/date/basis identity and uses existing table/read-set fences atomically.
+No balance, movement, receipt, inbound or SupplierTerm writes originate here.
+
+The migration expands membership_grants catalogue CHECK to 43 permissions-v3 keys;
+it inserts no grants or business rows. Downgrade refuses retained history or newly
+granted permission evidence. Current Import metadata has61 application tables (62 with Alembic).
+
+HISTORICAL INFORMATION at Import126b0f2: both heads independently replaced the
+same CHECK and restored v2 on downgrade. That overlap was open at the source
+snapshot; the integration-only repairs and verified traversal are described above.
+Original acceptance used shelfcash_import_test/shelfcash_import_tester, not Auth,
+development or shared DBs.
+
+## HISTORICAL INFORMATION — Auth0fbb979 B2/B3/B4 schema
+
+Auth source head `0023_auth_permissions_v3` has parent `0022_invitation_decline`,
+then `0020_password_reset_delivery` (parent0018); Import owns0019/0021 separately.
+No historical revisions are edited or heads merged. Metadata has63 application
+tables,64 with Alembic; this inventory does not mean the Gmail demo was migrated.
+
+B2 adds password_reset_deliveries: encrypted durable transport per canonical
+RESET credential token, email/proof binding, claim/lease/attempts/expiry/outcome.
+It reuses credential_tokens and stores no plaintext token. N7 atomically changes
+the credential and revokes sessions. Downgrade refuses RESET delivery evidence.
+
+B3 adds nullable staff_invitations.declined_at and extends the status CHECK with
+declined. Existing tokens/versions/grants and the pending-only unique index stay
+intact. Terminal state consumes mutation capability while retaining digest proof
+for holder offer reads/replay. Transition, DECLINED event and existing idempotency
+receipt commit atomically, with no membership/grants write or new table.
+Downgrade refuses retained declined state/event/receipt evidence.
+
+B4 extends only ck_membership_grants_catalogue to the43 approved v3 keys.
+No grants, memberships, invitation versions or token bindings are backfilled.
+Downgrade to0022 refuses retained grants using the six new keys. Import0021 also
+extends this same CHECK alongside its history tables: central BE integration must
+reconcile the overlapping catalogue constraint and migration graph explicitly;
+this Auth worktree does not merge heads or import those domain tables.
+
+## HISTORICAL INFORMATION — B1 migration0018 inventory
+
+`0018_email_verification` has parent `0017_planning_exports`, coordinated for the
+Auth worktree. Two account-scoped tables: email_verification_tokens (digest-only
+EMAIL_VERIFY purpose, email/proof/credential binding, expiry/consumption) and
+email_verification_deliveries (one encrypted transport intent/token, claim/lease,
+attempts/outcome/safe error code). No invitation/Store/membership/grants backfill.
+AuthAccount proof fields may be NULL together for an unverified credential-unset
+account; a CHECK enforces that state. Existing verified proofs stay unchanged;
+proof_revision defaults to1 and application proof writers advance it. Current
+metadata has62 application tables,63 with Alembic; one head0018. Synthetic tests
+compare ORM/Alembic metadata and fresh committed state. Development DB is untouched.
+Downgrade refuses retained verification tokens/delivery or unverified accounts;
+operational evidence is not disposable test output. Configuration/flow belongs to
+[Auth feature](features/AUTH_SESSION.md), product policy to [Authorization](AUTHORIZATION_CONTRACT_VI.md#auth-self-service).
+
+## HISTORICAL INFORMATION — S4.10 migration0017
+
+One additive purpose-specific planning_exports aggregate: export/job/Run/Store/
+actor UUID identity, canonical accepted request/original receipt, key/request
+digests, revision, lifecycle/claim/attempt, retained artifact SHA/size proof.
+Actor/Store/Run/key uniqueness serializes replay; queue/history indexes support
+bounded scans and existing Run history. ImportJob retains its mandatory Import
+identity. No broker/generic-job table or business backfill. Head0017_planning_exports,
+61 tables including Alembic. Empty down/up preserves populated older Run JSON;
+any retained export intent prevents downgrade. ORM/Alembic metadata diff is empty.
+Schema and affected persistence evidence: [current verification runbook](runbooks/FULL_TEST_FLOW.md).
+
+## HISTORICAL INFORMATION — S4.8 migration0016
+
+Eight additive tables: planning_defaults, planning_budgets, saved_requirements,
+planning_configuration_events, planning_configuration_revisions,
+planning_configuration_receipts, model_serving_configurations,
+forecast_serving_identities. Store foreign keys restrict deletion; serving
+identities use a composite ForecastRun/Store FK. Saved original creator and
+creation time are immutable. Revision/audit/receipt/serving-identity triggers
+reject UPDATE/DELETE. Historical values are retained in fixed typed JSON shapes.
+Operator events have no fabricated customer actor. Config mutations serialize
+through Store locking; saved active Product references use a Product write fence.
+No backfill; downgrade refuses any configuration or retained evidence. Head0016,
+60 tables including Alembic, verified by clean roundtrip and full ORM metadata
+comparison on exact local shelfcash_test. See S48 notes and feature walkthrough.
+
+
+## CURRENT FACT — S4.6 operational evidence, migration0014
+
+Eight additive tables: supplier_source_records, term_source_records,
+payable_fee_records, scope_declaration_records, inventory_receipt_records,
+inventory_thresholds, stock_request_receipts, inventory_audit.
+Typed Import models validate payloads before transaction-owned writers; JSONB holds
+fixed discriminated fee/declaration/source shapes and provenance, not arbitrary
+canonical extension dictionaries. Source record SHA-256 keys keep Unicode identities
+within PostgreSQL index limits; raw identity is preserved/compared, no name dedup.
+SupplierTerm/InventoryMovement gain id+Store unique keys for composite scoped evidence
+FKs. Seven evidence tables reject UPDATE/DELETE; threshold is audited mutable CAS.
+Fee period closing appends evidence revision, term closing only sets reviewed end;
+no price rewrite/backfill/implicit readiness facts. Inventory dependency binds approved
+scope to exact unchanged lots; N6 creates genuine lot+movement+actor/source identity.
+S4.5 sources remain in immutable Import canonical audit; no rewrite/migration of
+historical receipts. S4.8 consumes declarations later; no readiness evaluator here.
+[Feature](features/IMPORT_INVENTORY_SUPPLIER.md), [evidence](runbooks/FULL_TEST_FLOW.md).
+
+
+## S4.4 — CURRENT FACT / additive staging only
+
+Migration0013_import_staging adds import_batches/import_blobs/import_files/
+import_profiles/import_profile_versions/import_source_contexts/import_jobs/
+import_previews/import_receipts/import_audit (41 non-Alembic tables total).
+Store-scoped immutable bounded bytea blobs; receipt/audit/evidence/sealed-source
+guards; proposals/current job metadata revisioned mutable. No backfill/canonical
+writes. Test-only downgrade0012→upgradehead preserves canonical rows; development
+DB untouched. See [Import staging](features/IMPORT_STAGING_PREVIEW.md); prior table counts below
+are historical slice-time inventory. No canonical fee/completeness storage yet.
+## S4.3 ? CURRENT FACT / additive optimistic read metadata
+
+Migration0012_public_read_revisions adds public_read_revisions: Store PK/FK
+(CASCADE metadata cleanup), three BIGINT revision counters, default1. Total31
+non-Alembic tables plus Alembic. Existing Stores initialized with metadata only,
+not business completeness/cost/threshold/ownership data. AFTER source row triggers
+on Stores/Products/Ingredients/Recipes/RecipeLines/Lots/Movements advance relevant
+counters atomically; INSERT/DELETE/ABA detected, rollback does not invalidate.
+No business writes on public GET. REPEATABLE READ READ ONLY projections and signed
+keysets implement optimistic snapshots; no transaction retained across requests.
+See PUBLIC_MENU_INVENTORY_READS and historical scope notes (retired). Downgrade removes only this
+metadata/function/triggers, tested only on shelfcash_test; development DB untouched.
+
+## S4.2 — CURRENT FACT / additive Staff workflow storage
+
+Migration0011_staff_invitations adds staff_invitations (Store/email/issuer/offer,
+token digest/revision/expiry/state), permission_events, invitation_events,
+staff_request_receipts (actor/Store/operation/key/body-CAS digest) and encrypted
+invitation_delivery_intents (attempt/claim/expiry/ciphertext/outcome). Total30
+business tables plus Alembic. History/receipt tables reject UPDATE/DELETE through
+append-only triggers; invitation mutation is via fenced use cases. One pending
+invitation per Store/email partial unique index. No ownership/grants backfill;
+existing S4.1 revision and S1/S2/S3 schema/lifecycle unchanged. Application accept
+atomically writes exact grants + membership + transition + audits + receipt.
+See STAFF_PERMISSIONS_INVITATIONS and historical scope notes (retired) for retention/delivery limits.
+
+## S4.1 — CURRENT FACT / additive authentication storage
+
+Migration0010_auth_sessions adds six tables: auth_accounts (verified operator
+attestation and usable-credential/revision state), auth_sessions (digest-only
+session identity/CSRF/idle/absolute/revocation), credential_tokens (digest/purpose/
+revision/expiry/consumption), membership_grants (per-membership canonical action
+keys), auth_audit (non-secret support/credential/session references) and
+auth_rate_limits (hashed fixed-window keys). Total25 business tables plus Alembic.
+No ownership/grants backfill; S1 reserved delegated_permissions=[] remains enforced.
+StoreMembership gains authorization_revision with server default1; membership
+active/role and grant-row changes advance it through PostgreSQL triggers, preventing
+ABA versions. Existing identity/Store access and create contracts retain defaults.
+An AFTER User.active deactivation trigger revokes only new auth_sessions, atomically;
+no run mutation or business computation trigger. Downgrade drops new auth tables
+and trigger only, destroys their history; development DB untouched in this task.
+S4.2 invitation/grant mutation/audit projections not exposed. Earlier sections
+describe their original slice-time semantics; current auth is documented in
+[AUTH_SESSION](features/AUTH_SESSION.md), evidence in historical scope notes (retired).
+
+## S3.6.4 — CURRENT FACT / additive planning storage
+
+Migration `0009_planning_runs` adds only `planning_runs`: UUID id (the single public
+run_id), Store/User RESTRICT FKs, C02 operation, actor+Store+operation+key-digest
+unique constraint, request/record SHA-256, status, accepted_at, revision and object
+JSONB record. Typed planning_storage/1/package1 holds original request/resolution/
+receipt plus optional claim/capture/result/errors/times. Separate capture/result
+digests are verified with the full aggregate. No S1 table, state/check or package
+version is changed; historical DecisionRun still requires a winner on completion.
+There are nineteen business tables at this head (twenty including Alembic).
+No auth/membership enforcement, immutability trigger or expiry/delete writer.
+Direct privileged SQL can bypass application guards. No development migration.
+Downgrade drops only this new planning history; no backfill/destructive upgrade.
+[ADR-022](adr/ADR-022-internal-durable-planning.md) and
+[feature](features/PLANNING_RUN.md) describe lifecycle/read verification and limits.
+The absence/head/table-count statements below describe their original slice states.
+
+CURRENT FACT (S3.3): no table/migration change. ADR-017 accepts future completed
+evaluation without winner; schema/lifecycle evolution is deferred, not implemented.
+S1 COMPLETED winner requirement remains enforced.
+
+CURRENT FACT (S3.1): no table/migration change. New opt-in typed decision shapes
+exist in application/contracts/decision_execution.py and decision_package.py; S1 DecisionRun opaque JSON
+writers retain their existing storage contract. Typed-package persistence wiring,
+input hashing/retention/replay and engine-level validation are not implemented.
+See DECISION_DESIGN and ADR-016; existing PostgreSQL head remains 0008.
+
 **CURRENT FACT:** S1.1 implements `users`, `stores`, `store_memberships`; S1.2 adds
 `products`, `ingredients`, `recipes`, `recipe_lines`. S1.3 adds `suppliers`,
 `supplier_terms`, `sales_daily`, `inventory_lots`, `inventory_movements`,
@@ -306,6 +521,15 @@ inputs only, not an implemented procurement/unit-conversion calculation.
 
 ### sales_daily
 
+CURRENT FACT A1 (verified on owned `shelfcash_import_test`): additive nullable
+BOOLEAN `is_stockout`, no default/backfill. True is observed product stockout,
+false known uncensored, null unknown. Quantity remains observed sales; immutable
+Import audit retains contribution revisions/evidence and canonical before/after.
+Forecast JSON captures derived demand separately. Migration `0019_sales_stockout`
+has parent `0017_planning_exports`, no Auth dependency. Upgrade only adds the column;
+downgrade refuses any non-null observation, including false. Upgrade and retention
+guard are verified using fresh Sessions; no development or Auth DB migration here.
+
 Purpose: one canonical daily sales total, not additive source observations.
 
 | Column | Type | Rule |
@@ -314,13 +538,15 @@ Purpose: one canonical daily sales total, not additive source observations.
 | product_id | UUID | FK (product_id,store_id) -> products(id,store_id) |
 | sales_date | DATE | Canonical business sales day; timezone cutoff conversion not implemented |
 | quantity | NUMERIC | Finite >=0 in Product.selling_unit |
+| is_stockout | BOOLEAN nullable | Observed stockout true / known uncensored false / unknown null; no default/backfill |
 
 PK id; `fk_sales_daily_product_store`, `uq_sales_daily_store_product_date`
 (store_id,product_id,sales_date), `ck_sales_daily_quantity`. Unique index supports
 store/product/day lookup; no source/import/filename in identity. No unnecessary
 revenue/promotion fields. A source quantity 100 changed to 105 is CHANGED under
-ADR-008, not a second row or total 205. Correction workflow/audit remains future;
-direct persisted state is mutable, not a Sales correction implementation.
+ADR-008, not a second row or total 205. Import correction/confirmed independent
+contribution workflow retains immutable source revisions and canonical before/after
+in Import audit. The materialized daily row remains mutable; it is not event sourcing.
 
 ### inventory_lots
 
@@ -612,7 +838,7 @@ not an invented framework/column now. Hashing/input retention is not implemented
 What-if remains non-persistent by default; no extra tables/services/APIs are added.
 Full shapes remain future application contracts; DB only checks minimal presence/object
 shape. Downgrade 0006->0005 drops exactly these three tables/history. Tests and manual
-inspection are in FORECAST, DECISION_RUN and S14_VERIFICATION.
+inspection are in FORECAST, DECISION_RUN and [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md).
 
 CURRENT FACT (S1.6): schema is unchanged. Application paths now enforce prediction
 horizon/Product membership, completed same-store forecast consumption, terminal
@@ -648,3 +874,16 @@ trigger. S1 and S2.3 runs need no row. Model binary/text stays local; run.artifa
 is actual immutable model identity, metrics_json is not warning/provenance storage.
 Downgrade 0008 drops this table only, losing warning/selection audit; export first.
 Development DB is not automatically migrated. Tests own only shelfcash_test.
+
+
+## CURRENT FACT — S4.7 / migration0015
+
+`recipes.assigned` boolean NOT NULL DEFAULT true giữ header/content/dates của
+recipe đã withdraw làm evidence; chỉ assigned rows thuộc inclusive exclusion và
+operational dated capture. Không nullable hóa ngày đầu vào domain, không xóa
+version/lines. `recipe_schedule_changes` giữ proposal/preview và completion/audit;
+`recipe_schedule_request_receipts` giữ replay evidence theo phase/actor/Store/Product.
+DB guards chặn sửa retained proposal, completed receipt/audit và request receipt.
+Downgrade0015 từ chối nếu tồn tại evidence hoặc unassigned content; clean roundtrip
+được kiểm trên shelfcash_test, không migrate development DB. Exact ORM/schema,
+manual flow và verification ở [current verification runbook](runbooks/FULL_TEST_FLOW.md).

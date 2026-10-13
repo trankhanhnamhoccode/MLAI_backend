@@ -136,7 +136,7 @@ Direct privileged ORM/SQL can still bypass application history policy.
 
 ## Tests and manual verification -- CURRENT FACT
 
-Follow [S16 verification](../runbooks/S16_VERIFICATION.md) and
+Follow [current verification runbook](../runbooks/FULL_TEST_FLOW.md) and
 [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md). Unit contracts reject bad shape before
 writes; integration uses actual isolated shelfcash_test, two Stores and fixed fixtures.
 It verifies close/fresh-session persistence, typed copied outputs, scoped/temporal
@@ -221,8 +221,8 @@ extension, DB trigger, dependency, table or migration was needed in S1.7.
 
 ### S1.7 verification -- CURRENT FACT
 
-See [S17_VERIFICATION](../runbooks/S17_VERIFICATION.md) and
-[S17_TASK_NOTES](../runbooks/S17_TASK_NOTES.md). New unit/integration coverage includes
+See [S17_VERIFICATION](../runbooks/FULL_TEST_FLOW.md) and
+[historical scope notes (retired)](../runbooks/FULL_TEST_FLOW.md). New unit/integration coverage includes
 shape/precision/domain independence; scoped exact Decimal writes; atomic Recipe
 header+lines; receipt and correction rollback after real flush; every new writer's
 commit failure/caller transaction preservation; read no-autoflush/no-commit;

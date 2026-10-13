@@ -1,4 +1,6 @@
 from alembic import context
+from sqlalchemy import text
+from sqlalchemy.engine import make_url
 
 from app.config import Settings
 from app.infrastructure.database.base import Base
@@ -21,9 +23,21 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    engine = create_database_engine(Settings())
+    settings = Settings()
+    url = make_url(settings.database_url)
+    # Test migrations, including subprocess callers, recheck effective identity.
+    # Normal development/demo migration behavior is unchanged.
+    if settings.environment == "test":
+        from scripts.dev import validate_reset_target
+        validate_reset_target(settings)
+    engine = create_database_engine(settings)
     try:
         with engine.connect() as connection:
+            if settings.environment == "test":
+                identity = connection.execute(text('SELECT current_database(), current_user')).one()
+                if identity[0] != url.database or (url.database == 'shelfcash_integration_test' and identity[1] != url.username):
+                    raise ValueError('Effective test migration identity mismatch')
+                connection.rollback()
             context.configure(
                 connection=connection,
                 target_metadata=target_metadata,

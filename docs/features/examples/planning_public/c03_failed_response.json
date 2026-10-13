@@ -1,0 +1,99 @@
+{
+  "data": {
+    "run_id": "789d7611-35ba-4763-9624-1dcd51e6688e",
+    "store_id": "0e6b1532-26ba-4a35-b6bd-48ff3d553965",
+    "status": "failed",
+    "outcome": "execution_error",
+    "accepted_at": "2026-10-10T02:00:00Z",
+    "started_at": "2026-10-10T02:00:00Z",
+    "finished_at": "2026-10-10T02:00:00Z",
+    "response_version": "8b9936805daf7c7d89d60e4533b80985e71f6d1880f0fe998bbe83b1957811c7",
+    "request": {
+      "requirements_mode": "default",
+      "forecast_start_date": "2026-10-10",
+      "default_requirements_version": "default-1"
+    },
+    "configuration": {
+      "requirements_mode": "default",
+      "effective_requirements": {
+        "paths": [
+          {
+            "path": "BASE",
+            "min_fill_rate_percent": "95",
+            "product_overrides": []
+          }
+        ],
+        "budget_limit": null
+      },
+      "budget": {
+        "limit": "100",
+        "currency": "VND",
+        "ceiling_at_acceptance": "100",
+        "ceiling_version": "afa124e1-8f43-4122-acb4-dc8fba813315"
+      },
+      "default_version": "default-1",
+      "saved_reference": null,
+      "policy_version": "procurement_api_policy/1"
+    },
+    "operational_basis": {
+      "version": "operational_basis/1",
+      "kind": "CURRENT_CAPTURE",
+      "captured_at": "2026-10-10T02:00:00Z",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "local_capture_date": "2026-10-10",
+      "planning_start_date": "2026-10-10",
+      "assumptions": [
+        "CURRENT_BALANCES_NOT_HISTORICAL_AS_OF",
+        "NO_INTERVENING_STOCK_EVOLUTION",
+        "ORIGINAL_RECEIPT_EXPIRY_DATES",
+        "NO_ADDITIONAL_ORDERS"
+      ]
+    },
+    "forecast": {
+      "forecast_run_id": "36057eb0-3710-4fd5-a553-212844a5534b",
+      "input_digest": "cf16802a49752c8f62244f825f2cda7d88ee8d99c7df68e7426533d08374febf",
+      "model_type": "historical_quantile_baseline",
+      "model_version": "1",
+      "artifact_identity": null,
+      "start_date": "2026-10-10",
+      "end_date": "2026-10-16",
+      "history_start_date": "2026-10-09",
+      "history_end_date": "2026-10-09",
+      "training_start_date": "2026-10-09",
+      "training_end_date": "2026-10-09",
+      "reused": false,
+      "quality_status": "not_evaluated",
+      "warnings": []
+    },
+    "scope": {
+      "menu_products": [
+        {
+          "product_id": "319dad12-d8e6-413c-a7cc-4e78e3468487",
+          "name": "Synthetic tea",
+          "selling_unit": "cup"
+        }
+      ],
+      "computed_product_ids": [
+        "319dad12-d8e6-413c-a7cc-4e78e3468487"
+      ],
+      "excluded_products": [],
+      "menu_count": 1,
+      "computed_count": 1,
+      "coverage_status": "full"
+    },
+    "execution": null,
+    "result": null,
+    "errors": [
+      {
+        "code": "EXECUTION_DEADLINE_EXCEEDED",
+        "message": "Execution deadline exceeded.",
+        "details": {}
+      }
+    ]
+  },
+  "meta": {
+    "warnings": [],
+    "poll_after_ms": 0
+  },
+  "error": null
+}

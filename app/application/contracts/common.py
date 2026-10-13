@@ -2,7 +2,7 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, JsonValue, RootModel, StringConstraints, model_validator
+from pydantic import BaseModel, BeforeValidator, AfterValidator, ConfigDict, Field, JsonValue, RootModel, StringConstraints, model_validator
 from decimal import Decimal
 
 
@@ -20,6 +20,18 @@ def exact_decimal(value: object) -> object:
 NonnegativeDecimal = Annotated[Decimal, BeforeValidator(exact_decimal), Field(ge=0, allow_inf_nan=False)]
 PositiveDecimal = Annotated[Decimal, BeforeValidator(exact_decimal), Field(gt=0, allow_inf_nan=False)]
 FiniteDecimal = Annotated[Decimal, BeforeValidator(exact_decimal), Field(allow_inf_nan=False)]
+
+
+def monetary(value: Decimal) -> Decimal:
+    from app.domain.money import within_money_bounds
+    if not within_money_bounds(value):
+        raise ValueError('MONEY_BOUNDS_EXCEEDED')
+    rendered = format(value, 'f')
+    # Exact removal of insignificant trailing zeros, never context-sensitive round.
+    return Decimal(rendered.rstrip('0').rstrip('.') if '.' in rendered else rendered)
+
+
+MoneyDecimal = Annotated[NonnegativeDecimal, AfterValidator(monetary)]
 Name = Annotated[str, StringConstraints(min_length=1, max_length=200, pattern=r'\S')]
 Unit = Annotated[str, StringConstraints(min_length=1, max_length=32, pattern=r'\S')]
 Sku = Annotated[str, StringConstraints(min_length=1, max_length=64, pattern=r'\S')]

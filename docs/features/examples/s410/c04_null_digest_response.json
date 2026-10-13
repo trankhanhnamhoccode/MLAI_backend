@@ -1,0 +1,33 @@
+{
+  "data": {
+    "run_id": "48c63dbb-b507-4e1b-95a5-810c26299dcd",
+    "result_digest": null,
+    "selected_option_id": null,
+    "selection_status": "not_selected",
+    "items": [
+      {
+        "ingredient_id": "08192ef7-90d4-4ea4-bca1-88a07bcf0e7e",
+        "unit": "ml",
+        "display_name": "Synthetic milk",
+        "name_availability": "captured",
+        "purchase_quantity": null,
+        "purchase_line_count": null,
+        "path_balances": null,
+        "issues": [],
+        "detail_available": true
+      }
+    ]
+  },
+  "meta": {
+    "request_id": "29c0f20f-413a-464a-bd4c-bb604e48b995",
+    "run_id": "48c63dbb-b507-4e1b-95a5-810c26299dcd",
+    "result_digest": null,
+    "response_version": "b10886e6b9494651f877d4867c80b3f4d439175db14c75b36e0d1151a0d0b2f0",
+    "pagination": {
+      "limit": 50,
+      "next_cursor": null,
+      "total_count": 1
+    }
+  },
+  "error": null
+}

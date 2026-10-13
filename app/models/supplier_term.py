@@ -14,6 +14,7 @@ class SupplierTerm(Base):
 
     __tablename__ = "supplier_terms"
     __table_args__ = (
+        UniqueConstraint("id", "store_id", name="uq_supplier_terms_id_store"),
         ForeignKeyConstraint(["supplier_id", "store_id"], ["suppliers.id", "suppliers.store_id"], name="fk_supplier_terms_supplier_store", ondelete="RESTRICT"),
         ForeignKeyConstraint(["ingredient_id", "store_id", "unit"], ["ingredients.id", "ingredients.store_id", "ingredients.base_unit"], name="fk_supplier_terms_ingredient_store_unit", ondelete="RESTRICT"),
         UniqueConstraint("supplier_id", "ingredient_id", "version", name="uq_supplier_terms_pair_version"),

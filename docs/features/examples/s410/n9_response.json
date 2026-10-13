@@ -1,0 +1,37 @@
+{
+  "data": {
+    "items": [
+      {
+        "run_id": "b49ee559-5b06-4111-bdf4-9720155c3f7e",
+        "store_id": "26438c49-3eed-4d01-82bb-9d57e896d118",
+        "status": "queued",
+        "accepted_at": "2026-10-10T02:00:00Z",
+        "started_at": null,
+        "completed_at": null,
+        "forecast_start_date": "2026-10-10",
+        "forecast_end_date": "2026-10-16",
+        "requirements_mode": "default",
+        "created_by": {
+          "user_id": "4a92d6c9-93a8-4dc1-ac2d-4f7445a8f506",
+          "display_name": null
+        },
+        "winner_option_id": null,
+        "outcome": null,
+        "error_code": null,
+        "result_schema_version": null,
+        "result_digest": null,
+        "record_version": "12aebcd0cee6d71cb6e9535a830342903105557ed8dad30e3f4b3b7a15db924d"
+      }
+    ]
+  },
+  "meta": {
+    "request_id": "8824952a-8f56-4916-9076-facb128d22ad",
+    "snapshot_id": "run-list-ae7de3e342fff866c0d35ffcc50281ac1133202e30bdf44f63936937c7e390c6",
+    "pagination": {
+      "limit": 1,
+      "next_cursor": "eyJpZGVudGl0eSI6WyI0YTkyZDZjOS05M2E4LTRkYzEtYWMyZC00Zjc0NDVhOGY1MDYiLCIyNjQzOGM0OS0zZWVkLTRkMDEtODJiYi05ZDU3ZTg5NmQxMTgiLCJhdXRoLTk2MGVkZmE2MDU2NmI2OTk5NGZiZDk0ZjgzNmE1YmUzZTdmZWQ5YTVmNWRiYTBlMmY0YTFjNTFmNGQ1NTFhN2EiLFtdLG51bGwsbnVsbCwxXSwic25hcHNob3QiOiJydW4tbGlzdC1hZTdkZTNlMzQyZmZmODY2YzBkMzVmZmNjNTAyODFhYzExMzMyMDJlMzBiZGY0NGY2MzkzNjkzN2M3ZTM5MGM2Iiwib2Zmc2V0IjoxfQ.47646200200df5aa0a6e57a4f6ed9c09e5c9245bb529d10054c80878809e88ff",
+      "total_count": 3
+    }
+  },
+  "error": null
+}

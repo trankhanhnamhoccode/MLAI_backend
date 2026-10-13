@@ -17,11 +17,7 @@ class SalesUseCases:
         require_idle_session(self.session)
         try:
             self.session.begin()
-            require_product(self.session, data.store_id, data.product_id)
-            row = SalesDaily(**data.model_dump())
-            self.sales.add_sales_record(data.store_id, row)
-            self.session.flush()
-            result = SalesResult.model_validate(row)
+            result = self.record_in_transaction(data)
             self.session.commit()
             return result
         except IntegrityError as error:
@@ -33,6 +29,28 @@ class SalesUseCases:
         except Exception:
             self.session.rollback()
             raise
+
+    def record_in_transaction(self, data: RecordDailySalesInput) -> SalesResult:
+        """Caller owns transaction, including Import receipt and rollback."""
+        data = RecordDailySalesInput.model_validate(data)
+        require_product(self.session, data.store_id, data.product_id)
+        row = SalesDaily(**data.model_dump())
+        self.sales.add_sales_record(data.store_id, row)
+        self.session.flush()
+        return SalesResult.model_validate(row)
+
+    def replace_in_transaction(self, data: RecordDailySalesInput) -> SalesResult:
+        """Explicit Import correction only after frozen before/read-set authority checks."""
+        data = RecordDailySalesInput.model_validate(data)
+        require_product(self.session, data.store_id, data.product_id)
+        row = self.sales.get_daily_sale(data.store_id, data.product_id, data.sales_date)
+        if row is None:
+            from app.application.errors import ApplicationError, ErrorCategory
+            raise ApplicationError(ErrorCategory.NOT_FOUND, 'Daily sales not found in Store')
+        row.quantity = data.quantity
+        row.is_stockout = data.is_stockout
+        self.session.flush()
+        return SalesResult.model_validate(row)
 
     def history(self, data: GetSalesHistoryInput) -> tuple[SalesResult, ...]:
         data = GetSalesHistoryInput.model_validate(data)

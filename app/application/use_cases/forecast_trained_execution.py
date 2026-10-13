@@ -18,6 +18,7 @@ from app.application.contracts.forecast_execution import (
 )
 from app.application.contracts.forecast_model import ExecutionDetails, ModelForecastRunResult, MODEL_TYPE, MODEL_VERSION
 from app.application.forecast_serialization import serialize_prepared, restore_prepared, RetainedInputError
+from app.application.forecast_demand import demand_warnings
 from app.application.errors import ApplicationError, ErrorCategory
 from app.application.use_cases.forecast import ForecastUseCases
 from app.application.use_cases.forecast_baseline import assess_baseline_readiness, run_historical_quantile_baseline
@@ -58,9 +59,15 @@ class TrainedForecastExecutionUseCases(ForecastExecutionUseCases):
     def _details(self, session: Session, reference: RunReferenceInput) -> ExecutionDetails:
         row = ForecastExecutionMetadataRepository(session).get(reference.store_id,reference.run_id)
         if row is None:
-            # S2.3 baseline runs have no metadata; retain their original warning-free behavior.
+            # Direct baseline runs have no execution row. V1 stays warning-free;
+            # V2 warnings are determined exclusively from their retained capture.
             run = ForecastRepository(session).get_forecast_run(reference.store_id,reference.run_id)
             if run is not None and run.model_type == BASELINE_MODEL_TYPE:
+                row = ForecastInputRepository(session).get_input(reference.store_id, reference.run_id)
+                if row is not None:
+                    prepared = restore_prepared(row.prepared_json, row.serialization_version, row.digest)
+                    return ExecutionDetails(selection_reason='LEGACY_BASELINE' if prepared.schema_version == 1 else 'BASELINE_SELECTED',
+                        warnings=demand_warnings(prepared))
                 return ExecutionDetails(selection_reason='LEGACY_BASELINE')
             raise RetainedInputError('EXECUTION_METADATA_UNAVAILABLE')
         return ExecutionDetails.model_validate(row.details_json)
@@ -116,8 +123,9 @@ class TrainedForecastExecutionUseCases(ForecastExecutionUseCases):
     def _compute(self, prepared: PreparedForecastInput, choice: ExecutionChoice) -> ExpectedCompletion:
         if choice.artifact is None:
             result = run_historical_quantile_baseline(prepared)
-            result = ForecastEngineResult(**(result.model_dump() | {'warnings':choice.details.warnings}))
-            return ExpectedCompletion(validate_engine_result(prepared,result),choice.details)
+            result = ForecastEngineResult(**(result.model_dump() | {'warnings':choice.details.warnings + result.warnings}))
+            details = ExecutionDetails(**(choice.details.model_dump() | {'warnings': result.warnings}))
+            return ExpectedCompletion(validate_engine_result(prepared,result),details)
         result,crossings,negatives = predict_quantiles(choice.artifact.model,prepared,choice.artifact.identity)
         details = ExecutionDetails(**(choice.details.model_dump() | dict(raw_crossings=len(crossings),
             negative_values=negatives,warnings=result.warnings)))
@@ -244,8 +252,11 @@ class TrainedForecastExecutionUseCases(ForecastExecutionUseCases):
         artifact = self.artifacts.load(run.artifact_key) if run.model_type == MODEL_TYPE else None
         if artifact is not None:
             require_compatible(artifact.model,prepared)
+        # Baseline recomputes demand warnings from the immutable capture. Retained
+        # metadata already includes them; carry only selection warnings into math.
+        captured_warnings = demand_warnings(prepared)
         initial = ExecutionDetails(**(details.model_dump() | dict(raw_crossings=0,negative_values=0,
-            warnings=() if artifact else details.warnings)))
+            warnings=() if artifact else tuple(w for w in details.warnings if w not in captured_warnings))))
         return prepared,ExecutionChoice(artifact,initial)
 
     def replay(self, reference: RunReferenceInput) -> ForecastEngineResult:

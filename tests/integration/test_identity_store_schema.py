@@ -1,4 +1,5 @@
 """Real PostgreSQL schema integrity and fresh-session persistence for S1.1."""
+from sqlalchemy.engine import make_url
 from collections.abc import Iterator
 from datetime import timedelta
 from uuid import UUID, uuid4
@@ -35,15 +36,15 @@ def create_parents(engine: Engine) -> tuple[UUID, UUID]:
     return identifiers
 
 
-def test_schema_exact_tables_constraints_indexes_and_metadata(engine: Engine) -> None:
+def test_schema_exact_tables_constraints_indexes_and_metadata(engine: Engine, test_database_url) -> None:
     import app.models
     from app.infrastructure.database.base import Base
 
     inspector = inspect(engine)
-    assert sorted(inspector.get_table_names(schema="public")) == [
-        "alembic_version", "business_constraints", "decision_runs", "forecast_execution_metadata", "forecast_predictions", "forecast_run_inputs", "forecast_runs", "ingredients", "inventory_lots", "inventory_movements", "products", "recipe_lines", "recipes", "sales_daily", "store_memberships", "stores", "supplier_terms", "suppliers", "users",
-    ]
-    assert set(Base.metadata.tables) == {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints", "forecast_runs", "forecast_predictions", "decision_runs", "forecast_run_inputs", "forecast_execution_metadata"}
+    assert sorted(inspector.get_table_names(schema="public")) == sorted([
+        "alembic_version", "business_constraints", "decision_runs", "forecast_execution_metadata", "forecast_predictions", "forecast_run_inputs", "forecast_runs", "ingredients", "inventory_lots", "inventory_movements", "planning_runs", "auth_accounts", "auth_sessions", "credential_tokens", "membership_grants", "auth_audit", "staff_invitations", "permission_events", "invitation_events", "staff_request_receipts", "invitation_delivery_intents", "auth_rate_limits", "public_read_revisions", "import_batches", "import_blobs", "import_files", "import_profiles", "import_profile_versions", "import_source_contexts", "import_jobs", "import_previews", "import_receipts", "import_audit", "supplier_source_records", "term_source_records", "payable_fee_records", "scope_declaration_records", "inventory_receipt_records", "inventory_thresholds", "stock_request_receipts", "inventory_audit", "products", "recipe_lines", "recipes", "sales_daily", "store_memberships", "stores", "supplier_terms", "suppliers", "users", "recipe_schedule_changes", "recipe_schedule_request_receipts", "forecast_serving_identities", "model_serving_configurations", "planning_budgets", "planning_configuration_events", "planning_configuration_receipts", "planning_configuration_revisions", "planning_defaults", "saved_requirements", "planning_exports", "email_verification_tokens", "email_verification_deliveries", "password_reset_deliveries", "import_history_records",
+    ])
+    assert set(Base.metadata.tables) == {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints", "forecast_runs", "forecast_predictions", "decision_runs", "forecast_run_inputs", "forecast_execution_metadata", "planning_runs", "auth_accounts", "auth_sessions", "credential_tokens", "membership_grants", "auth_audit", "staff_invitations", "permission_events", "invitation_events", "staff_request_receipts", "invitation_delivery_intents", "auth_rate_limits", "public_read_revisions", "import_batches", "import_blobs", "import_files", "import_profiles", "import_profile_versions", "import_source_contexts", "import_jobs", "import_previews", "import_receipts", "import_audit", "supplier_source_records", "term_source_records", "payable_fee_records", "scope_declaration_records", "inventory_receipt_records", "inventory_thresholds", "stock_request_receipts", "inventory_audit", "recipe_schedule_changes", "recipe_schedule_request_receipts", "forecast_serving_identities", "model_serving_configurations", "planning_budgets", "planning_configuration_events", "planning_configuration_receipts", "planning_configuration_revisions", "planning_defaults", "saved_requirements", "planning_exports", "email_verification_tokens", "email_verification_deliveries", "password_reset_deliveries", "import_history_records"}
     for table in ("users", "stores", "store_memberships"):
         assert inspector.get_pk_constraint(table)["constrained_columns"] == ["id"]
         columns = {column["name"]: column for column in inspector.get_columns(table)}
@@ -62,8 +63,8 @@ def test_schema_exact_tables_constraints_indexes_and_metadata(engine: Engine) ->
         ("ix_store_memberships_user_id", ["user_id"]),
     ]
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT current_database()")) == "shelfcash_test"
-        assert connection.scalar(text("SELECT version_num FROM public.alembic_version")) == "0008_forecast_execution_meta"
+        assert connection.scalar(text("SELECT current_database()")) == make_url(test_database_url).database
+        assert connection.scalar(text("SELECT version_num FROM public.alembic_version")) == "0024_integrate_import_auth"
         assert compare_metadata(MigrationContext.configure(connection, opts={"compare_server_default": True}), Base.metadata) == []
 
 

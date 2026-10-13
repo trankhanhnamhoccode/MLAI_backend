@@ -103,7 +103,7 @@ verification is recorded in TESTING/CURRENT_STATE.
 
 Duplicate email/pair, invalid role/FK or reserved permissions produce PostgreSQL
 integrity failures; rollback the failed Session transaction before further writes.
-Reset retry/guards are in [DATABASE_RESET](../runbooks/DATABASE_RESET.md). Downgrade
+Reset retry/guards are in [DATABASE_RESET](../runbooks/FULL_TEST_FLOW.md). Downgrade
 to 0001_scaffold drops these three tables and their rows, so it is destructive.
 No automatic soft-delete, owner-count, active-parent, timezone-catalog, email provider,
 credential security or permission-engine policy is supplied by these models.

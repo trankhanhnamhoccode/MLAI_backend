@@ -108,7 +108,8 @@ def test_sparse_explicit_zero_no_fabricated_facts():
     assert len(prepared.observations) == 1
     row = prepared.observations[0]
     assert row.quantity == Decimal('0') and row.sales_date == D
-    assert set(row.model_dump()) == {'store_id', 'product_id', 'sales_date', 'quantity', 'selling_unit'}
+    assert set(row.model_dump()) == {'store_id', 'product_id', 'sales_date', 'quantity', 'selling_unit', 'is_stockout'}
+    assert row.is_stockout is None  # Unknown, never fabricated false from zero sales.
     assert not any(r.product_id == B for r in prepared.observations)
     assert PreparedForecastInput(**(prepared_values() | {'observations': []})).observations == ()
 

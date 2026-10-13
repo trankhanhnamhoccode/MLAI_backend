@@ -1,0 +1,50 @@
+{
+  "data": {
+    "run_id": "36e3ba9a-ac22-4d60-90d5-8f616c35dbdc",
+    "store_id": "c109c0a5-4025-42a9-975e-193a5ba40653",
+    "status": "running",
+    "outcome": null,
+    "accepted_at": "2026-10-10T02:00:00Z",
+    "started_at": "2026-10-10T02:00:00Z",
+    "finished_at": null,
+    "response_version": "2a3543485cdc6727833d54d6edcb9cd3263e7eb96862aefc7554197137206397",
+    "request": {
+      "requirements_mode": "default",
+      "forecast_start_date": "2026-10-10",
+      "default_requirements_version": "default-1"
+    },
+    "configuration": {
+      "requirements_mode": "default",
+      "effective_requirements": {
+        "paths": [
+          {
+            "path": "BASE",
+            "min_fill_rate_percent": "95",
+            "product_overrides": []
+          }
+        ],
+        "budget_limit": null
+      },
+      "budget": {
+        "limit": "100",
+        "currency": "VND",
+        "ceiling_at_acceptance": "100",
+        "ceiling_version": "be9cec80-1ff7-455b-b48e-48ee3d7ec0ce"
+      },
+      "default_version": "default-1",
+      "saved_reference": null,
+      "policy_version": "procurement_api_policy/1"
+    },
+    "operational_basis": null,
+    "forecast": null,
+    "scope": null,
+    "execution": null,
+    "result": null,
+    "errors": []
+  },
+  "meta": {
+    "warnings": [],
+    "poll_after_ms": 2000
+  },
+  "error": null
+}

@@ -1,4 +1,4 @@
-"""SYNTHETIC retained trained execution, writes only shelfcash_test; no reset/migrate."""
+"""SYNTHETIC retained trained execution, writes only an allowlisted test database; no reset/migrate."""
 from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
@@ -16,7 +16,7 @@ from app.infrastructure.database.engine import create_database_engine
 from app.infrastructure.forecast_model import train_quantiles
 from app.infrastructure.storage.forecast_artifacts import ForecastArtifactStore
 from app.models import Store, Product, SalesDaily, ForecastRun, ForecastRunInput, ForecastPrediction, ForecastExecutionMetadata
-from scripts.dev import validate_reset_target, inspect_database, require_head
+from scripts.dev import TEST_DATABASE_NAMES, validate_reset_target, inspect_database, require_head
 from scripts.forecast_demo import synthetic_input
 
 
@@ -24,8 +24,8 @@ def main():
     current = Settings()
     settings = Settings(_env_file=None,environment='test',database_url=current.test_database_url)
     validate_reset_target(settings)
-    if make_url(settings.database_url).database != 'shelfcash_test':
-        raise ValueError('Manual verification owns only shelfcash_test')
+    if make_url(settings.database_url).database not in TEST_DATABASE_NAMES:
+        raise ValueError('Manual verification requires an allowlisted test database')
     require_head(inspect_database(settings))
     engine = create_database_engine(settings)
     try:
@@ -69,7 +69,7 @@ def main():
                     sorted(predictions,key=lambda p:(p.forecast_date,p.product_id)),before.predictions))
         print('SYNTHETIC mechanics verified: fresh-session completed 14 predictions + metadata; retained exact-artifact replay after live corrections.')
         print(f'store_id={store}; run_id={result.id}; replay_run_id={second.id}; artifact={identity}')
-        print('Real-data quality NOT EVALUATED; fixtures retained in shelfcash_test for inspection.')
+        print('Real-data quality NOT EVALUATED; fixtures retained in the selected test database for inspection.')
     finally:
         engine.dispose()
 

@@ -1,5 +1,6 @@
 from datetime import date
 from uuid import UUID
+from pydantic import StrictBool
 from pydantic import model_validator
 from app.application.contracts.common import Contract, NonnegativeDecimal
 
@@ -9,6 +10,7 @@ class RecordDailySalesInput(Contract):
     product_id: UUID
     sales_date: date
     quantity: NonnegativeDecimal
+    is_stockout: StrictBool | None = None
 
 
 class SalesResult(RecordDailySalesInput):

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import InventoryLot, SupplierTerm
 from scripts.dev import migration_config
-from test_supplier_operational_constraints import engine, parents, lot_values, term_values
+from tests.integration.test_supplier_operational_constraints import engine, parents, lot_values, term_values
 
 
 @pytest.mark.parametrize("insertion", ["orm_null", "sql_omitted", "sql_null"])
@@ -90,7 +90,7 @@ def test_migration_downgrade_reupgrade_preserves_known_receipt(engine):
     with Session(engine) as fresh:
         assert fresh.get(InventoryLot, identifier).received_date == date(2026, 10, 1)
     with engine.connect() as fresh:
-        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0008_forecast_execution_meta"
+        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0024_integrate_import_auth"
 
 
 def test_downgrade_refuses_unknown_receipt_without_fabrication(engine):
@@ -106,4 +106,4 @@ def test_downgrade_refuses_unknown_receipt_without_fabrication(engine):
     with Session(engine) as fresh:
         assert fresh.get(InventoryLot, identifier).received_date is None
     with engine.connect() as fresh:
-        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0008_forecast_execution_meta"
+        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0024_integrate_import_auth"

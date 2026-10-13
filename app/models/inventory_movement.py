@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKeyConstraint, Index, Numeric, String, Text, func, text
+from sqlalchemy import CheckConstraint, DateTime, ForeignKeyConstraint, Index, Numeric, String, Text, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -15,6 +15,7 @@ class InventoryMovement(Base):
 
     __tablename__ = "inventory_movements"
     __table_args__ = (
+        UniqueConstraint("id", "store_id", name="uq_inventory_movements_id_store"),
         ForeignKeyConstraint(["lot_id", "store_id", "ingredient_id"], ["inventory_lots.id", "inventory_lots.store_id", "inventory_lots.ingredient_id"], name="fk_inventory_movements_lot_store_ingredient", ondelete="RESTRICT"),
         CheckConstraint("movement_type IN ('RECEIPT', 'USAGE', 'WASTE', 'EXPIRED', 'COUNT_CORRECTION', 'MANUAL_ADJUSTMENT')", name="ck_inventory_movements_type"),
         CheckConstraint("quantity_delta <> 0 AND quantity_delta NOT IN ('NaN'::numeric, 'Infinity'::numeric, '-Infinity'::numeric)", name="ck_inventory_movements_delta"),

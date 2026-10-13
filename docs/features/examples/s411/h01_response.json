@@ -1,0 +1,20 @@
+{
+  "data": {
+    "month": "2026-10",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "grouped_by": "imported_at",
+    "matched_import_count": 1,
+    "unfiltered_import_count": 1,
+    "days": [
+      {
+        "date": "2026-10-10",
+        "import_count": 1
+      }
+    ]
+  },
+  "meta": {
+    "request_id": "196d294f-4baa-4d51-a8f9-63892ac28f84",
+    "warnings": []
+  },
+  "error": null
+}

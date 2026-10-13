@@ -23,6 +23,7 @@ htmlcov/
 .env
 .env.*
 !.env.example
+!.env.integration.example
 .envrc
 .secrets/
 /secrets/
@@ -76,3 +77,13 @@ Desktop.ini
 /backendContext/
 /backendContext.zip
 /shelfcash_*.zip
+
+# Generated development packages; canonical source, contracts and fixtures stay tracked.
+/CONTRACT_ALIGNMENT_EVIDENCE*.zip
+/LEGACY_IMPORT_MAPPING_EVIDENCE.zip
+/*.zip.sha256
+/*.zip.verification.json
+/scripts/browser/node_modules/
+
+# User-supplied demo workbooks are read-only local inputs, never release source.
+/0[1-6]_*DEMO*.xlsx

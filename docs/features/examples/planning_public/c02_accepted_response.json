@@ -1,0 +1,12 @@
+{
+  "data": {
+    "run_id": "b01d44d5-5065-4154-b3c9-776527818338",
+    "status": "queued",
+    "accepted_at": "2026-10-10T02:00:00Z"
+  },
+  "meta": {
+    "warnings": [],
+    "poll_after_ms": 2000
+  },
+  "error": null
+}

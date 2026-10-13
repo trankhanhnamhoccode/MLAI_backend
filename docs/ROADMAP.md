@@ -1,130 +1,171 @@
-# Vertical-slice roadmap
+# Remaining work and acceptance gates
 
-CURRENT FACT: S0 is complete; S1 is complete with S1.1/S1.2/S1.3/S1.4 persistence schemas
-implemented, with S1.5/S1.6/S1.7 operational access (acceptance in CURRENT_STATE). Future slices are PROPOSAL, not permission to
-implement them or an accepted public contract. Every slice must freeze precise
-contracts, acceptance tests, rollback scope and affected BE/FE/ML/Data/demo behavior
-before implementation. Preserve unrelated WIP; no batches of backend layers.
+## CURRENT FACT
 
-| Slice | End-to-end behavior | Acceptance gate before implementation |
+Local unified source: Import126b0f2 + Auth0fbb979 on feat/integrate-import-auth;
+integration verification uses its dedicated DB/head0024. A separate integrated
+BE demo is prepared at HTTPS8103 on shelfcash_integration_demo/head0024, with
+limited runtime/migration roles, explicit synthetic accounts and three workers.
+Runtime TLS/Auth/isolation/idle dependencies and graceful lifecycle are verified;
+browser E2E, actual nonempty jobs on this demo and real credential-email workflow
+remain unverified. FE work is paused following errors in user testing.
+FE HTTPS/API configuration and verification/invitation delivery
+callback alignment remain FE integration prerequisites; email/provider stay OFF.
+Commands and private credential/trust instructions belong to
+[FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#integrated-demo-runtime).
+Branch milestones below remain their historical acceptance evidence.
+FE artifacts: [response010](handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
+
+Local Gmail preparation: one SMTP smoke message accepted, inbox user-confirmed;
+isolated Auth demo DB and HTTPS8102 lifecycle checked. BE-only scope: FE HTTPS/API configuration,
+self-service pages/adapters and real workflow-email/browser acceptance remain
+open with the FE team. No further smoke email; account workflow email to the configured
+test username is authorized. Operational steps belong
+to [Auth feature](features/AUTH_SESSION.md#local-gmail-smokedemo-profile).
+
+| Scope | State | Boundary |
 | --- | --- | --- |
-| S0 — Scaffold + architecture freeze | App/settings → health/OpenAPI → PostgreSQL migration bootstrap → canonical docs | Includes S0.2 persistence correction: healthy Compose, named volume, isolated real PostgreSQL tests, guarded reset/status/seed, migration head and unchanged API. Completion evidence/status is recorded in CURRENT_STATE. |
-| S1 — Domain Model + Database Schema v1 / Operational truth | Store → Product → Ingredient → Recipe → Sales → Inventory Lot → Supplier Term | Split into small create/read/validate/persist vertical paths. Define Pydantic contracts, store boundaries, units/money/date rules and corrections. Assert validated persistence/retrieval, same-store relations, rejected invalid data and reproducible clean DB migrations. |
-| S2 — Forecast | Sales → model/baseline → ForecastRun → P25/P50/P75 | Freeze cutoff, horizon, baseline/model, quantile semantics and data contract. Assert future dates, ordered nonnegative quantiles, reproducible controlled-input output, input/model provenance and no LLM dependence. |
-| S3 — Decision MVP | Forecast → BOM → ingredient demand → inventory/FEFO → three candidates → exact simulation → comparison → recommendation → DecisionRun | Freeze units, simulator granularity, objective/tie break, infeasibility and package schema. Assert demand/pack/MOQ/expiry/arrival invariants, exactly three evaluated strategies, deterministic selection, preserved schema-versioned snapshot, all golden scenarios and provider-outage operation. |
-| S4 — Explanation + What-if | Authorized facts → wording; baseline + mutation → recomputation → comparison | Freeze allowed tools/mutations and permissions. Assert fact fidelity, deterministic recomputation, authorized facts only, no real-state mutation, simulation vs mutation distinction and useful provider-unavailable behavior. |
-| S5 — Excel semantic mapping / Store Mapping Profile | Known approved profile or rules → validated mapping → ambiguity suggestion → approval if required | Freeze canonical schema, confidence and approval rules. Assert known profiles never need LLM, confident rules are deterministic, ambiguous suggestions are validated, no invented fields, profile versions/store scope and safe human fallback on outage. |
-| S6 — Authorization/human approval hardening where required | OWNER/STAFF + delegated permissions → authorized use case → auditable human approval | Freeze action permission matrix and approval triggers. Assert unauthorized reads/mutations rejected, simulation permission does not imply mutation permission, tools cannot bypass checks, store isolation and approval evidence. |
+| S0/S1 | Implemented | PostgreSQL/local tooling, operational models/repositories and typed internal application paths |
+| S2 | Implemented mechanics | Baseline/trained quantiles, retained inputs/evaluation/artifacts/replay; real-data quality NOT EVALUATED |
+| S3.1-S3.6.4 | Implemented internal paths | Validated decision/BOM/serving/FEFO, procurement/1 and /2, comparison/selector, operational capture/setup and durable PlanningRun |
+| S4.1-S4.10 | Implemented backend scope | Auth/Staff, public Menu/Inventory, Import/commit, calendar/config/readiness, public Planning, retained history/PDF |
+| S4.11 | PARTIAL | Local integration/API coverage exists; whole mapping browser continuation NOT_RUN; PDF/planning-history UI incomplete |
+| A1 Sales/reimport + stockout | COMPLETE | Migration0019 and targeted PostgreSQL acceptance on owned shelfcash_import_test; fresh-session sales/stockout, causal capture/trained/replay, retained Planning, rights/isolation/rollback/concurrency; real-data quality not evaluated |
+| A2 support history + constraints | COMPLETE backend scope | Four history-only schemas, append revisions/current domain grants and retained reads; 24 targeted DB acceptance cases plus affected regressions; R01 scoped unsupported safety-stock blocker; no full-suite/whole-FE or forecast-feature claim |
+| A3 Import → readiness → Planning | COMPLETE backend acceptance | Fresh provisioned Store/public imports and config/real workers/fresh reads; both upload orders and exact purchase/service/stock oracle; Staff invitation/source reuse/Owner spec change, conflict/ambiguity, scoped unsupported safety and lost ACK/retry; 11 unique targeted DB cases plus inherited A1/A2 evidence; no browser/full-suite/real-accuracy claim |
+| B1 | COMPLETE backend/fake-delivery acceptance | A02/A05/A06 signup/email verify/resend; isolated Auth DB, fresh-session persistence, token/retry/concurrency/transport coverage and auth/session/invitation regressions; no Store/grants/session from signup or verify; real workflow email/browser unverified |
+| B2 | COMPLETE backend/fake-delivery acceptance | A07 public RESET request via encrypted durable intent, existing N7 completion/session revocation; token/retry/concurrency/recovery/transport and schema coverage, B1/auth/session/invitation regressions; no Store/grants changes; isolated Auth DB; real workflow email/browser unverified |
+| B3 | COMPLETE backend/fake-delivery acceptance | IN01 explicit holder decline; terminal fields/capabilities/events/filter, immutable receipt/current-authority replay; fences/rollback/uncertain commit/races/new-identity acceptance and related auth/schema regressions; no membership/grants/access/email; Auth-only test DB; browser UI unverified |
+| B4 | COMPLETE backend/fake-delivery VERIFIED | Linked HTTP/PostgreSQL signup/invitation/grants/multi-Store/decline/reset flows and fresh reads; Product-approved v3/43 catalogue sync, additive Auth0023 CHECK and restart recovery; affected auth/Staff/API/schema regressions; no full-suite claim; browser/real workflow email pending; CHECK overlap reconciled in integration-only0021/0023 plus merge0024 |
 
-S6 hardens authorization; it is not permission to postpone minimum access enforcement
-needed by any earlier slice. No unprotected real business data exposure is implied.
+These are functional checkpoints, not a claim each is a Git commit or every route
+passed a fresh full suite. Current runtime/debt is in [CURRENT_STATE](CURRENT_STATE.md).
+Acceptance uses [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) and relevant tests.
 
-## S1 implementation slices
+## CURRENT FACT - authorized repair scope
 
-HISTORICAL INFORMATION: scope exclusions in S1.1-S1.4 rows describe those schema
-slices when delivered. CURRENT FACT: S1.5 adds internal repositories for all their
-tables; S1.6/S1.7 add internal operational application paths. Public APIs and engines remain future work.
+The ADR-013 authority clarification, recipe adapter test doubles, Money boundary
+expectations, current API inventories and four application query boundaries have
+been repaired without changing product/API behavior. Related tests remain active,
+including both capture versions. Verification results are reported in the
+conversation; S4.11 UI acceptance and remaining product proposals are unchanged.
 
-| Slice | Status | Scope |
-| --- | --- | --- |
-| S1.1 — Identity + Store | COMPLETE; 22 targeted; historical full suite 240 passes | Only users/stores/store_memberships, storage constraints, direct Session tests and manual inspection; no APIs/repos/auth |
-| S1.2 — Catalog + Recipe | COMPLETE; 51 targeted; historical full suite 240 passes, usable manual guide | Only products/ingredients/recipes/recipe_lines; scoped SKU, dated nonoverlap, yield/loss, exact unit/same-store constraints; no APIs/repos/BOM |
-| S1.3 — Supplier / Operational / Constraints | COMPLETE; 80 targeted / 240 historical full passes, usable manual guide | Exactly suppliers/terms, canonical sales, received lots/movement history, registry constraints; ADR-008/009 accepted; no import/mutation/FEFO/API/repos |
-| S1.3.1 -- Data Completeness & Source Semantics | COMPLETE; 9 targeted / 240 historical full passes | ADR-010; unknown receipt date nullable without default; strict supplier dates/per-pack costs unchanged; no import/readiness implementation |
-| S1.4 -- Forecast / Decision persistence | COMPLETE; 58 targeted / 240 full passes | Three run tables, dated/status/quantile/state constraints, same-store FKs, versioned snapshot/package, ADR-011; no engine/API/repos |
-| S1.5 -- Persistence Access Contract + Repository Layer | COMPLETE; 65 repository integration / 15 unit checks; historical full suite 320 passes | Concrete typed access for sixteen tables; explicit Store scope, caller-owned transactions, inserts/history/date queries, RUNNING-only lifecycle guards and PostgreSQL acceptance tests; no generic framework, public API or engines |
-| S1.6 -- Application Contracts + Validated Read/Write Paths | COMPLETE; 38 unit / 44 application integration; 82 targeted / 402 full passes | Typed Product/Sales paths, Forecast/Decision persistence lifecycle, effective Recipe read, by-value outputs, explicit Store context/transactions/errors, atomic PostgreSQL rollback; no schema/API/engine change |
-| S1.7 -- Application Coverage + Inventory Transaction Closure | COMPLETE; 106 new targeted / 188 combined targeted / 508 full passes; one final full regression | Typed Store/Ingredient/SupplierTerm create/read, atomic Recipe version+lines, received lot+RECEIPT and locked justified corrections; frozen exact money/unit/DATE/UTC/correction semantics; no schema/API/engine change |
+## ACCEPTED DECISION — phạm vi tiếp theo được người dùng duyệt
 
-S1.5 is authorized and implemented; see PERSISTENCE_ACCESS for its internal contract.
-S1.6 adds representative contracts; S1.7 closes remaining authorized operational
-boundaries. Public transports, auth and computation need separately authorized
-slices; none is started automatically.
+Chốt/push v1.0 trước rồi tách nhánh import: audit sáu workbook chỉ đọc, cải tiến
+deterministic mapping proposals và approved Store/source/report/version profile
+reuse, phát hiện drift, giữ Owner approval và atomic commit. Provider thật cần
+duyệt model/dữ liệu/giới hạn calls/chi phí riêng trước khi gửi dữ liệu. Không sửa
+FE, triển khai ngoài import hoặc deploy trong phạm vi này.
 
-## Local verification gate
+CURRENT FACT: v1.0 đã push; nhánh import riêng đã có header/preamble discovery,
+controlled aliases/candidates/reasons, full-spec Owner review và scoped drift notice.
+Reuse không học từ proposal chưa duyệt. Slice analyze → rules/LLM proposal → Owner
+review → reuse đã có bounded candidates/reasons/diagnostics, late-result revision
+fence và offline HTTP/DB acceptance. Numeric Excel dates hỗ trợ explicit
+EXCEL_SERIAL + workbook epoch + Owner review; không tự chọn date semantics.
+Live gateway probe POS demo đã nhận proposal hợp lệ cho SLX và giữ unsupported
+columns null; không mở rộng workbook khác hay activate/commit. Whole browser flow
+và broader model quality chưa kiểm chứng; live calls theo approved scope. Version
+`v1.2` chưa release; Supplier source price/MOQ basis đã có explicit quantity/unit
+declarations và exact normalization; recipe source basis đã có explicit
+PER_SERVING/WHOLE_BATCH và Owner-reviewed scalar resolution → exact normalization
+→ preview/atomic commit → fresh recipe/BOM/recipe readiness. Không defaults/loss kép,
+old profiles thiếu basis cần review; output conversion chưa hỗ trợ. FE chưa có
+acceptance cho selector/provenance mới;
+CURRENT FACT A2: usage/purchase history, declared calendar và observed promotion có
+record-only import writer/readback. Calendar/weather forecast features, waste/BOM
+reconciliation và arbitrary tabular rules chưa hỗ trợ, không suy từ history presence.
 
-CURRENT FACT: S0 includes categorized repository test runners, guarded PostgreSQL
-reset/migration, explicit no-op schema-verification seed, read-only DB inspection, a
-[scaffold feature guide](features/SCAFFOLD.md) and
-[fresh-environment runbook](runbooks/FULL_TEST_FLOW.md). Business seeds and e2e
-scenarios are not implemented. S1.1-S1.4 implement sixteen persistence tables;
-S1.5-S1.7 implement operational persistence/application paths. S1.7 final acceptance passes, and S1 is COMPLETE.
+ACCEPTED DECISION: ưu tiên nghiệp vụ cốt lõi theo chuỗi schema → mapping/resolution
+→ validation → persistence → consumer → readiness, không theo số cột của sáu workbook.
+Giữ Owner approval/profile reuse/exact semantics; không port defaults, permissive
+conversions hoặc constraints chỉ lưu nhưng chưa enforce. Chín writer schemas hiện có
+được dùng làm nền; thiếu một alias không được xem là thiếu cả persistence/consumer.
+CURRENT FACT: Recipe serving/batch và SupplierTerm price/MOQ units đã implement
+trong các slices được người dùng duyệt. Supplier source/canonical contracts tách
+riêng; whole-pack price/MOQ normalization, Owner/profile review, preview/atomic
+commit và immutable evidence nối writer/capture/procurement/readiness hiện có.
+Acceptance gồm fresh-session persistence, exact MOQ/budget oracle và retained Run;
+không đồng nghĩa toàn browser flow hoặc full regression. Các nghiệp vụ ngoài phạm
+vi vẫn cần authorization riêng. Xem
+[field inventory/gaps](features/IMPORT_SCHEMA_INVENTORY.md).
 
-ACCEPTED DECISION: future major slices are complete only with automated tests,
-relevant integration/persistence coverage, usable manual verification, deterministic
-fixtures where practical, fresh-session persisted-state assertions and canonical
-feature documentation. Require both application/API results and database evidence.
-Keep the full test flow and testing guide current; do not mark a slice complete
-while its verification instructions are unusable.
+CURRENT FACT: lát setup identity/opening/count/completeness đã nối public intake
+đến custom Planning trên Store mới không seed business facts. Source opening_stock
+dùng writer/receipt identity N6, whole-batch dependencies và typed declaration
+bindings; count/stock CAS, quyền và atomic rollback giữ nguyên. R01/capture operational/2
+cùng kiểm một current completeness scope, nhận explicit zero trên retained lots.
+Source declaration M04 đi trước compatible reuse; signature không chứng minh nguồn.
+Recipe cross-sheet cùng version bị RECIPE_SOURCE_SCOPE_AMBIGUOUS; split-part grain
+chưa supported. Retirement giữ chặn cả fresh reuse và pending commit.
+Default configuration absence vẫn UNKNOWN; whole browser acceptance chưa chạy.
+Excel actual receipts vẫn ngoài phạm vi lát setup identity.
 
-## S1 overall acceptance -- CURRENT FACT / PROPOSAL
+ACCEPTED DECISION: người dùng đã mở A1 sales/reimport và stockout riêng;
+[ADR-A1](adr/ADR-A1-observed-stockout-demand-policy.md) sở hữu capture/consumer policy.
+A2 được duyệt riêng: recorded calendar/promotion/usage/purchase và constraints đã
+contract/enforce; không Excel actual receipts, Auth workflow hoặc queue/notification.
 
-S1.7 has implemented the authorized remaining S1 gates: Store/Ingredient/SupplierTerm
-create/read, Recipe atomic version+lines, audited initial inventory receipt and
-movement-backed locked corrections; exact money/unit/DATE/UTC/correction semantics.
-S1.7 COMPLETE; S1 overall COMPLETE. Targeted and full regression gates pass;
-no canonical S1 acceptance gate remains open. See CURRENT_STATE for counts/evidence.
-The full operational chain is tested with fresh-session persistence; only Supplier
-identity creation remains an explicit S1.5 repository prerequisite, as authorized.
+HISTORICAL INFORMATION Import126b0f2 A3: backend acceptance of the implemented chain is complete on the owned
+Import DB, provider OFF. Coverage extends existing tests only at the missing oracle,
+retained correction/count/config, Staff public-grants/reuse and scope/retry boundaries.
+No runtime/schema/API/permission change or migration was needed. A1/A2 targeted
+evidence is reused explicitly rather than repeating broad groups. See current
+[workflow/expected outcomes/recovery](runbooks/FULL_TEST_FLOW.md). No next feature
+slice, FE work, commit/push/merge/deploy or ZIP was authorized by that A3 milestone.
+The separate integration task authorizes only its local branch merge/commit; no push,
+main merge, deployment or next product feature follows it.
 
-Future budget/constraint writers, actor authorization, full Sales correction,
-source conversion, engine-specific currency rounding/day cutoffs and public APIs
-are deliberately outside S1.7 and are not newly invented S1 completion gates.
-Current phase: **S2 -- Forecast**, IN PROGRESS. S2.1 contracts/validation and S2.2
-baseline/readiness and S2.3 retained execution exist; the explicit remaining-S2 task
-authorizes trained models/evaluation/artifact integration. No S3 or public API is authorized.
+## ACCEPTED / DESIGN_READY — read projections chờ triển khai
 
-## S2 implementation slices — CURRENT FACT / PROPOSAL
+- [R05 file/sheet preview aggregates](IMPORT_MAPPING_API_CONTRACT_VI.md#preview-aggregates): retained raw rows and distinct logical actions, overlap semantics and same pinned digest; existing I04 extension, not runtime.
+- [R09 captured effective RunSummary budget](PROCUREMENT_API_CONTRACT_VI.md#history-captured-budget): acceptance limit/currency/availability, financial rights and list snapshot/pagination; not runtime.
+- R10 recipe split-report identity/completeness and cross-file/sheet assembly are DEFERRED. Source-before-reuse/scope ambiguity guards and valid single-sheet assembly remain implemented; no Product question blocks handoff.
 
-| Slice | Status | Scope |
-| --- | --- | --- |
-| S2.1 — Forecast execution contract and semantic validation | COMPLETE; 81 new unit + 1 new PostgreSQL regression; 164 targeted / 590 full passed, one final full run | Typed execution/prepared/result values, pure validation, complete Product x 7-date output, canonical docs; S1/schema/API unchanged; no model/readiness policy or execution persistence |
-| S2.2 — Forecast Readiness + Deterministic Quantile Baseline | COMPLETE; 42 new unit; 233 targeted / 632 full passed, one final full run | Baseline-specific per-Product >=1 observation readiness, all-or-nothing no-history rejection, exact historical Decimal quantiles, seven dates and mandatory S2.1 result gate; no persistence/evaluation/model dependencies |
-| S2.3 -- Internal baseline execution end-to-end + retained input | COMPLETE; 40 new tests /165 final targeted /672 full passed; one full run | Explicitly user-authorized snapshot loader, separate JSONB retention, versioned SHA-256, atomic baseline persistence and new-UUID replay; no trained model/evaluation/S3 |
+## PROPOSAL / ngoài phạm vi đã duyệt
 
-S2.1 adds typed execution requests, immutable prepared observed-sales values and
-pure semantic validation. Verification/status is recorded in CURRENT_STATE.
-See [FORECAST_EXECUTION](features/FORECAST_EXECUTION.md) and accepted ADR-012:
-Store-local D, explicit Products, D+1..D+7 and complete Product/date output. S1's
-supplied-prediction lifecycle, including empty completion, is unchanged.
+- TD-BE review (`008_TechDebt.md`, original reference not present in this repo)
+  là review/acceptance dependency, không ủy quyền
+  implement/deploy endpoint PROPOSED. Ưu tiên Product freeze queue semantics TD004
+  trước Staff→Owner→Staff; kế tiếp supplier/location TD007 và settings TD010,
+  preview/PDF discovery/Today TD006/008/009. Budget absence/create hiện có C01/N4,
+  Ingredient discovery có V01; FE cần current environment/rights/persistence evidence.
+  Product chốt assisted/public provisioning và decline TD001/002; AI/What-if/PO
+  TD011–013 phải chốt scope/design trước API. Owner cá nhân và ngày môi trường mới
+  chưa được xác nhận; không mục nào đủ điều kiện đề nghị đóng từ review tài liệu.
 
-S2.2 implements the explicitly authorized weak Historical Quantile Baseline and its
-own >=1 observation readiness rule; this is not general/LightGBM readiness. Exact
-policy and callable verification are in FORECAST_EXECUTION; no existing ADR changed.
-S2.4-S2.7 are explicitly authorized by the remaining-S2 task. ADR-015 freezes
-provisional readiness, causal pooled direct-horizon LightGBM, validation-only selection,
-postprocessing, immutable artifact identity and retained execution metadata/replay.
-**S2 implementation complete / real-data evaluation pending**. Final gate: 767 passed,
-fresh-session persistence/retained exact-artifact replay and guarded manual CLI verified.
-No real dataset is available; synthetic checks prove mechanics, not quality/superiority.
-S3 remains PLANNED and has not started; this task does not authorize S3.
+- Dashboard D01/prototype screens and draft PO remain proposals unless separately
+  approved; the retired v0 prototype contract is not implementation authority.
 
-| Slice | Status | Scope |
-| --- | --- | --- |
-| S2.4 | COMPLETE; 85 targeted | Policy and immutable typed contracts, ADR-015 |
-| S2.5 | COMPLETE; 56 targeted | Causal features, three fixed deterministic quantile boosters, Decimal postprocessing |
-| S2.6 | COMPLETE; 21 targeted | Chronological paired-target evaluation, validation/holdout, selection and metrics |
-| S2.7 | COMPLETE implementation; final 767 passed, fresh-session + CLI manual verified | Immutable artifacts, atomic input/run/metadata, validated completion/read/replay, migration 0008, CLI/manual verification |
+- Finish whole-chain browser acceptance against real BE: mapping/Owner approval,
+  preview/confirm/commit, readiness, Planning and retained/history/PDF UI; distinguish
+  unsupported UI from API defects and assert fresh-session persistence.
+- Assess forecast quality using suitable observed sales/correction provenance;
+  do not activate trained artifacts merely because training code exists.
+- Owner lifecycle/reactivation, one-time approval allowlist/TTL and sensitive audit
+  retention need separate reviewed scope. Stored membership alone is not authority.
+- Notification, permission requests and public Store onboarding remain separate
+  slices. B4 does not authorize starting them. Email delivery is
+  opt-in and requires the configured HTTPS verification page and private encryption
+  key; [Auth feature](features/AUTH_SESSION.md) owns configuration and FE flow.
+- AI wording/copilot, deterministic hypothetical what-if, customer selection and
+  draft/actual purchase orders are not silently enabled by current Planning/PDF.
+- Stock/correction/purchase history extensions, unsupported supplier conditions,
+  safety-stock semantics and latency improvements require explicit slices.
 
-See [trained forecast](features/FORECAST_TRAINED.md) and
-[task notes](runbooks/S2_TRAINED_TASK_NOTES.md) for exact final evidence.
+CURRENT FACT: isolated worktree test DB setup is supported; effective target, dedicated
+roles and reset commands are documented in [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md).
+Parallel tests require different owned DBs; each DB remains sequential.
 
-## Future import direction — ACCEPTED DECISION, not implemented
+## Acceptance policy ? ACCEPTED DECISION
 
-[ADR-013](adr/ADR-013-future-store-mapping-approval-direction.md) records Store-scoped
-OWNER/STAFF with delegated actions; authorized mappers may approve their own mapping.
-Profiles are per source/report type; reviewed versions are immutable; approved mapping
-runs deterministically; approval differs from import confirmation; audit retains
-the version used. Mapping stays S5, authorization hardening S6 and ordering unchanged.
-Minimum access enforcement cannot wait when a public operation needs it.
-Atomic/partial import and detailed permissions remain unfrozen. No import implementation.
+Select tests for changed behavior and affected callers. Full pytest is for important
+integration milestones or broad shared-contract/schema/transaction/infrastructure
+changes when targeted coverage is insufficient; state why it is needed. Pure doc
+changes use link/content checks, not full pytest. Never treat historical PASS logs
+or HTTP2xx as fresh regression/persistence proof. A fresh Session must verify commits.
+Public API changes require explicit contract approval and OpenAPI diff.
 
-
-CURRENT FACT (2026-10-07): S2.3 corrective patch is limited to commit-error classification
-and primary-error-preserving cleanup; 35 added regression cases, 238 targeted passed
-including existing architecture assertions. First full gate had one direct-close
-architecture failure, fixed by placing concrete cleanup in infrastructure; second full
-gate **707 passed in283.16s**, zero skips, one existing warning. Corrective patch COMPLETE;
-two full attempts due to the initial failure. Original slice counts above are historical verification.
-No baseline/contract/schema/retention scope change or authorization for another slice.
-See CURRENT_STATE and S23_TASK_NOTES for final corrective verification.
+Update this document when scope/status changes; keep execution logs in the
+conversation. No automatic next product slice follows cleanup.
