@@ -1,5 +1,19 @@
 # Domain model and business meaning
 
+## ACCEPTED DECISION / CURRENT FACT — A2 recorded support history
+
+CalendarEvent is a Store-scoped declared inclusive event, distinct from observed
+Product/day promotion. UsageHistory records actual Ingredient consumption; it is
+not theoretical BOM, waste/loss or a stock transaction. PurchaseHistory records
+historical quantity/price basis with separate order, receipt and report dates; it
+is not received stock, committed inbound or current supplier terms. Exact reviewed
+physical conversion applies to quantity and price denominator without rounding.
+Stable source/report/record identity has immutable domain grain and append-only
+confirmed correction revisions; absent records remain. History-only readers are
+retained Import preview/completion and H01/H02 discovery, not forecast features.
+See [Import](IMPORT_MAPPING_API_CONTRACT_VI.md) and
+[Authorization](AUTHORIZATION_CONTRACT_VI.md) for accepted workflow/current rights.
+
 ## ACCEPTED DECISION ? identity, units and time
 
 A User may belong to several Stores; Owner/Staff authority is scoped to current
@@ -33,6 +47,13 @@ revisions distinguish duplicate, replacement and confirmed independent-source
 merge; changing file hash is not permission to add quantities. Approved mapping
 is distinct from preview/commit confirmation. Canonical commit is atomic for all
 requested groups; missing rights/blockers never silently drop rows.
+
+CURRENT FACT A1 adds nullable observed product stockout, separately from inventory or
+projected shortage. Contribution revisions retain observation evidence; quantity-only
+preserves the contribution observation. Captured derived demand never overwrites
+SalesDaily.quantity. [ADR-A1](adr/ADR-A1-observed-stockout-demand-policy.md) owns
+schema-2 mechanics and legacy replay. Migration and targeted persistence/consumer
+acceptance are verified on the owned Import test DB; real-data quality is not evaluated.
 
 InventoryLot holds current physical balance; InventoryMovement holds justified
 history. Receipt/count correction update movement+balance atomically under locks;

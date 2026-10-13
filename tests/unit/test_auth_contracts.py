@@ -8,8 +8,8 @@ from app.infrastructure.auth_crypto import HASHER, verify_password
 
 
 def test_catalogue_is_explicit_no_implications():
-    assert CATALOG_VERSION == "permissions-v2"
-    assert len(PERMISSIONS) == 37
+    assert CATALOG_VERSION == "permissions-v3"
+    assert len(PERMISSIONS) == 43
     assert effective_permissions("STAFF", ("planning.run",)) == ("planning.run",)
     assert set(effective_permissions("OWNER", ())) == PERMISSIONS
     assert all(p.grantable_to_staff and p.label_vi and p.description_vi for p in CATALOGUE)

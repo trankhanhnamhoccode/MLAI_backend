@@ -1,5 +1,24 @@
 # Authorization — Store, session, Staff and approval
 
+## ACCEPTED DECISION / CURRENT FACT — A2 catalogue delta
+
+Catalogue `permissions-v3` có43 keys; thêm calendar.read/calendar.write,
+usage.history.read/usage.history.write, purchase.history.read/purchase.history.write.
+Staff chỉ nhận keys mới khi Owner grant rõ ràng; migration/profile approval/reuse
+không tự cấp. import.commit là điều kiện cần, kèm quyền ghi miền; preview/readback
+kèm quyền đọc miền và binding reads. Calendar dùng calendar.read/write;
+usage dùng usage.history.read/write + ingredient.read; purchase dùng
+purchase.history.read/write + ingredient.read + supplier.read + procurement.cost.read.
+Promotion observation dùng menu.read + sales.read và sales.record hiện có.
+Thiếu procurement.cost.read thì chặn whole response/operation purchase history,
+không bỏ price fields. Correction cần quyền ghi + reason + explicit pinned-version
+confirmation. Current membership/grants kiểm lại acceptance, worker, replay và
+retained read. History keys không cấp inventory.receive/count.correct, không actual
+receipt/committed inbound; calendar.write không cấp forecast/model write.
+N13/N15/N17 tiếp tục Owner-only; grants max43, unique/sorted, không implications.
+Old Staff grants không đổi; current catalogue mismatch cần refresh theo error hiện có.
+[Import](IMPORT_MAPPING_API_CONTRACT_VI.md) sở hữu payload và workflow A2.
+
 ## CURRENT FACT / S4.11 authorization integration boundary
 
 A01 login returns `data.session.csrf_token`, current Store context and HttpOnly
@@ -237,7 +256,7 @@ Ví dụ A01 request:
 Ví dụ T02 response (UUID chỉ minh họa; permissions Owner thực tế là đầy đủ catalogue):
 
 ```json
-{"data":{"store_id":"00000000-0000-0000-0000-000000000001","name":"Quán A","timezone":"Asia/Ho_Chi_Minh","currency":"VND","role":"STAFF","membership_id":"00000000-0000-0000-0000-000000000002","authorization_version":"auth-7","active":true,"server_now":"2026-10-09T02:00:00Z","as_of_date":"2026-10-09","membership":{"membership_id":"00000000-0000-0000-0000-000000000002","role":"STAFF","authorization_version":"auth-7","effective_permissions":["menu.read"]},"permission_catalog_version":"permissions-v2"},"meta":{"request_id":"req-context"},"error":null}
+{"data":{"store_id":"00000000-0000-0000-0000-000000000001","name":"Quán A","timezone":"Asia/Ho_Chi_Minh","currency":"VND","role":"STAFF","membership_id":"00000000-0000-0000-0000-000000000002","authorization_version":"auth-7","active":true,"server_now":"2026-10-09T02:00:00Z","as_of_date":"2026-10-09","membership":{"membership_id":"00000000-0000-0000-0000-000000000002","role":"STAFF","authorization_version":"auth-7","effective_permissions":["menu.read"]},"permission_catalog_version":"permissions-v3"},"meta":{"request_id":"req-context"},"error":null}
 ```
 
 Error mapping:401 INVALID_CREDENTIALS chung cho email không tồn tại/password sai/
@@ -263,7 +282,7 @@ required_with:string[],exposure:"ordinary"|"cost"|"budget"}. Catalogue chỉ act
 đã có contract v1, không checkbox giả cho features chưa review. Active toggle chỉ
 read ở đây; quản lý membership lifecycle không bị lẫn vào PUT grants.
 
-Catalogue `permissions-v2`, technical action mapping, không quyền runtime có thật:
+Catalogue `permissions-v3`, technical action mapping, không quyền runtime có thật:
 
 | Nhóm | có thể cấp cho Staff action keys |
 | --- | --- |
@@ -356,7 +375,7 @@ invitation_id UUID; invitation_version opaque đổi mỗi lần reissue/revoke/
 store_id immutable; target_email canonical như A01; role cố định STAFF;
 permission_catalog_version pin catalogue review; offered_grants unique sorted,
 chỉ Staff-grantable keys. Không role/user_id/membership_id do client đặt. Catalogue
-permissions-v2 thêm recipe.manage_effectivity theo contract Catalog12; versions
+HISTORICAL INFORMATION: permissions-v2 thêm recipe.manage_effectivity theo Catalog12; current permissions-v3 thêm6 A2 history keys, versions
 trước giữ history, không suy invitation dùng latest keys khi accept.
 
 States pending→accepted|revoked|expired. expired là server_now≥expires_at, không
@@ -450,7 +469,7 @@ User/Store/membership; membership revoked thì403, không resurrect grants. Key 
 khi token consumed409 INVITATION_ALREADY_ACCEPTED, không cấp lại quyền.
 
 ```json
-{"email":"linh@example.com","grants":["ingredient.read","inventory.read","menu.read"],"permission_catalog_version":"permissions-v2","reason":"Mời nhân viên ca sáng xem Menu và Kho"}
+{"email":"linh@example.com","grants":["ingredient.read","inventory.read","menu.read"],"permission_catalog_version":"permissions-v3","reason":"Mời nhân viên ca sáng xem Menu và Kho"}
 ```
 
 ```json
@@ -720,7 +739,7 @@ quyền duy nhất; PR04 approval sử dụng cùng grants application mutation,
 authorization fence, không FE gọi PR04 rồi N13 để hoàn thành hai bước.
 
 TECHNICAL CHOICE: mỗi (Store,requester_membership) tối đa một request pending;
-requested_permissions sorted unique nonempty≤37 trong current catalogue,
+requested_permissions sorted unique nonempty≤43 trong current catalogue,
 grantable_to_staff=true. Không implicit permission implications. Requester xem
 catalogue qua PR02 (không cấp N12 Owner-only cho Staff). Một request giữ nguyên
 requested_permissions khi pending, sửa bằng cancel rồi submit mới.
@@ -789,24 +808,24 @@ Race N13/PR04 serialize grants; approve/reject/cancel chỉ một winner; stale 
 Ví dụ PR01 request; PR04 approve request (CAS header lấy PR03):
 
 ```json
-{"requested_permissions":["inventory.read","inventory.receive"],"permission_catalog_version":"permissions-v2","expected_grants_version":"grants-7","reason":"Nhận và kiểm tra hàng thực tế"}
+{"requested_permissions":["inventory.read","inventory.receive"],"permission_catalog_version":"permissions-v3","expected_grants_version":"grants-7","reason":"Nhận và kiểm tra hàng thực tế"}
 ```
 
 ```json
-{"action":"approve","approved_permissions":["inventory.read","inventory.receive"],"expected_grants_version":"grants-7","permission_catalog_version":"permissions-v2","reason":"Cấp quyền cho ca nhập hàng"}
+{"action":"approve","approved_permissions":["inventory.read","inventory.receive"],"expected_grants_version":"grants-7","permission_catalog_version":"permissions-v3","reason":"Cấp quyền cho ca nhập hàng"}
 ```
 
 Ví dụ PermissionRequest dùng chung PR01/PR02.items/PR03/PR04.request (approved):
 
 ```json
-{"request_id":"00000000-0000-0000-0000-000000000033","store_id":"00000000-0000-0000-0000-000000000001","requester_membership_id":"00000000-0000-0000-0000-000000000003","requester_user_id":"00000000-0000-0000-0000-000000000002","requested_permissions":["inventory.read","inventory.receive"],"grants_at_submission":["inventory.read"],"current_grants":["inventory.read","inventory.receive"],"approved_permissions":["inventory.read","inventory.receive"],"actually_added_permissions":["inventory.receive"],"permission_catalog_version":"permissions-v2","grants_version_at_submission":"grants-7","current_grants_version":"grants-8","version":"request-2","state":"approved","reason":"Nhận và kiểm tra hàng thực tế","created_at":"2026-10-13T02:00:00Z","updated_at":"2026-10-13T02:05:00Z","decision":{"decision_id":"00000000-0000-0000-0000-000000000034","actor_user_id":"00000000-0000-0000-0000-000000000004","reason":"Cấp quyền cho ca nhập hàng","decided_at":"2026-10-13T02:05:00Z","permission_event_id":"00000000-0000-0000-0000-000000000035"},"allowed_actions":[]}
+{"request_id":"00000000-0000-0000-0000-000000000033","store_id":"00000000-0000-0000-0000-000000000001","requester_membership_id":"00000000-0000-0000-0000-000000000003","requester_user_id":"00000000-0000-0000-0000-000000000002","requested_permissions":["inventory.read","inventory.receive"],"grants_at_submission":["inventory.read"],"current_grants":["inventory.read","inventory.receive"],"approved_permissions":["inventory.read","inventory.receive"],"actually_added_permissions":["inventory.receive"],"permission_catalog_version":"permissions-v3","grants_version_at_submission":"grants-7","current_grants_version":"grants-8","version":"request-2","state":"approved","reason":"Nhận và kiểm tra hàng thực tế","created_at":"2026-10-13T02:00:00Z","updated_at":"2026-10-13T02:05:00Z","decision":{"decision_id":"00000000-0000-0000-0000-000000000034","actor_user_id":"00000000-0000-0000-0000-000000000004","reason":"Cấp quyền cho ca nhập hàng","decided_at":"2026-10-13T02:05:00Z","permission_event_id":"00000000-0000-0000-0000-000000000035"},"allowed_actions":[]}
 ```
 
-Ví dụ PR02 empty data (catalogue đầy đủ trong response thực, không copy37
+Ví dụ PR02 empty data (catalogue đầy đủ trong response thực, không copy43
 descriptors vào ví dụ): catalogue excerpt là same PermissionDescriptor source.
 
 ```json
-{"items":[],"permission_catalog_version":"permissions-v2","permission_catalog":[{"key":"inventory.receive","group":"Kho","label_vi":"Ghi nhận hàng nhận","description_vi":"Ghi nhận hàng nhận; chỉ trong Store được cấp quyền.","grantable_to_staff":true,"required_with":[],"exposure":"ordinary"}]}
+{"items":[],"permission_catalog_version":"permissions-v3","permission_catalog":[{"key":"inventory.receive","group":"Kho","label_vi":"Ghi nhận hàng nhận","description_vi":"Ghi nhận hàng nhận; chỉ trong Store được cấp quyền.","grantable_to_staff":true,"required_with":[],"exposure":"ordinary"}]}
 ```
 
 Ví dụ PR04 response field notification_delivery (request là DTO đầy đủ ở trên):

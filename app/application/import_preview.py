@@ -249,6 +249,15 @@ def normalize(source, spec, import_values=()):
             if target:
                 identity_bound = True
                 raw = target
+        alias_rules = ()
+        if field == 'is_stockout' and raw not in (None, '', 'true', 'false'):
+            aliases = [a for n in spec.normalizations if n.kind == 'stockout_alias'
+                       for a in (dto.StockoutAlias.model_validate(v) for v in json.loads(n.parameter))
+                       if a.token == raw]
+            if len(aliases) != 1:
+                raise RowBlocked('STOCKOUT_VALUE_ALIAS_REQUIRED')
+            raw = None if aliases[0].value is None else 'true' if aliases[0].value else 'false'
+            alias_rules = ('declared_stockout_aliases',)
         values[field] = raw_value(raw, model.model_fields[field].annotation)
         if field == "declaration" and isinstance(values[field], dict):
             bound = resolve_nested_identities(values[field], spec)
@@ -261,6 +270,7 @@ def normalize(source, spec, import_values=()):
                 origin="SOURCE_EXPLICIT",
                 value_source="IDENTITY_BINDING" if identity_bound else "SOURCE_COLUMN",
                 source_column_index=bind.source_column_index,
+                applied_rule_ids=alias_rules,
             )
         )
     declarations = [
@@ -309,6 +319,8 @@ def normalize(source, spec, import_values=()):
         ):
             raise RowBlocked("SUPPLIER_BASIS_REVIEW_REQUIRED")
         for field in rule.fields:
+            if rule.kind == 'stockout_alias':
+                continue  # Exact aliases applied before strict scalar parsing above.
             value = values.get(field)
             if value is None:
                 continue
@@ -343,6 +355,9 @@ def normalize(source, spec, import_values=()):
                 provenance = [p for p in provenance if p.field != field] + [
                     derived_provenance(provenance, field, (rule.rule_id,))
                 ]
+    if spec.schema in domains.HISTORY_MODELS:
+        from app.application.import_history import normalize_history
+        return normalize_history(values, spec, provenance)
     if spec.schema == "supplier_terms":
         if not spec.supports_supplier_basis():
             raise RowBlocked("SUPPLIER_BASIS_REVIEW_REQUIRED")
@@ -476,7 +491,7 @@ def supplier_fee_coverage(value, spec, snapshot, normalized):
 
 
 def make_preview(
-    sources, specs, snapshot, now, store_timezone, currency, import_values=None
+    sources, specs, snapshot, now, store_timezone, currency, import_values=None, stockout_policies=None
 ):
     products = {r["id"]: r for r in snapshot["products"]}
     ingredients = {r["id"]: r for r in snapshot["ingredients"]}
@@ -550,6 +565,8 @@ def make_preview(
         refs = []
         supplier_semantics = None
         inventory_effect = None
+        stockout_update = None
+        source_stockout = None
         data = value.model_dump(mode="json")
 
         def block(code):
@@ -568,7 +585,20 @@ def make_preview(
                 block("UNKNOWN_" + kind.upper())
             return record
 
-        if isinstance(value, domains.SalesSource):
+        history_target = None
+        history_version = None
+        if value.domain in domains.HISTORY_MODELS:
+            from app.application.import_history import preview_history
+            before, cls, action, confirm, history_target = preview_history(
+                value, spec, snapshot, normalized, today, now, entity, block, warn,
+                ingredients, products, suppliers)
+            from app.application.import_history import latest_record
+            old_history = latest_record(snapshot.get('import_history_records', ()), value, spec.scope)
+            history_version = str(old_history['version']) if old_history else None
+            if isinstance(value, domains.UsageHistorySource) and value.observed_at is not None:
+                if value.observed_at.astimezone(ZoneInfo(store_timezone)).date() != value.usage_date:
+                    block('USAGE_DAY_TIMESTAMP_MISMATCH')
+        elif isinstance(value, domains.SalesSource):
             product = entity("product", value.product_id, products)
             if product and value.unit != product["selling_unit"]:
                 block("UNIT_MISMATCH")
@@ -588,8 +618,36 @@ def make_preview(
                 None,
             )
             from app.application.import_sales_sources import classify_sales, sources_for
+            from app.application.import_sales_sources import latest_source, project_stockout
+            history = sources_for(snapshot, value.product_id, value.sales_date)
+            old_source = latest_source(history, spec.scope.source_system_key, value.business_report_key,
+                                       spec.scope.report_type)
+            provided = any(p.field == 'is_stockout' for p in prov)
+            policy, policy_evidence = (stockout_policies or {}).get(str(loc.sheet_id), (None, None))
+            if provided and (value.is_stockout is not None or policy != 'quantity_only'):
+                stockout_update = 'source'
+                source_stockout = value.is_stockout
+            elif policy == 'quantity_only':
+                stockout_update = policy
+                if not old_source:
+                    block('STOCKOUT_QUANTITY_ONLY_REQUIRES_EXISTING_CONTRIBUTION')
+                source_stockout = old_source.get('source_stockout') if old_source else None
+            else:
+                stockout_update = policy
+                if current and policy != 'not_provided':
+                    block('STOCKOUT_UPDATE_DECLARATION_REQUIRED')
+            if stockout_update == 'quantity_only' or not provided:
+                prov += (dto.FieldProvenance(field='is_stockout', origin='UNKNOWN' if source_stockout is None else 'DETERMINISTIC_DERIVED',
+                    applied_rule_ids=('stockout:' + (policy or 'new_unknown'),), source_value=policy_evidence),)
             target, action, cls, source_blocker = classify_sales(value, current, spec, snapshot)
-            after = value.model_copy(update={"quantity": target})
+            canonical_stockout = project_stockout(source_stockout, old_source, current, spec, history)
+            if current and action == 'NO_OP' and current.get('is_stockout') is not canonical_stockout:
+                action, cls = 'REPLACE_DAILY_TOTAL', 'CHANGED'
+            after = value.model_copy(update={"quantity": target, 'is_stockout': canonical_stockout})
+            if canonical_stockout is None:
+                warn('STOCKOUT_UNKNOWN')
+            elif canonical_stockout:
+                warn('CENSORED_SALES_REQUIRES_DEMAND_POLICY')
             if Decimal(target) != Decimal(value.quantity):
                 prov = tuple(
                     p.model_copy(update={
@@ -599,7 +657,7 @@ def make_preview(
                     for p in prov
                 )
             if current:
-                before = value.model_copy(update={"quantity": current["quantity"]})
+                before = value.model_copy(update={"quantity": current["quantity"], 'is_stockout': current.get('is_stockout')})
             if source_blocker:
                 block(source_blocker)
             confirm = action in {"REPLACE_DAILY_TOTAL", "MERGE_DISJOINT_SALES"}
@@ -1082,12 +1140,12 @@ def make_preview(
                 movement_type="COUNT_CORRECTION" if not blockers and delta != "0" else None,
                 unit=after.unit, observed_at=after.observed_at)
         target_entities = {"supplier_term"} if value.domain == "supplier_terms" else {"lot"} if value.domain in {"inventory_count", "opening_stock"} else set()
-        target = next(
+        target = history_target or next(
             (r.canonical_id for r in refs if r.entity in target_entities),
             (
                 rid
                 if value.domain
-                in {"supplier_terms", "payable_fees", "scope_declarations"}
+                in {"supplier_terms", "payable_fees", "scope_declarations", *domains.HISTORY_MODELS}
                 else None
             ),
         )
@@ -1101,12 +1159,15 @@ def make_preview(
                 before=before,
                 after=after,
                 normalized_source_quantity=value.quantity if isinstance(value, domains.SalesSource) else None,
+                normalized_source_stockout=source_stockout,
+                stockout_update=stockout_update,
                 changes=changes,
                 provenance=prov,
                 blockers=tuple(blockers),
                 warnings=tuple(warnings),
                 confirmation_required=confirm,
                 target_reserved_or_existing_id=target,
+                expected_version=history_version,
                 supplier_term_semantics=supplier_semantics,
                 inventory_effect=inventory_effect,
             )
@@ -1345,4 +1406,5 @@ def make_preview(
                 blockers=row.blockers + (notice("ENTITY_METADATA_CONFLICT", row.source_location),)))
     from app.application.import_configuration_preview import finish_configurations
     from app.application.import_dependencies import finalize_dependencies
-    return finalize_dependencies(finish_configurations(tuple(rows), specs, snapshot, normalized, now, store_timezone))
+    from app.application.import_sales_groups import finish_sales
+    return finalize_dependencies(finish_configurations(finish_sales(rows, specs, snapshot), specs, snapshot, normalized, now, store_timezone))

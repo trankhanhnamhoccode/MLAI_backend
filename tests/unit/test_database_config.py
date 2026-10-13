@@ -84,3 +84,35 @@ def test_unknown_test_category_fails() -> None:
     root = Path(__file__).resolve().parents[2]
     result = subprocess.run([sys.executable, str(root / "scripts/dev.py"), "test", "unknown"], capture_output=True)
     assert result.returncode != 0
+
+
+@pytest.mark.parametrize("database", ["shelfcash_test", "shelfcash_import_test", "shelfcash_auth_test"])
+def test_reset_accepts_only_named_test_databases(database):
+    validate_reset_target(Settings(_env_file=None, environment="test",
+        database_url=f"postgresql+psycopg://tester:dummy@127.0.0.1:5432/{database}"))
+
+
+@pytest.mark.parametrize("database", ["shelfcash", "postgres", "shelfcash_other_test", "shelfcash_auth_test_copy"])
+def test_test_reset_rejects_non_allowlisted_names(database):
+    with pytest.raises(ValueError):
+        validate_reset_target(Settings(_env_file=None, environment="test",
+            database_url=f"postgresql+psycopg://tester:dummy@127.0.0.1:5432/{database}"))
+
+
+@pytest.mark.parametrize("action", ["reset", "status"])
+def test_cli_test_database_uses_effective_environment_override(monkeypatch, action):
+    import scripts.dev as dev
+    target = "postgresql+psycopg://tester:dummy@127.0.0.1:5432/shelfcash_auth_test"
+    monkeypatch.setenv("TEST_DATABASE_URL", target)
+    monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://tester:dummy@127.0.0.1:5432/shelfcash")
+    monkeypatch.setattr(sys, "argv", ["dev", action, "--test-database"])
+    observed = []
+    def reset(settings, seed):
+        observed.append((settings.environment, settings.database_url))
+    def status(settings):
+        observed.append((settings.environment, settings.database_url))
+        return {"at_head": True}
+    monkeypatch.setattr(dev, "reset_database", reset)
+    monkeypatch.setattr(dev, "inspect_database", status)
+    assert dev.main() == 0
+    assert observed == [("test", target)]

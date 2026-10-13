@@ -6,6 +6,10 @@ from app.application.contracts.import_domains import SOURCE_MODELS
 from app.application.contracts.import_field_values import allowed_scopes
 
 SCHEMAS = {
+    "calendar_events": ("Sự kiện lịch", "Declared Store event; history-only, no forecast features."),
+    "promotion_observations": ("Khuyến mãi quan sát", "Observed Product/day evidence; no inferred discount or uplift."),
+    "usage_history": ("Lịch sử sử dụng", "Recorded consumption; no inventory movement or BOM adjustment."),
+    "purchase_history": ("Lịch sử mua", "Record-only; no receipt, inbound or current SupplierTerm."),
     "sales": ("Doanh số", "Observed sales theo Product/ngày; missing khác zero."),
     "inventory_count": ("Kiểm kê lô", "Count cho lô đã có; không receipt hoặc tạo lô."),
     "opening_stock": ("Tồn đầu kỳ", "OPENING_STOCK của lô vật lý; không kiểm kê lô existing hoặc hàng thực nhận."),
@@ -25,6 +29,17 @@ SCHEMAS = {
 }
 
 LABELS = {
+    'source_record_key': 'Mã record lịch sử ở nguồn',
+    'event_name': 'Tên sự kiện lịch',
+    'declared_at': 'Thời điểm khai báo sự kiện',
+    'is_closed': 'Đóng cửa (true/false/unknown)',
+    'is_holiday': 'Ngày lễ (true/false/unknown)',
+    'promotion_name': 'Tên chương trình khuyến mãi quan sát',
+    'promotion_applied': 'Có khuyến mãi (true/false/unknown)',
+    'usage_date': 'Ngày thực sử dụng',
+    'order_date': 'Ngày đặt mua (có thể chưa biết)',
+    'report_date': 'Ngày báo cáo lịch sử mua',
+    'is_stockout': 'Observed product stockout (true/false/unknown)',
     "source_record_id": "Mã nguồn của lô tồn đầu kỳ",
     "lot_code": "Nhãn lô vật lý",
     "received_date": "Ngày thực nhận (có thể chưa biết)",
@@ -84,6 +99,14 @@ LABELS = {
     "declaration": "Nội dung khai báo",
 }
 ALIASES = {
+    'usage_history.usage_date': ('Ngày sử dụng',),
+    'usage_history.quantity': ('Lượng thực dùng',),
+    'usage_history.ingredient_id': ('Nguyên liệu sử dụng',),
+    'purchase_history.order_date': ('Ngày đặt mua',),
+    'purchase_history.received_date': ('Ngày thực nhận',),
+    'purchase_history.report_date': ('Ngày báo cáo mua',),
+    'promotion_observations.promotion_name': ('Tên CTKM quan sát',),
+    'sales.is_stockout': ('stockout', 'out of stock', 'Hết món?'),
     "sales.quantity": ("Số lượng bán", "SL", "quantity sold"),
     "sales.sales_date": ("Ngày bán", "Ngày", "sales date", "Ngày GD"),
     "sales.unit": ("ĐVT", "ĐV"),
@@ -110,7 +133,17 @@ ALIASES = {
     "products.name": ("Tên món / Combo",),
     "products.selling_unit": ("ĐVT",),
 }
+FIELD_LABELS = {
+    'usage_history.observed_at': 'Thời điểm thực sử dụng (có thể chưa biết)',
+    'purchase_history.price': 'Giá mua lịch sử theo cơ sở giá',
+}
 UNSUPPORTED = (
+    'business_constraints.minimum_safety_stock',
+    'business_constraints.product_priority',
+    'business_constraints.open_purchase_orders',
+    'calendar_events.weather',
+    'calendar_events.demand_uplift',
+    'promotion_observations.discount_rate',
     "payable_fees.tax_percent",
     "payable_fees.free_over_threshold",
     "payable_fees.tiers",
@@ -130,9 +163,8 @@ def unsupported_sheet_reason(headers):
     """Known unsupported workflows, identified by headers rather than filename."""
     present = {normalized_hint(h) for h in headers}
     for code, markers in (
-        ("ACTUAL_CONSUMPTION_UNSUPPORTED", ("Ngày sử dụng", "Lượng thực dùng")),
-        ("PURCHASE_RECEIPT_UNSUPPORTED", ("NCT", "SLN", "Giá nhập")),
-        ("CALENDAR_CONTEXT_UNSUPPORTED", ("Date", "Weekend", "Holiday")),
+        ("PURCHASE_HISTORY_DATE_AND_BASIS_REVIEW_REQUIRED", ("NCT", "SLN", "Giá nhập")),
+        ("CALENDAR_DECLARATION_REQUIRED", ("Date", "Weekend", "Holiday")),
         ("TABULAR_BUSINESS_RULES_UNSUPPORTED", ("Loại điều kiện", "Áp dụng cho NL")),
     ):
         if {normalized_hint(h) for h in markers} <= present:
@@ -227,6 +259,8 @@ def options(schema=None):
                 description = "Số còn thực tế của lô hiện có, không lượng nhận/mua; zero hợp lệ, không tạo lô mới."
             elif full == "sales.sales_date":
                 description = "Ngày bán đã quan sát; không ngày nhập file hoặc ngày mua nguyên liệu."
+            elif full == 'sales.is_stockout':
+                description = 'Observed product/day stockout. True: positive evidence; false: known uncensored; null: unknown. No sales-zero inference. Value aliases require explicit review.'
             elif full == "recipes.quantity_basis":
                 description = "Explicit PER_SERVING (mỗi đơn vị bán) hoặc WHOLE_BATCH (toàn yield); Owner review, không suy từ header."
             elif full == "recipes.quantity":
@@ -252,9 +286,9 @@ def options(schema=None):
                     unit_semantics="exact" if unit else None,
                     support="source_only" if role == "source_only" else "supported",
                     available=True,
-                    label=LABELS[key],
+                    label=FIELD_LABELS.get(full, LABELS[key]),
                     description=description,
-                    aliases=(key, LABELS[key], *ALIASES.get(full, ())),
+                    aliases=(key, FIELD_LABELS.get(full, LABELS[key]), *ALIASES.get(full, ())),
                     conditional_requirements=conditional,
                     nullable=nullable,
                     input_sources=(

@@ -1,5 +1,121 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+## A3 — backend Import → readiness → Planning acceptance
+
+Run from `D:\hocc_bk\ai\proj\projectMLAI\backend-import-sales-stockout`, branch
+`feat/import-sales-stockout`. Keep the A1/A2 WIP/setup. Use the existing interpreter;
+provider OFF, sequential owned-DB tests, no server/browser or Auth worktree changes.
+The main synthetic Store is created through assisted provisioning and all operational
+facts enter through public Import/configuration boundaries; no business seed fills gaps.
+Only the isolated unsupported-rule scope case uses the existing persisted-rule fixture.
+
+Before pytest, validate configured target **and the connected database/role**, without
+printing URLs/credentials. Do not use development, demo, Auth or shared test databases.
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-import-sales-stockout
+$env:IMPORT_LLM_SUGGESTIONS_ENABLED='false'
+@'
+from app.config import Settings
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import make_url
+s = Settings()
+u = make_url(s.test_database_url)
+assert u.database == 'shelfcash_import_test' and u.username == 'shelfcash_import_tester'
+assert not s.import_llm_suggestions_enabled
+engine = create_engine(s.test_database_url)
+with engine.connect() as c:
+    assert c.execute(text('SELECT current_database(), current_user')).one() == ('shelfcash_import_test', 'shelfcash_import_tester')
+engine.dispose()
+print('Owned Import DB/role and provider-OFF guards PASS')
+'@ | & ..\backend\.venv\Scripts\python.exe -
+```
+
+A3 coverage selectors below reproduce the acceptance gaps and affected helper callers.
+For continuation after a failure, run only the failed/affected selector; do not repeat
+already passing A1/A2 groups or a broad suite without a new reason.
+
+```powershell
+$cases = @(
+  'tests/integration/test_import_setup_stock.py::test_fresh_multifile_setup_readiness_custom_planning_and_retained_run',
+  'tests/integration/test_import_planning_a3.py',
+  'tests/integration/test_import_recipe_basis.py::test_two_recipe_reports_same_version_never_union_distinct_ingredients',
+  'tests/integration/test_import_staging.py::test_multiple_approved_profiles_require_explicit_context_selection',
+  'tests/integration/test_import_inventory_supplier.py::test_mixed_commit_lost_ack_is_reconciled_and_public_count_scope_invalidates_on_new_lot',
+  'tests/integration/test_import_setup_stock.py::test_fresh_opening_public_commit_reimport_and_count',
+  'tests/integration/test_import_history_a2.py::test_history_depends_on_reviewed_master_across_file_order'
+)
+& ..\backend\.venv\Scripts\python.exe -m pytest @cases -q --tb=short --show-capture=no
+```
+
+Expected main fixture: eight complementary files establish one Product/Ingredient/
+Supplier, recipe1 litre/cup, observed uncensored sales2 cups, pack4 litres at10 VND,
+opening12 litres and explicit fee NONE. Source/report, Store identities and units
+are reviewed before Owner full-spec approval; preview/confirm/commit run real Import
+workers and fresh Sessions. Explicit stock/sales/procurement coverage and BASELINE
+serving declaration, Store cap100 and custom BASE95% are required. R01 may still report
+DEFAULT_CONFIGURATION_UNAVAILABLE; successful custom Planning does not claim default
+readiness. Completion readiness is execution capability, not forecast quality.
+
+Seven-day BASE demand14 cups needs14 litres: winner purchases1 pack, total10, fees0,
+fulfilled14/lost0/service100%, consumed14/expired0/ending2. After explicit count0 plus
+CONFIRMED_EMPTY, winner buys4 packs for40 and ends2. Canonical stock stays unchanged
+by Planning; three movements are opening+12/count-2/count-10, one opening receipt.
+Budget100→80 and sales2→3 correction after retention leave both public Run responses
+and the original complete retained aggregate unchanged. Both upload orders are covered.
+Synthetic expected arithmetic/causal mechanics do not establish real forecast accuracy.
+
+Staff case obtains exact grants through public invitation/acceptance, reuses the
+approved declared source and commits without model calls. A new token stays unresolved;
+adding an alias forks the spec, Staff approval fails and Owner approval is required.
+Existing A1/A2 evidence owns stockout3-state/contributions/masked correction/current
+rights/isolation/rollback, history correction/price protection/no implicit grants and
+retained consumer coverage. A3 inherits that evidence instead of rerunning whole groups.
+The scoped safety case distinguishes unrelated Ingredients/future dates from a current
+computed dependency; unsupported value0 blocks Planning and does not block forecast.
+
+Recovery: fixture tests own only the guarded Import DB and reset it before/after a
+case using supported reset code. If connection/role/head guard fails, stop and correct
+the dedicated setup; never fall back to another DB or kill unrelated sessions. If a
+job fails, inspect J01/error and fresh state; obtain new preview/confirmation for stale
+input, resolve source/identity or use a nonretired approved version. A lost ACK retries
+the same key and reads the durable receipt; never blindly reapply stock. Preserve
+source/audit/artifacts and WIP. Migration heads remain independent; no migration,
+feature, FE change or provider call is needed for this acceptance slice.
+
+## A2 — manual review và targeted checks trên DB Import riêng
+
+CURRENT FACT: worktree `D:\hocc_bk\ai\proj\projectMLAI\backend-import-sales-stockout`,
+branch feat/import-sales-stockout; interpreter có dependencies tại
+`..\backend\.venv\Scripts\python.exe`. Settings TEST_DATABASE_URL phải trỏ
+shelfcash_import_test/role shelfcash_import_tester trước bất kỳ pytest/reset nào.
+Provider OFF; mỗi phiên chạy DB checks tuần tự, không dùng shelfcash_test/Auth/dev DB.
+Import migration0021 parent0019; không merge Auth heads0018/0020. Không startup migrate.
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-import-sales-stockout
+$env:IMPORT_LLM_SUGGESTIONS_ENABLED='false'
+& ..\backend\.venv\Scripts\python.exe -c "from app.config import Settings; from sqlalchemy.engine import make_url; u=make_url(Settings().test_database_url); assert u.database=='shelfcash_import_test' and u.username=='shelfcash_import_tester'; print('Import DB guard OK')"
+& ..\backend\.venv\Scripts\python.exe -m pytest tests/integration/test_import_history_a2.py tests/integration/test_import_history_migration_a2.py -q --tb=short --show-capture=no
+```
+
+Manual synthetic flow: upload rows with stable source_record_key/evidence; declare
+source/report before reuse; review typed fields and approved entity/physical unit
+bindings; Owner approves reusable profile. Staff must separately have new domain
+read/write grants and import.commit; purchase requires procurement.cost.read. Preview
+keeps RECORDED_HISTORY_ONLY and calendar's no-feature warning. Confirm review, then
+commit; a correction additionally sends history_corrections row_id/expected_version/
+reason plus commit reason. I06 exposes history_record/canonical_version/provenance;
+H01/H02 category calendar/usage/purchase discovers uploads (promotion=sales). Reimport
+same facts NO_OP, changed fact append revision; old completion stays unchanged.
+Verify through fresh Session that history rows exist and no lot/movement/receipt/
+SupplierTerm is generated. History presence does not make Planning inputs complete.
+R01 rejects configured unsupported MIN_SAFETY_STOCK for computed scope. Six demo
+workbooks do not supply business truth or replace synthetic boundary coverage.
+
+Coverage and current task notes/results belong in the conversation; commands above
+are repeatable verification instructions, not a claim of a full suite or FE pass.
+
 ## Phạm vi và chuẩn bị
 
 **CURRENT FACT:** một backend Python/FastAPI với các thread Import, Planning và
@@ -29,6 +145,36 @@ Nếu `.venv` đã có thì dùng lại. Không cần activate; gọi thẳng py
 
 Store là quán; Owner là chủ quán; Staff là nhân viên. Quyền product không bao gồm
 quyền reset/seed/admin DB. Không dùng dữ liệu khách thật trong profile demo.
+
+
+ACCEPTED DECISION (explicit user authorization): different owned test DBs may run
+in parallel; this extends ADR-007's original sequential test workflow only across
+isolated DBs. No change to persistence or transaction architecture.
+
+CURRENT FACT: parallel Auth/Import worktrees use one existing local PostgreSQL
+instance on 127.0.0.1:5432. Import owns `shelfcash_import_test` (role
+`shelfcash_import_tester`); Auth owns `shelfcash_auth_test` (role
+`shelfcash_auth_tester`). Each ignored `.env` supplies its TEST_DATABASE_URL;
+process environment overrides `.env`, so verify the effective target before writes.
+Dedicated roles have no superuser/CREATEDB/CREATEROLE rights and own only their DB.
+Local pg_hba rules restrict these roles to their corresponding database.
+Tests/reset are sequential within each DB; different owned DBs may run in parallel.
+Legacy `shelfcash_test` remains supported. Stop both clients before setup changes;
+do not start another Compose on port5432 or touch shared/development DBs.
+
+Run from the intended worktree (no credentials in commands):
+```powershell
+.\.venv\Scripts\python.exe -m scripts.dev status --test-database
+.\.venv\Scripts\python.exe -m scripts.dev reset --test-database
+# PowerShell wrapper: .\scripts\reset_db.ps1 -TestDatabase
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_database_config.py
+```
+Status prints actual database/current_user and this tree's migration heads.
+Reset explicitly selects effective TEST_DATABASE_URL, validates the allowlist,
+checks connected identity, and migrates only that tree's head. Bare reset still
+uses DATABASE_URL: use --test-database for worktree test setup. Never print URLs.
+Auth migration 0018 and Import migration 0019 each descend from 0017; do not copy
+branch migrations across trees or merge heads for this setup.
 
 ## 1. Thiết lập demo mới — chỉ thực hiện một lần
 

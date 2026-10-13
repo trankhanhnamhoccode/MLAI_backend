@@ -18,7 +18,7 @@ class PermissionDescriptor(DTO):
 
 
 class GrantsRequest(DTO):
-    grants: tuple[StrictStr, ...] = Field(max_length=37)
+    grants: tuple[StrictStr, ...] = Field(max_length=43)
     reason: StrictStr = Field(min_length=1, max_length=1000)
 
     @field_validator("grants")
@@ -96,7 +96,7 @@ class StaffMembership(DTO):
 
 class MembershipList(DTO):
     items: tuple[StaffMembership, ...]
-    permission_catalog_version: Literal["permissions-v2"] = "permissions-v2"
+    permission_catalog_version: Literal["permissions-v3"] = "permissions-v3"
     permission_catalog: tuple[PermissionDescriptor, ...]
 
 

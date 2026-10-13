@@ -48,12 +48,13 @@ def test_controlled_normalization_duplicates_and_no_identity_inference():
 
 def test_unsupported_sheets_and_ambiguous_business_meanings_are_not_forced():
     for headers in (
-        ('Ngày sử dụng', 'Tên NL', 'Lượng thực dùng', 'ĐVT', 'Hao hụt', 'Nguồn'),
         ('NCT', 'Tên hàng', 'SLN', 'ĐVT', 'Giá nhập', 'Thành tiền'),
         ('Date', 'Weekend', 'Holiday', 'Store closed', 'Promo'),
         ('Loại điều kiện', 'Áp dụng cho NL', 'Giá trị', 'Unit', 'Currency'),
     ):
         assert rule_classification(headers, 'sales')[0] is None
+    usage = rule_classification(('Ngày sử dụng', 'Lượng thực dùng'), 'sales')
+    assert usage[0] == 'usage_history' and usage[3]  # Missing identity/unit/evidence still requires review.
     kind, targets, _, _ = rule_classification(
         ('Vendor', 'Material', 'MOQ', 'Order UOM', 'Pack Size', 'Base UOM', 'Lead time (days)', 'Giá mua'), '')
     assert kind == 'supplier_terms'

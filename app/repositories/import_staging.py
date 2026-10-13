@@ -21,7 +21,8 @@ from app.application.contracts.auth import AuthError
 from app.application.import_identity import content_digest
 
 from app.models.operational_import import SupplierSourceRecord, TermSourceRecord, PayableFeeRecord, ScopeDeclarationRecord, InventoryReceiptRecord
-from app.models.import_staging import ImportBatch, ImportFile, ImportAudit
+from app.models.import_history import ImportHistoryRecord
+from app.models.import_staging import ImportBatch, ImportFile, ImportAudit, ImportProfileVersion
 from sqlalchemy.orm import Session
 
 
@@ -54,9 +55,13 @@ OPERATIONAL = (
     Supplier,
     SupplierTerm,
     SupplierSourceRecord, TermSourceRecord, PayableFeeRecord, ScopeDeclarationRecord,
-    InventoryReceiptRecord, ImportAudit,
+    InventoryReceiptRecord, ImportAudit, ImportHistoryRecord,
 )
 SCHEMA_TABLES = {
+    "calendar_events": (ImportHistoryRecord,),
+    "promotion_observations": (Product, ImportHistoryRecord),
+    "usage_history": (Ingredient, ImportHistoryRecord),
+    "purchase_history": (Ingredient, Supplier, ImportHistoryRecord),
     "sales": (Product, SalesDaily),
     "inventory_count": (Ingredient, InventoryLot, InventoryMovement, ImportAudit),
     "opening_stock": (Ingredient, Supplier, InventoryLot, InventoryMovement, InventoryReceiptRecord, ImportAudit),
@@ -66,7 +71,7 @@ SCHEMA_TABLES = {
     "suppliers": (Supplier, SupplierSourceRecord),
     "supplier_terms": (Supplier, Ingredient, SupplierTerm, SupplierSourceRecord, TermSourceRecord, PayableFeeRecord),
     "payable_fees": (Supplier, SupplierTerm, SupplierSourceRecord, TermSourceRecord, PayableFeeRecord),
-    "scope_declarations": OPERATIONAL,
+    "scope_declarations": tuple(m for m in OPERATIONAL if m is not ImportHistoryRecord),
     "scope_declarations.INVENTORY": (Ingredient, InventoryLot, InventoryMovement, ScopeDeclarationRecord),
     "scope_declarations.SALES_COVERAGE": (Product, SalesDaily, ScopeDeclarationRecord),
     "scope_declarations.PROCUREMENT_CONTEXT": (Supplier, Ingredient, ScopeDeclarationRecord),
@@ -116,6 +121,9 @@ def read_set_in_session(s, store_id, schemas=None, *, fence=False):
         if model not in selected:
             continue
         query = select(model, text("xmin::text")).where(model.store_id == store_id)
+        if model is ImportHistoryRecord:
+            query = query.where(ImportHistoryRecord.domain.in_(set(chosen) & {
+                'calendar_events','promotion_observations','usage_history','purchase_history'}))
         if model is ImportAudit:
             query = query.where(ImportAudit.kind == "IMPORT_CANONICAL_COMMITTED")
         rows = s.execute(
@@ -145,8 +153,25 @@ def read_set_in_session(s, store_id, schemas=None, *, fence=False):
             raise AuthError("RESOURCE_LIMIT_EXCEEDED", 413)
         values["import_sales_sources"] = []
         for audit in audits:
+            completion = audit.record_json.get('completion', {})
+            legacy_scopes = {}
+            if any('report_type' not in r for r in audit.record_json.get('sales_sources', ())):
+                # Recover only immutable, same-Store pinned profile evidence, never
+                # infer a historical report type from the incoming source declaration.
+                for ref in completion.get('mapping_bindings', ()):
+                    profile = s.get(ImportProfileVersion, (UUID(ref['profile_id']), ref['version']))
+                    if profile is not None and profile.store_id == store_id and profile.content_digest == ref['content_digest']:
+                        legacy_scopes[str(ref['sheet_id'])] = profile.spec_json['scope']
             for source in audit.record_json.get("sales_sources", []):
                 if len(values["import_sales_sources"]) >= 100000:
                     raise AuthError("RESOURCE_LIMIT_EXCEEDED", 413)
+                source = dict(source)
+                if 'report_type' not in source:
+                    candidates = {legacy_scopes[str(ref['source_location']['sheet_id'])]['report_type']
+                        for ref in completion.get('canonical_references', ())
+                        if ref.get('canonical_domain') == 'sales' and ref['canonical_id'] == source['canonical_id']
+                        and str(ref['source_location']['sheet_id']) in legacy_scopes
+                        and legacy_scopes[str(ref['source_location']['sheet_id'])]['source_system_key'] == source['source_system_key']}
+                    source['report_type'] = next(iter(candidates)) if len(candidates) == 1 else None
                 values["import_sales_sources"].append({**source, "audit_id": str(audit.id)})
     return values, content_digest(values)

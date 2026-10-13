@@ -1,5 +1,12 @@
 # Forecast execution contract and historical quantile baseline — S2.1 / S2.2
 
+CURRENT FACT A1: new capture schema 2 retains typed derived demand records
+and `causal_stockout_v1`. Baseline samples and trained lag/rolling/labels use usable
+demand, excluding unsupported censored days; unknown history retains observed values
+with warnings. Historical schema-1 payload/digest/replay keeps behavior below.
+Fresh-session persistence/replay is verified on the owned Import test DB;
+[ADR-A1](../adr/ADR-A1-observed-stockout-demand-policy.md) owns policy.
+
 Classification: CURRENT FACT for the modules/tests described here; ACCEPTED DECISION
 for user-approved semantics in [ADR-012](../adr/ADR-012-observed-sales-forecast-execution-contract.md)
 and the explicit S2.2 task specification below. CURRENT FACT: baseline-specific
@@ -144,13 +151,13 @@ history requirements of a future model. No 7/14/28/90-day threshold or fallback 
    prediction quantile computation**, with code BASELINE_NOT_READY, deterministic
    product_ids of all no-history Products and the complete readiness tuple. No partial
    result, DB write or HTTP mapping.
-4. For each ready Product, take every captured observed quantity in the requested
+4. Schema 1: for each ready Product, take every captured observed quantity in the requested
    history window, including zero/repeated values; sort a new tuple ascending.
 5. Compute empirical P25/P50/P75 by Decimal linear interpolation and use the same
    triple for each of the seven forecast dates. Publish truthful metadata
    model_type=historical_quantile_baseline, model_version=1 (strings), artifact_identity=None,
-   No trained artifact, fake training metadata or metrics. CURRENT FACT: warnings=();
-   this is an implementation choice, not an accepted confidence/quality warning policy.
+   No trained artifact, fake training metadata or metrics. Schema-1 warnings=();
+   schema 2 uses usable derived samples and captured demand warnings per ADR-A1.
 6. Call canonical validate_engine_result and return only the validated result.
 
 For sorted x[0..n-1] and q=.25/.50/.75, position=(n-1)*q, lower=floor(position),
@@ -165,8 +172,9 @@ limits. It restores caller context. Samples/dates are never sorted in place.
 Known mathematical examples (not measured accuracy): [12.5] -> 12.5/12.5/12.5;
 [10,20] -> 12.5/15/17.5; [0,10] -> 2.5/5/7.5; [0,0,10,20] -> 0/5/12.5.
 Monday=10, Tuesday=missing, Wednesday=0 uses **two** samples, [10,0], not [10,0,0].
-No imputation, clipping, weights, trend, weekday/seasonal/calendar/weather feature,
-stockout correction, reconstruction or arbitrary uncertainty percentage exists.
+For schema 1, no imputation, clipping, weights, trend, weekday/seasonal/calendar/weather
+feature, stockout correction, reconstruction or arbitrary uncertainty percentage exists.
+Schema 2 applies the versioned causal projection before the unchanged quantile helper.
 
 Output retains S2.1 canonical order **forecast_date then Product UUID**. A two-Product
 request returns exactly 14 rows. Same capture yields the same readiness, predictions,

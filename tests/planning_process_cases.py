@@ -7,15 +7,20 @@ the same service calls, local test guards and transaction/process behavior.
 def child_claim_export(url,ident,now,queue,release):
     from datetime import datetime
     from app.config import Settings
-    from scripts.dev import validate_reset_target
+    from scripts.dev import TEST_DATABASE_NAMES, validate_reset_target
     from app.infrastructure.database.engine import create_database_engine
     from app.application.use_cases.auth import AuthUseCases
     from app.application.use_cases.planning_public import PublicPlanning
     from app.application.use_cases.planning_exports import PlanningExports
     settings=Settings(_env_file=None,environment='test',database_url=url);validate_reset_target(settings)
-    assert settings.database_url.endswith('/shelfcash_test')
+    from sqlalchemy.engine import make_url
+    from sqlalchemy import text
+    parsed = make_url(settings.database_url)
+    assert parsed.database in TEST_DATABASE_NAMES
     engine=create_database_engine(settings)
     try:
+        with engine.connect() as c:
+            assert c.scalar(text('SELECT current_database()')) == parsed.database
         service=PlanningExports(PublicPlanning(AuthUseCases(engine,clock=lambda:datetime.fromisoformat(now)),None),None,None)
         record=service.claim(ident);queue.put(record.claim.model_dump(mode='json'));release.wait(20)
     finally:engine.dispose()
@@ -28,16 +33,16 @@ def child_public_claim(url,store,run,clock_iso,queue):
     from sqlalchemy.engine import make_url
     from sqlalchemy import text
     from app.config import Settings
-    from scripts.dev import validate_reset_target
+    from scripts.dev import TEST_DATABASE_NAMES, validate_reset_target
     from app.infrastructure.database.engine import create_database_engine
     from app.application.use_cases.auth import AuthUseCases
     from app.application.use_cases.planning_run import PlanningRunUseCases
     parsed=make_url(url)
-    assert parsed.database=='shelfcash_test' and parsed.host in {'127.0.0.1','localhost','::1'}
+    assert parsed.database in TEST_DATABASE_NAMES and parsed.host in {'127.0.0.1','localhost','::1'}
     settings=Settings(_env_file=None,environment='test',database_url=url);validate_reset_target(settings)
     engine=create_database_engine(settings)
     try:
-        with engine.connect() as conn:assert conn.scalar(text('select current_database()'))=='shelfcash_test'
+        with engine.connect() as conn:assert conn.scalar(text('select current_database()'))==parsed.database
         clock=lambda:datetime.fromisoformat(clock_iso)
         execution=PlanningExecution(AuthUseCases(engine,clock=clock),None)
         record=execution.runs.read(store,run).record
@@ -55,14 +60,14 @@ def child_claim(url,store,run_id,queue):
     from app.application.use_cases.planning_run import PlanningRunUseCases
     from sqlalchemy.engine import make_url
     from app.config import Settings
-    from scripts.dev import validate_reset_target
+    from scripts.dev import TEST_DATABASE_NAMES, validate_reset_target
     parsed=make_url(url)
-    assert parsed.database=='shelfcash_test' and parsed.host in {'127.0.0.1','localhost','::1'}
+    assert parsed.database in TEST_DATABASE_NAMES and parsed.host in {'127.0.0.1','localhost','::1'}
     settings=Settings(_env_file=None,environment='test',database_url=url)
     validate_reset_target(settings)
     engine=create_database_engine(settings)
     try:
-        with engine.connect() as c:assert c.scalar(text('select current_database()'))=='shelfcash_test'
+        with engine.connect() as c:assert c.scalar(text('select current_database()'))==parsed.database
         record=PlanningRunUseCases(engine).claim(store,run_id)
         queue.put(record.claim.model_dump(mode='json'))
     finally:engine.dispose()

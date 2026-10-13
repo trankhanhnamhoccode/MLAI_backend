@@ -25,8 +25,9 @@ from uuid import uuid4
 from datetime import datetime, timezone
 from app.application.import_identity import content_digest
 from app.application.import_sales_sources import sources_for, latest_source
+from app.application.contracts.import_history import HISTORY_MODELS
 
-SUPPORTED = frozenset({"products", "ingredients", "sales", "recipes", "inventory_count", "opening_stock", "suppliers", "supplier_terms", "payable_fees", "scope_declarations"})
+SUPPORTED = frozenset({"products", "ingredients", "sales", "recipes", "inventory_count", "opening_stock", "suppliers", "supplier_terms", "payable_fees", "scope_declarations", *HISTORY_MODELS})
 
 
 def commit_rows(preview, body):
@@ -40,10 +41,13 @@ def commit_rows(preview, body):
         raise AuthError("SCHEMA_BLOCKED", 409)
     if preview.content_json["summary"]["blockers"] or any(r.blockers or not r.after for r in rows):
         raise AuthError("PREVIEW_BLOCKED", 409)
+    if any(r.after.domain == 'sales' and not r.sales_contributions for r in rows):
+        # Old pending previews cannot authorize an implicit stockout overwrite.
+        raise AuthError('SALES_PLAN_REVIEW_REQUIRED', 409)
     # Validate the retained effective plan, not client-declared intent. Source/action
     # reasons remain separate evidence; review confirmation does not replace this.
     reason_actions = {"REPLACE_DAILY_TOTAL", "MERGE_DISJOINT_SALES", "COUNT_CORRECTION",
-                      "AMEND_TERM_PERIOD", "AMEND_FEE_PERIOD"}
+                      "AMEND_TERM_PERIOD", "AMEND_FEE_PERIOD", "CORRECT_HISTORY_RECORD"}
     if any(r.proposed_action in reason_actions for r in rows) and not body.reason:
         raise AuthError("COMMIT_REASON_REQUIRED", 422)
     required = {r.row_id: r for r in rows if r.confirmation_required and r.after.domain == "sales"}
@@ -61,6 +65,12 @@ def commit_rows(preview, body):
     confirmed_supplier = {r.action_id for r in body.supplier_changes}
     if len(confirmed_supplier) != len(body.supplier_changes) or confirmed_supplier != required_supplier:
         raise AuthError("INVALID_IMPORT_CONFIGURATION",422)
+    required_history = {r.row_id: r for r in rows if r.proposed_action == 'CORRECT_HISTORY_RECORD'}
+    confirmed_history = {c.row_id: c for c in body.history_corrections}
+    if len(confirmed_history) != len(body.history_corrections) or set(confirmed_history) != set(required_history):
+        raise AuthError('HISTORY_CORRECTION_UNRESOLVED', 409)
+    if any(confirmed_history[k].expected_version != r.expected_version for k, r in required_history.items()):
+        raise AuthError('PREVIEW_STALE', 409)
     return rows
 
 
@@ -213,22 +223,45 @@ def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None,
                     affected_ingredients.add(value.ingredient_id)
                 elif row.proposed_action != "NO_OP":
                     raise AuthError("PREVIEW_BLOCKED", 409)
+            elif value.domain in HISTORY_MODELS:
+                canonical_id = row.target_reserved_or_existing_id
+                if row.proposed_action != 'NO_OP':
+                    from app.application.use_cases.import_history_write import write_history
+                    spec = specs[str(row.source_location.sheet_id)]
+                    version = write_history(session, store_id, row, spec.scope,
+                        dict(row=row.model_dump(mode='json'), spec=spec.model_dump(mode='json'),
+                            actor_id=str(actor_id), correction=[c.model_dump(mode='json')
+                                for c in body.history_corrections if c.row_id == row.row_id]),
+                        recorded_at or datetime.now(timezone.utc))
+                    canonical_version = str(version)
+                    if row.proposed_action == 'CORRECT_HISTORY_RECORD':
+                        changed += 1
+                    else:
+                        inserted += 1
+                else:
+                    canonical_version = row.expected_version
             elif value.domain == "sales":
                 spec = specs[str(row.source_location.sheet_id)]
                 source_quantity = row.normalized_source_quantity
                 if source_quantity is None:
                     raise AuthError("PREVIEW_STALE", 409)
                 data = RecordDailySalesInput(store_id=store_id, product_id=value.product_id,
-                                            sales_date=value.sales_date, quantity=Decimal(value.quantity))
+                                            sales_date=value.sales_date, quantity=Decimal(value.quantity),
+                                            is_stockout=value.is_stockout)
                 writer = SalesUseCases(session)
                 if row.proposed_action == "INSERT":
                     result = writer.record_in_transaction(data)
                     inserted += 1
                     added_sales += 1
                 elif row.proposed_action in {"REPLACE_DAILY_TOTAL", "MERGE_DISJOINT_SALES"}:
-                    result = writer.replace_in_transaction(data)
-                    changed += 1
-                    changed_sales += 1
+                    if row.before is None and row.proposed_action == 'MERGE_DISJOINT_SALES':
+                        result = writer.record_in_transaction(data)
+                        inserted += 1
+                        added_sales += 1
+                    else:
+                        result = writer.replace_in_transaction(data)
+                        changed += 1
+                        changed_sales += 1
                 elif row.proposed_action == "NO_OP":
                     old = writer.sales.get_daily_sale(store_id, value.product_id, value.sales_date)
                     if old is None:
@@ -238,22 +271,35 @@ def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None,
                     raise AuthError("PREVIEW_BLOCKED", 409)
                 canonical_id = result.id
                 history = sources_for(snapshot, value.product_id, value.sales_date)
-                old_source = latest_source(history, spec.scope.source_system_key, value.business_report_key)
-                if not old_source or Decimal(old_source["source_quantity"]) != Decimal(source_quantity):
+                contributions = row.sales_contributions or (dto.SalesContribution(
+                    source_system_key=spec.scope.source_system_key, report_type=spec.scope.report_type,
+                    business_report_key=value.business_report_key, semantics=spec.sales_semantics,
+                    quantity=source_quantity, is_stockout=row.normalized_source_stockout,
+                    stockout_update=row.stockout_update, source_locations=(row.source_location,), provenance=row.provenance),)
+                for contribution in contributions:
+                    old_source = latest_source(history, contribution.source_system_key, contribution.business_report_key, contribution.report_type)
+                    if (old_source and Decimal(old_source['source_quantity']) == Decimal(contribution.quantity)
+                            and old_source.get('source_stockout') is contribution.is_stockout):
+                        continue
                     resolution = next((r for r in body.resolutions if r.row_id == row.row_id), None)
                     sources.append(dict(
-                        source_system_key=spec.scope.source_system_key, business_report_key=value.business_report_key,
-                        product_id=str(value.product_id), sales_date=str(value.sales_date), semantics=spec.sales_semantics,
-                        source_quantity=source_quantity, canonical_quantity=value.quantity, canonical_id=str(canonical_id),
+                        source_system_key=contribution.source_system_key, business_report_key=contribution.business_report_key,
+                        report_type=contribution.report_type, source_stockout=contribution.is_stockout,
+                        canonical_stockout=value.is_stockout, stockout_update=contribution.stockout_update,
+                        source_locations=[loc.model_dump(mode='json') for loc in contribution.source_locations],
+                        provenance=[p.model_dump(mode='json') for p in contribution.provenance],
+                        product_id=str(value.product_id), sales_date=str(value.sales_date), semantics=contribution.semantics,
+                        source_quantity=contribution.quantity, canonical_quantity=value.quantity, canonical_id=str(canonical_id),
                         source_revision=old_source["source_revision"] + 1 if old_source else 1,
                         canonical_revision=max((r["canonical_revision"] for r in history), default=0) + 1,
                         resolution=resolution.model_dump(mode="json") if resolution else None,
                         baseline=(dict(quantity=row.before.quantity,
+                                       is_stockout=row.before.is_stockout,
                                        canonical_id=str(canonical_id),
                                        expected_version=next(r["_row_version"] for r in snapshot["sales_daily"]
                                                              if r["id"] == str(canonical_id)),
                                        evidence_reference=resolution.evidence_reference)
-                                  if row.proposed_action == "MERGE_DISJOINT_SALES" and not history and resolution else None),
+                                  if row.proposed_action == "MERGE_DISJOINT_SALES" and row.before and not history and resolution else None),
                     ))
             else:
                 raise AuthError("SCHEMA_BLOCKED", 409)
@@ -282,6 +328,8 @@ def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None,
             line_provenance=row.line_provenance, movement_ids=movement_ids,
             supplier_term_semantics=row.supplier_term_semantics,
             inventory_effect=row.inventory_effect,
+            sales_contributions=row.sales_contributions,
+            history_record=value if value.domain in HISTORY_MODELS else None,
             nested_references=row.nested_references,nested_provenance=row.nested_provenance,canonical_version=canonical_version,
             provenance=row.model_dump(mode="json")["provenance"],
         ))

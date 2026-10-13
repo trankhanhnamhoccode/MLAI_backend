@@ -7,6 +7,10 @@ from app.application.contracts.import_scalars import ImportDTO, Text
 from app.application.contracts.import_domains import SOURCE_MODELS
 
 BOTH = {
+    "calendar_events": (),
+    "promotion_observations": (),
+    "usage_history": ("unit",),
+    "purchase_history": ("unit", "currency", "price_basis", "price_unit"),
     "sales": ("unit",),
     "inventory_count": ("unit",),
     "opening_stock": ("unit", "currency"),
@@ -20,7 +24,11 @@ BOTH = {
     "scope_declarations": (),
 }
 IMPORT_ONLY = {
-    "sales": ("business_report_key",),
+    "calendar_events": ("effective_from", "effective_to", "declared_at", "is_closed", "is_holiday", "evidence_reference"),
+    "promotion_observations": ("sales_date", "promotion_name", "promotion_applied", "evidence_reference"),
+    "usage_history": ("usage_date", "observed_at", "evidence_reference"),
+    "purchase_history": ("order_date", "received_date", "report_date", "price", "price_quantity", "supplier_id", "evidence_reference"),
+    "sales": ("business_report_key", "is_stockout"),
     "inventory_count": ("observed_at", "reason"),
     "opening_stock": ("observed_at", "reason", "received_date", "expiry_date", "supplier_id", "unit_cost"),
     "recipes": ("version", "effective_from", "effective_to"),

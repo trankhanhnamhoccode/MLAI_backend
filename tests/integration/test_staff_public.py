@@ -36,7 +36,7 @@ def staff_env(env):
 def create(ctx, *, email="staff@example.test", grants=("menu.read",), key=None):
     env, _, owner, _, _, headers = ctx
     response = env[5].post(f"/api/v1/stores/{owner.store_id}/staff-invitations",
-        headers={**headers,"Idempotency-Key":key or str(uuid4())},json=dict(email=email,grants=list(grants),permission_catalog_version="permissions-v2",reason="Synthetic invitation"))
+        headers={**headers,"Idempotency-Key":key or str(uuid4())},json=dict(email=email,grants=list(grants),permission_catalog_version="permissions-v3",reason="Synthetic invitation"))
     assert response.status_code == 201, response.text
     data = response.json()["data"]
     with Session(env[1]) as fresh:
@@ -118,7 +118,7 @@ def test_grants_http_cas_replace_empty_noop_retry_current_authority(staff_env):
     owner_session(ctx)
     url=f"/api/v1/stores/{owner.store_id}/memberships"
     listing=env[5].get(url).json()["data"]
-    assert listing["permission_catalog_version"]=="permissions-v2" and len(listing["permission_catalog"])==37
+    assert listing["permission_catalog_version"]=="permissions-v3" and len(listing["permission_catalog"])==43
     item=listing["items"][0]
     path=url+f"/{item['membership_id']}/permissions"
     request_headers={**headers,"Idempotency-Key":str(uuid4()),"If-Match":item["version"]}
@@ -153,7 +153,7 @@ def test_grants_http_cas_replace_empty_noop_retry_current_authority(staff_env):
 def test_create_rejects_invalid_fields(staff_env,change,code):
     env,_,owner,_,_,headers=staff_env
     response=env[5].post(f"/api/v1/stores/{owner.store_id}/staff-invitations",headers={**headers,"Idempotency-Key":str(uuid4())},
-        json=dict(email="other@example.test",grants=["menu.read"],permission_catalog_version="permissions-v2",reason="test")|change)
+        json=dict(email="other@example.test",grants=["menu.read"],permission_catalog_version="permissions-v3",reason="test")|change)
     assert response.json()["error"]["code"]==code
     with Session(env[1]) as fresh:
         assert fresh.scalar(select(func.count()).select_from(StaffInvitation))==0
@@ -169,7 +169,7 @@ def test_owner_only_cross_store_filters_and_headers(staff_env):
     assert env[5].get(base+"/staff-invitations?view=events&status=pending").status_code==422
     assert env[5].get(base+"/staff-invitations?unknown=x").status_code==422
     assert env[5].post(base+"/staff-invitations",json={}).status_code==403
-    assert env[5].post(base+"/staff-invitations",headers={"Origin":ORIGIN},json=dict(email="x@example.test",grants=[],permission_catalog_version="permissions-v2",reason="x")).status_code==422
+    assert env[5].post(base+"/staff-invitations",headers={"Origin":ORIGIN},json=dict(email="x@example.test",grants=[],permission_catalog_version="permissions-v3",reason="x")).status_code==422
     login(env,"foreign@example.test")
     assert env[5].get(base+"/memberships").status_code==404
     assert env[5].get(base+"/staff-invitations").status_code==404
@@ -196,9 +196,9 @@ def test_reissue_revoke_expiry_and_existing_membership(staff_env):
     ctx=staff_env
     data,old=create(ctx)
     env,staff,owner,target,token,headers=ctx
-    assert env[5].post(f"/api/v1/stores/{owner.store_id}/staff-invitations",headers={**headers,"Idempotency-Key":str(uuid4())},json=dict(email="staff@example.test",grants=[],permission_catalog_version="permissions-v2",reason="duplicate")).json()["error"]["code"]=="INVITATION_ALREADY_PENDING"
+    assert env[5].post(f"/api/v1/stores/{owner.store_id}/staff-invitations",headers={**headers,"Idempotency-Key":str(uuid4())},json=dict(email="staff@example.test",grants=[],permission_catalog_version="permissions-v3",reason="duplicate")).json()["error"]["code"]=="INVITATION_ALREADY_PENDING"
     path=f"/api/v1/stores/{owner.store_id}/staff-invitations/{data['invitation']['invitation_id']}/actions"
-    action=env[5].post(path,headers={**headers,"Idempotency-Key":str(uuid4()),"If-Match":data["invitation"]["version"]},json=dict(action="reissue",grants=[],permission_catalog_version="permissions-v2",reason="new offer"))
+    action=env[5].post(path,headers={**headers,"Idempotency-Key":str(uuid4()),"If-Match":data["invitation"]["version"]},json=dict(action="reissue",grants=[],permission_catalog_version="permissions-v3",reason="new offer"))
     assert action.status_code==200,action.text
     new=action.json()["data"]
     with Session(env[1]) as fresh:
@@ -315,7 +315,7 @@ def test_concurrent_accept_transition_single_membership(staff_env,op):
         try:
             if action=="accept":
                 return staff.accept(target_token,identifier,AcceptInvitation(token=raw,accept=True),str(uuid4()),data["invitation"]["version"],csrf,"concurrency","accept")[0]
-            body=RevokeInvitation(action="revoke",reason="cancel") if action=="revoke" else ReissueInvitation(action="reissue",grants=(),permission_catalog_version="permissions-v2",reason="rotate")
+            body=RevokeInvitation(action="revoke",reason="cancel") if action=="revoke" else ReissueInvitation(action="reissue",grants=(),permission_catalog_version="permissions-v3",reason="rotate")
             return staff.action(owner_token,owner.store_id,identifier,body,str(uuid4()),data["invitation"]["version"],headers["X-CSRF-Token"],"owner")
         except AuthError as error:return error
     with ThreadPoolExecutor(max_workers=2) as pool:
@@ -431,7 +431,7 @@ def test_create_commit_error_and_cleanup_never_fabricate_success(staff_env,monke
         m.setattr(Session,"rollback",bad_rollback)
         m.setattr(Session,"close",bad_close)
         response=env[5].post(f"/api/v1/stores/{owner.store_id}/staff-invitations",headers={**headers,"Idempotency-Key":str(uuid4())},
-            json=dict(email="failure@example.test",grants=[],permission_catalog_version="permissions-v2",reason="failure test"))
+            json=dict(email="failure@example.test",grants=[],permission_catalog_version="permissions-v3",reason="failure test"))
         assert response.status_code==503 and "SYNTHETIC-PRIMARY" not in response.text
     assert any("rollback failed" in n for n in primary.__notes__) and any("close failed" in n for n in primary.__notes__)
     with Session(env[1]) as fresh:
@@ -479,7 +479,7 @@ def test_owner_create_idempotency_replay_and_store_mutation_throttle(staff_env):
     assert first==again
     env,_,owner,_,_,headers=ctx
     base=f"/api/v1/stores/{owner.store_id}/staff-invitations"
-    body=dict(email="other@example.test",grants=[],permission_catalog_version="permissions-v2",reason="different")
+    body=dict(email="other@example.test",grants=[],permission_catalog_version="permissions-v3",reason="different")
     assert env[5].post(base,headers={**headers,"Idempotency-Key":key},json=body).status_code==409
     # Nine invalid catalogue mutations count; receipt replay does not count.
     for i in range(9):
@@ -487,7 +487,7 @@ def test_owner_create_idempotency_replay_and_store_mutation_throttle(staff_env):
         assert r.status_code==409
     r=env[5].post(base,headers={**headers,"Idempotency-Key":str(uuid4())},json=body)
     assert r.status_code==429 and int(r.headers["retry-after"])>0
-    r=env[5].post(base,headers={**headers,"Idempotency-Key":key},json=dict(email="staff@example.test",grants=["menu.read"],permission_catalog_version="permissions-v2",reason="Synthetic invitation"))
+    r=env[5].post(base,headers={**headers,"Idempotency-Key":key},json=dict(email="staff@example.test",grants=["menu.read"],permission_catalog_version="permissions-v3",reason="Synthetic invitation"))
     assert r.status_code==201 and r.json()["data"]==first
 
 
@@ -526,7 +526,7 @@ def test_two_dispatchers_one_send_and_reissue_during_delivery(staff_env):
         second=pool.submit(dispatcher.dispatch,"support-test",KEY,send)
         assert second.result(timeout=10)==dict(delivered=0,failed=0,cancelled=0)
         rotated=staff.action(token,owner.store_id,UUID(data["invitation"]["invitation_id"]),
-            ReissueInvitation(action="reissue",grants=(),permission_catalog_version="permissions-v2",reason="Rotate in flight"),
+            ReissueInvitation(action="reissue",grants=(),permission_catalog_version="permissions-v3",reason="Rotate in flight"),
             str(uuid4()),data["invitation"]["version"],headers["X-CSRF-Token"],"delivery-race")
         release.set()
         assert first.result(timeout=10)["cancelled"]==1
@@ -560,7 +560,7 @@ def test_cross_store_invitation_and_wrong_account_offer_no_private_facts(staff_e
         headers={**headers,"If-Match":data["invitation"]["version"],"Idempotency-Key":str(uuid4())},json=dict(action="revoke",reason="spoof store"))
     assert bad_scope.status_code==404
     existing=env[5].post(f"/api/v1/stores/{owner.store_id}/staff-invitations",headers={**headers,"Idempotency-Key":str(uuid4())},
-        json=dict(email="owner@example.test",grants=[],permission_catalog_version="permissions-v2",reason="Owner must not become Staff"))
+        json=dict(email="owner@example.test",grants=[],permission_catalog_version="permissions-v3",reason="Owner must not become Staff"))
     assert existing.status_code==409 and existing.json()["error"]["code"]=="MEMBERSHIP_ALREADY_EXISTS"
     with Session(env[1]) as fresh:
         owner_member=fresh.scalar(select(StoreMembership).where(StoreMembership.store_id==owner.store_id,StoreMembership.user_id==owner.user_id))

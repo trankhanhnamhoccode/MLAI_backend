@@ -5,7 +5,7 @@
 
 CURRENT FACT: I01-I06/M01-M04/N5/J01/H01/H02/R01 are wired with Store authorization,
 immutable staging/preview/provenance, manual/approved-profile deterministic flow,
-canonical nine-schema adapters and durable history/completion. Upload/review/save/
+canonical fourteen-schema adapters and durable history/completion. Upload/review/save/
 HTTP202 are not canonical persistence. Runtime: app/api/import_staging.py,
 app/application/use_cases/import_staging.py and import workers/repositories.
 
@@ -65,8 +65,90 @@ Store/actor/file IDs/profile versions và semantic/parsing context không phải
 business bắt buộc. Không tự điền date/unit/currency/zero từ context chưa hỗ trợ.
 Chi tiết đủ fields, validation, writer và gaps:
 [inventory](features/IMPORT_SCHEMA_INVENTORY.md). Opening_stock Excel đã nối writer N6;
-actual receipt Excel và purchase-history Import chưa triển khai. Không map các nhóm
-này sang inventory_count.
+Actual receipt Excel chưa triển khai; A2 purchase history là record-only riêng.
+Không map các nhóm này sang inventory_count.
+
+## ACCEPTED DECISION / CURRENT FACT — A2 recorded support domains
+
+A2 thêm `calendar_events`, `promotion_observations`, `usage_history`,
+`purchase_history` vào registry typed hiện hành. Chúng **history-only**, không phải
+nguồn forecast feature, recipe facts, stock movement, actual receipt, committed
+inbound hoặc current supplier term. H01/H02 thêm category `calendar`, `usage`,
+`purchase`; promotion thuộc `sales`. I04 preview và I06 completion đọc typed payload,
+provenance và immutable revision; không thêm endpoint. H01 là lịch **upload**, không
+phải business calendar. `RECORDED_HISTORY_ONLY` luôn cảnh báo giới hạn consumer;
+calendar có thêm `CALENDAR_NOT_FORECAST_FEATURE`. Không tuyên bố forecast cải thiện.
+
+Schema/OpenAPI sở hữu fields; [inventory](features/IMPORT_SCHEMA_INVENTORY.md) mô tả
+dictionary. Mỗi row cần source record key ổn định và evidence; thiếu key không suy
+từ filename/tên/ngày hoặc tự cộng hàng. Identity chung là Store + domain + approved
+source_system_key + report_type + source_record_key. Immutable business grain:
+promotion Product/day, usage Ingredient/day, purchase Ingredient/Supplier; sửa
+grain bị SOURCE_IDENTITY_CONFLICT, cần đúng identity mới. Calendar giữ event source
+identity và cho correction period/name có evidence. Không merge bằng tên, không
+delete records vắng mặt, không áp contribution summing của sales. Duplicate cùng
+identity trong batch bị DUPLICATE_HISTORY_IDENTITY, khác facts bị
+CONFLICTING_HISTORY_IDENTITY; toàn batch blocked. Exact numeric spellings tương đương
+không tạo correction. Reimport cùng identity/facts là NO_OP, facts đổi tạo append
+revision, không UPDATE lịch sử cũ.
+
+Correction preview là `CORRECT_HISTORY_RECORD`, confirmation_required=true và
+expected_version. I05 commit cần reason và `history_corrections:[{row_id,
+expected_version,reason}]` khớp đúng toàn bộ corrections; thiếu/dư/trùng bị
+HISTORY_CORRECTION_UNRESOLVED, stale version/read set bị PREVIEW_STALE. Confirm review
+không thay confirmation riêng này. Permission/revision pin/retirement/read-set fence,
+atomic transaction/receipt/audit/retry giữ cơ chế hiện hành. Profile reusable chỉ giữ
+structure/approved exact semantics; quantities/prices/dates/observations không là
+PROFILE_CONSTANT. IMPORT_VALUE là fact mới của batch, không reuse value.
+
+Calendar là Store event được khai báo: inclusive period, declared_at aware không
+vượt server now, nullable strict closed/holiday, tên không suy bool/uplift/discount.
+Event tương lai đã khai báo được lưu; không inject feature vào model/artifact cũ,
+không đổi capture /1 hoặc /2. Promotion là observation Product/day, ngày không tương
+lai, applied true/false/null độc lập với nullable name; name không tự là true.
+Usage là actual recorded quantity>=0 và exact Ingredient base_unit, usage_date,
+observed_at aware hoặc explicit null. Known timestamp phải đúng usage_date trong
+timezone Store và không tương lai. Không suy waste/loss từ chênh BOM, không reconcile
+hoặc sửa recipe tự động. Purchase có order_date/received_date nullable riêng và
+report_date bắt buộc; ngày quan sát không tương lai hoặc sau report_date; known
+receipt không trước known order. Không học lead time, phí, expiry hay promote term.
+
+Purchase price cần explicit `PER_QUANTITY`, `LINE_TOTAL` hoặc `UNKNOWN`.
+PER_QUANTITY cần positive denominator quantity và unit; LINE_TOTAL không denominator;
+UNKNOWN buộc price/denominator/unit null. Explicit zero price khác unknown. Canonical
+money exact Store currency, không FX/truncation. Reviewed physical conversion scale
+purchase quantity **và price denominator**, giữ price amount/line total nguyên nghĩa;
+không tự áp density hoặc chia để làm tròn unit cost. Raw source giữ trong provenance.
+
+A2 quyền theo quyết định Owner: import.commit **và quyền ghi miền**; preview/readback
+cần quyền đọc miền. Calendar dùng calendar.read/write, usage dùng
+usage.history.read/write, purchase dùng purchase.history.read/write + ingredient.read
++ supplier.read; mọi response/operation có purchase history cần procurement.cost.read,
+thiếu thì whole denial. Promotion dùng menu.read + sales.read và sales.record.
+Corrections vẫn cần quyền ghi và reason/explicit confirmation. Catalogue
+permissions-v3/43 keys do [Authorization](AUTHORIZATION_CONTRACT_VI.md) sở hữu;
+không tự grant Staff, không inventory mutation, Owner profile approval không cấp
+quyền commit. Current rights kiểm lại acceptance/worker/replay/retained read.
+
+Constraints A2 tái dùng typed scope_declarations.PROCUREMENT_CONTEXT: exact supplier
+limits ONE_ORDER_SUPPLIER_INGREDIENT, capacities POST_RECEIPT_PRE_EXPIRY_PRE_CONSUMPTION,
+fee coverage và current Planning budget/requirements. Consumer chỉ gọi supported khi
+capture và exact validator enforce. Hard limits khác customer requirements/fairness/
+winner policy; A2 không đổi objective/selector. MIN_SAFETY_STOCK lưu ở business schema
+nhưng semantics chưa accepted: execution blocked và R01 báo
+MIN_SAFETY_STOCK_UNSUPPORTED trong computed Ingredient/horizon scope, kể cả value0.
+Open PO PRESENT_UNSUPPORTED, unknown constraints/fees/budget, tax/tier/priority và
+arbitrary tabular rules không silently ignore/default. Business notes/evidence là
+metadata, không điều kiện solver. Unsupported sheet/column cần resolution hoặc
+explicit IGNORE với acknowledgment, không fake ready.
+
+CURRENT FACT: advisory input projection sheet_profile/2 uses compact supported field
+metadata (type/required/nullability/aliases/conditions), not whole FE descriptors;
+mapping_prompt/3 distinguishes four history-only types from stock/forecast facts.
+Output sheet_suggestion/1,96KB request cap, ≤8 samples, finite attempts and strict
+supported-target validation remain unchanged. All data stays advisory; no real
+provider was called for A2 acceptance. Targeted DB acceptance verifies retained
+readback and mutation boundaries; whole browser flow is not evaluated.
 
 ## ĐÃ CHỐT — bổ sung classification/review theo task ngày10/10/2026
 
@@ -449,7 +531,7 @@ parser/domain-specific boundary/auth/audit/atomic commit đã wired, hiện chư
 
 | Schema/profile | Canonical intent và validation | Phần chưa được phép suy ra |
 | --- | --- | --- |
-| sales daily_total/disjoint_contribution | Existing Product hoặc new Product đã Owner duyệt tạo trong cùng batch, Store-local date, nonnegative quantity trong selling_unit, source/report identity; policy mục 8. | Retail price/revenue/stockout/promotion từ FE không có SalesDaily fields; không tự ghi Product.price hoặc invented history. |
+| sales daily_total/disjoint_contribution | Existing Product hoặc new Product đã Owner duyệt tạo trong cùng batch, Store-local date, nonnegative quantity trong selling_unit, source/report identity; policy mục 8. | Retail price/revenue/promotion từ FE không có SalesDaily fields; không tự ghi Product.price hoặc invented history. |
 | inventory lot_stock_count | Existing Ingredient + uniquely identified received lot, target on_hand≥0 exact base_unit; COUNT_CORRECTION reason/observation/version. | Không receipt/inbound, tự tạo lot từ batch_id, warehouse table hoặc source total→lot allocation. |
 | recipes | Existing hoặc new Product/Ingredient được Owner duyệt tạo trong cùng batch, explicit quantity_basis/version/from/to/yield/loss, unique lines exact base_unit, yield unit=Product.selling_unit. | Không auto-close overlap/retroedit; nhóm entire recipe atomically, không one-row-one-version. |
 | new Product/Ingredient identity | **ĐÃ CHỐT**, mục 6.1: Owner duyệt explicit identity/đơn vị/metadata; preview creation; executor có quyền tạo catalog toàn phạm vi. | Không tạo từ tên lạ hoặc mapping confidence, không silently map gần giống; không tạo lot hoặc đổi đơn vị entity cũ. |
@@ -706,7 +788,7 @@ Hai semantics phải explicit trong reviewed profile, không chọn bằng giá 
   CONFLICT, không tự suy “hai file khác”=205. Khách phải khai báo evidence và report
   business reference đủ trace trước resolve; không approve LLM classification.
 
-SourceContribution identity={Store,source_system_key,business_report_key,Product,date};
+SourceContribution identity={Store,source_system_key,report_type,business_report_key,Product,date};
 reviewed semantic grain yêu cầu unique report/transaction keys, không import_id/
 file_id/client_file_id/filename làm business report key. Giữ immutable accepted
 source revisions và resulting canonical total. Re-import cùng contribution same
@@ -745,14 +827,40 @@ Không đổi namespace/source key để biến bản sửa thành phần mới 
 | Source key khác nhưng covered-set overlap/unknown | Blocker; source namespace không disjoint proof. |
 | File mới vắng phần/record cũ | Không delete, không zero record vắng, không replace-all. |
 
-CURRENT FACT: trong một batch preview `seen` sales theo (Product,date) chặn duplicate
-daily observation, kể cả hai report khai contribution riêng; không có merge nhiều
-file cùng ngày trong một commit chỉ bằng order upload. Guard duplicate này có thể
-chỉ đánh dấu row gặp sau, nhưng bất kỳ blocker vẫn chặn toàn batch. DESIGN_READY
-handoff không hứa một resolution mới để chọn winner/cộng rows: dùng nguồn/scope
-report hợp lệ hoặc các imports riêng đã preview/confirm, không drop row lỗi để chạy.
-Nếu mở rộng aggregate nhiều contributions cùng batch cần slice riêng giữ exact
-source identity/overlap evidence và toàn-group order-independent preview/commit.
+CURRENT FACT A1 (PostgreSQL acceptance verified on owned Import test DB): preview lập một effect cho
+Product/day và `sales_contributions[]` giữ namespace/report type/key, source quantity,
+stockout/update mode, locations và provenance. Same-key exact duplicates collapse;
+conflicting values trả SALES_CONTRIBUTION_CONFLICT. Mixed full/partial reports trả
+SALES_OVERLAP_UNRESOLVED. Disjoint contributions aggregate không phụ thuộc order;
+MERGE_DISJOINT_SALES cần sales.merge và assertion/evidence cho toàn frozen list,
+kể cả insert tổng mới. Revision cần sales.correct; không xóa phần vắng. Historical
+report_type chỉ recover từ immutable pinned mapping cùng Store; thiếu proof trả
+SOURCE_REPORT_IDENTITY_UNRESOLVED. Writer có mặt không chứng minh independence.
+Contribution revision đổi quantity/observation vẫn là REPLACE_DAILY_TOTAL, cần
+sales.correct và resolution kể cả canonical aggregate không đổi; không NO_OP để
+ghi lineage correction ngoài quyền. NO_OP chỉ khi contribution facts cũng unchanged.
+
+ACCEPTED DECISION A1: `sales.is_stockout` là observed Product/day nullable boolean:
+true có bằng chứng hết món; false biết không censored; null unknown. Không suy từ
+sales0/inventory/projected shortage. Alias value khác true/false cần explicit
+`SourceContext.stockout_aliases[]` token/value và Owner review reusable normalization.
+IMPORT_VALUE được phép; không PROFILE_CONSTANT cho stockout business fact.
+
+Reimport thiếu observation cần `SourceContext.missing_stockout=quantity_only` giữ
+observation cũ của đúng contribution hoặc `not_provided` ghi unknown. Declaration
+có evidence chỉ thuộc batch, không profile/N5 nếu spec unchanged. Thiếu lựa chọn
+trả STOCKOUT_UPDATE_DECLARATION_REQUIRED; quantity_only chưa có contribution trả
+STOCKOUT_QUANTITY_ONLY_REQUIRES_EXISTING_CONTRIBUTION. Mapped blank là unknown, trừ
+quantity_only explicit; supplied true/false luôn là fact correction. Aggregate:
+true thắng; false khi mọi phần false; unknown+false vẫn unknown. Preview giữ source/
+canonical observation, before/after và STOCKOUT_UNKNOWN/CENSORED_SALES_REQUIRES_DEMAND_POLICY.
+Completion giữ contribution list; audit giữ revisions/evidence/provenance.
+Pending sales preview cũ thiếu typed contribution plan trả SALES_PLAN_REVIEW_REQUIRED;
+cần preview/confirm mới, không tự N5 lại nếu reusable spec không đổi. Completed
+receipt/replay cũ vẫn đọc nguyên retained outcome, không chạy lại writer.
+Migration0019 và fresh-session persistence đã verified trên DB Import riêng;
+[ADR-A1](adr/ADR-A1-observed-stockout-demand-policy.md)
+sở hữu consumer policy. Import completed không chứng nhận forecast-ready/accurate.
 
 Ví dụ các effects sales đã chuẩn hóa (minh họa dữ liệu nguồn/tổng, không I05 payload):
 
@@ -2093,7 +2201,7 @@ full-spec approval; N5 race/retry/revoke; returned reason/resubmit; no batch com
 
 ACCEPTED DECISION: Excel actual receipt bổ sung workflow **hàng đã thực nhận**;
 opening stock/count của phiên import hiện tại giữ nguyên. CURRENT FACT: registry
-Schema hiện có mười variants gồm opening_stock, `inventory_count` chỉnh canonical lot đã định danh;
+Schema hiện có mười bốn variants gồm A2 history-only và opening_stock, `inventory_count` chỉnh canonical lot đã định danh;
 không `inventory_receipts`. N6 public receipt hỗ trợ OPENING_STOCK/ACTUAL_RECEIPT
 và source identity/durable receipt; implementation ở StockWrites.receive và
 InventoryUseCases.receive_in_transaction. Không mở receipt import endpoint riêng.

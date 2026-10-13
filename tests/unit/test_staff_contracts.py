@@ -16,7 +16,7 @@ def test_explicit_consent_grants_and_no_caller_authority():
     for consent in (False,1,"true"):
         with pytest.raises(ValidationError):AcceptInvitation(token="synthetic",accept=consent)
     with pytest.raises(ValidationError):AcceptInvitation(token="synthetic",accept=True,user_id="spoof")
-    value=CreateInvitation(email=" STAFF@Example.test ",grants=[],permission_catalog_version="permissions-v2",reason="test")
+    value=CreateInvitation(email=" STAFF@Example.test ",grants=[],permission_catalog_version="permissions-v3",reason="test")
     assert value.email=="staff@example.test"
     with pytest.raises(AuthError,match="INVALID_TOKEN"):AcceptInvitation(token="x"*255+"\U0001f600"*65,accept=True)
 

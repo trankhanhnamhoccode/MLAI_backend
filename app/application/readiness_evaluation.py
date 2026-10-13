@@ -9,6 +9,7 @@ from app.application.contracts import import_domains as domains
 from app.application.import_identity import content_digest
 from app.application.operational_import_facts import declaration_dependency,current_fees,inventory_matches
 from app.application.planning_fee_bindings import fee_bindings
+from app.domain.forecasting.stockout import Observation, reconstruct
 
 ACTION_READS={
     'import':('import.read',),'menu':('menu.read',),'inventory':('inventory.read','ingredient.read'),
@@ -107,6 +108,9 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
         codes=[];affected=()
         if not history:
             codes.append('PRODUCT_HISTORY_MISSING')
+        elif not any(r.usable for r in reconstruct(tuple(Observation(date.fromisoformat(r['sales_date']),
+                Decimal(r['quantity']), r.get('is_stockout')) for r in history), cutoff)):
+            codes.append('CENSORED_HISTORY_NOT_USABLE')
         else:
             base_scope.append(p['id'])
         if codes:
@@ -151,8 +155,10 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
                 blockers.append(issue('NO_ACTIVE_PRODUCTS','catalog'));data='incomplete'
             if not current_ids:
                 blockers.append(issue('NO_COMPUTABLE_PRODUCTS','catalog'));data='incomplete'
+                if any('CENSORED_HISTORY_NOT_USABLE' in e.reason_codes for e in exclusions):
+                    blockers.append(issue('CENSORED_HISTORY_NOT_USABLE', 'sales'))
             for excluded in exclusions:
-                warnings.extend(issue(code,'sales' if code=='PRODUCT_HISTORY_MISSING' else 'inventory' if code in ('INVENTORY_SCOPE_UNKNOWN','REQUIRED_EXPIRY_MISSING') else 'recipe',excluded.product_id,excluded.affected_dates) for code in excluded.reason_codes)
+                warnings.extend(issue(code,'sales' if code in ('PRODUCT_HISTORY_MISSING', 'CENSORED_HISTORY_NOT_USABLE') else 'inventory' if code in ('INVENTORY_SCOPE_UNKNOWN','REQUIRED_EXPIRY_MISSING') else 'recipe',excluded.product_id,excluded.affected_dates) for code in excluded.reason_codes)
             if len(menu)>50:
                 blockers.append(issue('RESOURCE_LIMIT_EXCEEDED','catalog'));data='invalid'
             if facts.serving is None:
@@ -161,6 +167,15 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
                 blockers.append(issue(model_issue,'forecast'));data='invalid'
             if current_ids and history_watermark is None:
                 warnings.append(issue('HISTORY_NOT_AVAILABLE_THROUGH_CUTOFF','sales'))
+            for pid in current_ids:
+                demand = reconstruct(tuple(Observation(date.fromisoformat(r['sales_date']), Decimal(r['quantity']),
+                    r.get('is_stockout')) for r in snapshot['sales_daily']
+                    if r['product_id'] == pid and r['sales_date'] <= str(cutoff)), cutoff)
+                for method, code in (('UNKNOWN_OBSERVED_COMPATIBILITY','STOCKOUT_UNKNOWN'),
+                        ('CENSORED_UNSUPPORTED','CENSORED_HISTORY_EXCLUDED'), ('PAST_MEDIAN','DEMAND_RECONSTRUCTED')):
+                    dates = tuple(r.day for r in demand if r.method == method)
+                    if dates:
+                        warnings.append(issue(code, 'sales', pid, dates))
             if not forecast_available:
                 execution='unavailable';blockers.append(issue('EXECUTION_UNAVAILABLE','runtime'))
             if action=='planning':
@@ -219,6 +234,10 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
                         bounded=bounded or bool(source and source['payload'].get('maximum_order_base_quantity') is not None)
                         if not bounded:blockers.append(issue('OFFER_BOUND_UNKNOWN','supplier'));data='incomplete'
                 constraints=[r for r in snapshot['business_constraints'] if r['active'] and r['scope_type']=='STORE' and any(contains(r,day) for day in days)]
+                if any(r['active'] and r['constraint_type']=='MIN_SAFETY_STOCK'
+                    and r['scope_id'] in required and any(contains(r,day) for day in days)
+                    for r in snapshot['business_constraints']):
+                    blockers.append(issue('MIN_SAFETY_STOCK_UNSUPPORTED','constraints'));data='invalid'
                 if facts.cap and any(Decimal(r['numeric_value'])!=Decimal(facts.cap.amount) or r['unit']!=facts.cap.currency for r in constraints):
                     blockers.append(issue('BUDGET_CONFIGURATION_CONFLICT','constraints'));data='invalid'
         if unknown and data=='valid':data='unknown'

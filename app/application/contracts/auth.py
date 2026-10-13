@@ -86,7 +86,7 @@ class StoreContext(StoreSummary):
     server_now: datetime
     as_of_date: date
     membership: MembershipContext
-    permission_catalog_version: Literal["permissions-v2"] = "permissions-v2"
+    permission_catalog_version: Literal["permissions-v3"] = "permissions-v3"
 
 
 class StoreList(DTO):

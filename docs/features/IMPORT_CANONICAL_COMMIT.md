@@ -1,5 +1,26 @@
 # Current clarification11/10 — CA-002/016/020
 
+CURRENT FACT A2: four typed recorded domains use append-only
+import_history_records revisions. Preview/commit/fresh read, explicit correction
+confirmation, current domain grants and price-read denial preserve the existing
+atomic boundary. I06 retains history_record + canonical_version; H01/H02 expose
+category calendar/usage/purchase (promotion=sales) with current scoped read rights.
+These are history consumers only; no stock/receipt/inbound/term/forecast mutation.
+Calendar declaration and promotion observation are separate schemas. Unsupported
+MIN_SAFETY_STOCK now blocks R01 in computed scope as well as execution.
+The [Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md) owns A2 semantics and
+the [field inventory](IMPORT_SCHEMA_INVENTORY.md) owns dictionaries/consumer limits.
+
+CURRENT FACT A1 (targeted persistence acceptance on owned Import test DB): frozen sales plans retain
+typed contributions and aggregate one effect per Product/day. Commit replaces each
+previous contribution and retains stockout update/provenance revisions. Correction/
+merge rights, read-set fence, transaction and retry receipts remain in force.
+Changed contribution facts require correction rights/resolution even when the
+canonical aggregate is unchanged. Fresh-session stockout/quantity rollback and
+two-worker competing corrections are verified; the losing preview fails stale.
+[Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md) owns identity/declarations;
+no new endpoint. Historical slice boundaries below remain historical evidence.
+
 I05 commit reason conditional theo effective actions, không bắt cho pure insert/NO_OP.
 Correction/merge/count/amend cần nonblank, thiếu422 COMMIT_REASON_REQUIRED. Confirmation
 reason/source/action evidence vẫn riêng. Money input18/18/keys1000 đã đồng bộ;

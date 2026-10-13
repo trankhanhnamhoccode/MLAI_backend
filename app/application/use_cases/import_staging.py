@@ -57,6 +57,10 @@ ALL_READS = (
     "budget.read",
 )
 READS = {
+    "calendar_events": ("calendar.read",),
+    "promotion_observations": ("menu.read", "sales.read"),
+    "usage_history": ("ingredient.read", "usage.history.read"),
+    "purchase_history": ("ingredient.read", "supplier.read", "purchase.history.read", "procurement.cost.read"),
     "sales": ("menu.read", "sales.read"),
     "recipes": ("menu.read", "ingredient.read", "recipe.read"),
     "inventory_count": ("ingredient.read", "inventory.read"),
@@ -81,6 +85,10 @@ READS.update(
     }
 )
 WRITES = {
+    "calendar_events": "calendar.write",
+    "promotion_observations": "sales.record",
+    "usage_history": "usage.history.write",
+    "purchase_history": "purchase.history.write",
     "sales": "sales.record",
     "recipes": "recipe.create_version",
     "inventory_count": "inventory.count.correct",
@@ -1091,10 +1099,13 @@ class ImportStaging:
                             "source_system_key",
                             "report_type",
                             "evidence_reference",
+                            "missing_stockout",
                         }
                         and value not in (None, (), [])
                     }
                     expected = existing_spec.model_dump(mode="json")
+                    expected['stockout_aliases'] = next((json.loads(n.parameter)
+                        for n in existing_spec.normalizations if n.kind == 'stockout_alias'), [])
                     expected.update(
                         decimal_locale=next(
                             (
@@ -2607,6 +2618,7 @@ class ImportStaging:
                 else {}
             )
             ignored_sheets = (
+                # Batch stockout declarations do not change reusable profile semantics.
                 {str(sh.sheet_id) for sh in self._sheets(b) if sh.ignored}
                 if b.analysis_json
                 else set()
@@ -2616,6 +2628,13 @@ class ImportStaging:
                 if operation == "import_preview"
                 else {}
             )
+            stockout_policies = {
+                str(i.sheet_id): (i.resolution.resolution.missing_stockout,
+                                 i.resolution.resolution.evidence_reference)
+                for i in self._issues(b) if i.issue_type == 'source_context' and i.resolution
+                and isinstance(i.resolution.resolution, dto.SourceContext)
+                and i.resolution.resolution.missing_stockout is not None
+            } if b.analysis_json else {}
             actor_id = j.actor_id
             import_id = j.import_id
             self._current = (job_id, claim)
@@ -2850,6 +2869,7 @@ class ImportStaging:
                     snapshot["stores"][0]["timezone"],
                     snapshot["stores"][0]["currency"],
                     import_values=import_values,
+                    stockout_policies=stockout_policies,
                 )
                 result = (rows, read_digest, snapshot)
         except Exception as e:

@@ -1,6 +1,93 @@
 # Current state
 
-## CURRENT FACT — mốc phát hành v1.0, 12/10/2026
+## CURRENT FACT — A3 backend acceptance complete, 2026-10-13
+
+Public Import/configuration boundaries and real Import/Planning workers are verified
+on a newly provisioned synthetic Store without seeded operational facts, using only
+`shelfcash_import_test` / `shelfcash_import_tester`, provider OFF. Complementary master,
+recipe, sales, term, opening and fee files work in both upload orders; declarations,
+identity/unit review, Owner reusable-spec approval, preview/confirmation, atomic commit
+and fresh reads lead to custom Planning and retained results. Default readiness remains
+unknown when no default configuration exists; import completion is not Store-wide READY.
+
+The explicit fixture oracle reconciles BASE14 cups /14 litres with opening12: one
+pack4 at10, total10/fees0, fulfilled14/lost0, consumed14/expired0/ending2. Confirmed
+zero stock instead needs four packs/total40/ending2. Planning creates no real stock
+movements; opening/count0 retain one receipt and three justified movements. Subsequent
+sales correction2→3 and budget100→80 preserve the original full retained aggregate
+and both public Run responses, including input/config/capture/result/provenance.
+
+Staff obtain exact permissions-v3 grants through public invitation/acceptance, reuse
+an approved declared source and commit with no model call. Unknown tokens block;
+an explicit alias changes the reusable spec, Staff cannot approve and Owner approval
+is needed. Recipe conflicts remain blocked in both upload orders; ambiguous source
+requires explicit selection. Mixed durable lost ACK reconciles and same-key retry
+returns the same receipt/job without duplicate writes. Safety-floor value0 blocks
+only computed Ingredients in the applicable horizon, not unrelated/future scopes or
+forecast. Targeted verification covers11 unique PostgreSQL cases across selected runs;
+existing A1/A2 rights/stockout/history/rollback/migration evidence is inherited, not
+claimed rerun. Test-only repairs read mapping pages, remove the fixture's100-step
+ceiling and submit sorted grants. No runtime/API/catalogue/migration delta in A3.
+
+Limits: no full suite, browser/FE E2E, demo workbook compatibility rerun, real provider
+or real forecast accuracy claim. No Auth worktree/DB, head merge, commit/push/deployment
+or next feature slice. Repeatable selectors, expected outcomes and recovery are in
+[FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md); task commands/results remain in conversation.
+
+## CURRENT FACT — A2 backend acceptance complete in the Import worktree
+
+Four typed support schemas are mapped/reviewed/previewed/atomically committed into
+append-only history revisions: declared calendar events, observed promotions,
+recorded ingredient usage and purchase history. Read consumers are retained I04/I06
+payload/provenance/version and H01/H02 category discovery. They are explicitly
+history-only; no inventory movements/receipt/inbound/term, recipe reconciliation or
+forecast feature/model/artifact changes. Unsupported safety stock blocks readiness
+in computed scope as well as procurement execution. Existing capacity/supplier
+limits/fees/budget/requirements consumers remain authoritative.
+
+Owner's A2 permission decision adds six domain read/write keys to permissions-v3
+(43 keys); Staff need explicit grants plus import.commit, current readback rights and
+procurement.cost.read for purchase. Corrections require reason and explicit retained
+version confirmation. Migration0021_import_support_history parents0019_sales_stockout,
+expands the CHECK without granting rights and refuses destructive downgrade of
+retained history/new grants. Auth0018/0020 remain independent. Targeted acceptance
+uses only shelfcash_import_test as shelfcash_import_tester, provider OFF. OpenAPI
+keeps54 operations/50 paths; H01/H02 filters and Import/Auth DTOs change additively.
+Acceptance covers21 support-domain integration cases plus2 additive migration cases
+and1 scoped unsupported-constraint readiness case, across targeted runs. Fresh reads,
+correction/NO_OP/retry, rollback/concurrency, current Staff domain/read-price rights,
+Store isolation and cross-file master dependencies pass. Staff with legacy grants
+can still analyze Sales; new history rights are never implicit. Selected A1/source/
+Auth, recipe/supplier/opening/count/completeness and retained reads regressions pass.
+Qwen projection is compact supported metadata (`sheet_profile/2`, mapping_prompt/3),
+not complete FE descriptors; existing96KB input limit and advisory validation stay
+unchanged, offline transport tests pass. No full-suite/whole-FE/real-data claim.
+See [Import](IMPORT_MAPPING_API_CONTRACT_VI.md),
+[inventory](features/IMPORT_SCHEMA_INVENTORY.md) and [workflow](runbooks/FULL_TEST_FLOW.md).
+
+## CURRENT FACT — A1 acceptance complete in the import worktree
+
+Sales preview freezes one Product/day effect with stable source/report contributions,
+stockout and full location/provenance lineage. Exact duplicates collapse; conflicts
+block; independent aggregation requires explicit disjoint confirmation. Stockout is
+connected to schema-2 baseline/trained demand inputs and readiness. Historical
+schema-1 JSON/digest/replay remains unchanged; see [ADR-A1](adr/ADR-A1-observed-stockout-demand-policy.md).
+
+Additive migration `0019_sales_stockout`, parent `0017_planning_exports`, is verified
+on `shelfcash_import_test` as `shelfcash_import_tester`, with no Auth dependency.
+Upgrade preserves existing quantities/unknown observations; downgrade blocks known
+observations. Fresh-Session acceptance covers correction, independent contributions,
+duplicate/no-op, three stockout states, explicit missing-observation policy, causal
+baseline/trained capture/replay and immutable Planning evidence. Current rights,
+Store isolation, atomic rollback and concurrent stale-preview rejection are verified.
+Contribution revisions require correction rights/resolution even when canonical
+quantity/stockout is unchanged. Baseline replay retains each warning once.
+Relevant targeted regressions passed; this is not a fresh full-suite or whole-FE gate.
+Real-data demand quality is NOT EVALUATED. No development/Auth/shared-test DB migration,
+head merge, commit/push or live provider call. Auth/Import heads remain independent
+until integration. See [test workflow](runbooks/FULL_TEST_FLOW.md) for DB ownership.
+
+## HISTORICAL INFORMATION — mốc phát hành v1.0, 12/10/2026
 
 The source composes 53 core HTTP operations plus health (54 operations/50 paths).
 Alembic has one head `0017_planning_exports`; registered metadata has 60 application
@@ -22,7 +109,7 @@ activation, paid provider, order placement or customer selection persistence.
 
 The supported S4.11 environment uses `shelfcash_integration_s411` on port5433,
 owned private runtime and explicit per-Store BASELINE. Automated persistence tests
-own `shelfcash_test`; neither target is the development database.
+own explicitly allowlisted `shelfcash_test`, `shelfcash_import_test` or `shelfcash_auth_test`; neither target is the development database.
 See [the runbook](runbooks/FULL_TEST_FLOW.md).
 
 CURRENT FACT: người dùng đã thử FE thật thành công ít nhất tới mapping lần đầu.
@@ -66,9 +153,9 @@ Recipe cùng Product/version qua nhiều sheets bị RECIPE_SOURCE_SCOPE_AMBIGUO
 split-part grain chưa hỗ trợ. Fresh Store public intake/custom Planning không seed
 business entities; R01 vẫn unknown nếu default configuration chưa có. Explicit EMPTY
 với retained zero lots dùng được ở operational/2; historical /1 giữ semantics cũ.
-Legacy stockout có consumer forecast
-thật theo source; bản mới chưa có observation/forecast chain tương ứng và giữ nó ở
-lát tiếp theo riêng. Sáu workbook là acceptance inputs, không schema authority.
+HISTORICAL INFORMATION: legacy stockout có consumer forecast thật theo source.
+CURRENT FACT: A1 đã nối observed stockout và versioned demand consumer với acceptance
+trên DB Import riêng; không mở A2. Sáu workbook là acceptance inputs, không schema authority.
 Đối chiếu legacy là static source audit, không chạy legacy runtime. Recipe source
 acceptance dùng synthetic public flow/guarded PostgreSQL test, fresh-session read,
 dated BOM và recipe-dependency readiness; Supplier acceptance dùng fresh-session term

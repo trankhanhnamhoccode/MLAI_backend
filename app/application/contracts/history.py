@@ -50,7 +50,7 @@ class RunHistoryEnvelope(DTO):
 
 
 ImportStatus=Literal['in_progress','completed','completed_with_warnings','failed']
-Category=Literal['sales','inventory','recipes','supplier']
+Category=Literal['sales','inventory','recipes','supplier','calendar','usage','purchase']
 
 
 class CalendarDay(DTO):

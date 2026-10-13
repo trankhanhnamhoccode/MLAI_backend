@@ -160,6 +160,19 @@ def test_context_all_saved_invalid_active_and_archived_removed(readiness):
     assert value['requirements_modes'][2]['availability']=='available'
 
 
+def test_safety_stock_is_explicitly_unsupported_only_in_computed_scope(readiness):
+    from app.models import BusinessConstraint
+    c=readiness;ingredient,_=known_facts(c)
+    assert not any(b['code']=='MIN_SAFETY_STOCK_UNSUPPORTED' for b in read(c).json()['data']['actions'][0]['blockers'])
+    with Session(c[0][1]) as s:
+        s.add(BusinessConstraint(id=uuid4(),store_id=c[1].store_id,scope_type='INGREDIENT',scope_id=ingredient,
+            constraint_type='MIN_SAFETY_STOCK',numeric_value=0,unit='ml',version=1,
+            effective_from=date(2026,10,10),effective_to=None,active=True));s.commit()
+    action=read(c).json()['data']['actions'][0]
+    assert not action['can_execute'] and 'MIN_SAFETY_STOCK_UNSUPPORTED' in {b['code'] for b in action['blockers']}
+    assert read(c,'forecast').json()['data']['actions'][0]['can_execute']
+
+
 def test_get_contract_invalid_filters_and_canonical_readonly(readiness):
     c=readiness;known_facts(c)
     assert read(c,'menu',forecast_start_date='2026-10-10').status_code==422

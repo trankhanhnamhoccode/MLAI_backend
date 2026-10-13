@@ -129,6 +129,7 @@ def test_business_headers_resolve_without_excel_uuid_and_receipt_dates_are_not_c
     )
     assert mapped == (None, None, None, None)
     assert set(SOURCE_MODELS) == {
+        "calendar_events", "promotion_observations", "usage_history", "purchase_history",
         "sales",
         "inventory_count",
         "opening_stock",
@@ -184,6 +185,18 @@ def test_payload_is_bounded_indexed_and_does_not_send_unrelated_facts():
     assert len(payload["sample_rows"]) <= 8
     assert "SECRET" not in json.dumps(payload)
     assert "rows" not in payload and "workbook" not in payload
+
+
+def test_all_supported_a2_schemas_fit_prompt_bound_without_fe_metadata():
+    sheets,_,raw=source()
+    payload=gateway.sheet_payload(sheets[0],raw[0],'synthetic.csv',{})
+    assert payload['version']=='sheet_profile/2'
+    assert len(json.dumps(payload,ensure_ascii=False).encode('utf-8'))<96000
+    assert {s['schema_id'] for s in payload['schemas']}==set(SOURCE_MODELS)
+    for schema in payload['schemas']:
+        supported={f.key for f in options(schema['schema_id']) if f.available}
+        assert {f['key'] for f in schema['fields']}==supported
+        assert all('input_help' not in f and 'input_sources' not in f for f in schema['fields'])
 
 
 @pytest.mark.parametrize(

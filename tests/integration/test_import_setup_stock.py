@@ -32,11 +32,31 @@ def fresh_store(env):
 
 def review_batch(context, ident, creations=None, bindings=None):
     creations, bindings = creations or {}, bindings or {}
-    for _ in range(100):
-        items = [i for i in listing(context, ident) if i["status"] not in {"resolved", "auto_mapped"} and not i.get("ignored")]
+    attempted = set()
+    for _ in range(500):
+        all_items, cursor = [], None
+        while True:
+            params = {"review_only":"false", "limit":100}
+            if cursor:
+                params["cursor"] = cursor
+            response = context[0][5].get("/api/v1/imports/" + ident + "/mappings", params=params)
+            assert response.status_code == 200, response.text
+            wire = response.json()
+            all_items.extend(wire["data"]["items"])
+            cursor = wire["meta"]["pagination"]["next_cursor"]
+            if cursor is None:
+                break
+        items = [i for i in all_items
+            if i["status"] not in {"resolved", "auto_mapped"} and not i.get("ignored")]
         if not items:
             break
-        item = items[0]
+        # Establish interpretation/source before binding row tokens. A missing
+        # context leaves spec incomplete; repeating that identity cannot fix it.
+        item = min(items, key=lambda i: {"classification":0, "source_context":1,
+            "column":2, "identity":3}.get(i["issue_type"], 4))
+        marker = (item["sheet_id"], item["issue_type"], item["source_header"])
+        assert marker not in attempted, ("Review did not progress", item)
+        attempted.add(marker)
         if item["issue_type"] == "classification":
             sheet = next(sh for sh in summary(context, ident)["sheets"] if sh["sheet_id"] == item["sheet_id"])
             resolution = dict(kind="sheet_type", sheet_type=sheet["selected_type"], reason="Synthetic explicit type")
@@ -63,7 +83,8 @@ def review_batch(context, ident, creations=None, bindings=None):
         response = mapping(context, ident, item, {"resolution":resolution})
         assert response.status_code == 200, response.text
     else:
-        raise AssertionError("Unresolved setup facts")
+        raise AssertionError(("Unresolved setup facts", item,
+            [(p["profile_id"], p["missing_fields"]) for p in summary(context, ident)["profile_proposals"]]))
     for proposal in summary(context, ident)["profile_proposals"]:
         assert not proposal["missing_fields"], proposal
         response = post(context, f"/stores/{context[1].store_id}/mapping-profiles/{proposal['profile_id']}/decisions",
@@ -157,6 +178,9 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
     from app.models import Supplier, SupplierTerm, RecipeLine, SalesDaily, PlanningRun
 
     c = fresh_store
+    from app.infrastructure import import_suggestions
+    monkeypatch.setattr(import_suggestions, "suggest_sheet",
+        lambda *a, **kw: pytest.fail("A3 provider must remain OFF"))
     today = c[0][4][0].astimezone(ZoneInfo("Asia/Ho_Chi_Minh")).date()
     cutoff = today - timedelta(days=1)
     metadata = dict(COFFEE=("product", dict(name="Coffee", selling_unit="cup", sku="C1", price=None, active=True)),
@@ -170,7 +194,7 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
             effective_from=cutoff.isoformat(), effective_to=None, quantity_basis="PER_SERVING", yield_quantity="1",
             yield_unit="cup", process_loss_rate="0", quantity="1", unit="l")])),
         ("sales.csv", csv_source("sales", [dict(product_id="COFFEE", sales_date=cutoff.isoformat(),
-            quantity="2", unit="cup", business_report_key="DAY-1")])),
+            quantity="2", unit="cup", business_report_key="DAY-1", is_stockout=False)])),
         ("terms.csv", csv_source("supplier_terms", [dict(source_term_key="T1", supplier_id="SUP", ingredient_id="MILK",
             effective_from=today.isoformat(), effective_to=None, unit="l", pack_size_base_quantity="4", pack_cost="10",
             currency="VND", price_basis="PER_PACK", price_quantity=None, price_unit=None,
@@ -235,6 +259,29 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
     assert record.status == "completed" and record.outcome == "recommendation_available", (record.error_code, record.capture.problems)
     retained = client.get(accepted.headers["Location"])
     assert retained.status_code == 200, retained.text
+    # Synthetic oracle: one observed day gives 2 cups/day for 7 days, recipe
+    # 1 litre/cup, real opening12, pack4 at10, zero fees. BASE95% needs >=14
+    # whole cups: purchase1 pack, consume14, end2; Planning writes no stock.
+    from fractions import Fraction
+    def exact(value):
+        return Fraction(int(value["numerator"]), int(value["denominator"]))
+    def verify_oracle(wire, packs, ending):
+        assert wire["forecast"]["quality_status"] == "not_evaluated"
+        assert wire["scope"]["computed_product_ids"] == [str(product)]
+        result = wire["result"]
+        winner = next(o for o in result["options"] if o["option_id"] == result["winner_option_id"])
+        purchase, = winner["purchases"]
+        assert purchase["packs"] == packs and exact(purchase["quantity"]) == 4 * packs
+        assert purchase["ingredient_id"] == str(ingredient)
+        assert exact(winner["costs"]["total"]) == 10 * packs
+        assert exact(winner["costs"]["payable_fees"]) == 0
+        service = next(s for s in winner["product_services"] if s["path"] == "BASE")
+        assert exact(service["requested"]) == exact(service["fulfilled"]) == 14
+        assert exact(service["lost_sales"]) == 0 and exact(service["service"]) == 1
+        balance = next(b for b in winner["ingredient_balances"] if b["path"] == "BASE")
+        assert exact(balance["consumed"]) == 14 and exact(balance["expired"]) == 0
+        assert exact(balance["ending_usable"]) == ending
+    verify_oracle(retained.json()["data"], 1, 2)
     with Session(c[0][1]) as session:
         original = session.get(PlanningRun, record.run_id).record_json
         assert session.get(InventoryLot, lot).on_hand_quantity == 12  # Planning never consumes real stock.
@@ -265,9 +312,35 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
     assert zero_plan.status_code == 202, zero_plan.text
     zero_record = worker.run_one()
     assert zero_record.outcome == "recommendation_available", (zero_record.error_code, zero_record.capture.problems)
+    zero_retained = client.get(zero_plan.headers["Location"])
+    assert zero_retained.status_code == 200, zero_retained.text
+    verify_oracle(zero_retained.json()["data"], 4, 2)
+    # Explicit current config and source correction after retention must not
+    # reconstruct either Run's input, capture, result, digest or provenance.
+    changed_budget = client.put(base + "/planning-budget",
+        headers={**c[3], "Idempotency-Key":str(uuid4()), "If-Match":budget.headers["ETag"]},
+        json=dict(amount="80"))
+    assert changed_budget.status_code == 200, changed_budget.text
+    from tests.integration.test_import_staging import approved
+    from tests.integration.test_import_stockout_a1 import resolution
+    sales_spec = next(p["spec"] for p in summary(c, ident)["profile_proposals"]
+        if p["spec"]["structure"]["sheet_roles"] == ["sales"])
+    corrected = analyzed_files(c, [("sales.csv", csv_source("sales", [dict(product_id="COFFEE",
+        sales_date=cutoff.isoformat(), quantity="3", unit="cup", business_report_key="DAY-1", is_stockout=False)]))])
+    approved(c, corrected, source=sales_spec["scope"]["source_system_key"], report=sales_spec["scope"]["report_type"])
+    corrected_read = previewed(c, corrected)
+    corrected_confirm = confirm(c, corrected, corrected_read)
+    assert corrected_confirm.status_code == 200, corrected_confirm.text
+    finished(c, corrected, commit(c, corrected, corrected_read,
+        corrected_confirm.json()["data"]["import_revision"], resolutions=[resolution(corrected_read["preview"]["rows"][0])]))
     with Session(c[0][1]) as session:
         assert session.get(InventoryLot, lot).on_hand_quantity == 0
+        assert session.scalar(select(SalesDaily)).quantity == 3
         assert session.get(PlanningRun, record.run_id).record_json == original
+        assert session.scalar(select(func.count()).select_from(InventoryMovement)) == 3
+        assert session.scalar(select(func.count()).select_from(InventoryReceiptRecord)) == 1
+    assert client.get(accepted.headers["Location"]).json()["data"] == retained.json()["data"]
+    assert client.get(zero_plan.headers["Location"]).json()["data"] == zero_retained.json()["data"]
 
 
 @pytest.mark.parametrize("permission", ["inventory.receive", "ingredient.create"])

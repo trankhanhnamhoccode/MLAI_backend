@@ -17,6 +17,7 @@ from pydantic import (
 from app.application.contracts.auth import Pagination
 from app.application.contracts.import_scalars import ImportDTO as DTO, Text
 from app.application.contracts.planning_export import ExportJobContext,ExportJobResult
+from app.application.contracts.import_history import HistoryValue
 
 Code = Annotated[
     StrictStr,
@@ -34,6 +35,10 @@ Schema = Literal[
     "supplier_terms",
     "payable_fees",
     "scope_declarations",
+    "calendar_events",
+    "promotion_observations",
+    "usage_history",
+    "purchase_history",
 ]
 Quantity = Annotated[
     StrictStr, Field(pattern=r"^(0|[1-9][0-9]*)(\.[0-9]+)?$", max_length=200)
@@ -176,6 +181,12 @@ class SupplierConfirmation(DTO):
     reason: Text
 
 
+class HistoryCorrectionConfirmation(DTO):
+    row_id: UUID
+    expected_version: Version
+    reason: Text
+
+
 class CommitRequest(DTO):
     phase: Literal["commit"]
     preview_id: UUID
@@ -184,6 +195,7 @@ class CommitRequest(DTO):
     reason: Text | None = None
     resolutions: tuple[SalesResolution, ...]
     supplier_changes: tuple[SupplierConfirmation, ...] = ()
+    history_corrections: tuple[HistoryCorrectionConfirmation, ...] = ()
 
     @field_validator("confirm", mode="before")
     @classmethod
@@ -212,11 +224,18 @@ class FeePeriodAmendment(DTO):
     reason: Text
 
 
+class StockoutAlias(DTO):
+    token: Text
+    value: StrictBool | None
+
+
 class SourceContext(DTO):
     kind: Literal["source_context"]
     source_system_key: Code
     report_type: Code
     evidence_reference: Text
+    missing_stockout: Literal['quantity_only', 'not_provided'] | None = None
+    stockout_aliases: tuple[StockoutAlias, ...] = Field(default=(), max_length=32)
     sales_semantics: Literal["daily_total", "disjoint_contribution"] | None = None
     inventory_semantics: Literal["lot_stock_count"] | None = None
     decimal_locale: Literal["dot", "comma"] | None = None
@@ -230,6 +249,8 @@ class SourceContext(DTO):
 
     @model_validator(mode="after")
     def unique_amendments(self):
+        if len({a.token for a in self.stockout_aliases}) != len(self.stockout_aliases):
+            raise ValueError('DUPLICATE_STOCKOUT_ALIAS')
         if len({a.supplier_term_id for a in self.term_period_amendments}) != len(
             self.term_period_amendments
         ):
@@ -382,7 +403,7 @@ class EntityReservation(DTO):
 
 class Normalization(DTO):
     rule_id: str
-    kind: Literal["decimal_locale", "date_format", "unit_label_alias", "exact_scale"]
+    kind: Literal["decimal_locale", "date_format", "unit_label_alias", "exact_scale", "stockout_alias"]
     fields: tuple[str, ...]
     parameter: str
     evidence_reference: str
@@ -819,6 +840,18 @@ class InventoryEffect(DTO):
     observed_at: datetime
 
 
+class SalesContribution(DTO):
+    source_system_key: Code
+    report_type: Code
+    business_report_key: Text
+    semantics: Literal['daily_total', 'disjoint_contribution']
+    quantity: Quantity
+    is_stockout: StrictBool | None
+    stockout_update: Literal['source', 'quantity_only', 'not_provided'] | None
+    source_locations: tuple[SourceLocation, ...]
+    provenance: tuple[FieldProvenance, ...]
+
+
 class PreviewRow(DTO):
     row_id: UUID
     source_location: SourceLocation
@@ -841,6 +874,9 @@ class PreviewRow(DTO):
     target_reserved_or_existing_id: UUID | None = None
     expected_version: str | None = None
     normalized_source_quantity: Quantity | None = None
+    normalized_source_stockout: StrictBool | None = None
+    stockout_update: Literal['source', 'quantity_only', 'not_provided'] | None = None
+    sales_contributions: tuple[SalesContribution, ...] = ()
     required_permissions: tuple[str, ...] = ()
     supplier_term_semantics: SupplierTermSemantics | None = None
     inventory_effect: InventoryEffect | None = None
@@ -1159,6 +1195,8 @@ class CommitRowReference(DTO):
     nested_references: tuple[EntityRef, ...] = ()
     supplier_term_semantics: SupplierTermSemantics | None = None
     inventory_effect: InventoryEffect | None = None
+    sales_contributions: tuple[SalesContribution, ...] = ()
+    history_record: HistoryValue | None = None
 
 
 class ImportCompletion(DTO):

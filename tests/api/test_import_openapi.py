@@ -33,6 +33,13 @@ def test_import_operations_and_typed_variants_preserve_boundaries():
         if ident in {"I01", "I02", "I03", "I04", "M01", "M04", "N5", "I05"}:
             assert "ETag" in operation["responses"][str(status)]["headers"]
     schemas = spec["components"]["schemas"]
+    assert len([1 for path in spec['paths'].values() for method in path if method in {'get','post','put','patch','delete'}])==54
+    assert 'history_corrections' in schemas['app__application__contracts__import_mapping__CommitRequest']['properties']
+    assert 'history_record' in schemas['CommitRowReference']['properties']
+    assert schemas['HistoryCorrectionConfirmation']['required']==['row_id','expected_version','reason']
+    assert 'calendar_events' in schemas['SheetTypeResolution']['properties']['sheet_type']['anyOf'][0]['enum']
+    assert schemas['StoreContext']['properties']['permission_catalog_version']['const']=='permissions-v3'
+    assert schemas['PurchaseHistorySource']['properties']['price_basis']['enum']==['PER_QUANTITY','LINE_TOTAL','UNKNOWN']
     line = schemas["RecipeLineProvenance"]["properties"]
     assert line["quantity_basis"]["anyOf"][0]["enum"] == ["PER_SERVING", "WHOLE_BATCH"]
     assert "source_value" in schemas["ProvenanceValue"]["properties"]
@@ -42,6 +49,12 @@ def test_import_operations_and_typed_variants_preserve_boundaries():
     assert "supplier_term_semantics" in schemas["PreviewRow"]["properties"]
     assert "supplier_term_semantics" in schemas["CommitRowReference"]["properties"]
     assert "inventory_effect" in schemas["PreviewRow"]["properties"]
+    assert 'sales_contributions' in schemas['PreviewRow']['properties']
+    assert 'sales_contributions' in schemas['CommitRowReference']['properties']
+    stockout = schemas['SalesSource']['properties']['is_stockout']
+    assert {p['type'] for p in stockout['anyOf']} == {'boolean', 'null'}
+    assert schemas['SourceContext']['properties']['missing_stockout']['anyOf'][0]['enum'] == ['quantity_only', 'not_provided']
+    assert 'stockout_aliases' in schemas['SourceContext']['properties']
     assert "inventory_effect" in schemas["CommitRowReference"]["properties"]
     assert schemas["OpeningValue"]["properties"]["domain"]["const"] == "opening_stock"
     assert "lot_id" in schemas["OpeningValue"]["required"]

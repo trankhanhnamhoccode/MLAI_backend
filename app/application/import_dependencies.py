@@ -59,7 +59,8 @@ def order_dependencies(rows: tuple[dto.PreviewRow, ...]) -> tuple[dto.PreviewRow
     from heapq import heappush, heappop
     rank = {"ingredients":0, "products":1, "suppliers":1, "supplier_terms":3,
         "recipes":4, "sales":5, "opening_stock":6, "inventory_count":6,
-        "payable_fees":7, "scope_declarations":8}
+        "payable_fees":7, "scope_declarations":8, "calendar_events":9,
+        "promotion_observations":9, "usage_history":9, "purchase_history":9}
     indexed = {r.row_id:r for r in rows}
     if len(indexed) != len(rows) or any(not set(r.dependencies) <= indexed.keys() for r in rows):
         raise AuthError("SOURCE_IDENTITY_CONFLICT", 409)

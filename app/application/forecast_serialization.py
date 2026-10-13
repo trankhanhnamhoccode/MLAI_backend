@@ -37,8 +37,17 @@ def _decimal_string(value: Decimal) -> str:
 def serialize_prepared(prepared: PreparedForecastInput) -> SerializedForecastInput:
     prepared = PreparedForecastInput.model_validate(prepared)
     payload = prepared.model_dump(mode='json')
+    if prepared.schema_version == 1:
+        # Preserve exact historical payload identity and retained artifact digests.
+        payload.pop('demand_policy')
+        payload.pop('demand_records')
+        for row in payload['observations']:
+            row.pop('is_stockout')
     for row, observation in zip(payload['observations'], prepared.observations, strict=True):
         row['quantity'] = _decimal_string(observation.quantity)
+    for row, demand in zip(payload.get('demand_records', ()), prepared.demand_records, strict=True):
+        row['observed_quantity'] = _decimal_string(demand.observed_quantity)
+        row['demand_quantity'] = None if demand.demand_quantity is None else _decimal_string(demand.demand_quantity)
     encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True,
                          separators=(',', ':'), allow_nan=False)
     return SerializedForecastInput(encoded, hashlib.sha256(PREFIX + encoded.encode('utf-8')).hexdigest())

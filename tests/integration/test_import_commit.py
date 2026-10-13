@@ -116,14 +116,16 @@ def test_excel_shared_values_reuse_12_and_zero_require_own_confirmation(imp, mon
     with Session(imp[0][1]) as fresh:
         assert {r.product_id: r.quantity for r in fresh.scalars(select(SalesDaily))} == {imp[4]: 12, other: 0}
         assert "POS-20261010" not in str(fresh.get(ImportProfileVersion, (UUID(profile["profile_id"]), profile["approved_version"])).spec_json)
-    monkeypatch.setattr(import_suggestions, "suggest_sheet", lambda *a, **k: pytest.fail("reused mapping called provider"))
     second = analyzed_files(imp, [("sales.xlsx", content)])
+    monkeypatch.setattr(import_suggestions, "suggest_sheet", lambda *a, **k: pytest.fail("reused mapping called provider"))
+    review(imp, second, context={"date_format": "DMY_SLASH", "missing_stockout": "not_provided"})
     summary = imp[0][5].get("/api/v1/imports/" + second + "/mapping-summary").json()["data"]
     assert not summary["can_preview"] and any(x["code"] == "MISSING_IMPORT_VALUE" for x in summary["blockers"])
-    assert shared(imp, second, "sales.business_report_key", "POS-20261010-REVIEWED").status_code == 200
+    assert shared(imp, second, "sales.business_report_key", "POS-20261010").status_code == 200
     read2 = previewed(imp, second)
     assert commit(imp, second, read2, read2["import_revision"]).status_code == 409
     reviewed = confirm(imp, second, read2)
+    assert reviewed.status_code == 200, (reviewed.text, read2['preview']['summary']['blockers'])
     done = finished(imp, second, commit(imp, second, read2, reviewed.json()["data"]["import_revision"]))
     assert done["outcome"] == "no_changes" and not done["updated_resources"]["sales"]["updated"]
     with Session(imp[0][1]) as fresh:
@@ -297,6 +299,7 @@ def test_recipe_creates_reserved_ingredient_and_preserves_zero_loss_then_blocks_
         iid = ing.id
     source.update(version=2, ingredient_id=str(iid))
     second = analyzed(imp, csv_source("recipes", [source]))
+    approved(imp, second, report="recipes")
     read2 = previewed(imp, second)
     assert any(b["code"] == "RECIPE_PERIOD_OVERLAP" for b in read2["preview"]["summary"]["blockers"])
     assert confirm(imp, second, read2).status_code == 409
@@ -308,7 +311,7 @@ def test_disjoint_source_retry_revision_205_to_210_and_daily_total_mix_blocked(i
     from decimal import Decimal
     with Session(imp[0][1]) as s:
         s.add(SalesDaily(store_id=imp[1].store_id, product_id=imp[4], sales_date=date(2026, 10, 9), quantity=Decimal(100))); s.commit()
-    ident, read, revision = ready(imp, context={"sales_semantics": "disjoint_contribution"})
+    ident, read, revision = ready(imp, context={"sales_semantics": "disjoint_contribution", "missing_stockout": "not_provided"})
     row = read["preview"]["rows"][0]
     assert row["after"]["quantity"] == "205" and row["normalized_source_quantity"] == "105"
     assert row["provenance"]["quantity"]["origin"] == "DETERMINISTIC_DERIVED"
@@ -317,12 +320,12 @@ def test_disjoint_source_retry_revision_205_to_210_and_daily_total_mix_blocked(i
     done = finished(imp, ident, commit(imp, ident, read, revision, resolutions=[resolution]))
     assert done["updated_resources"]["sales"]["changed_record_count"] == 1
     # Same report reimport is source-aware NO_OP, not 205 + 105.
-    second = analyzed(imp); approved(imp, second, context={"sales_semantics": "disjoint_contribution"}); read2 = previewed(imp, second)
+    second = analyzed(imp); approved(imp, second, context={"sales_semantics": "disjoint_contribution", "missing_stockout": "not_provided"}); read2 = previewed(imp, second)
     assert read2["preview"]["rows"][0]["proposed_action"] == "NO_OP"
     reviewed = confirm(imp, second, read2)
     done2 = finished(imp, second, commit(imp, second, read2, reviewed.json()["data"]["import_revision"]))
     assert done2["outcome"] == "no_changes"
-    third = analyzed(imp, sales_bytes(imp, "110")); approved(imp, third, context={"sales_semantics": "disjoint_contribution"}); read3 = previewed(imp, third)
+    third = analyzed(imp, sales_bytes(imp, "110")); approved(imp, third, context={"sales_semantics": "disjoint_contribution", "missing_stockout": "not_provided"}); read3 = previewed(imp, third)
     r3 = read3["preview"]["rows"][0]
     assert r3["after"]["quantity"] == "210" and r3["normalized_source_quantity"] == "110"
     confirmation = confirm(imp, third, read3)
@@ -395,18 +398,18 @@ from datetime import datetime
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from app.config import Settings
-from scripts.dev import validate_reset_target
+from scripts.dev import TEST_DATABASE_NAMES, validate_reset_target
 from app.infrastructure.database.engine import create_database_engine
 from app.application.use_cases.auth import AuthUseCases
 from app.application.use_cases.import_staging import ImportStaging
 cfg = Settings(_env_file=None, openrouter_api_key=None, import_worker_enabled=False)
 url = make_url(cfg.database_url)
-assert cfg.environment == 'test' and url.database == 'shelfcash_test'
+assert cfg.environment == 'test' and url.database in TEST_DATABASE_NAMES
 assert url.host in {'localhost','127.0.0.1','::1'} and not url.query
 validate_reset_target(cfg)
 engine = create_database_engine(cfg)
 with engine.connect() as c:
-    assert c.scalar(text('SELECT current_database()')) == 'shelfcash_test'
+    assert c.scalar(text('SELECT current_database()')) == url.database
 class CrashBeforeWrites(ImportStaging):
     def _execute_commit(self, job_id, claim):
         os._exit(86)
@@ -429,7 +432,7 @@ raise AssertionError('No queued commit claimed')
     done = finished(imp, ident, commit(imp, ident, read, current["import_revision"]))
     assert done["outcome"] == "committed" and imp[2].recover() == ()
     with Session(imp[0][1]) as fresh:
-        assert fresh.get(ImportBatch, UUID(ident)).status == "completed"
+        assert fresh.get(ImportBatch, UUID(ident)).status == "completed_with_warnings"
         assert fresh.scalar(select(func.count()).select_from(SalesDaily)) == 1
 
 
@@ -507,7 +510,7 @@ def test_retired_pin_blocks_uncommitted_but_completion_survives_profile_reapprov
     with Session(imp[0][1]) as fresh:
         assert fresh.get(ImportBatch, UUID(ident)).status == original_status
     assert imp[0][5].get("/api/v1/imports/" + ident + "/completion").json()["data"] == done
-    second = analyzed(imp); approved(imp, second); read2 = previewed(imp, second)
+    second = analyzed(imp); approved(imp, second, context={"missing_stockout": "not_provided"}); read2 = previewed(imp, second)
     reviewed = confirm(imp, second, read2); assert reviewed.status_code == 200
     with Session(imp[0][1]) as fresh:
         profile = fresh.get(ImportProfile, UUID(ref["profile_id"]))

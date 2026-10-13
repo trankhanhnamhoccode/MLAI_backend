@@ -533,7 +533,7 @@ def test_grant_revoke_waits_for_authorization_fence_and_next_request_denies(env)
         deadline, waiting = monotonic()+5, False
         while monotonic() < deadline:
             with env[1].connect() as monitor:
-                waiting = bool(monitor.scalar(text("SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = 'shelfcash_test' AND application_name = 's41-revoke-test' AND wait_event_type = 'Lock')")))
+                waiting = bool(monitor.scalar(text("SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND application_name = 's41-revoke-test' AND wait_event_type = 'Lock')")))
             if waiting:
                 break
             sleep(.02)

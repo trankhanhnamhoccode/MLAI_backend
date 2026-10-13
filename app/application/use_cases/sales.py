@@ -48,6 +48,7 @@ class SalesUseCases:
             from app.application.errors import ApplicationError, ErrorCategory
             raise ApplicationError(ErrorCategory.NOT_FOUND, 'Daily sales not found in Store')
         row.quantity = data.quantity
+        row.is_stockout = data.is_stockout
         self.session.flush()
         return SalesResult.model_validate(row)
 

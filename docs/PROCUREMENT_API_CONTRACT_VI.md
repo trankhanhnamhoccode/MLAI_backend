@@ -5,6 +5,17 @@ C06 is merged into C05; C07 polling responsibility is C03. This contract owns
 approved requirements/budget/forecast/capture/strategy/result meanings and
 workflow states. Source DTOs/OpenAPI own request/response structure.
 
+CURRENT FACT A1 (targeted PostgreSQL acceptance on owned Import test DB): new forecasts use
+schema-2 captured demand policy. Quantity remains observed sales; derived demand
+retains method/version/support dates separately. Unsupported censored history is
+excluded; all-unusable Products have CENSORED_HISTORY_NOT_USABLE readiness. Unknown
+stockout is a quality warning under observed-value compatibility; usable/censored
+history reports CENSORED_HISTORY_EXCLUDED or DEMAND_RECONSTRUCTED. Reuse hashes
+stockout/policy/evidence. Retained Run reads/replay keep captured values; schema-1
+JSON/digest/replay is unchanged. Old observed artifacts cannot silently serve new
+demand policy. [ADR-A1](adr/ADR-A1-observed-stockout-demand-policy.md) owns mechanics;
+P25/P50/P75 and LOW/BASE/HIGH semantics remain unchanged.
+
 ACCEPTED DECISION: a recommendation is not customer selection or an order. No
 GET recomputes a forecast/solver/provider result. Current Store-sensitive rights
 apply to reads/replay/workers/PDF; no permissive staging account. Known configuration

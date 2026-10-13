@@ -1,6 +1,33 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
-## CURRENT FACT — S4.10 migration0017
+## CURRENT FACT — A2 migration0021, Import head
+
+`0021_import_support_history`, parent `0019_sales_stockout`, creates one
+purpose-specific append-only `import_history_records` table for four typed domains.
+UUID id, Store RESTRICT FK, domain/source_system_key/report_type/source_record_key,
+SHA-256 key hash, positive version, typed payload/provenance JSONB and explicit
+recorded_at are required. Unique Store/domain/source/report/hash/version prevents
+duplicate revision; JSON object/domain checks and immutable UPDATE/DELETE trigger
+protect retained evidence. Application pins the full unhashed key, verifies Store
+entity/unit/date/basis identity and uses existing table/read-set fences atomically.
+No balance, movement, receipt, inbound or SupplierTerm writes originate here.
+
+The migration expands membership_grants catalogue CHECK to 43 permissions-v3 keys;
+it inserts no grants or business rows. Downgrade refuses retained history or newly
+granted permission evidence. Current Import metadata has61 application tables (62 with Alembic).
+
+CURRENT FACT — local integration CHECK overlap: Import head `0021_import_support_history`
+and Auth reported head `0023_auth_permissions_v3` remain independent. Read-only source
+comparison confirms both migrations replace `ck_membership_grants_catalogue` with
+identical permissions-v3/43 expressions and add no grants. Auth chain is
+0017→0018→0020→0022→0023; Import is0017→0019→0021. Each downgrade independently restores
+the v2/37 CHECK, so integration must account for the other branch still requiring v3,
+in addition to resolving the two heads. This is an integration concern, not a verified
+combined upgrade/downgrade path; neither migration nor head is merged here.
+Owned PostgreSQL acceptance uses shelfcash_import_test/shelfcash_import_tester;
+development/Auth/shared DBs remain untouched.
+
+## HISTORICAL INFORMATION — S4.10 migration0017
 
 One additive purpose-specific planning_exports aggregate: export/job/Run/Store/
 actor UUID identity, canonical accepted request/original receipt, key/request
@@ -435,6 +462,15 @@ inputs only, not an implemented procurement/unit-conversion calculation.
 
 ### sales_daily
 
+CURRENT FACT A1 (verified on owned `shelfcash_import_test`): additive nullable
+BOOLEAN `is_stockout`, no default/backfill. True is observed product stockout,
+false known uncensored, null unknown. Quantity remains observed sales; immutable
+Import audit retains contribution revisions/evidence and canonical before/after.
+Forecast JSON captures derived demand separately. Migration `0019_sales_stockout`
+has parent `0017_planning_exports`, no Auth dependency. Upgrade only adds the column;
+downgrade refuses any non-null observation, including false. Upgrade and retention
+guard are verified using fresh Sessions; no development or Auth DB migration here.
+
 Purpose: one canonical daily sales total, not additive source observations.
 
 | Column | Type | Rule |
@@ -443,13 +479,15 @@ Purpose: one canonical daily sales total, not additive source observations.
 | product_id | UUID | FK (product_id,store_id) -> products(id,store_id) |
 | sales_date | DATE | Canonical business sales day; timezone cutoff conversion not implemented |
 | quantity | NUMERIC | Finite >=0 in Product.selling_unit |
+| is_stockout | BOOLEAN nullable | Observed stockout true / known uncensored false / unknown null; no default/backfill |
 
 PK id; `fk_sales_daily_product_store`, `uq_sales_daily_store_product_date`
 (store_id,product_id,sales_date), `ck_sales_daily_quantity`. Unique index supports
 store/product/day lookup; no source/import/filename in identity. No unnecessary
 revenue/promotion fields. A source quantity 100 changed to 105 is CHANGED under
-ADR-008, not a second row or total 205. Correction workflow/audit remains future;
-direct persisted state is mutable, not a Sales correction implementation.
+ADR-008, not a second row or total 205. Import correction/confirmed independent
+contribution workflow retains immutable source revisions and canonical before/after
+in Import audit. The materialized daily row remains mutable; it is not event sourcing.
 
 ### inventory_lots
 

@@ -18,9 +18,10 @@ def prepare_observations(facts: ReadinessFacts,store: UUID,start: date,
     rows=[r for r in history if r['product_id'] in ids]
     if {r['product_id'] for r in rows}!=ids:
         raise AuthError('PRODUCT_HISTORY_MISSING',409)
-    return PreparedForecastInput(request=ForecastExecutionInput(store_id=store,product_ids=tuple(UUID(i) for i in sorted(ids)),
+    return PreparedForecastInput(schema_version=2, demand_policy='causal_stockout_v1',
+        request=ForecastExecutionInput(store_id=store,product_ids=tuple(UUID(i) for i in sorted(ids)),
         history_start_date=min(date.fromisoformat(r['sales_date']) for r in rows),cutoff_date=cutoff),
         timezone=facts.snapshot['stores'][0]['timezone'],products=tuple(dict(product_id=i,selling_unit=active[i]['selling_unit']) for i in sorted(ids)),
         observations=tuple(dict(store_id=store,product_id=r['product_id'],sales_date=r['sales_date'],
-            quantity=Decimal(r['quantity']),selling_unit=active[r['product_id']]['selling_unit']) for r in rows),
+            quantity=Decimal(r['quantity']),is_stockout=r.get('is_stockout'),selling_unit=active[r['product_id']]['selling_unit']) for r in rows),
         forecast_dates=tuple(start+timedelta(days=i) for i in range(7)))

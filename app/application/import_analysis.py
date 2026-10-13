@@ -344,6 +344,12 @@ def build_spec(
     if missing:
         return None, tuple(missing)
     normalizations = list(prior_normalizations)
+    if context.stockout_aliases:
+        import json
+        normalizations = [r for r in normalizations if r.kind != 'stockout_alias']
+        normalizations.append(dto.Normalization(rule_id='declared_stockout_aliases', kind='stockout_alias',
+            fields=('is_stockout',), parameter=json.dumps([a.model_dump() for a in context.stockout_aliases],
+                ensure_ascii=False, sort_keys=True), evidence_reference=context.evidence_reference))
     if context.decimal_locale:
         normalizations = [r for r in normalizations if r.kind != "decimal_locale"]
         fields = tuple(
@@ -378,7 +384,7 @@ def build_spec(
         fields = tuple(
             k
             for k in SOURCE_MODELS[schema].model_fields
-            if k in {"sales_date", "effective_from", "effective_to", "received_date", "expiry_date"}
+            if k in {"sales_date", "effective_from", "effective_to", "received_date", "expiry_date", "order_date", "report_date", "usage_date"}
         )
         if context.date_format == "EXCEL_SERIAL" and sheet.excel_date_system is None:
             return None, ("EXCEL_DATE_SYSTEM_REQUIRED",)

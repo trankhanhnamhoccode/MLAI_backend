@@ -35,6 +35,7 @@ belongs in CURRENT_STATE; report drift rather than hiding it by editing decision
 | ADR-013 | Future Store mapping and approval direction | ACCEPTED; not superseded | Authorized self-approval, source/report profiles, reviewed immutable mapping versions, deterministic execution and version audit; original implementation status is historical, current Owner-only authority is detailed in the Import/Authorization contracts | [ADR-013](adr/ADR-013-future-store-mapping-approval-direction.md) |
 | ADR-014 | Retained internal baseline execution | ACCEPTED | Read-only snapshot capture, atomic run+JSONB input, versioned SHA-256, baseline execution/replay and explicit failure outcomes | [ADR-014](adr/ADR-014-retained-baseline-execution.md) |
 | ADR-015 | Trained observed-sales forecast/evaluation/artifacts | ACCEPTED by explicit remaining-S2 implementation delegation | Provisional mechanics policies, fixed LightGBM, selection, immutable artifacts and typed retained execution metadata | [ADR-015](adr/ADR-015-trained-observed-sales-forecast.md) |
+| ADR-A1 | Observed stockout and demand inputs | ACCEPTED under explicit A1 request | Schema-2 causal demand inputs; preserves v1 replay; targeted owned-DB persistence acceptance complete | [ADR-A1](adr/ADR-A1-observed-stockout-demand-policy.md) |
 
 CURRENT FACT S3.4.1: the user explicitly reopened ADR-017's procurement heuristic
 selection, without changing serving/FEFO or accepting MILP. Its old accepted text

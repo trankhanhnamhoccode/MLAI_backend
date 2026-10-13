@@ -109,9 +109,17 @@ def test_mixed_commit_lost_ack_is_reconciled_and_public_count_scope_invalidates_
         original(session)
         if success and not lost:lost.append(True);raise RuntimeError("Synthetic committed response loss")
     monkeypatch.setattr(Session,"commit",commit_lost)
-    result=finished(imp,ident,commit(imp,ident,read,revision))
+    key=str(uuid4())
+    accepted=commit(imp,ident,read,revision,key=key)
+    result=finished(imp,ident,accepted)
+    replay=commit(imp,ident,read,revision,key=key)
+    assert replay.status_code==202 and replay.json()["data"]==accepted.json()["data"]
+    assert imp[2].run_one() is None
+    assert imp[0][5].get("/api/v1/imports/"+ident+"/completion").json()["data"]==result
     assert lost and result["updated_resources"]["inventory"]["updated"]
     with Session(imp[0][1]) as s:
+        assert s.scalar(select(func.count()).select_from(InventoryMovement))==2
+        assert s.scalar(select(func.count()).select_from(InventoryLot))==1
         from app.repositories.import_staging import read_set_in_session
         from app.application.operational_import_facts import inventory_dependency
         snapshot,_=read_set_in_session(s,imp[1].store_id,("scope_declarations.INVENTORY",))

@@ -13,7 +13,9 @@ from app.infrastructure.database.auth_session import auth_session
 
 # Only approved category meanings; other schemas remain uncategorized.
 CATEGORIES={'sales':'sales','inventory_count':'inventory','recipes':'recipes',
-    'suppliers':'supplier','supplier_terms':'supplier','payable_fees':'supplier'}
+    'suppliers':'supplier','supplier_terms':'supplier','payable_fees':'supplier',
+    'calendar_events':'calendar','promotion_observations':'sales',
+    'usage_history':'usage','purchase_history':'purchase'}
 MAX_HISTORY_BATCHES=1000
 
 

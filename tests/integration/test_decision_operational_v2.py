@@ -1,4 +1,5 @@
 """Real disposable PostgreSQL acceptance for /2; never SQLite/unit replacements."""
+from sqlalchemy.engine import make_url
 from datetime import timedelta
 from decimal import Decimal
 from uuid import uuid4
@@ -19,7 +20,7 @@ from app.models import Store,Product,InventoryLot,ForecastRun,ForecastRunInput,D
 def request():return synthetic_case_v2()[0]
 
 
-def test_pg_v2_retained_forecast_to_winner_release_and_fresh_session(setup,monkeypatch):
+def test_pg_v2_retained_forecast_to_winner_release_and_fresh_session(setup,monkeypatch, test_database_url):
     engine,old,facts=setup;r=request();checks=[]
     from app.application.use_cases import decision_pipeline_v2 as module
     original=module.expand_bom
@@ -33,7 +34,7 @@ def test_pg_v2_retained_forecast_to_winner_release_and_fresh_session(setup,monke
     assert result.capture.forecast_provenance.retained_input_digest==facts.forecast.retained_digest
     assert checks[0]=='BOM' and checks.count('solver')==3 and engine.pool.checkedout()==0
     with Session(engine) as fresh:
-        assert fresh.scalar(text('select current_database()'))=='shelfcash_test'
+        assert fresh.scalar(text('select current_database()')) == make_url(test_database_url).database
         assert fresh.get(InventoryLot,facts.lots[0].id).on_hand_quantity==1
         assert fresh.get(ForecastRun,r.forecast_run_id).status=='COMPLETED'
         assert not fresh.scalars(select(DecisionRun)).all()

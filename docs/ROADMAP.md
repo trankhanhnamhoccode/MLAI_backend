@@ -9,6 +9,9 @@
 | S3.1-S3.6.4 | Implemented internal paths | Validated decision/BOM/serving/FEFO, procurement/1 and /2, comparison/selector, operational capture/setup and durable PlanningRun |
 | S4.1-S4.10 | Implemented backend scope | Auth/Staff, public Menu/Inventory, Import/commit, calendar/config/readiness, public Planning, retained history/PDF |
 | S4.11 | PARTIAL | Local integration/API coverage exists; whole mapping browser continuation NOT_RUN; PDF/planning-history UI incomplete |
+| A1 Sales/reimport + stockout | COMPLETE | Migration0019 and targeted PostgreSQL acceptance on owned shelfcash_import_test; fresh-session sales/stockout, causal capture/trained/replay, retained Planning, rights/isolation/rollback/concurrency; real-data quality not evaluated |
+| A2 support history + constraints | COMPLETE backend scope | Four history-only schemas, append revisions/current domain grants and retained reads; 24 targeted DB acceptance cases plus affected regressions; R01 scoped unsupported safety-stock blocker; no full-suite/whole-FE or forecast-feature claim |
+| A3 Import → readiness → Planning | COMPLETE backend acceptance | Fresh provisioned Store/public imports and config/real workers/fresh reads; both upload orders and exact purchase/service/stock oracle; Staff invitation/source reuse/Owner spec change, conflict/ambiguity, scoped unsupported safety and lost ACK/retry; 11 unique targeted DB cases plus inherited A1/A2 evidence; no browser/full-suite/real-accuracy claim |
 
 These are functional checkpoints, not a claim each is a Git commit or every route
 passed a fresh full suite. Current runtime/debt is in [CURRENT_STATE](CURRENT_STATE.md).
@@ -45,8 +48,9 @@ PER_SERVING/WHOLE_BATCH và Owner-reviewed scalar resolution → exact normaliza
 → preview/atomic commit → fresh recipe/BOM/recipe readiness. Không defaults/loss kép,
 old profiles thiếu basis cần review; output conversion chưa hỗ trợ. FE chưa có
 acceptance cho selector/provenance mới;
-consumption, purchase history, calendar/weather và tabular business rules chưa có
-writer import. Đưa các workflow này vào import là slice riêng, chưa được thực hiện.
+CURRENT FACT A2: usage/purchase history, declared calendar và observed promotion có
+record-only import writer/readback. Calendar/weather forecast features, waste/BOM
+reconciliation và arbitrary tabular rules chưa hỗ trợ, không suy từ history presence.
 
 ACCEPTED DECISION: ưu tiên nghiệp vụ cốt lõi theo chuỗi schema → mapping/resolution
 → validation → persistence → consumer → readiness, không theo số cột của sáu workbook.
@@ -71,12 +75,20 @@ Source declaration M04 đi trước compatible reuse; signature không chứng m
 Recipe cross-sheet cùng version bị RECIPE_SOURCE_SCOPE_AMBIGUOUS; split-part grain
 chưa supported. Retirement giữ chặn cả fresh reuse và pending commit.
 Default configuration absence vẫn UNKNOWN; whole browser acceptance chưa chạy.
-Excel actual receipts và stockout vẫn là lát riêng, không được mở theo kết quả này.
+Excel actual receipts vẫn ngoài phạm vi lát setup identity.
 
-ACCEPTED DECISION: stockout là hạng mục tiếp theo riêng. Legacy có consumer
-reconstruction/rolling features trong training/inference, không chỉ storage.
-Thiết kế nullable observation, observed/reconstructed separation, provenance/as-of
-và forecast compatibility còn PROPOSAL; không mở rộng forecast trong core import.
+ACCEPTED DECISION: người dùng đã mở A1 sales/reimport và stockout riêng;
+[ADR-A1](adr/ADR-A1-observed-stockout-demand-policy.md) sở hữu capture/consumer policy.
+A2 được duyệt riêng: recorded calendar/promotion/usage/purchase và constraints đã
+contract/enforce; không Excel actual receipts, Auth workflow hoặc queue/notification.
+
+CURRENT FACT A3: backend acceptance of the implemented chain is complete on the owned
+Import DB, provider OFF. Coverage extends existing tests only at the missing oracle,
+retained correction/count/config, Staff public-grants/reuse and scope/retry boundaries.
+No runtime/schema/API/permission change or migration was needed. A1/A2 targeted
+evidence is reused explicitly rather than repeating broad groups. See current
+[workflow/expected outcomes/recovery](runbooks/FULL_TEST_FLOW.md). No next feature
+slice, FE work, commit/push/merge/deploy or ZIP is authorized by this milestone.
 
 ## PROPOSAL / ngoài phạm vi đã duyệt
 
@@ -103,6 +115,10 @@ và forecast compatibility còn PROPOSAL; không mở rộng forecast trong core
   draft/actual purchase orders are not silently enabled by current Planning/PDF.
 - Stock/correction/purchase history extensions, unsupported supplier conditions,
   safety-stock semantics and latency improvements require explicit slices.
+
+CURRENT FACT: isolated worktree test DB setup is supported; effective target, dedicated
+roles and reset commands are documented in [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md).
+Parallel tests require different owned DBs; each DB remains sequential.
 
 ## Acceptance policy ? ACCEPTED DECISION
 

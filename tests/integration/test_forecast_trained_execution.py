@@ -26,6 +26,10 @@ from scripts.forecast_demo import synthetic_input
 def setup(database_settings,tmp_path):
     engine = create_database_engine(database_settings)
     prepared = synthetic_input(80,2)
+    # Current capture policy must match the artifact; legacy artifacts remain
+    # explicitly incompatible with schema-2 inference, covered separately.
+    prepared = type(prepared).model_validate(prepared.model_dump() | dict(
+        schema_version=2, demand_policy='causal_stockout_v1'))
     with Session(engine) as writer, writer.begin():
         writer.add(Store(id=prepared.request.store_id,name='SYNTHETIC trained integration',timezone=prepared.timezone))
         writer.flush()
@@ -95,7 +99,7 @@ def test_fallback_metadata_is_persisted_and_readable(setup,candidate,reason):
     result = cases.execute(prepared.request,candidate)
     details = cases.get_with_metadata(reference(prepared,result.id)).execution
     assert result.model_type == 'historical_quantile_baseline' and result.artifact_key is None
-    assert details.selection_reason == reason and details.warnings[0].code == 'BASELINE_FALLBACK'
+    assert details.selection_reason == reason and 'BASELINE_FALLBACK' in {w.code for w in details.warnings}
     with Session(engine) as fresh:
         stored = fresh.get(ForecastExecutionMetadata,result.id)
         assert stored.details_json['warnings'][0]['impact'] == details.warnings[0].impact
@@ -240,7 +244,7 @@ def test_postprocessing_warnings_and_counts_are_durable(setup,monkeypatch):
     assert all((p.p25,p.p50,p.p75)==(Decimal(0),Decimal(1),Decimal(3)) for p in result.predictions)
     details = cases.get_with_metadata(reference(prepared,result.id)).execution
     assert details.raw_crossings == 14 and details.negative_values == 14
-    assert details.warnings[0].code == 'QUANTILE_POSTPROCESSING'
+    assert 'QUANTILE_POSTPROCESSING' in {w.code for w in details.warnings}
     with Session(engine) as fresh:
         row = fresh.get(ForecastExecutionMetadata,result.id)
         assert row.details_json['raw_crossings'] == 14 and row.details_json['negative_values'] == 14

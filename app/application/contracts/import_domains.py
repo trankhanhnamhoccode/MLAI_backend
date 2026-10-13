@@ -15,6 +15,10 @@ from app.application.contracts.import_scalars import (
     IngredientMetadata,
     SupplierMetadata,
 )
+from app.application.contracts.import_history import (
+    CalendarEventSource, PromotionObservationSource, UsageHistorySource,
+    PurchaseHistorySource, HISTORY_MODELS,
+)
 
 
 class SalesSource(DTO):
@@ -24,6 +28,7 @@ class SalesSource(DTO):
     quantity: Quantity
     unit: str
     business_report_key: Text
+    is_stockout: StrictBool | None = None
 
 
 class CountSource(DTO):
@@ -356,6 +361,10 @@ SourceValue = Annotated[
     | SupplierSource
     | TermImportSource
     | FeeSource
+    | CalendarEventSource
+    | PromotionObservationSource
+    | UsageHistorySource
+    | PurchaseHistorySource
     | DeclarationSource,
     Field(discriminator="domain"),
 ]
@@ -376,10 +385,15 @@ CanonicalValue = Annotated[
     | SupplierSource
     | TermValue
     | FeeSource
+    | CalendarEventSource
+    | PromotionObservationSource
+    | UsageHistorySource
+    | PurchaseHistorySource
     | DeclarationSource,
     Field(discriminator="domain"),
 ]
 SOURCE_MODELS = {
+    **HISTORY_MODELS,
     "sales": SalesSource,
     "inventory_count": CountSource,
     "opening_stock": OpeningSource,

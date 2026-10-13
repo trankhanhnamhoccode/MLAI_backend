@@ -8,6 +8,7 @@ from app.models.recipe import Recipe
 from app.models.recipe_line import RecipeLine
 from app.models.supplier import Supplier
 from app.models.supplier_term import SupplierTerm
+from app.models.import_history import ImportHistoryRecord
 from app.models.sales_daily import SalesDaily
 from app.models.inventory_lot import InventoryLot
 from app.models.inventory_movement import InventoryMovement
@@ -25,6 +26,7 @@ from app.models.import_staging import (ImportBatch, ImportFile, ImportBlob, Impo
     ImportSourceContext, ImportJob, ImportPreview, ImportReceipt, ImportAudit)
 
 __all__ = [
+    "ImportHistoryRecord",
     "SupplierSourceRecord", "TermSourceRecord", "PayableFeeRecord", "ScopeDeclarationRecord", "InventoryReceiptRecord", "InventoryThreshold", "StockRequestReceipt", "InventoryAudit",
     "ImportBatch", "ImportFile", "ImportBlob", "ImportProfile", "ImportProfileVersion",
     "ImportSourceContext", "ImportJob", "ImportPreview", "ImportReceipt", "ImportAudit",

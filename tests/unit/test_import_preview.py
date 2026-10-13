@@ -90,7 +90,8 @@ def case(
     }
     data.update(snapshot or {})
     return make_preview(
-        sources, {str(sheets[0].sheet_id): spec}, data, NOW, "Asia/Ho_Chi_Minh", "VND"
+        sources, {str(sheets[0].sheet_id): spec}, data, NOW, "Asia/Ho_Chi_Minh", "VND",
+        stockout_policies={str(sheets[0].sheet_id): (context.missing_stockout, context.evidence_reference)} if context.missing_stockout else None,
     )
 
 
@@ -385,6 +386,7 @@ def test_disjoint_intent_requires_confirmation_and_keeps_100_plus_105():
             ],
         ),
         semantics="disjoint_contribution",
+        context_fields={'missing_stockout': 'not_provided'},
     )
     row = rows[0]
     assert row.after.quantity == "205" and row.confirmation_required

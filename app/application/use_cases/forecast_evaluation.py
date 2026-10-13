@@ -13,7 +13,8 @@ from app.infrastructure.forecast_model import train_quantiles, predict_quantiles
 def at_origin(prepared: PreparedForecastInput, origin) -> PreparedForecastInput:
     if not prepared.request.history_start_date <= origin <= prepared.request.cutoff_date:
         raise ValueError('Origin must be inside captured history window')
-    return PreparedForecastInput(request=ForecastExecutionInput(store_id=prepared.request.store_id,
+    return PreparedForecastInput(schema_version=prepared.schema_version, demand_policy=prepared.demand_policy,
+        request=ForecastExecutionInput(store_id=prepared.request.store_id,
         product_ids=prepared.request.product_ids, history_start_date=prepared.request.history_start_date,
         cutoff_date=origin), timezone=prepared.timezone, products=prepared.products,
         observations=tuple(o for o in prepared.observations if o.sales_date <= origin),
@@ -43,7 +44,9 @@ def backtest(prepared: PreparedForecastInput, dataset_label='USER_PROVIDED_UNVER
               for partition in ('validation','holdout')}
     excluded, missing = [], 0
     # The actual lookup is never passed into feature generation/training/inference.
-    actuals = {(r.product_id,r.sales_date):r.quantity for r in prepared.observations}
+    # Censored quantities are lower bounds, not observed demand evaluation targets.
+    actuals = {(r.product_id,r.sales_date):r.quantity for r in prepared.observations
+               if prepared.demand_policy == 'observed_sales_v1' or r.is_stockout is not True}
     for partition, partition_origins in (('validation', validation), ('holdout',holdout)):
         for origin in partition_origins:
             captured = at_origin(prepared, origin)

@@ -1,22 +1,97 @@
 # Inventory schemas Import hiện hành — khảo sát field-by-field
 
-CURRENT FACT: inventory xuất từ mười typed SOURCE_MODELS, gồm opening_stock, không registry legacy. Đây là bảng inventory của **mọi schema**, không riêng nghiệp vụ kho. Schema/row validation là authority; descriptors không tạo capability writer. ACCEPTED DECISION: sáu workbook demo là bộ kiểm thử, không định nghĩa schema hệ thống. Đối chiếu nghiệp vụ dựa trên [legacy handoff](../../IMPORT_SCHEMA_LEGACY_HANDOFF_VI.md); implementation/consumer của legacy là HISTORICAL INFORMATION, không authority cho bản mới.
+CURRENT FACT: inventory xuất từ mười bốn typed SOURCE_MODELS, gồm opening_stock và bốn miền history-only A2, không registry legacy. Đây là bảng inventory của **mọi schema**, không riêng nghiệp vụ kho. Schema/row validation là authority; descriptors không tạo capability writer. ACCEPTED DECISION: sáu workbook demo là bộ kiểm thử, không định nghĩa schema hệ thống. Đối chiếu nghiệp vụ dựa trên [legacy handoff](../../IMPORT_SCHEMA_LEGACY_HANDOFF_VI.md); implementation/consumer của legacy là HISTORICAL INFORMATION, không authority cho bản mới.
 
 ## Cách đọc và nguồn giá trị
 
-- `required`/`required-nullable` nói về row đã normalize; nullable không nghĩa có thể bỏ field. Hiện các business fields đều required (một số nhận null); chỉ discriminator `domain` có system default. Điều kiện bổ sung xem từng schema/nested model.
+- `required`/`required-nullable` nói về row đã normalize; nullable không nghĩa có thể bỏ field. Business fields required (một số nhận null), ngoại trừ optional-warning sales.is_stockout; discriminator `domain` có system default. Điều kiện bổ sung xem từng schema/nested model.
 - Cột Excel có thể chứa tên/mã nguồn thay UUID: approved IdentityRule/alias/reservation resolve sang canonical UUID; lot count phải existing và duy nhất, opening_stock giữ reserved lot ID đến commit. Không yêu cầu người dùng biết UUID.
 - CURRENT FACT: explicit scalar sources theo allowlist đã triển khai. `build_spec` nhận column/shared rule; missing IMPORT_VALUE vẫn blocked. Required row value không buộc cột vật lý. Generic arbitrary JSON/nested/context injection vẫn chưa có; không hạ validation/bịa defaults. Xem [feature](IMPORT_FIELD_VALUE_BINDINGS.md) và [allowlist/evidence](../runbooks/FULL_TEST_FLOW.md).
 - Store/actor/import/file/row IDs, package/profile versions, clock/currency comparison đến từ server/session/context/binding, không business columns bắt buộc của Excel. Bảng metadata context ở dưới tách chúng khỏi row schemas.
-- Mười schemas có retained preview/canonical writer; opening_stock dùng InventoryUseCases và InventoryReceiptRecord của N6, inventory_count chỉ existing lots. Mixed batch atomic, dependencies toàn batch gồm master/reservation rows. Excel actual receipts và purchase-history vẫn chưa triển khai. Chi tiết [setup/opening contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#setup-identity-excel-opening-stock-và-lot-count--current-fact).
+- Mười bốn schemas có retained preview/canonical writer; opening_stock dùng InventoryUseCases và InventoryReceiptRecord của N6, inventory_count chỉ existing lots. Mixed batch atomic, dependencies toàn batch gồm master/reservation rows. Excel actual receipts chưa triển khai; purchase_history A2 chỉ record-only. Chi tiết [setup/opening contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#setup-identity-excel-opening-stock-và-lot-count--current-fact).
 
 ## Bảng toàn bộ fields
 
+### A2 — recorded support schemas (CURRENT FACT, history-only)
+
+Authority: `contracts/import_history.py`, projected by SOURCE_MODELS/descriptors.
+All fields below are required, nullable only when stated; `domain` alone has the
+system discriminator default. Common `source_record_key` is a nonblank stable
+source row/event key (column only), `evidence_reference` is nonblank reviewed
+evidence (column or IMPORT_VALUE). Neither filename nor name creates identity.
+Store/source/report/profile/file/row/actor provenance is server/approved context.
+Persistence is append-only ImportHistoryRecord; correction confirmation and domain
+grants are owned by [Import](../IMPORT_MAPPING_API_CONTRACT_VI.md).
+
+| Schema / field | Meaning / validation | Shared sources besides column |
+| --- | --- | --- |
+| calendar_events.event_name | Declared event name; no inferred effects | None |
+| calendar_events.effective_from / effective_to | Inclusive ordered ISO date period; future declared event allowed | IMPORT_VALUE |
+| calendar_events.declared_at | Aware known declaration instant ≤ now | IMPORT_VALUE |
+| calendar_events.is_closed / is_holiday | Strict bool or explicit null; false ≠ unknown | IMPORT_VALUE |
+| promotion_observations.product_id | Same-Store reviewed Product binding/reservation | None |
+| promotion_observations.sales_date | Observed ISO Store day ≤ today | IMPORT_VALUE |
+| promotion_observations.promotion_name | Nonblank name or explicit null; no name→bool | IMPORT_VALUE |
+| promotion_observations.promotion_applied | Strict true/false/null observation | IMPORT_VALUE |
+| usage_history.ingredient_id | Same-Store reviewed Ingredient binding/reservation | None |
+| usage_history.usage_date | Actual consumption ISO Store day ≤ today | IMPORT_VALUE |
+| usage_history.observed_at | Aware actual observation instant or explicit null; known instant's Store day equals usage_date and ≤now | IMPORT_VALUE |
+| usage_history.quantity | Exact decimal text ≥0; actual recorded, not BOM/waste; null/missing blocked | None |
+| usage_history.unit | Exact Ingredient.base_unit after reviewed physical scaling | PROFILE_CONSTANT / IMPORT_VALUE |
+| purchase_history.ingredient_id | Same-Store reviewed Ingredient binding/reservation | None |
+| purchase_history.supplier_id | Same-Store reviewed Supplier binding or explicit null | IMPORT_VALUE |
+| purchase_history.quantity | Exact recorded physical quantity ≥0; no inbound or stock effect | None |
+| purchase_history.unit | Exact Ingredient.base_unit after reviewed scaling | PROFILE_CONSTANT / IMPORT_VALUE |
+| purchase_history.order_date / received_date | Separate historical ISO dates or explicit null; known receipt ≥ known order | IMPORT_VALUE |
+| purchase_history.report_date | Explicit report ISO date ≤today and ≥known order/receipt; never upload fallback | IMPORT_VALUE |
+| purchase_history.price | Exact Money18/18 or null only for UNKNOWN; zero meaningful | IMPORT_VALUE |
+| purchase_history.price_basis | PER_QUANTITY / LINE_TOTAL / UNKNOWN; no default | PROFILE_CONSTANT / IMPORT_VALUE |
+| purchase_history.price_quantity | Positive denominator for PER_QUANTITY; null otherwise; scale with price_unit, never price amount | IMPORT_VALUE |
+| purchase_history.price_unit | Physical price denominator label; null outside PER_QUANTITY | PROFILE_CONSTANT / IMPORT_VALUE |
+| purchase_history.currency | Explicit exact Store ISO currency; no FX | PROFILE_CONSTANT / IMPORT_VALUE |
+
+Recorded history consumers: H01/H02 discovery categories calendar/usage/purchase,
+promotion=sales; I04 retained preview and I06 immutable history_record payload,
+canonical_version, locations, provenance, audit link. Preview uses latest revision
+for exact reimport/correction; prior completion remains historical. No history
+query replaces canonical SalesDaily, recipe/BOM, inventory or SupplierTerm. Readiness
+does not mark setup complete from these records. No forecast calendar/weather/promo
+features, accuracy claim, waste reconciliation, recipe adjustment, actual goods
+receipts or historical-price promotion is implemented.
+
+| Existing constraint/configuration | Real consumer / status |
+| --- | --- |
+| ProcurementDeclaration.capacities | planning_capture.declarations_for → captured operational/2 → evaluate_procurement_basket gross capacity check per day/path at POST_RECEIPT_PRE_EXPIRY_PRE_CONSUMPTION; ENFORCED |
+| ProcurementDeclaration.supplier_limits | captured operational/2 → exact basket_violations ONE_ORDER_SUPPLIER_INGREDIENT quantity; ENFORCED |
+| SupplierTerm MOQ/maximum and payable_fees | Exact pack/MOQ/offer bounds/outlay validation; unsupported formulas block; ENFORCED for supported kinds |
+| Current Planning budget and customer requirements | Existing Planning configuration/request resolver → hard budget versus target satisfaction/selector; A2 does not import a generic budget row or change fairness/objective |
+| MIN_SAFETY_STOCK | Storage exists but computation semantics unsupported; procurement preflight blocks, R01 now MIN_SAFETY_STOCK_UNSUPPORTED for computed Ingredient/horizon, including zero |
+| Open PO / priority / arbitrary rule / weather / uplift / discount inference | Unsupported; explicit resolution/IGNORE required, never silent ready/default |
+
+Legacy source traced read-only in IMPORT_QWEN_REPRO_20261012.zip:
+`app/services/business_persistence.py::_persist_usage_history` (line344) sums same
+Ingredient/day and writes current usage; `_persist_purchase_history` (line388)
+falls back received_date→purchase_date and stores receipts without inventory;
+`_persist_calendar_features` (line547) bool-defaults fields. A2 keeps record-only
+boundaries, but deliberately requires declared grain/source key, append revisions,
+separate date semantics, exact price denominator and strict nullable booleans.
+The [legacy handoff](../../IMPORT_SCHEMA_LEGACY_HANDOFF_VI.md) §2.6–2.8/3.3 remains
+HISTORICAL INFORMATION; old weather known_at is not causal feature evidence.
+
 ### `sales` — Doanh số
 
-Nguồn: `app/application/contracts/import_domains.py:18` (SalesSource); metadata kế thừa `app/application/contracts/import_scalars.py`. Validation row + preview: Product hiện có hoặc reservation đã duyệt đúng Store; exact selling_unit; ngày bán không tương lai; reject duplicate Product/day; daily_total khác disjoint_contribution, correction phải xác nhận.
+CURRENT FACT A1 (migration/targeted DB acceptance verified): optional-warning
+`sales.is_stockout` strict boolean/null, column hoặc IMPORT_VALUE, không
+PROFILE_CONSTANT. Source/quantity-only/not-provided declarations, exact value
+aliases và multi-contribution grouping do [Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md)
+sở hữu. Canonical `sales_daily.is_stockout` cần additive migration; forecast consumer
+đã nối ở source theo [ADR-A1](../adr/ADR-A1-observed-stockout-demand-policy.md).
+Unknown không false, sales0 không infer stockout. Duplicate guard của slice cũ
+ở mô tả dưới là historical; A1 collapse exact same contribution và block conflicts.
 
-CURRENT FACT S4.5: sales_daily.quantity/sales_date/product_id; unit kiểm; versioned source report provenance immutable audit0013. SalesUseCases record/replace transaction-owned; explicit correction/merge + full confirmation/fences. Không generic upsert.
+Nguồn: `app/application/contracts/import_domains.py:18` (SalesSource); metadata kế thừa `app/application/contracts/import_scalars.py`. Validation row + preview: Product hiện có hoặc reservation đã duyệt đúng Store; exact selling_unit; ngày bán không tương lai; same-key exact duplicates collapse; conflicting contributions block; independent aggregation requires confirmation; daily_total khác disjoint_contribution, correction phải xác nhận.
+
+CURRENT FACT A1: SalesUseCases record/replace giữ transaction-owned; group Product/day giữ source/report contributions và nullable stockout. Migration0019/persistence/consumer acceptance verified trên DB Import riêng; confirmation/fences giữ nguyên, không generic upsert.
 
 | Field / nhãn | Requiredness / conditional | Nguồn hiện có | Validation typed (cộng rules ở trên) | Writer / dữ liệu đích  Shared scopes được phép |
 | --- | --- | --- | --- | ---  --- |
@@ -26,6 +101,7 @@ CURRENT FACT S4.5: sales_daily.quantity/sales_date/product_id; unit kiểm; vers
 | `quantity` — Số lượng | required | Cột Excel đã map; không context auto-fill | type=string; pattern=^(0&#124;[1-9][0-9]*)(\.[0-9]+)?$; maxLength=200 | sales_daily.quantity  Không shared; column/binding hiện hành |
 | `unit` — Đơn vị | required | Cột Excel hoặc explicit shared value; không fallback ô trống | type=string | kiểm Product.selling_unit; không column sales_daily.unit  PROFILE_CONSTANT / IMPORT_VALUE |
 | `business_report_key` — Mã báo cáo nghiệp vụ | required | Cột Excel hoặc explicit shared value; không fallback ô trống | type=string; minLength=1; maxLength=1000 | source identity/evidence/provenance; không tự là DB column  IMPORT_VALUE |
+| `is_stockout` — Observed product stockout | optional-warning; nullable, không default false | Cột đã map hoặc IMPORT_VALUE; exact aliases đã review | strict boolean/null | sales_daily.is_stockout; migration0019 và fresh-session acceptance verified. Không PROFILE_CONSTANT |
 
 ### `inventory_count` — Kiểm kê lô
 
@@ -263,24 +339,24 @@ Bảng gồm fields, discriminator, nested structured values và context metadat
 | inventory snapshot của legacy | CURRENT FACT: count và opening tách semantics | inventory_count chỉ target existing lot; opening_stock dedicated intake dùng approved identity/units, không legacy auto-create theo spelling/batch label. |
 | Opening stock | CURRENT FACT: Excel intake nối writer/consumer | opening_stock → reviewed Ingredient/Supplier + physical lot facts → preview/frozen effects → InventoryUseCases + receipt identity/audit → lot/count movement → scoped completeness → readiness/operational2 planning. |
 | Actual goods receipts | N6 public lifecycle đã có; chưa dedicated Import schema | N6 ACTUAL_RECEIPT: lô thực nhận + RECEIPT. N6 có identity/actor/CAS/HTTP; internal receive giữ standalone ownership. S4.6; optional Excel intake cần thiết kế riêng đã freeze, không map inventory_count. |
-| purchase_history | Capability mới/chưa duyệt | Legacy có purchase_receipts, không thay đổi kho. Hiện không source model/table/writer/contract tương ứng; OPEN authorization trước khi định slice. Không dùng supplier_terms/receipt/count thay thế. |
-| usage_history | Capability Import mới/chưa duyệt | Internal movement USAGE có storage sign, không usage importer. Không port waste/usage auto facts. |
-| calendar_features | Capability Import mới/chưa duyệt | Forecast temporal features không là source calendar importer; không thêm schema vì parity. |
-| sales stockout observation | HISTORICAL INFORMATION: legacy có consumer thật; bản mới chưa có field/consumer tương ứng | Legacy persistence → ForecastDataRepository → demand reconstruction/rolling features/training/inference. Hạng mục tiếp theo riêng; không mở rộng forecast trong lát import cốt lõi. Unknown phải khác false; observed sales không bị ghi đè bằng reconstructed demand. |
+| purchase_history | CURRENT FACT A2: history-only | Typed exact price basis + quantity/unit + separate dates → preview/correction → immutable history revisions → I06 payload/version and H01/H02 category purchase. No inventory/term/inbound effects. |
+| usage_history | CURRENT FACT A2: history-only | Typed recorded quantity/unit/day/time → immutable history revisions → I06 and H01/H02 category usage. Not movement USAGE/BOM/waste reconciliation. |
+| calendar_features | CURRENT FACT A2: calendar_events and promotion_observations, history-only | Declared Store event period/known timestamp differs from observed Product/day promotion. Read I06 and history categories; no model features/weather/uplift/discount inference. |
+| sales stockout observation | CURRENT FACT A1 complete | Nullable SalesDaily observation → causal schema2 demand capture/training/serving/readiness/retained replay; schema1 unchanged. Legacy remains historical source evidence, not the current policy. |
 | unknown | Unsupported/review | Không source schema mới; manual choose supported type hoặc acknowledged ignore. Không zero-row fake success. |
 
 Nguồn đối chiếu: [legacy handoff](../../IMPORT_SCHEMA_LEGACY_HANDOFF_VI.md), mục2.3 (Sales/stockout), 2.4–2.8 (recipe/inventory/supplier/usage/calendar/constraints), 3.3 (consumer), 4.4 (readiness) và 6 (gaps). N6 thuộc [API contract](../API_CONTRACT.md); lot_stock_count thuộc [Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md). Legacy source/ZIP chỉ evidence, không authority.
 
 ## Gaps có kế hoạch / OPEN
 
-- CURRENT FACT: `import_commit.py::SUPPORTED` và `write_rows` đã orchestrate cả mười schemas, gồm opening_stock. S4.5/S4.6 không còn là gaps persistence chung. Bounded scalar sources, immutable approved profiles, atomic commit và read-set/current-rights revalidation hiện có; API2xx/import completed vẫn không đủ chứng minh planning ready.
+- CURRENT FACT: `import_commit.py::SUPPORTED` và `write_rows` đã orchestrate cả mười bốn schemas, gồm opening_stock và A2. S4.5/S4.6 không còn là gaps persistence chung. Bounded scalar sources, immutable approved profiles, atomic commit và read-set/current-rights revalidation hiện có; API2xx/import completed vẫn không đủ chứng minh planning ready.
 - ACCEPTED DECISION: ưu tiên đóng chuỗi nghiệp vụ cốt lõi, giữ exact semantics, Owner approval/profile reuse và không port defaults/permissive conversions hoặc constraints chỉ lưu. Schema mới phải có validation, writer, consumer được enforce và readiness tương ứng trước khi gọi là hoàn thiện.
 - CURRENT FACT: Recipe serving/batch và Supplier price/MOQ source basis đã nối các canonical chains hiện có. Supplier physical MOQ dùng ceil điều kiện pack nguyên, giữ source MOQ; giá không làm tròn. Các limits/unsupported cases và FE projection thuộc [Import §13.2](../IMPORT_MAPPING_API_CONTRACT_VI.md#supplier-source-basis-và-fe-projection). Không tự đặt yield/loss/version/lead time hoặc suy phí miễn phí; không bắt đầu lát tiếp khi chưa được duyệt.
 - PROPOSAL — acceptance cho từng lát: inputs tổng hợp ngoài sáu workbook; ambiguous/missing/zero/null/invalid units và exact arithmetic; profile approve/reuse/drift; preview/commit cùng validators; fresh-session canonical state; consumer BOM/FEFO/procurement thực sự dùng giá trị; readiness block thiếu/stale evidence và phân biệt confirmed empty với UNKNOWN. Tests hiện có là điểm bắt đầu, không phải kết quả vừa chạy.
 - CURRENT FACT: Excel opening_stock đã nối lifecycle N6. Missing/partial inventory giữ UNKNOWN; explicit zero declaration và complete exact lots scope nối readiness/capture operational/2. Actual receipt Excel vẫn là lát riêng; count chỉ existing lots, received_date không derive từ as-of/upload.
 - CURRENT FACT: fee/declaration writers đã có; `planning_capture.py::declarations_for` đưa fee coverage, supplier limits và capacities vào captured inputs. Kind constraint mới còn OPEN cho tới khi có enforcement/capability/readiness, không generic free-text constraint importer. Budget/config dùng contract Planning hiện có; thiếu và zero không được gộp.
-- ACCEPTED DECISION: stockout là hạng mục tiếp theo riêng, không gộp vào core import. PROPOSAL cho lát đó: nullable observation và explicit merge/conflict policy, provenance/as-of, tách observed/reconstructed demand, consumer/training compatibility và readiness; không tự thêm bool field rồi tuyên bố forecast dùng được.
-- OPEN: purchase-history record-only, observed usage/waste, calendar/promotion/actual revenue, combo/mixed-table schemas; không tự ACCEPT parity. Chúng có mục đích/lifecycle riêng; purchase history không tự thành receipt/inbound, usage không tự trừ tồn. Nested bindings/flatten JSON UI ngoài allowlist chưa có runtime.
+- ACCEPTED DECISION: A1 stockout đã được mở riêng. CURRENT FACT: schema/mapping/preview, migration/persistence, demand consumer và readiness đã có targeted acceptance trên DB Import riêng; [ADR-A1](../adr/ADR-A1-observed-stockout-demand-policy.md) sở hữu policy/compatibility; A2 recorded support domains được duyệt riêng.
+- CURRENT FACT A2: purchase/usage/calendar/promotion có record-only writer và retained read consumer. OPEN: waste/reconciliation, calendar/weather forecast features, actual revenue, combo/mixed-table workflows. Nested bindings/flatten JSON UI ngoài allowlist chưa có runtime.
 - Unsupported M03: tax_percent/free_over_threshold/tiers/payment_terms không writer/source schema; không silently ignore thành readiness.
 
 Trace current chain: `app/application/contracts/import_domains.py`, `import_analysis.py::build_spec`, `import_preview.py::normalize/make_preview`, `import_commit.py::write_rows`, `use_cases/operational_configuration.py`, `app/domain/demand/bom.py::expand_dated_bom`, `app/domain/decision/procurement.py`, `app/infrastructure/database/planning_capture.py::declarations_for`, `app/application/readiness_evaluation.py::recipe_dependencies/watermark`. Source/tests mô tả implementation; không thay thế acceptance trên môi trường đang chạy.
