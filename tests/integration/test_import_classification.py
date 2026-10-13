@@ -116,12 +116,18 @@ def test_manual_correction_owner_profile_then_reuse_still_needs_own_confirmation
         ).all()
         assert len(audits) == 1 and audits[0].record_json == receipt["confirmation"]
         assert fresh.scalar(select(func.count()).select_from(SalesDaily)) == 0
+    # Analysis has no source proof yet; a custom header may reach the disabled
+    # suggestion gateway. Reuse is only eligible after this upload's declaration.
+    second = analyzed(imp, content)
+    from tests.integration.test_import_rule_review import declare_context, summary as mapping_summary
+    unselected = mapping_summary(imp, second)
+    assert not unselected["binding_refs"] and not unselected["can_preview"]
     monkeypatch.setattr(
         import_suggestions,
         "suggest_sheet",
         lambda *a: (_ for _ in ()).throw(AssertionError("provider forbidden on reuse")),
     )
-    second = analyzed(imp, content)
+    declare_context(imp, second, {"source_system_key": "POS-A", "report_type": "daily-sales"})
     summary = (
         imp[0][5]
         .get("/api/v1/imports/" + second + "/mapping-summary?include_clean_sheets=true")
@@ -644,6 +650,10 @@ def test_direct_reused_column_edit_forks_proposal_and_preserves_approved_context
     first = analyzed(imp)
     old = approved(imp, first)
     ident = analyzed(imp)
+    from tests.integration.test_import_rule_review import declare_context, summary as mapping_summary
+    unselected = mapping_summary(imp, ident)
+    assert not unselected["binding_refs"] and not unselected["can_preview"]
+    declare_context(imp, ident, {"source_system_key": "POS-A", "report_type": "daily-sales"})
     read = previewed(imp, ident)
     assert confirm(imp, ident, read).status_code == 200
     quantity = next(

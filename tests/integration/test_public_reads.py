@@ -1,4 +1,5 @@
 """Synthetic committed PostgreSQL facts through the six real HTTP routes."""
+from sqlalchemy.engine import make_url
 
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
@@ -527,10 +528,10 @@ def test_store_date_rollover_and_recipe_switch(facts):
     )
 
 
-def test_malformed_source_and_money_representation_fail_closed(facts):
+def test_malformed_source_and_money_representation_fail_closed(facts, test_database_url):
     env, ids = facts
     with Session(env[1]) as s:
-        assert s.scalar(text("select current_database()")) == "shelfcash_test"
+        assert s.scalar(text("select current_database()")) == make_url(test_database_url).database
         s.execute(
             text(
                 "ALTER TABLE recipe_lines DROP CONSTRAINT fk_recipe_lines_ingredient_store_unit"
@@ -610,10 +611,10 @@ def test_inventory_snapshot_stock_and_first_page_same_mvcc(facts, monkeypatch):
     )
 
 
-def test_recipe_overlap_fail_closed_not_highest_version(facts):
+def test_recipe_overlap_fail_closed_not_highest_version(facts, test_database_url):
     env, ids = facts
     with Session(env[1]) as s:
-        assert s.scalar(text("select current_database()")) == "shelfcash_test"
+        assert s.scalar(text("select current_database()")) == make_url(test_database_url).database
         s.execute(text("ALTER TABLE recipes DROP CONSTRAINT ex_recipes_product_period"))
         s.add(
             Recipe(
@@ -725,14 +726,14 @@ def test_query_count_bounded_not_per_product(facts):
     print("P01 total SELECTs for limit5/50 at203 Products:", counts)
 
 
-def test_revision_migration_existing_store_metadata_only_and_reversible(facts):
+def test_revision_migration_existing_store_metadata_only_and_reversible(facts, test_database_url):
     from alembic import command
     from scripts.dev import migration_config
     from sqlalchemy import inspect
 
     env, ids = facts
     with Session(env[1]) as s:
-        assert s.scalar(text("select current_database()")) == "shelfcash_test"
+        assert s.scalar(text("select current_database()")) == make_url(test_database_url).database
         before = [
             s.scalar(select(Product.price).where(Product.id == ids["products"][0])),
             s.scalar(

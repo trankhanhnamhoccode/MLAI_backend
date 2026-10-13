@@ -1,19 +1,15 @@
 """Transaction-owned append writer; retained completion is the public history reader."""
 from hashlib import sha256
-from sqlalchemy import select, func
 from app.application.contracts.auth import AuthError
 from app.application.contracts.import_history import HISTORY_MODELS
 from app.models.import_history import ImportHistoryRecord
+from app.repositories.import_staging import ImportHistoryRepository
 
 
 def write_history(session, store_id, row, scope, provenance, recorded_at):
     value = HISTORY_MODELS[row.after.domain].model_validate(row.after.model_dump())
-    current = session.scalar(select(func.max(ImportHistoryRecord.version)).where(
-        ImportHistoryRecord.store_id == store_id,
-        ImportHistoryRecord.domain == value.domain,
-        ImportHistoryRecord.source_system_key == scope.source_system_key,
-        ImportHistoryRecord.report_type == scope.report_type,
-        ImportHistoryRecord.source_record_key == value.source_record_key))
+    current = ImportHistoryRepository(session).latest_record_version(
+        store_id, value.domain, scope.source_system_key, scope.report_type, value.source_record_key)
     if (str(current) if current is not None else None) != row.expected_version:
         raise AuthError('PREVIEW_STALE', 409)
     if row.proposed_action not in {'CREATE_HISTORY_RECORD', 'CORRECT_HISTORY_RECORD'}:

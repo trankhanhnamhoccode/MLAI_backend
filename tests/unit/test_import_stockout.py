@@ -47,6 +47,22 @@ def test_reimport_missing_stockout_requires_explicit_batch_policy():
     assert row.proposed_action == 'REPLACE_DAILY_TOTAL' and row.confirmation_required
 
 
+@pytest.mark.parametrize('before,after,delta', [
+    ('100', '105', '5'),
+    ('105', '100', '-5'),
+    ('1000.123456789012345678901', '1000.123456789012345678902', '0.000000000000000000001'),
+])
+def test_grouped_quantity_change_keeps_exact_signed_delta(before, after, delta):
+    from decimal import localcontext
+    pid = uuid4()
+    with localcontext() as context:
+        context.prec = 3
+        row, = case('sales', [source(pid, after, is_stockout=False)], snapshot(pid, before, False))
+    assert not row.blockers and row.proposed_action == 'REPLACE_DAILY_TOTAL'
+    change, = row.changes
+    assert (change.field, change.before, change.after, change.delta) == ('quantity', before, after, delta)
+
+
 def test_value_aliases_only_explicit_reviewed_tokens():
     pid = uuid4()
     row, = case('sales', [source(pid, is_stockout='YES')], snapshot(pid))

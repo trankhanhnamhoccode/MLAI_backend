@@ -55,6 +55,26 @@ def configuration_ready(imp,sources,context=None):
     assert response.status_code==200,response.text
     return ident,read,response.json()["data"]["import_revision"]
 
+
+def declare_reused_sources(imp, ident):
+    """Each upload supplies explicit source proof; do not reapprove its profiles."""
+    from tests.integration.test_import_classification import listing, mapping
+    from tests.integration.test_import_rule_review import summary
+    before = summary(imp, ident)
+    assert not before['binding_refs'] and not before['can_preview']
+    for issue in listing(imp, ident):
+        if issue['issue_type'] != 'source_context':
+            continue
+        response = mapping(imp, ident, issue, {'resolution': {
+            'kind': 'source_context', 'source_system_key': 'POS-A',
+            'report_type': 'supplier-import', 'sales_semantics': 'daily_total',
+            'inventory_semantics': 'lot_stock_count',
+            'evidence_reference': 'Owner declared source for this upload',
+        }})
+        assert response.status_code == 200, response.text
+    reused = summary(imp, ident)
+    assert reused['can_preview'] and reused['profile_proposals'] == []
+
 def test_multi_schema_supplier_terms_explicit_none_fee_and_declaration_atomic_commit(imp):
     ingredient,lot,supplier,sources=supplier_sources(imp)
     ident,read,revision=configuration_ready(imp,sources)
@@ -227,6 +247,7 @@ def test_concurrent_mixed_imports_with_same_read_set_have_one_success_and_one_st
     ingredient,lot,supplier,sources=supplier_sources(imp)
     first,read,revision=configuration_ready(imp,sources)
     second=analyzed_files(imp,list(reversed(sources)))
+    declare_reused_sources(imp, second)
     other=previewed(imp,second)
     review=confirm(imp,second,other);assert review.status_code==200,review.text
     accepted=[commit(imp,first,read,revision),commit(imp,second,other,review.json()["data"]["import_revision"])]
@@ -261,6 +282,7 @@ def test_same_declared_scope_gets_new_revision_after_same_batch_count_and_zero_t
     ident,read,revision=configuration_ready(imp,sources)
     finished(imp,ident,commit(imp,ident,read,revision))
     other=analyzed_files(imp,[count("0"),sources[3]])
+    declare_reused_sources(imp, other)
     read=previewed(imp,other);review=confirm(imp,other,read)
     assert review.status_code==200,review.text
     result=finished(imp,other,commit(imp,other,read,review.json()["data"]["import_revision"]))

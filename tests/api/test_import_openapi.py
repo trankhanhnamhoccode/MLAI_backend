@@ -33,7 +33,8 @@ def test_import_operations_and_typed_variants_preserve_boundaries():
         if ident in {"I01", "I02", "I03", "I04", "M01", "M04", "N5", "I05"}:
             assert "ETag" in operation["responses"][str(status)]["headers"]
     schemas = spec["components"]["schemas"]
-    assert len([1 for path in spec['paths'].values() for method in path if method in {'get','post','put','patch','delete'}])==54
+    # Integrated Auth adds A02/A05/A06/A07/IN01; Import's route set is preserved.
+    assert len([1 for path in spec['paths'].values() for method in path if method in {'get','post','put','patch','delete'}])==59
     assert 'history_corrections' in schemas['app__application__contracts__import_mapping__CommitRequest']['properties']
     assert 'history_record' in schemas['CommitRowReference']['properties']
     assert schemas['HistoryCorrectionConfirmation']['required']==['row_id','expected_version','reason']

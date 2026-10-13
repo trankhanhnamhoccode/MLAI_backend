@@ -2,7 +2,7 @@ import base64
 import pytest
 from cryptography.exceptions import InvalidTag
 from pydantic import SecretStr, ValidationError
-from app.application.contracts.staff import GrantsRequest, AcceptInvitation, CreateInvitation
+from app.application.contracts.staff import GrantsRequest, AcceptInvitation, CreateInvitation, DeclineInvitation
 from app.application.contracts.auth import AuthError
 from app.infrastructure.invitation_secret import InvitationSecret
 
@@ -31,3 +31,13 @@ def test_encrypted_intent_authenticated_identity_random_nonce_and_secret_repr():
     with pytest.raises(InvalidTag):crypto.open(a[:-1]+bytes([a[-1]^1]),"scope-a")
     for key in (None,SecretStr("invalid"),SecretStr(base64.b64encode(b"short").decode())):
         with pytest.raises((ValueError,AuthError)):InvitationSecret(key)
+
+
+def test_decline_strict_reason_token_and_secret_redaction():
+    value = DeclineInvitation(token='synthetic-sensitive-token', reason='Holder refuses')
+    assert 'synthetic-sensitive-token' not in repr(value)
+    for fields in ({'reason':'   '}, {'reason':'x'*1001}, {'accept':False}, {'store_id':'spoof'}, {'token':123}):
+        with pytest.raises(ValidationError):
+            DeclineInvitation.model_validate({'token':'synthetic','reason':'Refuse'} | fields)
+    with pytest.raises(AuthError,match='INVALID_TOKEN'):
+        DeclineInvitation(token='é'*257,reason='Refuse')

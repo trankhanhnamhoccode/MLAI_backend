@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from app.models import (
     Store,
     Product,
@@ -27,9 +27,18 @@ from sqlalchemy.orm import Session
 
 
 class ImportHistoryRepository:
-    """Retained metadata queries in the caller's authorized repeatable-read Session."""
+    """Scoped history queries in the caller's authorized, transaction-owned Session."""
     def __init__(self, session: Session):
         self.session=session
+
+    def latest_record_version(self, store_id: UUID, domain: str, source_system_key: str,
+                              report_type: str, source_record_key: str) -> int | None:
+        return self.session.scalar(select(func.max(ImportHistoryRecord.version)).where(
+            ImportHistoryRecord.store_id == store_id,
+            ImportHistoryRecord.domain == domain,
+            ImportHistoryRecord.source_system_key == source_system_key,
+            ImportHistoryRecord.report_type == report_type,
+            ImportHistoryRecord.source_record_key == source_record_key))
 
     def store_timezone(self, store_id: UUID) -> str | None:
         return self.session.scalar(select(Store.timezone).where(Store.id==store_id))

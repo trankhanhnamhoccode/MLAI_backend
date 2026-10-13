@@ -1,0 +1,354 @@
+{
+  "provenance": {
+    "branch": "feat/integrate-import-auth",
+    "common_base": "b1ede89a3919230ce9526337537d7a19ca182f15",
+    "import_commit": "126b0f210c898ba7510039b46f10ce3a42b4e0c0",
+    "auth_commit": "0fbb979490eca5f8334284b6a1f7193591fe26a0",
+    "generated_at": "2026-10-13T15:21:54.814438+00:00",
+    "source_manifest_sha256": "a79179985327e1a3815e5e108f569b1978cf58b33eb3f54bbd47d7984ba9474d",
+    "migration_head": "0024_integrate_import_auth",
+    "operations": 59,
+    "paths": 55,
+    "source_only": true,
+    "database_access": false,
+    "server_started": false,
+    "workers": false,
+    "provider": false,
+    "scope": "Integrated source; enclosing Git commit owns artifact provenance; no running deployment claim"
+  },
+  "examples": [
+    {
+      "name": "Public email accepted",
+      "operation_ids": [
+        "A02",
+        "A06",
+        "A07"
+      ],
+      "http_status": 202,
+      "schema_model": "Envelope[PublicEmailAcceptance]",
+      "synthetic": true,
+      "body": {
+        "data": {
+          "next_action": "check_email",
+          "delivery": {
+            "status": "accepted"
+          },
+          "retry_after_seconds": 60
+        },
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": null
+      }
+    },
+    {
+      "name": "Verified/reset completed without session",
+      "operation_ids": [
+        "A05",
+        "N7"
+      ],
+      "http_status": 200,
+      "schema_model": "Envelope[CompletedCredential]",
+      "synthetic": true,
+      "body": {
+        "data": {
+          "next_action": "login",
+          "completed_at": "2026-10-13T13:00:00Z"
+        },
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": null
+      }
+    },
+    {
+      "name": "Exact invitation acceptance",
+      "operation_ids": [
+        "N19"
+      ],
+      "http_status": 201,
+      "schema_model": "Envelope[AcceptanceReceipt]",
+      "synthetic": true,
+      "body": {
+        "data": {
+          "invitation_id": "00000000-0000-0000-0000-000000000001",
+          "invitation_version_at_acceptance": "invitation-1",
+          "store_id": "00000000-0000-0000-0000-000000000002",
+          "membership_id": "00000000-0000-0000-0000-000000000003",
+          "role": "STAFF",
+          "accepted_grants": [
+            "calendar.read"
+          ],
+          "authorization_version_at_acceptance": "auth-1",
+          "accepted_at": "2026-10-13T13:00:00Z",
+          "event_id": "00000000-0000-0000-0000-000000000004",
+          "next_action": "refresh_store_context"
+        },
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": null
+      }
+    },
+    {
+      "name": "Declined without authority",
+      "operation_ids": [
+        "IN01"
+      ],
+      "http_status": 200,
+      "schema_model": "Envelope[DeclineReceipt]",
+      "synthetic": true,
+      "body": {
+        "data": {
+          "invitation_id": "00000000-0000-0000-0000-000000000005",
+          "store_id": "00000000-0000-0000-0000-000000000002",
+          "status": "declined",
+          "declined_at": "2026-10-13T13:00:00Z",
+          "version": "invitation-2",
+          "event_id": "00000000-0000-0000-0000-000000000004",
+          "next_action": "return_to_stores"
+        },
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": null
+      }
+    },
+    {
+      "name": "Service-wide mail unavailable",
+      "operation_ids": [
+        "A02",
+        "A06",
+        "A07"
+      ],
+      "http_status": 503,
+      "schema_model": "PublicEmailErrorEnvelope",
+      "synthetic": true,
+      "body": {
+        "data": null,
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": {
+          "code": "EMAIL_DELIVERY_UNAVAILABLE",
+          "message": "Email delivery unavailable",
+          "details": {
+            "reason_codes": [
+              "EMAIL_DELIVERY_UNAVAILABLE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "UNAUTHENTICATED",
+      "operation_ids": [
+        "A03",
+        "N19",
+        "IN01"
+      ],
+      "http_status": 401,
+      "schema_model": "ErrorEnvelope",
+      "synthetic": true,
+      "body": {
+        "data": null,
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": {
+          "code": "UNAUTHENTICATED",
+          "message": "UNAUTHENTICATED",
+          "details": {
+            "approval_request_allowed": false
+          }
+        }
+      }
+    },
+    {
+      "name": "CSRF_CHECK_FAILED",
+      "operation_ids": [
+        "N19",
+        "IN01"
+      ],
+      "http_status": 403,
+      "schema_model": "ErrorEnvelope",
+      "synthetic": true,
+      "body": {
+        "data": null,
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": {
+          "code": "CSRF_CHECK_FAILED",
+          "message": "CSRF_CHECK_FAILED",
+          "details": {
+            "approval_request_allowed": false
+          }
+        }
+      }
+    },
+    {
+      "name": "PERMISSION_CATALOG_CHANGED",
+      "operation_ids": [
+        "N15",
+        "N17",
+        "N19"
+      ],
+      "http_status": 409,
+      "schema_model": "ErrorEnvelope",
+      "synthetic": true,
+      "body": {
+        "data": null,
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": {
+          "code": "PERMISSION_CATALOG_CHANGED",
+          "message": "PERMISSION_CATALOG_CHANGED",
+          "details": {
+            "approval_request_allowed": false
+          }
+        }
+      }
+    },
+    {
+      "name": "VALIDATION_ERROR",
+      "operation_ids": [
+        "N19"
+      ],
+      "http_status": 422,
+      "schema_model": "ErrorEnvelope",
+      "synthetic": true,
+      "body": {
+        "data": null,
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "VALIDATION_ERROR",
+          "details": {
+            "approval_request_allowed": false
+          }
+        }
+      }
+    },
+    {
+      "name": "UNKNOWN_PERMISSION",
+      "operation_ids": [
+        "N13",
+        "N15"
+      ],
+      "http_status": 422,
+      "schema_model": "ErrorEnvelope",
+      "synthetic": true,
+      "body": {
+        "data": null,
+        "meta": {
+          "request_id": "synthetic-handoff-example"
+        },
+        "error": {
+          "code": "UNKNOWN_PERMISSION",
+          "message": "UNKNOWN_PERMISSION",
+          "details": {
+            "approval_request_allowed": false
+          }
+        }
+      }
+    }
+  ],
+  "source_fragments": [
+    {
+      "schema_model": "SourceContext",
+      "synthetic": true,
+      "body": {
+        "kind": "source_context",
+        "source_system_key": "POS_FIXTURE",
+        "report_type": "daily_sales",
+        "evidence_reference": "Synthetic reviewed source",
+        "missing_stockout": "not_provided",
+        "stockout_aliases": [
+          {
+            "token": "OUT",
+            "value": true
+          }
+        ],
+        "sales_semantics": "daily_total",
+        "inventory_semantics": null,
+        "decimal_locale": null,
+        "date_format": null,
+        "pack_cost_basis": null,
+        "planned_arrival_expiry_rule": null,
+        "term_period_amendments": [],
+        "fee_period_amendments": []
+      },
+      "scope": "Typed source/field fragment; not a complete HTTP response or standalone request"
+    },
+    {
+      "schema_model": "CalendarEventSource",
+      "synthetic": true,
+      "body": {
+        "source_record_key": "event-fixture",
+        "evidence_reference": "Synthetic declaration",
+        "domain": "calendar_events",
+        "event_name": "Declared closure",
+        "effective_from": "2026-10-13",
+        "effective_to": "2026-10-13",
+        "declared_at": "2026-10-13T13:00:00Z",
+        "is_closed": true,
+        "is_holiday": null
+      },
+      "scope": "Typed source/field fragment; not a complete HTTP response or standalone request"
+    },
+    {
+      "schema_model": "PurchaseHistorySource",
+      "synthetic": true,
+      "body": {
+        "source_record_key": "purchase-fixture",
+        "evidence_reference": "Synthetic history",
+        "domain": "purchase_history",
+        "ingredient_id": "00000000-0000-0000-0000-000000000001",
+        "supplier_id": null,
+        "quantity": "2",
+        "unit": "kg",
+        "order_date": null,
+        "received_date": null,
+        "report_date": "2026-10-13",
+        "price": null,
+        "price_basis": "UNKNOWN",
+        "price_quantity": null,
+        "price_unit": null,
+        "currency": "VND"
+      },
+      "scope": "Typed source/field fragment; not a complete HTTP response or standalone request"
+    },
+    {
+      "schema_model": "ProvenanceValue",
+      "synthetic": true,
+      "body": {
+        "source_value": "100",
+        "origin": "DETERMINISTIC_DERIVED",
+        "applied_rule_ids": [],
+        "value_source": "SOURCE_COLUMN",
+        "source_column_index": 2,
+        "declaration_id": null
+      },
+      "scope": "Typed source/field fragment; not a complete HTTP response or standalone request"
+    },
+    {
+      "schema_model": "InventoryEffect",
+      "synthetic": true,
+      "body": {
+        "origin": "OPENING_STOCK",
+        "lot_id": "00000000-0000-0000-0000-000000000001",
+        "before_quantity": null,
+        "after_quantity": "5",
+        "quantity_delta": "5",
+        "movement_type": "COUNT_CORRECTION",
+        "unit": "g",
+        "observed_at": "2026-10-13T13:00:00Z"
+      },
+      "scope": "Typed source/field fragment; not a complete HTTP response or standalone request"
+    }
+  ]
+}

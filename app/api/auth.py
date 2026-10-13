@@ -6,6 +6,7 @@ from fastapi.security import APIKeyCookie
 from app.application.contracts.auth import (
     AuthContext, AuthError, CompletedCredential, CredentialCompletion, Envelope,
     ErrorEnvelope, LoginRequest, Meta, StoreContext, StoreList,
+    PublicEmailRequest, RegistrationRequest, PublicEmailAcceptance, PublicEmailErrorEnvelope,
 )
 
 router = APIRouter(prefix="/api/v1", tags=["Auth and Store"])
@@ -15,6 +16,14 @@ ERRORS = {status: {"model": ErrorEnvelope} for status in (400, 401, 403, 404, 42
 
 def service(request: Request):
     return request.app.state.auth
+
+
+def email_service(request: Request):
+    return request.app.state.email_verification
+
+
+def reset_service(request: Request):
+    return request.app.state.password_reset
 
 
 def raw_session_token(request: Request):
@@ -53,6 +62,38 @@ def clear_cookie(response, request):
     response.delete_cookie("shelfcash_dev_session" if dev else "__Host-shelfcash_session", path="/", secure=not dev, httponly=True, samesite="lax")
 
 
+@router.post("/auth/register", operation_id="A02", status_code=202,
+    response_model=Envelope[PublicEmailAcceptance], responses={status: {"model": PublicEmailErrorEnvelope} for status in (400, 403, 413, 422, 429, 503)}, dependencies=[Depends(mutations)])
+def register(body: RegistrationRequest, request: Request, use_cases=Depends(email_service)):
+    strict_query(request)
+    return dict(data=use_cases.request(body, request.client.host if request.client else "unknown", request_id=request.state.request_id),
+                meta=dict(request_id=request.state.request_id), error=None)
+
+
+@router.post("/auth/email-verifications/request", operation_id="A06", status_code=202,
+    response_model=Envelope[PublicEmailAcceptance], responses={status: {"model": PublicEmailErrorEnvelope} for status in (400, 403, 413, 422, 429, 503)}, dependencies=[Depends(mutations)])
+def request_verification(body: PublicEmailRequest, request: Request, use_cases=Depends(email_service)):
+    strict_query(request)
+    return dict(data=use_cases.request(body, request.client.host if request.client else "unknown", request_id=request.state.request_id),
+                meta=dict(request_id=request.state.request_id), error=None)
+
+
+@router.post("/auth/email-verifications/complete", operation_id="A05",
+    response_model=Envelope[CompletedCredential], responses={status: {"model": ErrorEnvelope} for status in (400, 403, 413, 422, 429, 503)}, dependencies=[Depends(mutations)])
+def complete_verification(body: CredentialCompletion, request: Request, use_cases=Depends(email_service)):
+    strict_query(request)
+    return dict(data=use_cases.complete(body, request.client.host if request.client else "unknown", request_id=request.state.request_id),
+                meta=dict(request_id=request.state.request_id), error=None)
+
+
+@router.post("/auth/password-reset/request", operation_id="A07", status_code=202,
+    response_model=Envelope[PublicEmailAcceptance], responses={status: {"model": PublicEmailErrorEnvelope} for status in (400, 403, 413, 422, 429, 503)}, dependencies=[Depends(mutations)])
+def request_password_reset(body: PublicEmailRequest, request: Request, use_cases=Depends(reset_service)):
+    strict_query(request)
+    return dict(data=use_cases.request(body, request.client.host if request.client else "unknown", request_id=request.state.request_id),
+                meta=dict(request_id=request.state.request_id), error=None)
+
+
 @router.post("/auth/login", operation_id="A01", response_model=Envelope[AuthContext],
     responses={**ERRORS, 200: {"headers": {"Set-Cookie": {"schema": {"type": "string"}}, "Cache-Control": {"schema": {"type": "string"}}}}}, dependencies=[Depends(mutations)])
 def login(body: LoginRequest, request: Request, response: Response, auth=Depends(service), previous=Depends(raw_session_token)):
@@ -79,7 +120,7 @@ def logout(request: Request, response: Response, auth=Depends(service), token=De
 @router.post("/auth/credentials/complete", operation_id="N7", response_model=Envelope[CompletedCredential], responses=ERRORS, dependencies=[Depends(mutations)])
 def complete(body: CredentialCompletion, request: Request, auth=Depends(service)):
     strict_query(request)
-    return dict(data=auth.complete(body, request.client.host if request.client else "unknown"), meta=dict(request_id=request.state.request_id), error=None)
+    return dict(data=auth.complete(body, request.client.host if request.client else "unknown", request_id=request.state.request_id), meta=dict(request_id=request.state.request_id), error=None)
 
 
 @router.get("/stores", operation_id="T01", response_model=Envelope[StoreList], responses=ERRORS)

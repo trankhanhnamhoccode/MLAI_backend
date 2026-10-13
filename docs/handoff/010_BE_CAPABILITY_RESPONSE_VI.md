@@ -1,0 +1,81 @@
+# Phản hồi BE cho FE010 — source tích hợp Import A1–A3 / Auth B1–B4
+
+## Tóm tắt cho chủ dự án
+
+CURRENT FACT: đã ghép hai commit nghiệm thu trong worktree riêng `backend-integrate-import-auth`, branch `feat/integrate-import-auth`, giữ nguyên lịch sử nguồn và WIP của hai phiên. Source thống nhất có **59 operations/55 paths**, catalogue **permissions-v3/43 keys**, migration head **0024_integrate_import_auth**. FE dùng [openapi.json](openapi.json), không cộng hai artifacts WIP cũ thành một contract.
+
+Backend/fake-delivery và PostgreSQL là phạm vi verification; kết quả gate cuối nằm trong [runbook](../runbooks/FULL_TEST_FLOW.md#integrated-acceptance). Chưa start server thống nhất hoặc verified base URL. Browser E2E và email workflow thật vẫn pending. Gmail smoke đã nhận inbox chỉ chứng minh email smoke đó. Forecast có consumers/mechanics, **real-data accuracy NOT EVALUATED**.
+
+R05/R09 đã ACCEPTED/DESIGN_READY, chưa implemented. Recipe split-report đa file/sheet deferred; các guards và single-sheet hợp lệ vẫn hoạt động. Những capabilities Đợt2 còn thiếu bên dưới không trở thành runtime chỉ vì đã có prose contract.
+
+## R00–R13
+
+G = source tích hợp từ Import `126b0f210c898ba7510039b46f10ce3a42b4e0c0` (I) và Auth `0fbb979490eca5f8334284b6a1f7193591fe26a0` (B), common base `b1ede89a3919230ce9526337537d7a19ca182f15`. Git commit chứa tài liệu/artifact là snapshot bàn giao. Branch evidence lịch sử thuộc I/B, không suy từ file test tồn tại; gate G được ghi riêng trong runbook.
+
+| Yêu cầu | Contract status | Runtime status | Branch/snapshot | Evidence / source kiểm tra | FE cần làm | BE cần làm | Slice phụ trách |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| R00 contract/API delta | OpenAPI source structural authority | G59/55; thêm5 operations, không bỏ operation FE54 | G; baseline FE hash bên dưới | [Diff JSON](openapi_diff_fe54.json), `app.main.create_app`, API tests | Regenerate DTO/adapters từ G; giữ strict validators | Cấp runtime demo khi được mở scope | Integration hiện tại |
+| R01 signup/verify/resend/reset | ACCEPTED; AUTH self-service | A02/A05/A06/A07 và N7 implemented; no automatic Store/grants/session from verification | B1/B2/B4 tại B; G composition | [Auth routes](../../app/api/auth.py), `EmailVerification.request/complete`, `PasswordReset.request`, `AuthUseCases.complete`; fake delivery/fresh reads B4 | A02→check_email→A05→login; A07→N7→login | Browser/real workflow-email acceptance còn thiếu | B1/B2/B4 backend COMPLETE |
+| R02 invitation decline | ACCEPTED; IN01 riêng; N19 true-only | Decline terminal/event/receipt, no membership/grants/access; new invitation identity for reinvite | B3/B4 tại B; G | [Staff DTO](../../app/application/contracts/staff.py), `StaffUseCases.decline/accept`, API const:true và transition tests | POST decline riêng; không dùng accept:false; refresh current context after acceptance | FE/browser terminal-state flow | B3/B4 backend COMPLETE |
+| R03 mapping scoped counters | Import §17 DESIGN_READY | M01/M02 batch Progress có; per-file/origin/filtered counters extension chưa có | G kế thừa I/B | `ImportStaging.mappings/_progress`; [Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md) | Dùng filters/DTO hiện hành; không totals từ page length | Extend existing projection/pins | Import read-projection backlog |
+| R04 raw-cell/source-effect preview | Import §17 DESIGN_READY | Provenance/raw source lineage có; bounded raw-cell projection đầy đủ chưa có | G, I A1/A2 source lineage | `import_preview.make_preview`, `PreviewRow`, `ProvenanceValue`; [preview DTO](../../app/application/contracts/import_mapping.py) | Nối fields hiện có; không gọi provenance là full raw-cell grid | Typed projection với current rights/source pins | Import preview backlog |
+| R05 file/sheet preview aggregates | ACCEPTED / DESIGN_READY | Whole-preview summary/groups có; scoped aggregates chưa IMPLEMENTED | G selective Product delta từ backend tổng | [§17.1](../IMPORT_MAPPING_API_CONTRACT_VI.md#preview-aggregates) | Tách raw rows/logical actions; không cộng overlapping scopes; chờ runtime | Extend I04, same pinned preview/digest; dedupe within scope; no new endpoint | Import accepted projection backlog |
+| R06 supplier picker | API SU01 DESIGN_READY | Canonical supplier/writer/N6 nullable reference có; GET picker chưa có | G | `Supplier`, `StockWrites.receive`; [API](../API_CONTRACT.md#today-operations) | Không bắt user gõ UUID; chỉ nối supported flow | Supplier-scoped discovery/paging | BE tổng supplier discovery |
+| R07 creator/created-date Run search | Planning §17 DESIGN_READY | N9 status/forecast-date filters có; created filters/meta timezone chưa có | G | `PublicPlanning.history`, [history DTO](../../app/application/contracts/history.py) | Giữ supported filters; “Tôi” dùng A03; không forecast_date làm created date | Extend accepted_at/Store timezone/list snapshot | Retained-history backlog |
+| R08 PDF locator discovery | EX01 DESIGN_READY; N10/J01/N11 implemented | Create/poll/download có; GET collection discovery chưa có | G | `PlanningExports.accept/download`, [export router](../../app/api/planning_exports.py) | Dùng locator receipt/job; không POST chỉ để dò PDF cũ | EX01 với availability/hash/current rights | PDF discovery; S4.11 PARTIAL |
+| R09 captured budget RunSummary | ACCEPTED / DESIGN_READY | C03 BudgetAtAcceptance có; N9 summary extension chưa IMPLEMENTED | G selective Product delta | [Planning §17](../PROCUREMENT_API_CONTRACT_VI.md#history-captured-budget) | Limit/currency tại acceptance, explicit availability; không current cap/spend/balance/null→0 | Project retained evidence, giữ financial rights/list snapshot/pagination | Planning retained-history backlog |
+| R10 source-before-reuse / recipe grain | Guards ACCEPTED; split-report DEFERRED | Explicit source proof trước reuse; recipe scope ambiguity blocks; valid single-sheet assembly có | Base b1ede89 + I A3 + G | `import_analysis.discover`, `ImportStaging.resolve/_bindings`, `import_preview.make_preview`; A3 source/conflict acceptance | M02→M04 declaration→review/pin→preview; hiển thị blocker | Giữ guards; split identity/completeness deferred, không Product blocker | Lát3/A3 guards; split-report ngoài đợt |
+| R11 Staff permission requests | AUTH PR01–PR04 ACCEPTED/DESIGN_READY | N12/N13/N14 grant/audit có; request lifecycle chưa có | G | [staff routes](../../app/api/staff.py), `StaffUseCases.replace`; [AUTH](../AUTHORIZATION_CONTRACT_VI.md#permission-requests) | Không mô phỏng approval bằng hai calls | Workflow atomic request/decision | Auth collaboration backlog sau B4 |
+| R12 inbox/count/read | NF01–NF03 ACCEPTED/DESIGN_READY | Chưa routes/DTO/producer/read state; SMTP intents không phải inbox | G | [Notification](../NOTIFICATION_API_CONTRACT_VI.md#notification-v1), composition | Chưa enable task badge từ email intent/page length | Recipient projection/count/read + approved producers | Notification backlog riêng |
+| R13 Excel actual receipts | Import §16 ACCEPTED/DESIGN_READY | Form N6 ACTUAL_RECEIPT có; Import opening/count có; Excel actual receipt chưa có | G; A2 purchase history history-only | `StockWrites.receive`, `InventoryEffect`, [Import](../IMPORT_MAPPING_API_CONTRACT_VI.md) | Nối N6; không gọi opening/count/purchase history là actual receipt | Dedicated import writer/ledger identity/dedupe/atomicity | Import actual-receipt backlog |
+
+## Quyết định Product còn cần duyệt
+
+Không còn câu hỏi Product chặn bàn giao trong R00–R13 hiện tại. R05/R09/R10 đã được duyệt theo nghĩa ở canonical contracts. Việc chọn thứ tự/ủy quyền triển khai các slices Đợt2 còn lại thuộc roadmap hiện hành, không phải yêu cầu đổi policy đã chốt hay duyệt cấu trúc JSON thường.
+
+R05: logical action nhiều locations đếm một lần trong scope; totals file/sheet có thể overlap và không cộng thành batch total. Raw retained source rows là count khác. Totals/page dùng cùng preview/digest, không page length; tận dụng I04.
+
+R09: captured effective limit/currency của Run tại acceptance, không Store cap hiện tại hoặc spend/remaining. Old Run thiếu evidence trả availability/nullable fields rõ, không zero giả; giữ quyền đọc tài chính và list snapshot/paging.
+
+R10: không auto-union/last-file-wins hoặc bypass RECIPE_SOURCE_SCOPE_AMBIGUOUS; valid single-sheet assembly giữ nguyên. Split-report identity/completeness là deferred scope, không câu hỏi Product đang mở.
+
+## FE nối ngay và runtime cần chờ
+
+FE có thể làm DTO/adapters theo G cho public auth, N7, invitation offer/accept/decline, current Store context/grants và Import A1/A2 fields. FE cũng có thể chuẩn bị browser flows; chưa có base URL của server tích hợp đang chạy để certify live connectivity. R03–R09 extensions và R11–R13 còn thiếu runtime như bảng, không enable bằng capability fixture/prose.
+
+Các URL lịch sử/demo riêng: Gmail Auth demo `https://localhost:8102` với Origin `https://localhost:5173`, DB5434 còn schema B2; demo S4.11 `http://localhost:18001`, DB5433 là profile cũ. **Không URL nào được chứng nhận là release tích hợp này.** Lượt tích hợp không start/restart/migrate demo hoặc sửa FE/config FE.
+
+- Mọi API dưới `/api/v1`; browser dùng `credentials: include`, exact `AUTH_ALLOWED_ORIGINS` (JSON array), cookie HttpOnly. HTTPS dùng `__Host-shelfcash_session`; local insecure dev profile chỉ dùng khi cấu hình explicit đúng AUTH contract.
+- A01/A02/A05/A06/A07/N7: exact Origin, public session/CSRF exemptions; verification/reset completion không cấp session. Authenticated invitation/grants mutations cần current session, Origin, X-CSRF-Token, Idempotency-Key và If-Match theo OpenAPI.
+- N19 body chỉ `accept:true`; false/string/number bị422, không decline. IN01 có token/reason riêng. Offer proof không cấp authority; acceptance tạo exact grants, replay không khôi phục quyền đã thu hồi.
+- Callback FE dùng AUTH_VERIFICATION_FRONTEND_URL, AUTH_PASSWORD_RESET_FRONTEND_URL, AUTH_INVITATION_FRONTEND_URL/AUTH_FRONTEND_URL theo [Auth feature](../features/AUTH_SESSION.md). URL base cần thuộc allowed Origin, không query/fragment/userinfo. Page lấy token từ fragment vào memory, xóa fragment ngay, no-referrer; không log/persist token. A05 consume verification, N7 consume SETUP/RESET, invitation proof không đổi purpose.
+- Import/Planning/PDF worker flags độc lập default OFF; chỉ bật worker tương ứng khi cần process jobs và đã cấu hình runtime. AUTH_EMAIL_DELIVERY_ENABLED default OFF; backend/fake-delivery tests inject adapters, không SMTP. Provider/LLM OFF. Public mail endpoints503 EMAIL_DELIVERY_UNAVAILABLE khi capability không available; completion vẫn dùng existing valid token theo contract.
+- Private errors phân biệt401 UNAUTHENTICATED,403 permission/CSRF,404 foreign resource,409 state/catalogue/idempotency,412 stale CAS,428 missing precondition. Không nới FE validator để che drift; refresh catalogue/version/context đúng error.
+
+Lệnh kiểm trong worktree tích hợp, không secrets:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.dev status --test-database
+.\.venv\Scripts\python.exe -m alembic heads
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_integrated_migrations.py -q
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_auth_combined_acceptance.py tests/integration/test_import_planning_a3.py tests/integration/test_import_history_a2.py -q
+```
+
+DB test phải đúng shelfcash_integration_test / shelfcash_integration_tester; tests reset tuần tự riêng DB đó. Commands chạy server/worker/demo thuộc [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md), là hướng dẫn, không evidence server đã chạy trong lượt này.
+
+## Artifacts và provenance
+
+| Artifact | Nội dung / giới hạn |
+| --- | --- |
+| [openapi.json](openapi.json) | Source G đo59 operations/55 paths; provenance extension ghi base/I/B/branch/head/time/SHA256 app+Alembic manifest; enclosing Git commit giữ snapshot artifact |
+| [openapi_diff_fe54.json](openapi_diff_fe54.json) | So sánh FE artifact thực đọc read-only, added/removed/changed operations, schemas và structural JSON pointers |
+| [examples.json](examples.json) | Synthetic examples validated bằng DTO; success/error auth/accept/decline và Import field fragments, không captured live responses/secrets |
+| Tài liệu này | Trả lời R00–R13 và hướng dẫn nối FE; canonical contracts vẫn sở hữu policy |
+
+Baseline FE thực đọc: `Shelfcash_FE_v2/api-contract-v2/generated/openapi.json`, SHA256 `6336bc0cdbe5f260389838934ba946cd51887af1b551c763b5beb4437e5e7e1f`,54 operations/50 paths. Yêu cầu010 trước ghi hash `f160bf4a46453404f103a32431da5dc722382fb02494612e61e2000e57533961`; đó là bytes snapshot khác, không được thay thành “cùng bản”. Baseline ngày10/10 trong tests/fixtures là32 operations, được giữ nguyên và không giả làm FE54.
+
+Delta chính: +A02/A05/A06/A07/IN01, không removed operations; N19 schema const:true; terminal declined/can_decline; public mail envelopes; catalogue v3/max43; stockout policies/contributions; bốn support-history domains/typed corrections/projections; source-value/recipe/supplier basis/opening provenance và parser/mapping metadata. Xem diff structural đầy đủ và source DTO, không suy typed source input nào cũng là public HTTP request.
+
+Source-only generation dùng process riêng, Settings không đọc .env, mọi workers/provider OFF, DB/network connect bị chặn; chỉ app.openapi(), không lifespan/server. Examples là synthetic và được model_validate; không deploy/API response captures. Artifact từng nhánh trong backend tổng `docs/handoff/010_openapi_{main,import-wip,auth-wip}.json` là lịch sử audit13/10 lúc18:07, không release I/B/G; provenance của chúng giữ nguyên ở backend tổng, không overwrite/copy làm artifact hiện hành.
+
+Còn thiếu: running unified environment/base URL, real workflow-email/browser receipts và Đợt2 runtime nêu trong bảng. Không tuyên bố toàn roadmap COMPLETE, forecast accuracy hay deployment pass.

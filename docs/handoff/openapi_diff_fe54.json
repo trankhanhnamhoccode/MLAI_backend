@@ -1,0 +1,4012 @@
+{
+  "baseline_path": "D:\\hocc_bk\\ai\\proj\\projectMLAI\\Shelfcash_FE_v2\\api-contract-v2\\generated\\openapi.json",
+  "baseline_sha256": "6336bc0cdbe5f260389838934ba946cd51887af1b551c763b5beb4437e5e7e1f",
+  "baseline_operations": 54,
+  "baseline_paths": 50,
+  "integrated_operations": 59,
+  "integrated_paths": 55,
+  "added_operations": {
+    "A02": {
+      "method": "POST",
+      "path": "/api/v1/auth/register"
+    },
+    "A05": {
+      "method": "POST",
+      "path": "/api/v1/auth/email-verifications/complete"
+    },
+    "A06": {
+      "method": "POST",
+      "path": "/api/v1/auth/email-verifications/request"
+    },
+    "A07": {
+      "method": "POST",
+      "path": "/api/v1/auth/password-reset/request"
+    },
+    "IN01": {
+      "method": "POST",
+      "path": "/api/v1/staff-invitations/{invitation_id}/decline"
+    }
+  },
+  "removed_operations": [],
+  "changed_operations": [
+    "H01",
+    "H02"
+  ],
+  "added_schemas": [
+    "AcceptedDelivery",
+    "CalendarEventSource",
+    "DeclineInvitation",
+    "DeclineReceipt",
+    "EmailDeliveryErrorDetails",
+    "Envelope_DeclineReceipt_",
+    "Envelope_PublicEmailAcceptance_",
+    "FieldProvenance",
+    "HistoryCorrectionConfirmation",
+    "InventoryEffect",
+    "OpeningValue",
+    "PromotionObservationSource",
+    "PublicEmailAcceptance",
+    "PublicEmailErrorEnvelope",
+    "PublicEmailErrorInfo",
+    "PublicEmailRequest",
+    "PurchaseHistorySource",
+    "RegistrationRequest",
+    "SalesContribution",
+    "StockoutAlias",
+    "SuggestionDiagnostic",
+    "SupplierTermSemantics",
+    "UsageHistorySource"
+  ],
+  "removed_schemas": [],
+  "changed_schemas": [
+    "AcceptInvitation",
+    "CommitRowReference",
+    "CreateInvitation",
+    "FieldOptions",
+    "GrantsRequest",
+    "Invitation",
+    "InvitationEvent",
+    "InvitationOffer",
+    "MappingIssue",
+    "MembershipList",
+    "Normalization",
+    "OfferRead",
+    "PreviewGroup",
+    "PreviewRow",
+    "ProfileSpec",
+    "ProvenanceValue",
+    "RecipeLineProvenance",
+    "ReissueInvitation",
+    "SalesSource",
+    "SchemaDescriptor",
+    "SheetInfo",
+    "SheetTypeResolution",
+    "SourceContext",
+    "StagedConfigurationRow",
+    "StoreContext",
+    "TermValue",
+    "app__application__contracts__import_mapping__CommitRequest"
+  ],
+  "structural_changes": [
+    {
+      "pointer": "/components/schemas/AcceptInvitation/properties/accept/const",
+      "change": "added",
+      "after": true
+    },
+    {
+      "pointer": "/components/schemas/AcceptedDelivery",
+      "change": "added",
+      "after": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "accepted",
+            "title": "Status",
+            "default": "accepted"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AcceptedDelivery"
+      }
+    },
+    {
+      "pointer": "/components/schemas/CalendarEventSource",
+      "change": "added",
+      "after": {
+        "properties": {
+          "source_record_key": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Source Record Key"
+          },
+          "evidence_reference": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Evidence Reference"
+          },
+          "domain": {
+            "type": "string",
+            "const": "calendar_events",
+            "title": "Domain",
+            "default": "calendar_events"
+          },
+          "event_name": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Event Name"
+          },
+          "effective_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective From"
+          },
+          "effective_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective To"
+          },
+          "declared_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Declared At"
+          },
+          "is_closed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Closed"
+          },
+          "is_holiday": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Holiday"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_record_key",
+          "evidence_reference",
+          "event_name",
+          "effective_from",
+          "effective_to",
+          "declared_at",
+          "is_closed",
+          "is_holiday"
+        ],
+        "title": "CalendarEventSource"
+      }
+    },
+    {
+      "pointer": "/components/schemas/CommitRowReference/properties/canonical_domain/enum",
+      "change": "changed",
+      "before": [
+        "products",
+        "ingredients",
+        "recipes",
+        "sales",
+        "inventory_count",
+        "suppliers",
+        "supplier_terms",
+        "payable_fees",
+        "scope_declarations"
+      ],
+      "after": [
+        "sales",
+        "recipes",
+        "inventory_count",
+        "opening_stock",
+        "products",
+        "ingredients",
+        "suppliers",
+        "supplier_terms",
+        "payable_fees",
+        "scope_declarations",
+        "calendar_events",
+        "promotion_observations",
+        "usage_history",
+        "purchase_history"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/CommitRowReference/properties/history_record",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CalendarEventSource"
+              },
+              {
+                "$ref": "#/components/schemas/PromotionObservationSource"
+              },
+              {
+                "$ref": "#/components/schemas/UsageHistorySource"
+              },
+              {
+                "$ref": "#/components/schemas/PurchaseHistorySource"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "domain",
+              "mapping": {
+                "calendar_events": "#/components/schemas/CalendarEventSource",
+                "promotion_observations": "#/components/schemas/PromotionObservationSource",
+                "purchase_history": "#/components/schemas/PurchaseHistorySource",
+                "usage_history": "#/components/schemas/UsageHistorySource"
+              }
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "History Record"
+      }
+    },
+    {
+      "pointer": "/components/schemas/CommitRowReference/properties/inventory_effect",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/InventoryEffect"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "pointer": "/components/schemas/CommitRowReference/properties/sales_contributions",
+      "change": "added",
+      "after": {
+        "items": {
+          "$ref": "#/components/schemas/SalesContribution"
+        },
+        "type": "array",
+        "title": "Sales Contributions",
+        "default": []
+      }
+    },
+    {
+      "pointer": "/components/schemas/CommitRowReference/properties/supplier_term_semantics",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SupplierTermSemantics"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "pointer": "/components/schemas/CreateInvitation/properties/grants/maxItems",
+      "change": "changed",
+      "before": 37,
+      "after": 43
+    },
+    {
+      "pointer": "/components/schemas/DeclineInvitation",
+      "change": "added",
+      "after": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Token",
+            "writeOnly": true
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token",
+          "reason"
+        ],
+        "title": "DeclineInvitation"
+      }
+    },
+    {
+      "pointer": "/components/schemas/DeclineReceipt",
+      "change": "added",
+      "after": {
+        "properties": {
+          "invitation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Invitation Id"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "declined",
+            "title": "Status",
+            "default": "declined"
+          },
+          "declined_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Declined At"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "next_action": {
+            "type": "string",
+            "const": "return_to_stores",
+            "title": "Next Action",
+            "default": "return_to_stores"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "invitation_id",
+          "store_id",
+          "declined_at",
+          "version",
+          "event_id"
+        ],
+        "title": "DeclineReceipt"
+      }
+    },
+    {
+      "pointer": "/components/schemas/EmailDeliveryErrorDetails",
+      "change": "added",
+      "after": {
+        "properties": {
+          "reason_codes": {
+            "items": {
+              "type": "string",
+              "const": "EMAIL_DELIVERY_UNAVAILABLE"
+            },
+            "type": "array",
+            "title": "Reason Codes",
+            "default": [
+              "EMAIL_DELIVERY_UNAVAILABLE"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "EmailDeliveryErrorDetails"
+      }
+    },
+    {
+      "pointer": "/components/schemas/Envelope_DeclineReceipt_",
+      "change": "added",
+      "after": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DeclineReceipt"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "error": {
+            "type": "null",
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data",
+          "meta",
+          "error"
+        ],
+        "title": "Envelope[DeclineReceipt]"
+      }
+    },
+    {
+      "pointer": "/components/schemas/Envelope_PublicEmailAcceptance_",
+      "change": "added",
+      "after": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PublicEmailAcceptance"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "error": {
+            "type": "null",
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data",
+          "meta",
+          "error"
+        ],
+        "title": "Envelope[PublicEmailAcceptance]"
+      }
+    },
+    {
+      "pointer": "/components/schemas/FieldOptions/properties/schema/anyOf",
+      "change": "changed",
+      "before": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "after": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "opening_stock",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations",
+            "calendar_events",
+            "promotion_observations",
+            "usage_history",
+            "purchase_history"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    {
+      "pointer": "/components/schemas/FieldProvenance",
+      "change": "added",
+      "after": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "source_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Value"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "SOURCE_EXPLICIT",
+              "DETERMINISTIC_DERIVED",
+              "SYSTEM_ASSIGNED",
+              "UNKNOWN",
+              "AMBIGUOUS"
+            ],
+            "title": "Origin"
+          },
+          "applied_rule_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Applied Rule Ids",
+            "default": []
+          },
+          "value_source": {
+            "type": "string",
+            "enum": [
+              "SOURCE_COLUMN",
+              "PROFILE_CONSTANT",
+              "IMPORT_VALUE",
+              "IDENTITY_BINDING"
+            ],
+            "title": "Value Source",
+            "default": "SOURCE_COLUMN"
+          },
+          "source_column_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Column Index"
+          },
+          "declaration_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declaration Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "field",
+          "origin"
+        ],
+        "title": "FieldProvenance"
+      }
+    },
+    {
+      "pointer": "/components/schemas/GrantsRequest/properties/grants/maxItems",
+      "change": "changed",
+      "before": 37,
+      "after": 43
+    },
+    {
+      "pointer": "/components/schemas/HistoryCorrectionConfirmation",
+      "change": "added",
+      "after": {
+        "properties": {
+          "row_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Row Id"
+          },
+          "expected_version": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Expected Version"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "row_id",
+          "expected_version",
+          "reason"
+        ],
+        "title": "HistoryCorrectionConfirmation"
+      }
+    },
+    {
+      "pointer": "/components/schemas/InventoryEffect",
+      "change": "added",
+      "after": {
+        "properties": {
+          "origin": {
+            "type": "string",
+            "enum": [
+              "OPENING_STOCK",
+              "IMPORT_COUNT"
+            ],
+            "title": "Origin"
+          },
+          "lot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Lot Id"
+          },
+          "before_quantity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before Quantity"
+          },
+          "after_quantity": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "After Quantity"
+          },
+          "quantity_delta": {
+            "type": "string",
+            "maxLength": 201,
+            "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Quantity Delta"
+          },
+          "movement_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "COUNT_CORRECTION"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Movement Type"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "origin",
+          "lot_id",
+          "before_quantity",
+          "after_quantity",
+          "quantity_delta",
+          "movement_type",
+          "unit",
+          "observed_at"
+        ],
+        "title": "InventoryEffect"
+      }
+    },
+    {
+      "pointer": "/components/schemas/Invitation/properties/declined_at",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Declined At"
+      }
+    },
+    {
+      "pointer": "/components/schemas/Invitation/properties/status/enum",
+      "change": "changed",
+      "before": [
+        "pending",
+        "accepted",
+        "revoked",
+        "expired"
+      ],
+      "after": [
+        "pending",
+        "accepted",
+        "revoked",
+        "expired",
+        "declined"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/Invitation/required",
+      "change": "changed",
+      "before": [
+        "invitation_id",
+        "store_id",
+        "target_email",
+        "offered_grants",
+        "permission_catalog_version",
+        "version",
+        "status",
+        "issuer_user_id",
+        "created_at",
+        "issued_at",
+        "expires_at",
+        "accepted_at",
+        "revoked_at",
+        "reason",
+        "delivery_status"
+      ],
+      "after": [
+        "invitation_id",
+        "store_id",
+        "target_email",
+        "offered_grants",
+        "permission_catalog_version",
+        "version",
+        "status",
+        "issuer_user_id",
+        "created_at",
+        "issued_at",
+        "expires_at",
+        "accepted_at",
+        "revoked_at",
+        "declined_at",
+        "reason",
+        "delivery_status"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/InvitationEvent/properties/kind/enum",
+      "change": "changed",
+      "before": [
+        "CREATED",
+        "REISSUED",
+        "REVOKED",
+        "ACCEPTED",
+        "DELIVERY_FAILED",
+        "DELIVERY_SUCCEEDED"
+      ],
+      "after": [
+        "CREATED",
+        "REISSUED",
+        "REVOKED",
+        "ACCEPTED",
+        "DECLINED",
+        "DELIVERY_FAILED",
+        "DELIVERY_SUCCEEDED"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/InvitationOffer/properties/declined_at",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Declined At"
+      }
+    },
+    {
+      "pointer": "/components/schemas/InvitationOffer/properties/status/enum",
+      "change": "changed",
+      "before": [
+        "pending",
+        "accepted",
+        "revoked",
+        "expired"
+      ],
+      "after": [
+        "pending",
+        "accepted",
+        "revoked",
+        "expired",
+        "declined"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/InvitationOffer/required",
+      "change": "changed",
+      "before": [
+        "invitation_id",
+        "store",
+        "target_email",
+        "offered_grants",
+        "permission_catalog_version",
+        "permission_descriptors",
+        "version",
+        "status",
+        "issued_at",
+        "expires_at"
+      ],
+      "after": [
+        "invitation_id",
+        "store",
+        "target_email",
+        "offered_grants",
+        "permission_catalog_version",
+        "permission_descriptors",
+        "version",
+        "status",
+        "issued_at",
+        "expires_at",
+        "declined_at"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/MappingIssue/properties/candidate_targets",
+      "change": "added",
+      "after": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "Candidate Targets",
+        "default": []
+      }
+    },
+    {
+      "pointer": "/components/schemas/MappingIssue/properties/field_category",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Field Category"
+      }
+    },
+    {
+      "pointer": "/components/schemas/MappingIssue/properties/model_reason",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 200
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Model Reason"
+      }
+    },
+    {
+      "pointer": "/components/schemas/MappingIssue/properties/suggested_ignore",
+      "change": "added",
+      "after": {
+        "type": "boolean",
+        "title": "Suggested Ignore",
+        "default": false
+      }
+    },
+    {
+      "pointer": "/components/schemas/MappingIssue/properties/suggestion_reason",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Suggestion Reason"
+      }
+    },
+    {
+      "pointer": "/components/schemas/MembershipList/properties/permission_catalog_version/const",
+      "change": "changed",
+      "before": "permissions-v2",
+      "after": "permissions-v3"
+    },
+    {
+      "pointer": "/components/schemas/MembershipList/properties/permission_catalog_version/default",
+      "change": "changed",
+      "before": "permissions-v2",
+      "after": "permissions-v3"
+    },
+    {
+      "pointer": "/components/schemas/Normalization/properties/kind/enum",
+      "change": "changed",
+      "before": [
+        "decimal_locale",
+        "date_format",
+        "unit_label_alias",
+        "exact_scale"
+      ],
+      "after": [
+        "decimal_locale",
+        "date_format",
+        "unit_label_alias",
+        "exact_scale",
+        "stockout_alias"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/OfferRead/properties/can_decline",
+      "change": "added",
+      "after": {
+        "type": "boolean",
+        "title": "Can Decline"
+      }
+    },
+    {
+      "pointer": "/components/schemas/OfferRead/required",
+      "change": "changed",
+      "before": [
+        "invitation",
+        "can_accept",
+        "reason_codes"
+      ],
+      "after": [
+        "invitation",
+        "can_accept",
+        "can_decline",
+        "reason_codes"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/OpeningValue",
+      "change": "added",
+      "after": {
+        "properties": {
+          "domain": {
+            "type": "string",
+            "const": "opening_stock",
+            "title": "Domain",
+            "default": "opening_stock"
+          },
+          "source_record_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Source Record Id"
+          },
+          "ingredient_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Ingredient Id"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "lot_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Code"
+          },
+          "quantity": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Quantity"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Unit"
+          },
+          "received_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received Date"
+          },
+          "expiry_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Date"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+                "description": "New money obeys 18 integer/18 fractional digits; retained pre-alignment import evidence may preserve wider exact decimal text. Never an input bypass."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason"
+          },
+          "lot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Lot Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_record_id",
+          "ingredient_id",
+          "supplier_id",
+          "lot_code",
+          "quantity",
+          "unit",
+          "received_date",
+          "expiry_date",
+          "unit_cost",
+          "currency",
+          "observed_at",
+          "reason",
+          "lot_id"
+        ],
+        "title": "OpeningValue"
+      }
+    },
+    {
+      "pointer": "/components/schemas/PreviewGroup/properties/canonical_domain/enum",
+      "change": "changed",
+      "before": [
+        "sales",
+        "recipes",
+        "inventory_count",
+        "products",
+        "ingredients",
+        "suppliers",
+        "supplier_terms",
+        "payable_fees",
+        "scope_declarations"
+      ],
+      "after": [
+        "sales",
+        "recipes",
+        "inventory_count",
+        "opening_stock",
+        "products",
+        "ingredients",
+        "suppliers",
+        "supplier_terms",
+        "payable_fees",
+        "scope_declarations",
+        "calendar_events",
+        "promotion_observations",
+        "usage_history",
+        "purchase_history"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/PreviewRow/properties/after/anyOf",
+      "change": "changed",
+      "before": [
+        {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/SalesSource"
+            },
+            {
+              "$ref": "#/components/schemas/CountSource"
+            },
+            {
+              "$ref": "#/components/schemas/RecipeValue"
+            },
+            {
+              "$ref": "#/components/schemas/ProductSource"
+            },
+            {
+              "$ref": "#/components/schemas/IngredientSource"
+            },
+            {
+              "$ref": "#/components/schemas/SupplierSource"
+            },
+            {
+              "$ref": "#/components/schemas/TermValue"
+            },
+            {
+              "$ref": "#/components/schemas/FeeSource"
+            },
+            {
+              "$ref": "#/components/schemas/DeclarationSource"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "domain",
+            "mapping": {
+              "ingredients": "#/components/schemas/IngredientSource",
+              "inventory_count": "#/components/schemas/CountSource",
+              "payable_fees": "#/components/schemas/FeeSource",
+              "products": "#/components/schemas/ProductSource",
+              "recipes": "#/components/schemas/RecipeValue",
+              "sales": "#/components/schemas/SalesSource",
+              "scope_declarations": "#/components/schemas/DeclarationSource",
+              "supplier_terms": "#/components/schemas/TermValue",
+              "suppliers": "#/components/schemas/SupplierSource"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "after": [
+        {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/SalesSource"
+            },
+            {
+              "$ref": "#/components/schemas/CountSource"
+            },
+            {
+              "$ref": "#/components/schemas/OpeningValue"
+            },
+            {
+              "$ref": "#/components/schemas/RecipeValue"
+            },
+            {
+              "$ref": "#/components/schemas/ProductSource"
+            },
+            {
+              "$ref": "#/components/schemas/IngredientSource"
+            },
+            {
+              "$ref": "#/components/schemas/SupplierSource"
+            },
+            {
+              "$ref": "#/components/schemas/TermValue"
+            },
+            {
+              "$ref": "#/components/schemas/FeeSource"
+            },
+            {
+              "$ref": "#/components/schemas/CalendarEventSource"
+            },
+            {
+              "$ref": "#/components/schemas/PromotionObservationSource"
+            },
+            {
+              "$ref": "#/components/schemas/UsageHistorySource"
+            },
+            {
+              "$ref": "#/components/schemas/PurchaseHistorySource"
+            },
+            {
+              "$ref": "#/components/schemas/DeclarationSource"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "domain",
+            "mapping": {
+              "calendar_events": "#/components/schemas/CalendarEventSource",
+              "ingredients": "#/components/schemas/IngredientSource",
+              "inventory_count": "#/components/schemas/CountSource",
+              "opening_stock": "#/components/schemas/OpeningValue",
+              "payable_fees": "#/components/schemas/FeeSource",
+              "products": "#/components/schemas/ProductSource",
+              "promotion_observations": "#/components/schemas/PromotionObservationSource",
+              "purchase_history": "#/components/schemas/PurchaseHistorySource",
+              "recipes": "#/components/schemas/RecipeValue",
+              "sales": "#/components/schemas/SalesSource",
+              "scope_declarations": "#/components/schemas/DeclarationSource",
+              "supplier_terms": "#/components/schemas/TermValue",
+              "suppliers": "#/components/schemas/SupplierSource",
+              "usage_history": "#/components/schemas/UsageHistorySource"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    {
+      "pointer": "/components/schemas/PreviewRow/properties/before/anyOf",
+      "change": "changed",
+      "before": [
+        {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/SalesSource"
+            },
+            {
+              "$ref": "#/components/schemas/CountSource"
+            },
+            {
+              "$ref": "#/components/schemas/RecipeValue"
+            },
+            {
+              "$ref": "#/components/schemas/ProductSource"
+            },
+            {
+              "$ref": "#/components/schemas/IngredientSource"
+            },
+            {
+              "$ref": "#/components/schemas/SupplierSource"
+            },
+            {
+              "$ref": "#/components/schemas/TermValue"
+            },
+            {
+              "$ref": "#/components/schemas/FeeSource"
+            },
+            {
+              "$ref": "#/components/schemas/DeclarationSource"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "domain",
+            "mapping": {
+              "ingredients": "#/components/schemas/IngredientSource",
+              "inventory_count": "#/components/schemas/CountSource",
+              "payable_fees": "#/components/schemas/FeeSource",
+              "products": "#/components/schemas/ProductSource",
+              "recipes": "#/components/schemas/RecipeValue",
+              "sales": "#/components/schemas/SalesSource",
+              "scope_declarations": "#/components/schemas/DeclarationSource",
+              "supplier_terms": "#/components/schemas/TermValue",
+              "suppliers": "#/components/schemas/SupplierSource"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "after": [
+        {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/SalesSource"
+            },
+            {
+              "$ref": "#/components/schemas/CountSource"
+            },
+            {
+              "$ref": "#/components/schemas/OpeningValue"
+            },
+            {
+              "$ref": "#/components/schemas/RecipeValue"
+            },
+            {
+              "$ref": "#/components/schemas/ProductSource"
+            },
+            {
+              "$ref": "#/components/schemas/IngredientSource"
+            },
+            {
+              "$ref": "#/components/schemas/SupplierSource"
+            },
+            {
+              "$ref": "#/components/schemas/TermValue"
+            },
+            {
+              "$ref": "#/components/schemas/FeeSource"
+            },
+            {
+              "$ref": "#/components/schemas/CalendarEventSource"
+            },
+            {
+              "$ref": "#/components/schemas/PromotionObservationSource"
+            },
+            {
+              "$ref": "#/components/schemas/UsageHistorySource"
+            },
+            {
+              "$ref": "#/components/schemas/PurchaseHistorySource"
+            },
+            {
+              "$ref": "#/components/schemas/DeclarationSource"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "domain",
+            "mapping": {
+              "calendar_events": "#/components/schemas/CalendarEventSource",
+              "ingredients": "#/components/schemas/IngredientSource",
+              "inventory_count": "#/components/schemas/CountSource",
+              "opening_stock": "#/components/schemas/OpeningValue",
+              "payable_fees": "#/components/schemas/FeeSource",
+              "products": "#/components/schemas/ProductSource",
+              "promotion_observations": "#/components/schemas/PromotionObservationSource",
+              "purchase_history": "#/components/schemas/PurchaseHistorySource",
+              "recipes": "#/components/schemas/RecipeValue",
+              "sales": "#/components/schemas/SalesSource",
+              "scope_declarations": "#/components/schemas/DeclarationSource",
+              "supplier_terms": "#/components/schemas/TermValue",
+              "suppliers": "#/components/schemas/SupplierSource",
+              "usage_history": "#/components/schemas/UsageHistorySource"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    {
+      "pointer": "/components/schemas/PreviewRow/properties/canonical_domain/anyOf",
+      "change": "changed",
+      "before": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "after": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "opening_stock",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations",
+            "calendar_events",
+            "promotion_observations",
+            "usage_history",
+            "purchase_history"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    {
+      "pointer": "/components/schemas/PreviewRow/properties/inventory_effect",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/InventoryEffect"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "pointer": "/components/schemas/PreviewRow/properties/normalized_source_stockout",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Normalized Source Stockout"
+      }
+    },
+    {
+      "pointer": "/components/schemas/PreviewRow/properties/sales_contributions",
+      "change": "added",
+      "after": {
+        "items": {
+          "$ref": "#/components/schemas/SalesContribution"
+        },
+        "type": "array",
+        "title": "Sales Contributions",
+        "default": []
+      }
+    },
+    {
+      "pointer": "/components/schemas/PreviewRow/properties/stockout_update",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "source",
+              "quantity_only",
+              "not_provided"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Stockout Update"
+      }
+    },
+    {
+      "pointer": "/components/schemas/PreviewRow/properties/supplier_term_semantics",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SupplierTermSemantics"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "pointer": "/components/schemas/ProfileSpec/properties/schema/enum",
+      "change": "changed",
+      "before": [
+        "sales",
+        "recipes",
+        "inventory_count",
+        "products",
+        "ingredients",
+        "suppliers",
+        "supplier_terms",
+        "payable_fees",
+        "scope_declarations"
+      ],
+      "after": [
+        "sales",
+        "recipes",
+        "inventory_count",
+        "opening_stock",
+        "products",
+        "ingredients",
+        "suppliers",
+        "supplier_terms",
+        "payable_fees",
+        "scope_declarations",
+        "calendar_events",
+        "promotion_observations",
+        "usage_history",
+        "purchase_history"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/PromotionObservationSource",
+      "change": "added",
+      "after": {
+        "properties": {
+          "source_record_key": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Source Record Key"
+          },
+          "evidence_reference": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Evidence Reference"
+          },
+          "domain": {
+            "type": "string",
+            "const": "promotion_observations",
+            "title": "Domain",
+            "default": "promotion_observations"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "sales_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Sales Date"
+          },
+          "promotion_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promotion Name"
+          },
+          "promotion_applied": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promotion Applied"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_record_key",
+          "evidence_reference",
+          "product_id",
+          "sales_date",
+          "promotion_name",
+          "promotion_applied"
+        ],
+        "title": "PromotionObservationSource"
+      }
+    },
+    {
+      "pointer": "/components/schemas/ProvenanceValue/properties/source_value",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Source Value"
+      }
+    },
+    {
+      "pointer": "/components/schemas/PublicEmailAcceptance",
+      "change": "added",
+      "after": {
+        "properties": {
+          "next_action": {
+            "type": "string",
+            "const": "check_email",
+            "title": "Next Action",
+            "default": "check_email"
+          },
+          "delivery": {
+            "$ref": "#/components/schemas/AcceptedDelivery",
+            "default": {
+              "status": "accepted"
+            }
+          },
+          "retry_after_seconds": {
+            "type": "integer",
+            "const": 60,
+            "title": "Retry After Seconds",
+            "default": 60
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PublicEmailAcceptance"
+      }
+    },
+    {
+      "pointer": "/components/schemas/PublicEmailErrorEnvelope",
+      "change": "added",
+      "after": {
+        "properties": {
+          "data": {
+            "type": "null",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "error": {
+            "$ref": "#/components/schemas/PublicEmailErrorInfo"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data",
+          "meta",
+          "error"
+        ],
+        "title": "PublicEmailErrorEnvelope"
+      }
+    },
+    {
+      "pointer": "/components/schemas/PublicEmailErrorInfo",
+      "change": "added",
+      "after": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "$ref": "#/components/schemas/EmailDeliveryErrorDetails"
+              }
+            ],
+            "title": "Details"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "details"
+        ],
+        "title": "PublicEmailErrorInfo"
+      }
+    },
+    {
+      "pointer": "/components/schemas/PublicEmailRequest",
+      "change": "added",
+      "after": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "minLength": 1,
+            "title": "Email"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "PublicEmailRequest"
+      }
+    },
+    {
+      "pointer": "/components/schemas/PurchaseHistorySource",
+      "change": "added",
+      "after": {
+        "properties": {
+          "source_record_key": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Source Record Key"
+          },
+          "evidence_reference": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Evidence Reference"
+          },
+          "domain": {
+            "type": "string",
+            "const": "purchase_history",
+            "title": "Domain",
+            "default": "purchase_history"
+          },
+          "ingredient_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Ingredient Id"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "quantity": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Quantity"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Unit"
+          },
+          "order_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Date"
+          },
+          "received_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received Date"
+          },
+          "report_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Report Date"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+                "description": "New money obeys 18 integer/18 fractional digits; retained pre-alignment import evidence may preserve wider exact decimal text. Never an input bypass."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "price_basis": {
+            "type": "string",
+            "enum": [
+              "PER_QUANTITY",
+              "LINE_TOTAL",
+              "UNKNOWN"
+            ],
+            "title": "Price Basis"
+          },
+          "price_quantity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Quantity"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Unit"
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_record_key",
+          "evidence_reference",
+          "ingredient_id",
+          "supplier_id",
+          "quantity",
+          "unit",
+          "order_date",
+          "received_date",
+          "report_date",
+          "price",
+          "price_basis",
+          "price_quantity",
+          "price_unit",
+          "currency"
+        ],
+        "title": "PurchaseHistorySource"
+      }
+    },
+    {
+      "pointer": "/components/schemas/RecipeLineProvenance/properties/quantity_basis",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "PER_SERVING",
+              "WHOLE_BATCH"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Quantity Basis"
+      }
+    },
+    {
+      "pointer": "/components/schemas/RegistrationRequest",
+      "change": "added",
+      "after": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "minLength": 1,
+            "title": "Email"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Display Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email",
+          "display_name"
+        ],
+        "title": "RegistrationRequest"
+      }
+    },
+    {
+      "pointer": "/components/schemas/ReissueInvitation/properties/grants/maxItems",
+      "change": "changed",
+      "before": 37,
+      "after": 43
+    },
+    {
+      "pointer": "/components/schemas/SalesContribution",
+      "change": "added",
+      "after": {
+        "properties": {
+          "source_system_key": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+            "title": "Source System Key"
+          },
+          "report_type": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+            "title": "Report Type"
+          },
+          "business_report_key": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Business Report Key"
+          },
+          "semantics": {
+            "type": "string",
+            "enum": [
+              "daily_total",
+              "disjoint_contribution"
+            ],
+            "title": "Semantics"
+          },
+          "quantity": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Quantity"
+          },
+          "is_stockout": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Stockout"
+          },
+          "stockout_update": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "source",
+                  "quantity_only",
+                  "not_provided"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stockout Update"
+          },
+          "source_locations": {
+            "items": {
+              "$ref": "#/components/schemas/SourceLocation"
+            },
+            "type": "array",
+            "title": "Source Locations"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/FieldProvenance"
+            },
+            "type": "array",
+            "title": "Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_system_key",
+          "report_type",
+          "business_report_key",
+          "semantics",
+          "quantity",
+          "is_stockout",
+          "stockout_update",
+          "source_locations",
+          "provenance"
+        ],
+        "title": "SalesContribution"
+      }
+    },
+    {
+      "pointer": "/components/schemas/SalesSource/properties/is_stockout",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Is Stockout"
+      }
+    },
+    {
+      "pointer": "/components/schemas/SchemaDescriptor/properties/schema_id/enum",
+      "change": "changed",
+      "before": [
+        "sales",
+        "recipes",
+        "inventory_count",
+        "products",
+        "ingredients",
+        "suppliers",
+        "supplier_terms",
+        "payable_fees",
+        "scope_declarations"
+      ],
+      "after": [
+        "sales",
+        "recipes",
+        "inventory_count",
+        "opening_stock",
+        "products",
+        "ingredients",
+        "suppliers",
+        "supplier_terms",
+        "payable_fees",
+        "scope_declarations",
+        "calendar_events",
+        "promotion_observations",
+        "usage_history",
+        "purchase_history"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/SheetInfo/properties/excel_date_system",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "1900",
+              "1904"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Excel Date System"
+      }
+    },
+    {
+      "pointer": "/components/schemas/SheetInfo/properties/header_row",
+      "change": "added",
+      "after": {
+        "type": "integer",
+        "title": "Header Row",
+        "default": 1
+      }
+    },
+    {
+      "pointer": "/components/schemas/SheetInfo/properties/preamble_rows",
+      "change": "added",
+      "after": {
+        "items": {
+          "type": "integer"
+        },
+        "type": "array",
+        "title": "Preamble Rows",
+        "default": []
+      }
+    },
+    {
+      "pointer": "/components/schemas/SheetInfo/properties/preamble_samples",
+      "change": "added",
+      "after": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "Preamble Samples",
+        "default": []
+      }
+    },
+    {
+      "pointer": "/components/schemas/SheetInfo/properties/selected_type/anyOf",
+      "change": "changed",
+      "before": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "after": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "opening_stock",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations",
+            "calendar_events",
+            "promotion_observations",
+            "usage_history",
+            "purchase_history"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    {
+      "pointer": "/components/schemas/SheetInfo/properties/suggested_type/anyOf",
+      "change": "changed",
+      "before": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "after": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "opening_stock",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations",
+            "calendar_events",
+            "promotion_observations",
+            "usage_history",
+            "purchase_history"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    {
+      "pointer": "/components/schemas/SheetInfo/properties/suggestion_diagnostic",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SuggestionDiagnostic"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "pointer": "/components/schemas/SheetTypeResolution/properties/sheet_type/anyOf",
+      "change": "changed",
+      "before": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "after": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "opening_stock",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations",
+            "calendar_events",
+            "promotion_observations",
+            "usage_history",
+            "purchase_history"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    {
+      "pointer": "/components/schemas/SourceContext/properties/date_format/anyOf",
+      "change": "changed",
+      "before": [
+        {
+          "type": "string",
+          "enum": [
+            "ISO",
+            "DMY_SLASH",
+            "MDY_SLASH"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "after": [
+        {
+          "type": "string",
+          "enum": [
+            "ISO",
+            "DMY_SLASH",
+            "MDY_SLASH",
+            "EXCEL_SERIAL"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    {
+      "pointer": "/components/schemas/SourceContext/properties/missing_stockout",
+      "change": "added",
+      "after": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "quantity_only",
+              "not_provided"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Missing Stockout"
+      }
+    },
+    {
+      "pointer": "/components/schemas/SourceContext/properties/pack_cost_basis/deprecated",
+      "change": "added",
+      "after": true
+    },
+    {
+      "pointer": "/components/schemas/SourceContext/properties/pack_cost_basis/description",
+      "change": "added",
+      "after": "Historical readability only; new proposals require supplier price_basis/price_quantity/price_unit declarations."
+    },
+    {
+      "pointer": "/components/schemas/SourceContext/properties/stockout_aliases",
+      "change": "added",
+      "after": {
+        "items": {
+          "$ref": "#/components/schemas/StockoutAlias"
+        },
+        "type": "array",
+        "maxItems": 32,
+        "title": "Stockout Aliases",
+        "default": []
+      }
+    },
+    {
+      "pointer": "/components/schemas/StagedConfigurationRow/properties/schema/anyOf",
+      "change": "changed",
+      "before": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "after": [
+        {
+          "type": "string",
+          "enum": [
+            "sales",
+            "recipes",
+            "inventory_count",
+            "opening_stock",
+            "products",
+            "ingredients",
+            "suppliers",
+            "supplier_terms",
+            "payable_fees",
+            "scope_declarations",
+            "calendar_events",
+            "promotion_observations",
+            "usage_history",
+            "purchase_history"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    {
+      "pointer": "/components/schemas/StockoutAlias",
+      "change": "added",
+      "after": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Token"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token",
+          "value"
+        ],
+        "title": "StockoutAlias"
+      }
+    },
+    {
+      "pointer": "/components/schemas/StoreContext/properties/permission_catalog_version/const",
+      "change": "changed",
+      "before": "permissions-v2",
+      "after": "permissions-v3"
+    },
+    {
+      "pointer": "/components/schemas/StoreContext/properties/permission_catalog_version/default",
+      "change": "changed",
+      "before": "permissions-v2",
+      "after": "permissions-v3"
+    },
+    {
+      "pointer": "/components/schemas/SuggestionDiagnostic",
+      "change": "added",
+      "after": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "disabled",
+              "unavailable",
+              "invalid",
+              "proposed"
+            ],
+            "title": "Status"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "prompt_version": {
+            "type": "string",
+            "title": "Prompt Version",
+            "default": "mapping_prompt/2"
+          },
+          "schema_version": {
+            "type": "string",
+            "title": "Schema Version",
+            "default": "sheet_suggestion/1"
+          },
+          "input_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Digest"
+          },
+          "attempts": {
+            "type": "integer",
+            "title": "Attempts",
+            "default": 0
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "prompt_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Tokens"
+          },
+          "completion_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Tokens"
+          },
+          "http_status": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Http Status"
+          },
+          "failure_stage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "configuration",
+                  "input",
+                  "transport",
+                  "validation"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Stage"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "model"
+        ],
+        "title": "SuggestionDiagnostic"
+      }
+    },
+    {
+      "pointer": "/components/schemas/SupplierTermSemantics",
+      "change": "added",
+      "after": {
+        "properties": {
+          "pack_label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Label"
+          },
+          "source_pack_quantity": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Source Pack Quantity"
+          },
+          "source_pack_unit": {
+            "type": "string",
+            "title": "Source Pack Unit"
+          },
+          "source_price": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Source Price",
+            "description": "New money obeys 18 integer/18 fractional digits; retained pre-alignment import evidence may preserve wider exact decimal text. Never an input bypass."
+          },
+          "price_basis": {
+            "type": "string",
+            "enum": [
+              "PER_PACK",
+              "PER_QUANTITY"
+            ],
+            "title": "Price Basis"
+          },
+          "price_quantity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Quantity"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Unit"
+          },
+          "canonical_price_quantity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Price Quantity"
+          },
+          "moq_basis": {
+            "type": "string",
+            "enum": [
+              "PACKS",
+              "PHYSICAL_QUANTITY"
+            ],
+            "title": "Moq Basis"
+          },
+          "source_moq_quantity": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Source Moq Quantity"
+          },
+          "moq_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moq Unit"
+          },
+          "canonical_moq_quantity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Moq Quantity"
+          },
+          "minimum_order_packs": {
+            "type": "integer",
+            "title": "Minimum Order Packs"
+          },
+          "fee_coverage": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "COMPLETE"
+            ],
+            "title": "Fee Coverage",
+            "default": "UNKNOWN"
+          },
+          "fee_coverage_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fee Coverage Date"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pack_label",
+          "source_pack_quantity",
+          "source_pack_unit",
+          "source_price",
+          "price_basis",
+          "price_quantity",
+          "price_unit",
+          "canonical_price_quantity",
+          "moq_basis",
+          "source_moq_quantity",
+          "moq_unit",
+          "canonical_moq_quantity",
+          "minimum_order_packs"
+        ],
+        "title": "SupplierTermSemantics"
+      }
+    },
+    {
+      "pointer": "/components/schemas/TermValue/required",
+      "change": "changed",
+      "before": [
+        "source_term_key",
+        "supplier_id",
+        "ingredient_id",
+        "effective_from",
+        "effective_to",
+        "unit",
+        "pack_size_base_quantity",
+        "pack_cost",
+        "currency",
+        "minimum_order_packs",
+        "lead_time_days",
+        "shelf_life_days",
+        "active",
+        "maximum_order_base_quantity"
+      ],
+      "after": [
+        "source_term_key",
+        "supplier_id",
+        "ingredient_id",
+        "effective_from",
+        "effective_to",
+        "unit",
+        "pack_size_base_quantity",
+        "pack_cost",
+        "currency",
+        "lead_time_days",
+        "shelf_life_days",
+        "active",
+        "maximum_order_base_quantity",
+        "minimum_order_packs"
+      ]
+    },
+    {
+      "pointer": "/components/schemas/UsageHistorySource",
+      "change": "added",
+      "after": {
+        "properties": {
+          "source_record_key": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Source Record Key"
+          },
+          "evidence_reference": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Evidence Reference"
+          },
+          "domain": {
+            "type": "string",
+            "const": "usage_history",
+            "title": "Domain",
+            "default": "usage_history"
+          },
+          "ingredient_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Ingredient Id"
+          },
+          "usage_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Usage Date"
+          },
+          "observed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed At"
+          },
+          "quantity": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Quantity"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Unit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_record_key",
+          "evidence_reference",
+          "ingredient_id",
+          "usage_date",
+          "observed_at",
+          "quantity",
+          "unit"
+        ],
+        "title": "UsageHistorySource"
+      }
+    },
+    {
+      "pointer": "/components/schemas/app__application__contracts__import_mapping__CommitRequest/properties/history_corrections",
+      "change": "added",
+      "after": {
+        "items": {
+          "$ref": "#/components/schemas/HistoryCorrectionConfirmation"
+        },
+        "type": "array",
+        "title": "History Corrections",
+        "default": []
+      }
+    },
+    {
+      "pointer": "/paths/~1api~1v1~1auth~1email-verifications~1complete",
+      "change": "added",
+      "after": {
+        "post": {
+          "tags": [
+            "Auth and Store"
+          ],
+          "summary": "Complete Verification",
+          "operationId": "A05",
+          "parameters": [
+            {
+              "name": "Origin",
+              "in": "header",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Origin"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialCompletion"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Envelope_CompletedCredential_"
+                  }
+                }
+              }
+            },
+            "400": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Bad Request"
+            },
+            "403": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Forbidden"
+            },
+            "413": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Request Entity Too Large"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Unprocessable Entity"
+            },
+            "429": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Too Many Requests"
+            },
+            "503": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Service Unavailable"
+            }
+          }
+        }
+      }
+    },
+    {
+      "pointer": "/paths/~1api~1v1~1auth~1email-verifications~1request",
+      "change": "added",
+      "after": {
+        "post": {
+          "tags": [
+            "Auth and Store"
+          ],
+          "summary": "Request Verification",
+          "operationId": "A06",
+          "parameters": [
+            {
+              "name": "Origin",
+              "in": "header",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Origin"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicEmailRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "202": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Envelope_PublicEmailAcceptance_"
+                  }
+                }
+              }
+            },
+            "400": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Bad Request"
+            },
+            "403": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Forbidden"
+            },
+            "413": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Request Entity Too Large"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Unprocessable Entity"
+            },
+            "429": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Too Many Requests"
+            },
+            "503": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Service Unavailable"
+            }
+          }
+        }
+      }
+    },
+    {
+      "pointer": "/paths/~1api~1v1~1auth~1password-reset~1request",
+      "change": "added",
+      "after": {
+        "post": {
+          "tags": [
+            "Auth and Store"
+          ],
+          "summary": "Request Password Reset",
+          "operationId": "A07",
+          "parameters": [
+            {
+              "name": "Origin",
+              "in": "header",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Origin"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicEmailRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "202": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Envelope_PublicEmailAcceptance_"
+                  }
+                }
+              }
+            },
+            "400": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Bad Request"
+            },
+            "403": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Forbidden"
+            },
+            "413": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Request Entity Too Large"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Unprocessable Entity"
+            },
+            "429": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Too Many Requests"
+            },
+            "503": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Service Unavailable"
+            }
+          }
+        }
+      }
+    },
+    {
+      "pointer": "/paths/~1api~1v1~1auth~1register",
+      "change": "added",
+      "after": {
+        "post": {
+          "tags": [
+            "Auth and Store"
+          ],
+          "summary": "Register",
+          "operationId": "A02",
+          "parameters": [
+            {
+              "name": "Origin",
+              "in": "header",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Origin"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "202": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Envelope_PublicEmailAcceptance_"
+                  }
+                }
+              }
+            },
+            "400": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Bad Request"
+            },
+            "403": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Forbidden"
+            },
+            "413": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Request Entity Too Large"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Unprocessable Entity"
+            },
+            "429": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Too Many Requests"
+            },
+            "503": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicEmailErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Service Unavailable"
+            }
+          }
+        }
+      }
+    },
+    {
+      "pointer": "/paths/~1api~1v1~1staff-invitations~1{invitation_id}~1decline",
+      "change": "added",
+      "after": {
+        "post": {
+          "tags": [
+            "Staff permissions and invitations"
+          ],
+          "summary": "Decline",
+          "operationId": "IN01",
+          "security": [
+            {
+              "APIKeyCookie": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "invitation_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid",
+                "title": "Invitation Id"
+              }
+            },
+            {
+              "name": "Idempotency-Key",
+              "in": "header",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 128
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Idempotency-Key"
+              }
+            },
+            {
+              "name": "If-Match",
+              "in": "header",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "If-Match"
+              }
+            },
+            {
+              "name": "X-CSRF-Token",
+              "in": "header",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 512
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Csrf-Token"
+              }
+            },
+            {
+              "name": "Origin",
+              "in": "header",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Origin"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeclineInvitation"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Envelope_DeclineReceipt_"
+                  }
+                }
+              },
+              "headers": {
+                "ETag": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "401": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Unauthorized"
+            },
+            "403": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Forbidden"
+            },
+            "404": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Not Found"
+            },
+            "409": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Conflict"
+            },
+            "410": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Gone"
+            },
+            "412": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Precondition Failed"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Unprocessable Entity"
+            },
+            "428": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Precondition Required"
+            },
+            "429": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Too Many Requests"
+            },
+            "503": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorEnvelope"
+                  }
+                }
+              },
+              "description": "Service Unavailable"
+            }
+          }
+        }
+      }
+    },
+    {
+      "pointer": "/paths/~1api~1v1~1stores~1{store_id}~1imports/get/parameters",
+      "change": "changed",
+      "before": [
+        {
+          "name": "store_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          }
+        },
+        {
+          "name": "import_date",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "date",
+            "title": "Import Date"
+          }
+        },
+        {
+          "name": "category",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "enum": [
+                  "sales",
+                  "inventory",
+                  "recipes",
+                  "supplier"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "enum": [
+                  "in_progress",
+                  "completed",
+                  "completed_with_warnings",
+                  "failed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1,
+            "default": 50,
+            "title": "Limit"
+          }
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cursor"
+          }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "const": "-imported_at",
+            "type": "string",
+            "default": "-imported_at",
+            "title": "Sort"
+          }
+        }
+      ],
+      "after": [
+        {
+          "name": "store_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          }
+        },
+        {
+          "name": "import_date",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "date",
+            "title": "Import Date"
+          }
+        },
+        {
+          "name": "category",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "enum": [
+                  "sales",
+                  "inventory",
+                  "recipes",
+                  "supplier",
+                  "calendar",
+                  "usage",
+                  "purchase"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "enum": [
+                  "in_progress",
+                  "completed",
+                  "completed_with_warnings",
+                  "failed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1,
+            "default": 50,
+            "title": "Limit"
+          }
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cursor"
+          }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "const": "-imported_at",
+            "type": "string",
+            "default": "-imported_at",
+            "title": "Sort"
+          }
+        }
+      ]
+    },
+    {
+      "pointer": "/paths/~1api~1v1~1stores~1{store_id}~1imports~1calendar/get/parameters",
+      "change": "changed",
+      "before": [
+        {
+          "name": "store_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 7,
+            "title": "Month"
+          }
+        },
+        {
+          "name": "category",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "enum": [
+                  "sales",
+                  "inventory",
+                  "recipes",
+                  "supplier"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "enum": [
+                  "in_progress",
+                  "completed",
+                  "completed_with_warnings",
+                  "failed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          }
+        }
+      ],
+      "after": [
+        {
+          "name": "store_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 7,
+            "title": "Month"
+          }
+        },
+        {
+          "name": "category",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "enum": [
+                  "sales",
+                  "inventory",
+                  "recipes",
+                  "supplier",
+                  "calendar",
+                  "usage",
+                  "purchase"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "enum": [
+                  "in_progress",
+                  "completed",
+                  "completed_with_warnings",
+                  "failed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          }
+        }
+      ]
+    }
+  ]
+}

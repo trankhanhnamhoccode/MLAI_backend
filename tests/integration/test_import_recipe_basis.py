@@ -157,13 +157,16 @@ def test_source_basis_reuse_reads_current_rows_and_unit_change_blocks(imp):
     assert first["preview"]["rows"][0]["after"]["lines"][0]["quantity"] == "1000"
     # Same indexed headers, new explicit source semantics: never retain old row facts.
     second = analyzed(imp, csv_source("recipes", [{**data, "quantity_basis": "PER_SERVING", "quantity": "100"}]))
-    review(imp, second, schema="recipes")
+    assert not summary(imp, second)["binding_refs"]
+    from tests.integration.test_import_rule_review import declare_context
+    declare_context(imp, second, {"source_system_key": "POS-A", "report_type": "daily-sales"})
     assert summary(imp, second)["can_preview"]
     reused = previewed(imp, second)
     line = reused["preview"]["rows"][0]["line_provenance"][0]
     assert line["quantity_basis"] == "PER_SERVING"
     assert line["provenance"]["quantity"]["source_value"] == "100"
     third = analyzed(imp, csv_source("recipes", [{**data, "unit": "ml"}]))
+    declare_context(imp, third, {"source_system_key": "POS-A", "report_type": "daily-sales"})
     from tests.integration.test_import_classification import listing
     assert any(i["code"] == "UNIT_CONVERSION_REQUIRED" for i in listing(imp, third))
     assert not summary(imp, third)["can_preview"]

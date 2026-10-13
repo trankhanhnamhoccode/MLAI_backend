@@ -16,17 +16,17 @@ def main():
         from sqlalchemy.engine import make_url
         from sqlalchemy import text
         from app.config import Settings
-        from scripts.dev import validate_reset_target
+        from scripts.dev import TEST_DATABASE_NAMES, validate_reset_target
         from app.infrastructure.database.engine import create_database_engine
         url=make_url(Settings().test_database_url)
-        if url.database!='shelfcash_test' or url.host not in {'localhost','127.0.0.1','::1'}:
+        if url.database not in TEST_DATABASE_NAMES or url.host not in {'localhost','127.0.0.1','::1'}:
             raise ValueError('Refusing non-disposable or nonlocal test target')
         settings=Settings(_env_file=None,environment='test',database_url=url.render_as_string(hide_password=False))
         validate_reset_target(settings)
         result.update(database=url.database,host=url.host,port=url.port or 5432,target_guard='PASS')
         engine=create_database_engine(settings)
         with engine.connect() as connection:
-            if connection.scalar(text('SELECT current_database()'))!='shelfcash_test':
+            if connection.scalar(text('SELECT current_database()'))!=url.database:
                 raise ValueError('Connected database does not match disposable target')
             result.update(status='READY',postgres_version=connection.scalar(text('SHOW server_version')))
     except Exception as error:

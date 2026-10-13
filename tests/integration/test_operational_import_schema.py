@@ -1,4 +1,5 @@
 """Additive S4.6 migration roundtrip and database evidence invariants."""
+from sqlalchemy.engine import make_url
 from uuid import uuid4
 import pytest
 from alembic import command
@@ -16,7 +17,7 @@ TABLES={"supplier_source_records","term_source_records","payable_fee_records","s
 def test_additive_migration_roundtrip_preserves_prior_tables_and_matches_model_columns(database_settings):
     engine=create_database_engine(database_settings)
     try:
-        schedule={'planning_exports', 'recipe_schedule_changes', 'saved_requirements', 'model_serving_configurations', 'recipe_schedule_request_receipts', 'planning_configuration_events', 'forecast_serving_identities', 'planning_configuration_receipts', 'planning_configuration_revisions', 'planning_budgets', 'planning_defaults'}
+        schedule={'email_verification_tokens', 'email_verification_deliveries', 'password_reset_deliveries', 'import_history_records', 'planning_exports', 'recipe_schedule_changes', 'saved_requirements', 'model_serving_configurations', 'recipe_schedule_request_receipts', 'planning_configuration_events', 'forecast_serving_identities', 'planning_configuration_receipts', 'planning_configuration_revisions', 'planning_budgets', 'planning_defaults'}
         before=set(inspect(engine).get_table_names())-TABLES-schedule
         command.downgrade(migration_config(),"0013_import_staging")
         assert set(inspect(engine).get_table_names())==before
@@ -28,7 +29,7 @@ def test_additive_migration_roundtrip_preserves_prior_tables_and_matches_model_c
             actual={c["name"]:c for c in inspector.get_columns(table)}
             assert set(actual)==set(Base.metadata.tables[table].columns.keys())
             for c in Base.metadata.tables[table].columns:assert actual[c.name]["nullable"]==c.nullable
-        with engine.connect() as c:assert c.scalar(text("SELECT current_database()"))=="shelfcash_test"
+        with engine.connect() as c:assert c.scalar(text("SELECT current_database()")) == make_url(database_settings.database_url).database
     finally:engine.dispose()
 
 def test_immutable_declaration_and_scoped_threshold_database_constraints(env):

@@ -2,6 +2,18 @@
 
 ## CURRENT FACT
 
+Local unified source: Import126b0f2 + Auth0fbb979 on feat/integrate-import-auth;
+integration verification uses its dedicated DB/head0024. Branch milestones below
+remain their historical acceptance evidence. No unified running server, browser
+or real credential-email workflow is certified. FE artifacts: [response010](handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
+
+Local Gmail preparation: one SMTP smoke message accepted, inbox user-confirmed;
+isolated Auth demo DB and HTTPS8102 lifecycle checked. BE-only scope: FE HTTPS/API configuration,
+self-service pages/adapters and real workflow-email/browser acceptance remain
+open with the FE team. No further smoke email; account workflow email to the configured
+test username is authorized. Operational steps belong
+to [Auth feature](features/AUTH_SESSION.md#local-gmail-smokedemo-profile).
+
 | Scope | State | Boundary |
 | --- | --- | --- |
 | S0/S1 | Implemented | PostgreSQL/local tooling, operational models/repositories and typed internal application paths |
@@ -12,6 +24,10 @@
 | A1 Sales/reimport + stockout | COMPLETE | Migration0019 and targeted PostgreSQL acceptance on owned shelfcash_import_test; fresh-session sales/stockout, causal capture/trained/replay, retained Planning, rights/isolation/rollback/concurrency; real-data quality not evaluated |
 | A2 support history + constraints | COMPLETE backend scope | Four history-only schemas, append revisions/current domain grants and retained reads; 24 targeted DB acceptance cases plus affected regressions; R01 scoped unsupported safety-stock blocker; no full-suite/whole-FE or forecast-feature claim |
 | A3 Import → readiness → Planning | COMPLETE backend acceptance | Fresh provisioned Store/public imports and config/real workers/fresh reads; both upload orders and exact purchase/service/stock oracle; Staff invitation/source reuse/Owner spec change, conflict/ambiguity, scoped unsupported safety and lost ACK/retry; 11 unique targeted DB cases plus inherited A1/A2 evidence; no browser/full-suite/real-accuracy claim |
+| B1 | COMPLETE backend/fake-delivery acceptance | A02/A05/A06 signup/email verify/resend; isolated Auth DB, fresh-session persistence, token/retry/concurrency/transport coverage and auth/session/invitation regressions; no Store/grants/session from signup or verify; real workflow email/browser unverified |
+| B2 | COMPLETE backend/fake-delivery acceptance | A07 public RESET request via encrypted durable intent, existing N7 completion/session revocation; token/retry/concurrency/recovery/transport and schema coverage, B1/auth/session/invitation regressions; no Store/grants changes; isolated Auth DB; real workflow email/browser unverified |
+| B3 | COMPLETE backend/fake-delivery acceptance | IN01 explicit holder decline; terminal fields/capabilities/events/filter, immutable receipt/current-authority replay; fences/rollback/uncertain commit/races/new-identity acceptance and related auth/schema regressions; no membership/grants/access/email; Auth-only test DB; browser UI unverified |
+| B4 | COMPLETE backend/fake-delivery VERIFIED | Linked HTTP/PostgreSQL signup/invitation/grants/multi-Store/decline/reset flows and fresh reads; Product-approved v3/43 catalogue sync, additive Auth0023 CHECK and restart recovery; affected auth/Staff/API/schema regressions; no full-suite claim; browser/real workflow email pending; CHECK overlap reconciled in integration-only0021/0023 plus merge0024 |
 
 These are functional checkpoints, not a claim each is a Git commit or every route
 passed a fresh full suite. Current runtime/debt is in [CURRENT_STATE](CURRENT_STATE.md).
@@ -82,13 +98,21 @@ ACCEPTED DECISION: người dùng đã mở A1 sales/reimport và stockout riên
 A2 được duyệt riêng: recorded calendar/promotion/usage/purchase và constraints đã
 contract/enforce; không Excel actual receipts, Auth workflow hoặc queue/notification.
 
-CURRENT FACT A3: backend acceptance of the implemented chain is complete on the owned
+HISTORICAL INFORMATION Import126b0f2 A3: backend acceptance of the implemented chain is complete on the owned
 Import DB, provider OFF. Coverage extends existing tests only at the missing oracle,
 retained correction/count/config, Staff public-grants/reuse and scope/retry boundaries.
 No runtime/schema/API/permission change or migration was needed. A1/A2 targeted
 evidence is reused explicitly rather than repeating broad groups. See current
 [workflow/expected outcomes/recovery](runbooks/FULL_TEST_FLOW.md). No next feature
-slice, FE work, commit/push/merge/deploy or ZIP is authorized by this milestone.
+slice, FE work, commit/push/merge/deploy or ZIP was authorized by that A3 milestone.
+The separate integration task authorizes only its local branch merge/commit; no push,
+main merge, deployment or next product feature follows it.
+
+## ACCEPTED / DESIGN_READY — read projections chờ triển khai
+
+- [R05 file/sheet preview aggregates](IMPORT_MAPPING_API_CONTRACT_VI.md#preview-aggregates): retained raw rows and distinct logical actions, overlap semantics and same pinned digest; existing I04 extension, not runtime.
+- [R09 captured effective RunSummary budget](PROCUREMENT_API_CONTRACT_VI.md#history-captured-budget): acceptance limit/currency/availability, financial rights and list snapshot/pagination; not runtime.
+- R10 recipe split-report identity/completeness and cross-file/sheet assembly are DEFERRED. Source-before-reuse/scope ambiguity guards and valid single-sheet assembly remain implemented; no Product question blocks handoff.
 
 ## PROPOSAL / ngoài phạm vi đã duyệt
 
@@ -111,6 +135,10 @@ slice, FE work, commit/push/merge/deploy or ZIP is authorized by this milestone.
   do not activate trained artifacts merely because training code exists.
 - Owner lifecycle/reactivation, one-time approval allowlist/TTL and sensitive audit
   retention need separate reviewed scope. Stored membership alone is not authority.
+- Notification, permission requests and public Store onboarding remain separate
+  slices. B4 does not authorize starting them. Email delivery is
+  opt-in and requires the configured HTTPS verification page and private encryption
+  key; [Auth feature](features/AUTH_SESSION.md) owns configuration and FE flow.
 - AI wording/copilot, deterministic hypothetical what-if, customer selection and
   draft/actual purchase orders are not silently enabled by current Planning/PDF.
 - Stock/correction/purchase history extensions, unsupported supplier conditions,

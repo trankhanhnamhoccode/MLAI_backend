@@ -161,7 +161,7 @@ def test_sales_correction_http_requires_effective_action_reason_before_acceptanc
     from app.models import SalesDaily
     with Session(imp[0][1]) as s:
         s.add(SalesDaily(store_id=imp[1].store_id,product_id=imp[4],sales_date=date(2026,10,9),quantity=100));s.commit()
-    ident,read,revision=ready(imp)
+    ident,read,revision=ready(imp, context={"missing_stockout": "not_provided"})
     row=read["preview"]["rows"][0];assert row["proposed_action"]=="REPLACE_DAILY_TOTAL"
     body=dict(phase="commit",preview_id=read["preview"]["summary"]["preview_id"],preview_digest=read["preview"]["summary"]["digest"],
         confirm=True,resolutions=[dict(row_id=row["row_id"],action="replace_daily_total",

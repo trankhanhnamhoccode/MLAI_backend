@@ -323,7 +323,7 @@ def test_import_recipe_and_editor_share_real_pg_fence_and_version_allocation(imp
     imp[0][5].app.state.recipe_schedule=RecipeSchedule(imp[0][2])
     c=(imp[0],imp[1],imp[4],ingredient,recipe,line,imp[3])
     source=dict(product_id=str(imp[4]),version=2,effective_from="2026-10-12",effective_to=None,
-        yield_quantity="1",yield_unit="cup",process_loss_rate="0",ingredient_id=str(ingredient),quantity="200",unit="ml")
+        yield_quantity="1",yield_unit="cup",quantity_basis="WHOLE_BATCH",process_loss_rate="0",ingredient_id=str(ingredient),quantity="200",unit="ml")
     ident=analyzed(imp,csv_source("recipes",[source]));approved(imp,ident,report="recipe-race")
     read=previewed(imp,ident);confirmed=confirm(imp,ident,read);assert confirmed.status_code==200,confirmed.text
     accepted=import_commit(imp,ident,read,confirmed.json()["data"]["import_revision"]);assert accepted.status_code==202,accepted.text

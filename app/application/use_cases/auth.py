@@ -51,9 +51,10 @@ class AuthUseCases:
         # Equal-cost verification for absent/inactive/unconfigured accounts.
         self._dummy_hash = HASHER.hash(new_token())
 
-    def _audit(self, s, kind, user_id, now):
+    def _audit(self, s, kind, user_id, now, *, evidence_reference=None, request_reference=None):
         s.add(AuthAudit(id=uuid4(), kind=kind, user_id=user_id,
-                        request_reference=str(uuid4()), request_digest=digest(kind), occurred_at=now))
+                        request_reference=request_reference or str(uuid4()), evidence_reference=evidence_reference,
+                        request_digest=digest(kind), occurred_at=now))
 
     def _rate(self, s, scope, limit, now, *, increment=True, window=timedelta(minutes=15)):
         key = digest(scope)
@@ -78,7 +79,7 @@ class AuthUseCases:
             if error is None:
                 user = AuthRepository(s).lock_user_by_email(request.email)
                 account = s.get(AuthAccount, user.id) if user is not None else None
-                usable = user is not None and user.active and account is not None and account.credential_ready and account.verified_email == user.email
+                usable = user is not None and user.active and account is not None and account.credential_ready and account.verified_at is not None and bool(account.verification_reference) and account.verified_email == user.email
                 correct = verify_password(user.password_hash if usable else self._dummy_hash, request.password)
                 if not (usable and correct):
                     self._rate(s, account_key, 5, now)
@@ -108,7 +109,7 @@ class AuthUseCases:
         row = AuthRepository(s).lock_session(digest(token))
         account = s.get(AuthAccount, uid) if uid else None
         now = self.clock()
-        if not user or not user.active or not account or not account.credential_ready or account.verified_email != user.email or not row or row.revoked_at or row.credential_revision != account.credential_revision or now >= min(row.idle_expires_at, row.absolute_expires_at):
+        if not user or not user.active or not account or not account.credential_ready or not account.verified_at or account.verified_email != user.email or not row or row.revoked_at or row.credential_revision != account.credential_revision or now >= min(row.idle_expires_at, row.absolute_expires_at):
             raise AuthError("UNAUTHENTICATED", 401)
         if csrf is not None and not hmac.compare_digest(row.csrf_token.encode(), csrf.encode()):
             raise AuthError("CSRF_CHECK_FAILED")
@@ -219,11 +220,11 @@ class AuthUseCases:
             s.commit()
         return result
 
-    def complete(self, request: CredentialCompletion, ip: str) -> CompletedCredential:
+    def complete(self, request: CredentialCompletion, ip: str, *, request_id: str | None = None) -> CompletedCredential:
         request = CredentialCompletion.model_validate(request.model_dump())
         now = self.clock()
         with auth_session(self.engine) as s:
-            error = self._rate(s, "credential-ip:" + ip, 20, now)
+            error = self._rate(s, "credential-ip:" + ip, 10, now)
             s.commit()
         if error:
             raise error
@@ -231,16 +232,30 @@ class AuthUseCases:
         with auth_session(self.engine) as s:
             uid = AuthRepository(s).token_user(digest(request.token))
             user = AuthRepository(s).lock_user(uid) if uid else None
-            account = s.get(AuthAccount, uid) if uid else None
+            account = AuthRepository(s).lock_account(uid) if uid else None
             token = AuthRepository(s).lock_token(digest(request.token))
             now = self.clock()  # Recheck time after waiting for concurrent locks.
-            if not user or not user.active or not account or account.verified_email != user.email or not token or token.consumed_at or now >= token.expires_at or token.revision != account.credential_revision:
+            if not user or not user.active or not account or not account.verified_at or not account.verification_reference or account.verified_email != user.email or not token or token.consumed_at or now >= token.expires_at or token.revision != account.credential_revision:
+                raise AuthError("CREDENTIAL_TOKEN_INVALID", 400)
+            from app.repositories.password_reset import PasswordResetRepository
+            reset_repo = PasswordResetRepository(s)
+            reset_intent = reset_repo.lock_delivery(token.digest) if token.purpose == "RESET" else None
+            now = self.clock()
+            if token.purpose not in {"SETUP", "RESET"} or (reset_intent is not None and (
+                reset_intent.email != user.email or reset_intent.proof_revision != account.proof_revision)) or now >= token.expires_at:
                 raise AuthError("CREDENTIAL_TOKEN_INVALID", 400)
             user.password_hash = HASHER.hash(request.password)
             token.consumed_at = now
             account.credential_revision += 1
             account.credential_ready = True
             AuthRepository(s).revoke_user_sessions(uid, now)
-            self._audit(s, "CREDENTIAL_COMPLETED", uid, now)
+            if reset_intent is not None:
+                reset_repo.invalidate(uid, now)
+            if reset_intent is not None:
+                self._audit(s, "CREDENTIAL_COMPLETED", uid, now,
+                    evidence_reference=f"RESET;delivery={reset_intent.id};proof_revision={account.proof_revision};credential_revision={account.credential_revision};actor=holder",
+                    request_reference=(request_id + ":reset-complete") if request_id else None)
+            else:
+                self._audit(s, "CREDENTIAL_COMPLETED", uid, now)
             s.commit()
         return CompletedCredential(completed_at=now)

@@ -1,4 +1,5 @@
 """0015 roundtrip and durable evidence constraints, no development database."""
+from sqlalchemy.engine import make_url
 from alembic import command
 from sqlalchemy import inspect, select, text
 from sqlalchemy.orm import Session
@@ -14,7 +15,7 @@ def test_clean_0015_roundtrip_and_orm_columns_match(database_settings):
     from app.infrastructure.database.base import Base
     engine=create_database_engine(database_settings)
     try:
-        with engine.connect() as c: assert c.scalar(text("SELECT current_database()"))=="shelfcash_test"
+        with engine.connect() as c: assert c.scalar(text("SELECT current_database()")) == make_url(database_settings.database_url).database
         command.downgrade(migration_config(),"0014_operational_import")
         assert "recipe_schedule_changes" not in inspect(engine).get_table_names()
         assert "assigned" not in {c["name"] for c in inspect(engine).get_columns("recipes")}
@@ -25,7 +26,7 @@ def test_clean_0015_roundtrip_and_orm_columns_match(database_settings):
             assert set(columns)==set(Base.metadata.tables[name].columns.keys())
             assert all(columns[c.name]["nullable"]==c.nullable for c in Base.metadata.tables[name].columns)
         with engine.connect() as c:
-            assert c.scalar(text("SELECT version_num FROM alembic_version"))=="0017_planning_exports"
+            assert c.scalar(text("SELECT version_num FROM alembic_version"))=="0024_integrate_import_auth"
     finally:engine.dispose()
 
 
@@ -41,4 +42,4 @@ def test_retained_proposal_receipt_audit_cannot_be_rewritten_or_downgraded(calen
     with pytest.raises(DBAPIError):command.downgrade(migration_config(),"0014_operational_import")
     with Session(c[0][1]) as fresh:
         assert fresh.get(RecipeScheduleChange,UUID(p["change_id"])).audit_json["reason"]
-        assert fresh.scalar(text("SELECT version_num FROM alembic_version"))=="0017_planning_exports"
+        assert fresh.scalar(text("SELECT version_num FROM alembic_version"))=="0024_integrate_import_auth"

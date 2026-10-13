@@ -116,6 +116,134 @@ workbooks do not supply business truth or replace synthetic boundary coverage.
 Coverage and current task notes/results belong in the conversation; commands above
 are repeatable verification instructions, not a claim of a full suite or FE pass.
 
+<a id="integrated-acceptance"></a>
+## Bản tích hợp Import/Auth — PostgreSQL riêng, không FE/SMTP/provider
+
+CURRENT FACT: branch feat/integrate-import-auth, worktree backend-integrate-import-auth,
+common base b1ede89, Import126b0f2 và Auth0fbb979. One head0024_integrate_import_auth,
+64 application tables/65 with Alembic; original branch heads/receipts below are historical.
+Một Docker PostgreSQL có sẵn tại127.0.0.1:5432. Integration owns ONLY
+shelfcash_integration_test / shelfcash_integration_tester; no superuser/CREATEDB/
+CREATEROLE/replication. pg_hba denies cross-DB; local ignored .env supplies both
+DATABASE_URL/TEST_DATABASE_URL, ENVIRONMENT=test and runtime/integration paths.
+LLM/Import/Planning/PDF/account-email worker flags are OFF by default.
+
+Before writes, effective settings and connected current_database/current_user are
+checked. Integration role is mandatory for this named DB. Alembic test migrations
+also check identity. Never supply another tree's .env or use a second Compose on5432.
+No development/Import/Auth/demo/shared-test DB reset/migration. One pytest process
+at a time on this DB. Dedicated source roles/DBs and Gmail demo remain unchanged.
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-integrate-import-auth
+.\.venv\Scripts\python.exe -m scripts.dev status --test-database
+.\.venv\Scripts\python.exe -m alembic heads
+# Explicit owned integration DB reset only when needed:
+.\.venv\Scripts\python.exe -m scripts.dev reset --test-database
+# New traversal/guard gap checks:
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_integrated_migrations.py tests/unit/test_database_config.py -q
+# Linked business coverage inherited from the accepted branch commits:
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_auth_combined_acceptance.py tests/integration/test_import_planning_a3.py tests/integration/test_import_history_a2.py -q
+# New linked Owner grants / Staff Import / live revoke coverage:
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_integrated_auth_import.py -q --tb=short --show-capture=no
+# Full integration milestone gate (run once; failures rerun by affected selectors):
+.\.venv\Scripts\python.exe -m pytest -q --tb=short --show-capture=no --junitxml=runtime/integration/full-suite.xml
+```
+
+Migration0024 merges0021/0023. Both original v3 upgrades are safe in either order.
+Integration-only repairs of the two unreleased downgrades walk applied ancestry,
+retain v3 while the companion needs it and guard the last removal against retained
+six-key grants. A2 history retention remains independent. Historical v1.0 is untouched;
+no stamp or deleting grants/data to force downgrade. Both branch-head upgrades and
+partial/final rollback/ORM-default parity pass new6-case traversal coverage.
+Schema/model tests retain exact inventory/constraint checks. Standalone branch
+catalogue retention tests now explicitly apply that branch without companion v3;
+integration tests separately prove the changed companion-preservation behavior.
+
+Verification results: initial traversal/guard gate28 passed; schema/tooling gate
+232 passed/4 failed (236 cases). Four stale head/inventory expectations were repaired;
+5 affected checks passed, including fresh-process RESET delivery. These overlapping
+runs are not added as a unique total. The first full milestone invocation was
+interrupted after the last observed progress at70%, with failures but no terminal
+summary/XML. It is NOT a completed full-suite result. This lost failure evidence
+requires a replacement milestone gate; its ignored runner flushes each test outcome
+and redacts database credentials so interruption cannot lose completed-case evidence.
+The replacement wrapper then exposed a Windows-spawn harness bug: without its
+__main__ guard the PDF child launched nested pytest. Only the698 reports before
+that case are valid (690 passed/8 failed); later reports are invalid, preserved
+outside Git, and do not count as backend failures or passes. Only this task's runner
+process tree was stopped. The corrected guarded runner selects1584 remaining,
+failed or affected cases and deselects679 already-passing cases; its selection is
+in ignored runtime/integration/remaining-selection.json. Six newly collected cases
+cover public Staff history grants and exact signed projection deltas. This is a
+resumed/targeted gate, NOT a completed single-invocation full-suite pass. It completed
+with1575 passed/9 failed, no skips (1584 selected; 1786.278 seconds). Failures exposed
+stale source-proof/stockout/basis fixtures, the new fake-delivery callback assertion,
+and a direct SQL query outside the repository boundary. The scoped max-version query
+was moved into the existing ImportHistoryRepository, retaining the caller's Session
+and transaction. Affected selectors plus the whole architecture/bounds/history modules
+then yielded72 passed/3 failed (75 cases; 186.824 seconds). The last three failures
+were the new linked flow's expectation after live write revocation: approved runtime
+already rejects confirm_review with403 PERMISSION_DENIED. Corrected assertions passed
+all3 cases (29.223 seconds), preserving checks for exact grants, fresh committed
+history and accept replay never restoring revoked grants. Signed
+quantity delta regression cases passed in the resumed gate. Overlapping counts are
+never added; no completed single-invocation full-suite pass is claimed.
+
+Final affected commands (sequential, same owned DB; no full gate repeat):
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_import_recipe_basis.py::test_source_basis_reuse_reads_current_rows_and_unit_change_blocks tests/integration/test_import_staging.py::test_missing_zero_duplicates_and_future_rows_are_blockers tests/integration/test_integrated_auth_import.py tests/integration/test_recipe_schedule.py::test_import_recipe_and_editor_share_real_pg_fence_and_version_allocation tests/integration/test_s47_audit_remediation.py::test_sales_correction_http_requires_effective_action_reason_before_acceptance tests/unit/test_application_contracts.py tests/unit/test_s47_bounds_reason.py tests/integration/test_import_history_a2.py -q --tb=short --show-capture=no --junitxml=runtime/integration/final-targeted.xml
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_integrated_auth_import.py -q --tb=short --show-capture=no --junitxml=runtime/integration/auth-import-final.xml
+```
+
+Ignored XML/logs are development evidence, not application audit or portable handoff
+artifacts. The three-case linked coverage spans calendar, usage and purchase history;
+it complements the accepted Auth B4/Import A3 flows and does not replace browser E2E.
+Final status confirms effective shelfcash_integration_test/shelfcash_integration_tester,
+head0024,65 tables and zero application rows after fixture teardown; no additional
+reset was needed. Role superuser/CREATEDB/CREATEROLE/replication flags are all false.
+OpenAPI source-manifest parity, JSON references, handoff links/anchors, Python compile
+and Git whitespace checks pass. The15 original Import WIP hashes remain unchanged
+and the Auth source worktree remains clean.
+
+Original15 Import WIP review (source WIP untouched):
+
+| File | Integration disposition |
+| --- | --- |
+| scripts/probe_decision_test_database.py | Superseded: identical guarded-target adaptation already committed by Auth; receives expanded shared allowlist |
+| scripts/verify_forecast_execution.py | Superseded: same Auth adaptation; tested process caller uses integration target |
+| scripts/verify_forecast_trained.py | Superseded: same Auth adaptation, exact retained/artifact replay retained |
+| scripts/verify_s362_acceptance.py | Superseded: same Auth adaptation; integration guard retained |
+| tests/integration/test_catalog_recipe_schema.py | Receive effective-identity intent from Auth; adapt exact integrated table inventory/head |
+| tests/integration/test_database_bootstrap.py | Same identity adaptation; preserve exact tables and check head0024 |
+| tests/integration/test_forecast_decision_persistence.py | Same identity adaptation;65-table head inventory, later-table downgrade exclusions include both branches |
+| tests/integration/test_identity_store_schema.py | Same identity adaptation; exact65-table inventory/head0024 |
+| tests/integration/test_operational_import_schema.py | Same identity adaptation; include A2 history in later-table roundtrip scope |
+| tests/integration/test_planning_configuration_schema.py | Same identity adaptation; include both branches in roundtrip exclusions/head0024 |
+| tests/integration/test_planning_export_schema.py | Same identity adaptation; integrated schema/head0024 |
+| tests/integration/test_public_reads.py | Superseded: identical guarded identity/lock-monitor adaptation already in Auth |
+| tests/integration/test_recipe_schedule_schema.py | Same identity adaptation; preserve period/column constraints, integrated inventory/head0024 |
+| tests/integration/test_supplier_operational_constraints.py | Same identity adaptation; exact inventory and exclusion constraints/head0024 |
+| tests/integration/test_verification_commands.py | Same effective identity and process environment intent; exact65-table status/seed/no-row expectations/head0024 |
+
+No WIP business implementation is imported. Old Import-only inventories/0017
+expectations are superseded, not copied over Auth metadata. Other shared repairs:
+API Import's54-op assertion recognizes the five accepted Auth operations; Auth/RESET
+child recovery verifies the fixture's guarded identity instead of hardcoded Auth DB.
+No test is deleted/skipped to obtain pass. Legacy reuse tests now declare this
+upload's source/report before preview, preserve atomicity/stale-read/confirmation
+assertions and test the provider boundary only after source proof. Sales tests use
+explicit missing-stockout policy and A1 contribution-level raw zero/overlap semantics.
+Integration repairs one projection regression: regrouping sales had discarded the
+existing changes.quantity.delta. Exact Fraction arithmetic restores it, without
+changing writer totals/replace/merge decisions; signed/high-precision checks cover it.
+
+[FE010/artifacts](../handoff/010_BE_CAPABILITY_RESPONSE_VI.md) owns FE handoff. OpenAPI
+is source-only, examples synthetic validated DTOs. Unified server not started; no
+ready base URL, browser/real workflow-email E2E or deployment claim. Existing Gmail
+smoke/inbox receipt is historical and does not cover credential workflow.
+
 ## Phạm vi và chuẩn bị
 
 **CURRENT FACT:** một backend Python/FastAPI với các thread Import, Planning và
@@ -173,8 +301,42 @@ Status prints actual database/current_user and this tree's migration heads.
 Reset explicitly selects effective TEST_DATABASE_URL, validates the allowlist,
 checks connected identity, and migrates only that tree's head. Bare reset still
 uses DATABASE_URL: use --test-database for worktree test setup. Never print URLs.
-Auth migration 0018 and Import migration 0019 each descend from 0017; do not copy
-branch migrations across trees or merge heads for this setup.
+Historical isolated-source setup: Auth0023 descends from0022/0020/0018/0017;
+Import0021 descends from0019/0017. Integration0024 explicitly joins these heads
+only in the integration worktree. Source tree DBs retain their separate graphs.
+
+### B4 Auth/Staff acceptance without FE or SMTP
+
+Run in backend-auth-self-service. Confirm status reports only shelfcash_auth_test /
+shelfcash_auth_tester before tests. These fixtures reset that guarded database;
+run one pytest process at a time and leave Gmail demo/Import/development untouched.
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.dev status --test-database
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_auth_combined_acceptance.py tests/integration/test_auth_catalogue_v3_schema.py tests/unit/test_auth_catalogue_v3.py tests/api/test_staff_openapi.py -q
+```
+
+Combined HTTP cases capture fake verification/invitation/reset mail; provision
+synthetic Owner Stores through AssistedProvisioning, not public signup. They verify
+registered/unregistered invitees, exact grants, live changes on existing sessions,
+two-Store isolation, decline/new invitation, receipt replay after grant revocation,
+and reset/session revocation through fresh-session reads. The schema test checks
+additive preservation, downgrade retention and pending delivery in a fresh process.
+Public membership deactivation is not implemented; the test exercises the existing
+persisted membership boundary and does not invent a new endpoint.
+
+| Invariant / existing coverage to reuse | Responsible test module |
+| --- | --- |
+| Signup enumeration, expiry/reissue/single-use, rollback/lost acknowledgment, rates, service-wide unavailable, restart/bounded delivery | test_email_verification.py |
+| RESET lifecycle/purpose/session revocation, rollback/lost acknowledgment, bounded claims and process restart | test_password_reset.py |
+| Session/proof/current grants, assisted setup, cookie/Origin/CSRF and logout | test_auth_public.py; test_self_service_auth.py |
+| Accept/reissue/revoke, no ghost access, pinned catalogue, grant CAS, replay, delivery uncertainty and locking | test_staff_public.py |
+| Decline fences/replay, accept/decline/revoke races, rollback/lost acknowledgment, N16/N18 terminal reads | test_invitation_decline.py |
+
+Select affected nodes when changing these boundaries; do not rerun every module
+just to total cases. Existing evidence is reusable coverage, not a new full-suite
+pass. Browser and real credential-email workflow acceptance remain pending; one
+user-confirmed Gmail smoke inbox delivery proves only that smoke message.
 
 ## 1. Thiết lập demo mới — chỉ thực hiện một lần
 
@@ -335,8 +497,9 @@ xác nhận DEAD, port free và đúng DB/Store guards; ALIVE/UNKNOWN chặn, kh
 ## 5. Automated tests — khác thao tác browser và seed
 
 Chạy từ backend. `.env` có thể được tạo từ `.env.example` nếu chưa có; chỉ
-cấu hình TEST_DATABASE_URL trỏ PostgreSQL local **shelfcash_test**. Không in URL có
-password. Guard từ chối DB khác. Tests chạy tuần tự, reset/migrate fixtures chỉ DB
+cấu hình TEST_DATABASE_URL trỏ PostgreSQL local **shelfcash_test** cho profile cũ;
+profile tích hợp dùng DB/role riêng ở mục integrated-acceptance. Không in URL có
+password. Guard từ chối DB ngoài explicit allowlist. Tests chạy tuần tự, reset/migrate fixtures chỉ DB
 test; không migrate/reset development. Docker development service chỉ cung cấp
 PostgreSQL, không cần upgrade schema shelfcash để chạy tests:
 
@@ -377,7 +540,7 @@ Chỉ khi chủ động thiết lập DB development mới: cấu hình root `.e
 `alembic.exe upgrade head` trong venv, rồi `scripts/db_status.ps1`. BE chạy bằng
 python venv `-m uvicorn app.main:app --host 127.0.0.1 --port 8000`. Worker flags
 cần bật rõ nếu thực hiện jobs; `seed_demo` chỉ kiểm schema, không tạo dataset.
-Schema source head0017/60 bảng; health không xác nhận DB. Volume development
+Schema Auth source head0023/63 bảng ứng dụng; health không xác nhận DB. Volume development
 `shelfcash-postgres-data` giữ qua restart; đổi Compose password không đổi role
 password trong volume đã init. POSIX wrappers tồn tại nhưng runtime chưa certified.
 
@@ -388,12 +551,15 @@ password trong volume đã init. POSIX wrappers tồn tại nhưng runtime chưa
 | Port/PID ownership conflict | Dùng process hiện có nếu đúng config; không kill/đổi port tùy tiện |
 | CORS/login không giữ cookie | localhost cả FE/BE, đúng Origin5173, credentials include, không thêm /api/v1 vào base URL |
 | Staff403 | Refresh quyền, Owner cấp đúng grants; không bypass bằng key/membership giả |
+| Signup/resend503 EMAIL_DELIVERY_UNAVAILABLE | Kiểm opt-in/TLS SMTP/key/HTTPS verification-page Origin theo [Auth feature](../features/AUTH_SESSION.md); không chờ email hoặc tạo Store từ response này |
 | Job queued mãi | Kiểm worker flags/private log và native lifespan; không chạy worker thứ hai trên cùng DB |
 | Mapping/preview bị stale | Refresh revision, review lại thay đổi, preview lại; không reuse confirmation cũ |
 | Readiness bị chặn | Xem missing/unknown/ambiguous facts và evidence, không bịa unit/date/MOQ/fee |
 
 Reset là hành động phá dữ liệu riêng, không thuộc startup/release. Local reset
-wrappers chỉ cho shelfcash/shelfcash_test, test mode chỉ shelfcash_test. Dừng
+wrappers chỉ cho development shelfcash hoặc các DB test trong explicit allowlist;
+test mode từ chối shelfcash. Lượt tích hợp chỉ dùng shelfcash_integration_test với
+role riêng đã guard, không dùng các targets còn lại dù tooling hỗ trợ. Dừng
 clients, backup dữ liệu muốn giữ trước; không xóa volume/kill arbitrary sessions.
 S4.11 reset-disposable cần đúng marker/Store allowlist/matched server exit/no
 clients; không có Store-only reset. Giữ private artifact generations, audit,

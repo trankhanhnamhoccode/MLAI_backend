@@ -13,6 +13,10 @@ from scripts.dev import migration_config
 
 @pytest.mark.parametrize('retained',['history','grant'])
 def test_additive_history_and_catalogue_migration_no_auto_grants_and_retention_guard(env,retained):
+    command.downgrade(migration_config(),'0017_planning_exports')
+    command.upgrade(migration_config(),'0021_import_support_history')
+    # AuthUseCases needs B1's proof fields; apply only0018, not Auth's v3 step.
+    command.upgrade(migration_config(),'0018_email_verification')
     receipt=setup(env)
     with Session(env[1]) as s:
         member=s.scalar(select(StoreMembership).where(StoreMembership.store_id==receipt.store_id));member.role='STAFF'
@@ -32,7 +36,7 @@ def test_additive_history_and_catalogue_migration_no_auto_grants_and_retention_g
     with pytest.raises(RuntimeError,match='prevent[s]? downgrade'):
         command.downgrade(migration_config(),'0019_sales_stockout')
     with Session(env[1]) as fresh:
-        assert fresh.scalar(text('SELECT version_num FROM alembic_version'))=='0021_import_support_history'
+        assert set(fresh.scalars(text('SELECT version_num FROM alembic_version'))) == {'0021_import_support_history','0018_email_verification'}
     if retained=='history':
         from sqlalchemy.exc import IntegrityError
         with pytest.raises(IntegrityError):

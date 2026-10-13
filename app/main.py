@@ -11,7 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.api.health import router as health_router
 from app.config import Settings
 from app.api.auth import router as auth_router, clear_cookie
-from app.application.contracts.auth import AuthError, ErrorDetails, ErrorEnvelope, ErrorInfo, Meta
+from app.application.contracts.auth import AuthError, ErrorDetails, EmailDeliveryErrorDetails, ErrorEnvelope, ErrorInfo, Meta, PublicEmailErrorEnvelope, PublicEmailErrorInfo
 from app.application.use_cases.auth import AuthUseCases
 from app.application.use_cases.staff import StaffUseCases
 from app.api.staff import router as staff_router
@@ -49,16 +49,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         worker=ImportWorker(application.state.import_staging) if configuration.import_worker_enabled else None
         planning_worker=PlanningWorker(application.state.planning_execution) if configuration.planning_worker_enabled else None
         pdf_worker=PlanningExportWorker(application.state.planning_exports) if configuration.pdf_export_worker_enabled else None
+        from app.infrastructure.email_verification_worker import EmailVerificationWorker
+        email_worker = EmailVerificationWorker(application.state.email_verification_dispatcher,
+            reset_dispatcher=application.state.password_reset_dispatcher) if configuration.auth_email_delivery_enabled else None
         application.state.planning_worker=planning_worker
         if worker:worker.start()
         if planning_worker:planning_worker.start()
         if pdf_worker:pdf_worker.start()
+        if email_worker:email_worker.start()
         try:
             yield
         finally:
             if worker:worker.stop()
             if planning_worker:planning_worker.stop()
             if pdf_worker:pdf_worker.stop()
+            if email_worker:email_worker.stop()
             engine.dispose()
     application = FastAPI(
         title=configuration.app_name,
@@ -69,6 +74,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.state.settings = configuration
     application.state.auth = AuthUseCases(engine)
+    from app.infrastructure.email_verification_transport import VerificationEmailTransport
+    from app.application.use_cases.email_verification import EmailVerification
+    from app.application.use_cases.email_verification_delivery import EmailVerificationDispatcher
+    email_transport = VerificationEmailTransport(configuration)
+    application.state.email_verification = EmailVerification(application.state.auth, configuration, email_transport)
+    application.state.email_verification_dispatcher = EmailVerificationDispatcher(application.state.auth, configuration, email_transport)
+    from app.application.use_cases.password_reset import PasswordReset
+    from app.application.use_cases.password_reset_delivery import PasswordResetDispatcher
+    reset_transport = VerificationEmailTransport(configuration, purpose="RESET")
+    application.state.password_reset = PasswordReset(application.state.auth, configuration, reset_transport)
+    application.state.password_reset_dispatcher = PasswordResetDispatcher(application.state.auth, configuration, reset_transport)
     application.state.staff = StaffUseCases(application.state.auth, configuration)
     application.state.public_reads = PublicReads(application.state.auth)
     application.state.stock_writes = StockWrites(application.state.auth, application.state.public_reads)
@@ -107,6 +123,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_middleware(ImportBodyLimits)
     from app.infrastructure.planning_body_limits import PlanningBodyLimits
     application.add_middleware(PlanningBodyLimits)
+    from app.infrastructure.auth_body_limits import AuthBodyLimits
+    application.add_middleware(AuthBodyLimits)
 
     def config_failure(error):
         body=ConfigurationErrorEnvelope(data=None,meta=EmptyMeta(),error=ConfigurationErrorInfo(
@@ -127,6 +145,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     def failure(request, error):
         body = ErrorEnvelope(data=None, meta=Meta(request_id=getattr(request.state, "request_id", str(uuid4()))), error=ErrorInfo(code=error.code, message=error.code, details=ErrorDetails()))
+        if error.code == "EMAIL_DELIVERY_UNAVAILABLE":
+            body = PublicEmailErrorEnvelope(data=None, meta=body.meta, error=PublicEmailErrorInfo(code=error.code,
+                message="Tạm thời chưa thể gửi email; thử lại sau hoặc liên hệ hỗ trợ.", details=EmailDeliveryErrorDetails()))
         if public_read(request) or planning_surface(request):
             body = ReadErrorEnvelope(data=None,meta=EmptyMeta(),error=body.error)
         response = JSONResponse(status_code=error.status, content=body.model_dump(mode="json", exclude_none=False))
@@ -144,6 +165,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @application.exception_handler(RequestValidationError)
     async def validation_error(request, error):
         issues = error.errors()
+        if request.url.path in {"/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"} and any(i["type"] == "json_invalid" for i in issues):
+            return failure(request, AuthError("INVALID_REQUEST", 400))
         if '/planning-requirements' in request.url.path or request.url.path.endswith('/planning-budget') or '/procurement-plans' in request.url.path:
             from app.application.contracts.planning_configuration import FieldError
             if any(i['loc'][:1]==('header',) for i in issues):
@@ -171,7 +194,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             code = "INVALID_EMAIL"
         elif "/staff-invitations/" in request.url.path and any(i["loc"][-1:] in (("token",), ("invitation_token",), ("X-Invitation-Token",)) for i in issues):
             code = "INVALID_TOKEN"
-        elif request.url.path.endswith("/credentials/complete") and any(i["loc"][-1:] == ("password",) for i in issues):
+        elif request.url.path.endswith(("/credentials/complete", "/email-verifications/complete")) and any(i["loc"][-1:] == ("password",) for i in issues):
             code = "PASSWORD_POLICY_VIOLATION"
         return failure(request, AuthError(code, 422))
 
@@ -193,7 +216,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def private_headers(request: Request, call_next):
         request.state.request_id = str(uuid4())
         loopback = {"localhost", "127.0.0.1", "::1"}
-        if request.url.path.startswith("/api/v1/") and configuration.auth_dev_cookie and (request.url.hostname not in loopback or not request.client or request.client.host not in loopback):
+        if request.method == "POST" and request.url.path in {"/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"} and request.headers.get("origin") not in configuration.auth_allowed_origins:
+            response = failure(request, AuthError("CSRF_CHECK_FAILED"))
+        elif request.url.path.startswith("/api/v1/") and configuration.auth_dev_cookie and (request.url.hostname not in loopback or not request.client or request.client.host not in loopback):
             response = failure(request, AuthError("CSRF_CHECK_FAILED"))
         else:
             try:
@@ -204,6 +229,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 logging.getLogger(__name__).error("Auth execution failure (%s)", type(error).__name__)
                 response = failure(request, AuthError("SERVICE_UNAVAILABLE", 503))
         if request.url.path.startswith("/api/v1/"):
+            if getattr(request.state, 'auth_body_limit', False):
+                response = failure(request, AuthError('RESOURCE_LIMIT_EXCEEDED', 413))
             if getattr(request.state,'planning_body_limit',False):
                 if request.url.path.endswith('/procurement-plans'):
                     from app.application.contracts.planning_configuration import FieldError

@@ -99,6 +99,14 @@ def test_test_reset_rejects_non_allowlisted_names(database):
             database_url=f"postgresql+psycopg://tester:dummy@127.0.0.1:5432/{database}"))
 
 
+def test_integration_reset_requires_exact_dedicated_role():
+    validate_reset_target(Settings(_env_file=None, environment="test",
+        database_url="postgresql+psycopg://shelfcash_integration_tester:dummy@127.0.0.1:5432/shelfcash_integration_test"))
+    with pytest.raises(ValueError, match="dedicated tester role"):
+        validate_reset_target(Settings(_env_file=None, environment="test",
+            database_url="postgresql+psycopg://admin:dummy@127.0.0.1:5432/shelfcash_integration_test"))
+
+
 @pytest.mark.parametrize("action", ["reset", "status"])
 def test_cli_test_database_uses_effective_environment_override(monkeypatch, action):
     import scripts.dev as dev

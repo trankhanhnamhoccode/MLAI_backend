@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: shelfcash_auth_demo
+      POSTGRES_USER: shelfcash_auth_demo
+      POSTGRES_PASSWORD: ${AUTH_DEMO_DB_PASSWORD:?private configuration required}
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - auth-demo-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shelfcash_auth_demo -d shelfcash_auth_demo"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+volumes:
+  auth-demo-data:

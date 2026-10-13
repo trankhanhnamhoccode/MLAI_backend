@@ -1004,6 +1004,10 @@ snapshotinvalid409 SNAPSHOT_NOT_AVAILABLE và refresh; không âm thầm skip du
 No DELETE/archive retention vì policy giữ Run vô thời hạn. Clickrow dùng C03 cùng
 UUID, C03 phản ánh latestlifecycle của Run, completedimmutable.
 
+RunSummary captured effective budget là extension ACCEPTED / DESIGN_READY ở mục17;
+chưa thuộc DTO/runtime N9 hiện hành. Không dùng C03 đã có để suy extension list đã
+implemented.
+
 ```json
 {"data":{"items":[{"run_id":"00000000-0000-4000-8000-000000000100","store_id":"00000000-0000-0000-0000-000000000001","status":"queued","accepted_at":"2026-10-09T03:01:00Z","started_at":null,"completed_at":null,"forecast_start_date":"2026-10-09","forecast_end_date":"2026-10-15","requirements_mode":"default","created_by":{"user_id":"00000000-0000-0000-0000-000000000004","display_name":"Owner"},"winner_option_id":null,"outcome":null,"error_code":null,"result_schema_version":null,"result_digest":null,"record_version":"run-1"}]},"meta":{"request_id":"req-history","snapshot_id":"run-list-1","pagination":{"limit":50,"next_cursor":null,"total_count":1}},"error":null}
 ```
@@ -1310,6 +1314,31 @@ Response data reuse ví dụ N9 mục15.2; meta extension:
 ```json
 {"timezone":"Asia/Ho_Chi_Minh","applied_filters":{"created_by_user_id":"00000000-0000-0000-0000-000000000004","created_date_from":"2026-10-13","created_date_to":"2026-10-13"}}
 ```
+
+<a id="history-captured-budget"></a>
+### R09 — Captured effective budget trong RunSummary — ACCEPTED / DESIGN_READY
+
+ACCEPTED DECISION — Product 13/10/2026: RunSummary trả effective budget limit và
+currency của chính Run tại acceptance, projection từ captured acceptance evidence.
+Không lấy cap Store hiện tại, không diễn giải budget thành spend, reservation hoặc
+tiền còn lại. C03 BudgetAtAcceptance vẫn là consumer retained từng Run hiện hành.
+CURRENT FACT: RunSummary/N9 hiện chưa có extension này; không thay source DTO hoặc
+generated OpenAPI bằng mô tả DESIGN_READY.
+
+Run cũ thiếu retained evidence phải trả availability rõ và nullable limit/currency
+theo evidence thực có; không đổi unknown/null thành zero hoặc fallback current cap.
+Limit0 chỉ hợp lệ khi captured evidence xác nhận0; available phải có đủ limit/currency
+của acceptance, không suy từ cost/result hay lifecycle status. Không yêu cầu backfill
+giá trị giả hoặc sửa historical Run để hoàn thành list projection.
+
+Giữ planning.result.read + budget.read + procurement.cost.read và current membership,
+whole-response denial, list snapshot/pagination/filter/cursor hiện hành N9. Budget
+projection thuộc cùng pinned list snapshot với RunSummary/page, không N+1 client reads
+để giả list contract. Không thêm budget writer hay endpoint riêng. Typed availability
+representation do DTO/OpenAPI sở hữu khi triển khai, với meaning đã chốt ở đây.
+Acceptance tương lai: budget snapshot không đổi khi Store cap đổi; available zero khác
+missing evidence; old Run unavailable; currency cùng acceptance; financial denial;
+list snapshot/cursor parity. Chưa có executed acceptance cho extension trong lượt docs.
 
 ### EX01 DESIGN_READY — GET /procurement-plans/{plan_id}/exports
 

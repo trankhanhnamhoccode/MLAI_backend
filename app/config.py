@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     auth_frontend_url: str | None = None
     auth_invitation_frontend_url: str | None = None
     auth_delivery_encryption_key: SecretStr | None = None
+    auth_email_delivery_enabled: bool = False
+    auth_verification_frontend_url: str | None = None
+    auth_password_reset_frontend_url: str | None = None
 
     @model_validator(mode="after")
     def auth_transport(self):

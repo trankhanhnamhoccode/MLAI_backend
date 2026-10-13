@@ -1,12 +1,78 @@
 # S4.2 — quyền Staff, lời mời và audit
 
+## CURRENT FACT — B4 catalogue and linked acceptance
+
+Catalogue permissions-v3 contains43 keys. The six History descriptors are identical
+to Import A2; all37 old descriptors remain intact. Owner grants are Store-scoped;
+existing Staff does not receive new keys. N12/T02 expose v3, N13 accepts an explicit
+sorted grant set up to43, and N15/N17 require the current catalogue version.
+Retained v2 offers need Owner reissue/review. N19 OpenAPI now has accept const:true;
+false/numeric1/string"true" still return422. No route or consent semantics changed.
+
+CURRENT FACT: integrated0024 joins Auth0023 and Import0021. Both CHECK upgrades
+retain grants and versions; integration-only downgrade repairs preserve v3 while
+the companion branch still requires it and block final removal of retained keys.
+Original Auth0fbb979 had an independent0023 head. Source worktrees/DBs remain
+unchanged; [schema contract](../DATABASE_SCHEMA.md) owns the merged traversal.
+
+The combined test exercises both verified and not-yet-registered invitees through
+public signup, fake mail, verification, HTTP login/offer/accept, live grant updates,
+multi-Store isolation, decline/new identity, and reset/relogin. It asserts committed
+state through fresh SQLAlchemy sessions. Membership deactivation is verified through
+the existing persistence boundary, since no public deactivation endpoint is added.
+Fake delivery restart is also exercised in a separate Python process. Existing
+B1/B2/B3 suites own lifecycle/fault/race coverage; rerunning overlapping cases does
+not create a unique aggregate count or a full-suite claim. Browser acceptance and
+real credential-email workflows remain pending; Gmail smoke inbox was user-confirmed.
+
+## CURRENT FACT — B3 invitation decline
+
+IN01 POST `/api/v1/staff-invitations/{invitation_id}/decline` takes `{token,reason}`
+and returns200 DeclineReceipt in the existing envelope. An active verified target
+session, exact Origin, X-CSRF-Token, If-Match and Idempotency-Key are required;
+membership is not required. Reason is nonblank1..1000 characters, token1..512
+UTF-8 bytes/write-only. N18 is an authenticated offer, not anonymous authority.
+
+Pending→declined atomically advances version, records declined_at, consumes
+mutation capability, writes InvitationEvent DECLINED and idempotency receipt,
+and cancels queued delivery secrets. No membership/grants/permission events,
+Store access, email or notification is created. Receipt contains invitation_id,
+store_id,status,declined_at,version,event_id,next_action=return_to_stores.
+
+Sorted User→session→Store→invitation locks serialize accept/decline/revoke and
+recheck holder/proof/token, Store, current active Owner issuer, expiry and pinned
+grants/catalog. IN01 wrong holder/token404; N18/N19 retain wrong-holder403.
+Expired/revoked410, absent If-Match428, stale pending revision412 and incompatible
+terminal409. N19 still requires accept:true; false stays422.
+
+N16 supports declined and DECLINED events. Invitation/InvitationOffer gain nullable
+declined_at; N18 gains can_decline, with both capabilities false for declined even
+without membership. N17 cannot reissue/revoke declined409 INVITATION_STATE_CONFLICT.
+Owner creates a new identity through N15; declined does not block its acceptance.
+
+Replay uses the same key/body/original If-Match after current account/token/Store/
+issuer proof, without requiring unused capability or membership. It never repeats
+transition or authority writes. A different body/CAS with the same key gives409
+IDEMPOTENCY_KEY_REUSED; lost commit acknowledgment is recovered by request replay.
+Pre-commit failure rolls back transition/event/receipt/secret cancellation. The
+existing30-attempt recipient/account+IP/15-minute throttle is shared with accept.
+
+Migration0022 is additive on Auth0020. Verification uses only guarded Auth test DB
+and fake delivery. The Gmail demo and FE source/config are untouched; browser UI
+is an FE-owned prerequisite. Canonical product authority remains
+[Authorization](../AUTHORIZATION_CONTRACT_VI.md#auth-self-service).
+CURRENT FACT: B3 backend/fake-delivery acceptance is COMPLETE. Fresh-session
+assertions and fault/race cases cover all accepted transition/replay/no-authority
+invariants, alongside relevant invitation/B1/B2/session/schema regressions.
+Commands/results are reported in the conversation; no fresh full-suite claim.
+
 CURRENT FACT S4.4 prerequisite: cursor HMAC now uses Auth-owned server-private
 CursorSigner key with domain/session binding. Client cannot re-sign modified offsets
 using their session token. Authorization/Store/filter/limit/list-version checks,
 routes and DTOs stay unchanged. Restart requires cursor refresh. Evidence:
 [historical scope notes (retired)](../runbooks/FULL_TEST_FLOW.md).
 
-CURRENT FACT: source triển khai N12–N19 theo AUTH v1 mục4/6; evidence và giới hạn
+HISTORICAL INFORMATION S4.2: source triển khai N12–N19 theo AUTH v1 mục4/6; evidence và giới hạn
 ở [historical scope notes (retired)](../runbooks/FULL_TEST_FLOW.md). Không thay product policy,
 không self-registration, chuyển Owner, xóa/reactivate membership hoặc one-time bypass.
 Catalogue mô tả 37 action keys đã chốt, không chứng minh các API tương lai đã có.
@@ -26,10 +92,10 @@ Store/resource ngoài phạm vi404. Các mutations đòi Origin allowlist và CS
 | N15 | POST /stores/{store_id}/staff-invitations | `{email,grants,permission_catalog_version,reason}`, Idempotency-Key; 201 invitation + delivery queued; không token/account_exists. |
 | N16 | GET /stores/{store_id}/staff-invitations | view=invitations: status/email/sort=-issued_at; view=events: invitation_id và limit/cursor; paging. |
 | N17 | POST /stores/{store_id}/staff-invitations/{invitation_id}/actions | Reissue hoặc revoke, Idempotency-Key/If-Match; 200 invitation/delivery/event_id + ETag. |
-| N18 | GET /staff-invitations/{invitation_id} | Session đúng verified account + X-Invitation-Token; offer/can_accept/reasons + ETag; không cần membership chưa tồn tại. |
+| N18 | GET /staff-invitations/{invitation_id} | Session đúng verified account + X-Invitation-Token; offer/can_accept/can_decline/reasons + ETag; không cần membership chưa tồn tại. |
 | N19 | POST /staff-invitations/{invitation_id}/accept | `{token,accept:true}`, Origin/CSRF/If-Match/Idempotency-Key; 201 mới, 200 retained replay. |
 
-Grants phải unique/sorted trong permissions-v2; reason không blank,1..1000.
+Grants phải unique/sorted trong permissions-v3; reason không blank,1..1000.
 Không auto-add prerequisites. Owner target422, inactive Staff409, stale CAS412,
 missing If-Match428. N13 no-op giữ version, changed=false,event_id=null; có receipt,
 không audit change giả. Request sau dùng current grants; session account không bị
@@ -49,7 +115,7 @@ giới hạn hiệu năng cần đo ở Store lớn, chưa claim load/performanc
 
 ## Consent, account và persistence
 
-Create/reissue không tạo account/membership. Account chưa có phải qua assisted
+Create/reissue không tạo account/membership. Account chưa có có thể qua B1 signup/verification hoặc assisted
 account setup + verified-holder credential flow S4.1. N18/N19 kiểm session active,
 account proof `verified_email/verified_at/verification_reference`, đúng target email.
 Possession token không cấp quyền. Unknown token/UUID404 chung; wrong account403;

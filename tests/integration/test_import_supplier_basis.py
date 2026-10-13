@@ -118,8 +118,9 @@ def test_shared_basis_reuse_never_reuses_commercial_values(imp, monkeypatch):
     assert row["after"]["pack_cost"] == "100000" and row["after"]["minimum_order_packs"] == 2
     assert row["provenance"]["pack_cost"]["declaration_id"]
     from app.infrastructure import import_suggestions
-    monkeypatch.setattr(import_suggestions, "suggest_sheet", lambda *a, **k: pytest.fail("reuse called model"))
     second = analyzed(imp, content)
+    assert not summary(imp, second)["binding_refs"]
+    monkeypatch.setattr(import_suggestions, "suggest_sheet", lambda *a, **k: pytest.fail("reuse called model"))
     review(imp, second, schema="supplier_terms")
     assert not summary(imp, second)["can_preview"]
     for f, v in {**facts, "pack_cost":"200", "minimum_order_quantity":"2500"}.items():

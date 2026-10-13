@@ -29,5 +29,7 @@ def test_s42_eight_operations_exact_contract_headers_dtos_and_auth():
     assert models["CreateInvitation"]["additionalProperties"] is False
     assert set(models["AcceptInvitation"]["properties"])=={"token","accept"}
     assert models["AcceptInvitation"]["properties"]["token"]["writeOnly"]
+    assert models["AcceptInvitation"]["properties"]["accept"]["const"] is True
+    assert models["GrantsRequest"]["properties"]["grants"]["maxItems"] == 43
     assert "token" not in models["Invitation"]["properties"]
     assert set(models["AcceptanceReceipt"]["properties"])=={"invitation_id","invitation_version_at_acceptance","store_id","membership_id","role","accepted_grants","authorization_version_at_acceptance","accepted_at","event_id","next_action"}

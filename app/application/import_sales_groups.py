@@ -92,7 +92,9 @@ def finish_sales(rows, specs, snapshot):
                     unchanged = current and total == Fraction(Decimal(current['quantity'])) and flag is current.get('is_stockout') and not new and not revised
                     action = 'NO_OP' if unchanged else 'MERGE_DISJOINT_SALES' if new else 'REPLACE_DAILY_TOTAL'
                     classification = 'UNCHANGED' if unchanged else 'CHANGED' if current else 'NEW'
-        changes = tuple(dto.Change(field=k, before=str(getattr(first.before, k)), after=str(getattr(after, k)))
+        changes = tuple(dto.Change(field=k, before=str(getattr(first.before, k)), after=str(getattr(after, k)),
+                        delta=exact_text(Fraction(Decimal(after.quantity)) - Fraction(Decimal(first.before.quantity)))
+                        if k == 'quantity' else None)
                         for k in ('quantity', 'is_stockout') if first.before and getattr(first.before, k) != getattr(after, k))
         provenance = tuple(p.model_copy(update={'origin': 'DETERMINISTIC_DERIVED',
             'applied_rule_ids': p.applied_rule_ids + ('sales:planned_total_from_declared_contributions',)})

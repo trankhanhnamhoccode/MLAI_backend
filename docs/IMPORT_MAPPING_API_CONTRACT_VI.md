@@ -390,7 +390,8 @@ commercial values, recipe facts, source report key hoặc confirmation batch cũ
 Rules/Qwen có thể đề xuất context, không attest source. Chỉ signature/context
 absent/untrusted/ambiguous phải làm rõ trước bind; không search/fuzzy engine mới.
 
-CURRENT FACT — source-before-reuse trong WIP lát3: I03 không có attested source
+CURRENT FACT — source-before-reuse trong source tích hợp, kế thừa guards lát3 và
+acceptance Import126b0f2/A3 (không chứng nhận server/release đang chạy): I03 không có attested source
 context nên analyze chỉ discover/candidate, giữ source_context unresolved kể cả
 chỉ một profile cùng signature. Metadata columns chỉ phát hiện conflict, không
 positive source proof; không copy source evidence của version cũ vào file mới.
@@ -902,8 +903,8 @@ set chính xác. Không sửa metadata/recipe/price history immutable để làm
 | recipes: canonical Product + integer version; lines Ingredient trong version; effectivity inclusive | Same version/header/normalized complete line set NO_OP; khác content RECIPE_VERSION_CONFLICT, không update version cũ. Version mới không overlap assigned applicability, otherwise RECIPE_PERIOD_OVERLAP; header inconsistency RECIPE_HEADER_CONFLICT, duplicate Ingredient DUPLICATE_RECIPE_INGREDIENT. Thay lịch dùng recipe-calendar commands hiện hữu với future-only guard, không import tự đóng lịch cũ. | import_preview.recipe_groups, write_plan→RecipeUseCases.create_in_transaction; recipe-source basis/whole-yield/loss policy tại mục6 giữ nguyên. |
 | supplier_terms: source_system_key + source_term_key; canonical Supplier/Ingredient/version + period | Exact canonical payload/source identity NO_OP; same values nhưng thiếu source provenance có REGISTER_TERM_SOURCE audited, không overwrite commercial facts. Khác source binding SOURCE_IDENTITY_CONFLICT; same key changed phải future dated version với explicit old-period amendment/reason/CAS/confirmation khi cần. Historical backdate/overwrite HISTORICAL_TERM_CORRECTION; overlap TERM_PERIOD_OVERLAP, amendment không hợp lệ TERM_AMENDMENT_CONFLICT. | import_preview TermSource branch, OperationalConfiguration.term/close_term, write_plan REGISTER_TERM_SOURCE; details/basis/term_period_amendments ở mục13. |
 | inventory_count: canonical lot_id + Ingredient/unit; observation known | Target balance=current NO_OP, vẫn giữ observation evidence; khác balance signed COUNT_CORRECTION có reason và freshness. Unknown/ambiguous lot block; không tạo lot, nhận hàng hoặc đổi expiry/cost/date. | import_preview CountSource, write_plan→adjust_in_transaction, stock_observation; temporal guards/read-set phải recheck ở commit. |
-| opening_stock: source_system_key + source_record_id trong shared N6 receipt ledger | CURRENT FACT WIP lát3 có OpeningSource/OpeningValue, same identity+normalized payload NO_OP/retained lot; khác RECEIPT_IDENTITY_CONFLICT. Lot quantity là physical remainder; newlot + COUNT_CORRECTION baseline0, không historical RECEIPT. Duplicate identity/ambiguous physical lot block. | import_opening_stock.receipt_semantics/write_opening, import_preview opening branch; phải đối chiếu lại finalized lát3 và public acceptance trước gọi implemented release. |
-| scope_declarations: source_system_key + source_declaration_key + kind/scoped dependencies | Same payload+same dependency evidence NO_OP; changed declaration/dependencies phải explicit SET_SCOPE_DECLARATION/review, không assume complete từ receipt/count. Kind/Ingredient identity khác DECLARATION_IDENTITY_CONFLICT. | import_configuration_preview, OperationalConfiguration.declaration, post-write declaration_dependency; WIP lát3 cần kiểm canonical dependency digest. |
+| opening_stock: source_system_key + source_record_id trong shared N6 receipt ledger | CURRENT FACT source tích hợp kế thừa A3: OpeningSource/OpeningValue, same identity+normalized payload NO_OP/retained lot; khác RECEIPT_IDENTITY_CONFLICT. Lot quantity là physical remainder; newlot + COUNT_CORRECTION baseline0, không historical RECEIPT. Duplicate identity/ambiguous physical lot block. | import_opening_stock.receipt_semantics/write_opening, import_preview opening branch; evidence nhánh thuộc Import126b0f2/A3, gate tích hợp ở FULL_TEST_FLOW, không browser/deployment claim. |
+| scope_declarations: source_system_key + source_declaration_key + kind/scoped dependencies | Same payload+same dependency evidence NO_OP; changed declaration/dependencies phải explicit SET_SCOPE_DECLARATION/review, không assume complete từ receipt/count. Kind/Ingredient identity khác DECLARATION_IDENTITY_CONFLICT. | import_configuration_preview, OperationalConfiguration.declaration, post-write declaration_dependency; A3 kiểm canonical dependency digest, evidence nhánh thuộc Import126b0f2, gate tích hợp ở FULL_TEST_FLOW. |
 | inventory_receipts actual receipt | DESIGN_READY mục16; shared receipt source identity/dedupe, không sửa receipt cũ từ new file. Không dùng inventory_count/opening để giả actual receipt. | N6 ACTUAL_RECEIPT hiện có; Excel variant chưa implemented. |
 
 CURRENT FACT: supplier term duplicate source key/active-period overlap được block;
@@ -916,9 +917,12 @@ RECIPE_SOURCE_SCOPE_AMBIGUOUS với source location của các lines và không 
 Matching headers/source scope/version không chứng minh full report hay split parts;
 không union hai full reports có ingredients khác nhau và không chọn winning file.
 Single-sheet reviewed report tiếp tục assemble lines với header/duplicate Ingredient/
-DB version/period checks. TECHNICAL DEBT: chưa có typed split-part/full-report grain
-resolution hoặc manifest để cho phép cross-sheet assembly; không suy grain từ
-filename hoặc dùng reason tùy ý để bypass. Patch không đổi BOM/recipe normalization.
+DB version/period checks. ACCEPTED DECISION — Product 13/10/2026: recipe split-report
+assembly qua nhiều file/sheet không thuộc đợt hiện tại. Split-report identity/completeness
+declaration hoặc manifest là DEFERRED scope, không là câu hỏi Product chặn bàn giao.
+Giữ RECIPE_SOURCE_SCOPE_AMBIGUOUS; không auto-union, last-file-wins, suy grain từ
+filename hoặc dùng reason tùy ý để bypass. Quyết định này không đổi single-sheet
+assembly hợp lệ, BOM/recipe normalization hoặc các guards đã có evidence.
 
 Supplier trace chưa thấy thiếu guard khiến source key khác payload được silently
 overwrite: namespace/source/canonical equality/version/effectivity/period amendment
@@ -1064,8 +1068,9 @@ CURRENT FACT: MappingList.counts là Progress của toàn bộ issues trong batc
 khi có sheet_id/review_only/status filter; chỉ items và meta.pagination.total_count
 theo filtered result. completed_fields gồm resolved và auto_mapped, không phải số
 auto/approved. Có thể đọc auto items với review_only=false&status=auto_mapped;
-không cộng items.length để suy totals. Per-file/per-sheet/origin/filter aggregates
-chưa có contract. Source: ImportStagingUseCases.mappings/_progress.
+không cộng items.length để suy totals. Per-file/per-sheet/origin/filter mapping
+counters chưa implemented; thiết kế extensions ở mục17. Preview aggregates R05
+là đơn vị khác, xem mục17.1. Source: ImportStagingUseCases.mappings/_progress.
 
 M03 query mapping_id optional; returns schema/schema_version/schema_context_id,
 mapping_revision,duplicate_mapping_allowed:false,options descriptors mục6. Target
@@ -2381,6 +2386,41 @@ SourceEvidenceCell và quyền full spec; không expose whole workbook qua queue
 Acceptance tương lai: counts scope/filters/status/origin/empty; matching pages;
 source→exact canonical→effect provenance; finance denial; bounds không truncate
 audit facts; stale snapshot và no compute. Xem [bàn giao chung](API_CONTRACT.md#dot2-handoff).
+
+<a id="preview-aggregates"></a>
+### 17.1. R05 — Preview aggregates theo file/sheet — ACCEPTED / DESIGN_READY
+
+ACCEPTED DECISION — Product 13/10/2026: bổ sung aggregates theo file/sheet trên
+projection I04 hiện có, cùng preview_id và pinned preview_digest. Không thêm endpoint
+chỉ trả aggregates. CURRENT FACT: PreviewSummary/PreviewGroup toàn preview đã có;
+scoped aggregates này chưa implemented trong routes/DTO/consumer hiện hành.
+
+Hai đơn vị phải trả riêng và có nhãn rõ:
+
+- Raw source rows: records dữ liệu nguồn retained trong scope file/sheet, trước
+  grouping thành action; không dùng số lines vật lý của CSV multiline hay mapping
+  issues thay count này.
+- Logical planned actions: distinct actions của pinned preview liên quan scope.
+  Một action có nhiều source locations trong scope chỉ đếm một lần, kể cả nhiều
+  locations trong cùng file/sheet. Source locations khác file/sheet có thể khiến
+  cùng action thuộc nhiều scope; vì vậy totals từng file/sheet có thể chồng lặp,
+  không được cộng thành batch total. Batch total đếm distinct actions trên scope
+  batch, độc lập với tổng các scope con. Logical actions không đồng nghĩa successful
+  writes; classification/planned action/blocker/warning vẫn giữ nghĩa preview.
+
+Totals và rows page áp cùng scope/filters được hỗ trợ, cùng pinned preview/digest;
+không đếm từ page length, cộng các pages hoặc trộn digest để dựng totals. File/sheet
+scope chọn các actions có source location liên quan; raw row count chỉ đếm records
+nguồn trong scope, không lấy số locations ngoài scope của action nhiều nguồn.
+Representation phải phân biệt hai counts; không tái định nghĩa row_count hiện hành
+để chứa lúc raw rows, lúc logical actions. Typed DTO/wire structure được chốt khi
+triển khai projection; API không tự tính lại canonical facts trên GET.
+
+Quyền whole-response sensitive reads, preview/read-set pins, foreign scope/error và
+cursor/stale handling giữ mục17 và workflow I04 hiện hành. Acceptance khi triển khai:
+raw rows khác actions; multi-location dedupe; overlapping file/sheet scopes và batch
+distinct total; totals/page pin/filters; empty scope; stale preview và financial denial.
+Đây là design acceptance, không test PASS hoặc runtime handoff.
 
 ## Canonical clarification for consumers
 

@@ -2,7 +2,7 @@
 
 ## Authority and current surface
 
-CURRENT FACT: source OpenAPI has54 operations/50 paths (53 core plus health),
+CURRENT FACT: source OpenAPI has59 operations/55 paths (58 core plus health),
 registered by `app/main.py`. `/openapi.json` and source Pydantic DTOs are the
 structural reference. `GET /health` returns status=ok/service=shelfcash-backend;
 it is liveness, not DB/business readiness. `/docs` and `/redoc` are disabled.
@@ -93,7 +93,7 @@ thay thế phần tương lai đúng scope, không sửa source/generated OpenAP
 
 | Chủ đề canonical | Trạng thái và consumer FE |
 | --- | --- |
-| [Auth self-service/decline](AUTHORIZATION_CONTRACT_VI.md#auth-self-service) | DESIGN_READY: đăng ký, verify/resend, quên mật khẩu, decline. N7/N15–N19 routes IMPLEMENTED; mở rộng lifecycle/DTO chưa implement. |
+| [Auth self-service/decline](AUTHORIZATION_CONTRACT_VI.md#auth-self-service) | B1 A02/A05/A06 và B2 A07/N7 forgot/reset IMPLEMENTED; IN01 decline IMPLEMENTED B3. N7/N15–N19 routes IMPLEMENTED. |
 | [Yêu cầu quyền](AUTHORIZATION_CONTRACT_VI.md#permission-requests) | DESIGN_READY: Staff submit/cancel; Owner review/approve/reject; refresh grants. N12–N14 IMPLEMENTED và tiếp tục là grants/audit authority. |
 | [Inbox](NOTIFICATION_API_CONTRACT_VI.md#notification-v1) | DESIGN_READY: inbox/count/read; không approve qua notification. |
 | [Mapping queue](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-queue) | DESIGN_READY: explicit submit, Store queue, pinned detail, request changes. N5/M01–M04 IMPLEMENTED; extensions chưa implement. |
@@ -112,16 +112,21 @@ version. Lát3 identity/opening/count/completeness đang WIP, source có thêm o
 writer; không dùng static trace để tuyên bố public acceptance hoặc đổi lịch sử release.
 Clarification này không thêm route, permission, approval store hoặc operation count.
 Auth service-wide disabled/unavailable dùng503 EMAIL_DELIVERY_UNAVAILABLE đồng nhất
-mọi email trên A02/A06/A07 DESIGN_READY, không generic202 hứa check_email khi không
+mọi email trên A02/A06 IMPLEMENTED B1 và A07 IMPLEMENTED B2, không generic202 hứa check_email khi không
 thể gửi. Profile approved inbox mở submission hiện hành rồi batch, không “đã nhập”.
 
-Inventory bằng **static source inspection**, không khởi tạo FastAPI/OpenAPI:
-54 operations/50 paths hiện có, gồm 53 core + GET /health. Thêm đúng **18 operations**
+HISTORICAL INFORMATION: inventory thiết kế trước B1 bằng static source inspection:
+54 operations/50 paths, gồm 53 core + GET /health. Tổng **18 operations**
 Đợt 2: NF01–NF03 (3), A02/A05–A07/IN01 (5), PR01–PR04 (4), MQ01–MQ03 (3),
 D01/SU01/EX01 (3). Có16 paths mới (POST/GET permission-requests chung path;
 GET exports dùng path POST N10 đã có). Surface dự kiến **72 operations/66 paths**,
 gồm71 core + health; đây là inventory thiết kế, không OpenAPI runtime72.
 Extension query/body/action trên route hiện có không cộng thêm operation.
+CURRENT FACT B1/B2/B3: source OpenAPI có59 operations/55 paths; B1 thêm A02/A05/A06,
+B2 chỉ thêm A07 `POST /auth/password-reset/request`, tái sử dụng N7 và DTO hiện có.
+Đường dẫn A07 này là user-approved B2 delta so với thiết kế plural trước đó;
+không đăng ký alias hoặc complete endpoint mới. B3 chỉ thêm IN01 và invitation schema extensions đã duyệt; operation cũ giữ nguyên. Còn13 operations thiết kế
+chưa implement để tới surface72/66 nêu trên; không gọi chúng từ FE như runtime.
 
 Routes reused trong scope: A01/A03/A04/T01/T02/N7/N12–N19; M01–M04/N5;
 I01–I06/H01/H02/J01; N6/V01–V04/N8; R01/C01/C02/C03;
@@ -760,7 +765,8 @@ Owner có quyền đúng Store; Staff phải được Owner cấp từng action.
 create_version cho phép thay calendar cũ. Unknown/foreign read/receipt deny như
 P02, no one-timeapprovalbypass cho đến approved allowlist. Price/budget không
 trong response, không buộc procurement.cost.read. Quyền mới đã vào AUTH catalogue
-permissions-v2 và Owner invitation có thể chọn nếu descriptorcurrent.
+permissions-v3 (HISTORICAL INFORMATION: recipe.manage_effectivity được thêm ở v2)
+và Owner invitation có thể chọn nếu descriptorcurrent.
 
 RecipeScheduleAudit immutable {change_id,actor_user_id,store_id,product_id,reason,occurred_at,
 preview_digest,calendar_before_version,calendar_after_version,before,after,

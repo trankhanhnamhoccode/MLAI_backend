@@ -66,6 +66,7 @@ class AssistedProvisioning:
                         verified_at=self.clock(), verified_email=command.email, verification_reference=command.evidence_reference)
                     s.add(account)
                 else:
+                    account.proof_revision += 1
                     account.verified_at, account.verification_reference = self.clock(), command.evidence_reference
                     account.verified_email = command.email
             store_id = None
@@ -110,6 +111,7 @@ class AssistedProvisioning:
                 raise AuthError("CREDENTIAL_ISSUANCE_REQUIRES_NEW_REFERENCE", 409)
             now = self.clock()
             account.verified_email, account.verified_at = command.verified_email, now
+            account.proof_revision += 1
             account.verification_reference = command.evidence_reference
             AuthRepository(s).invalidate_user_tokens(user.id, now)
             s.add(CredentialToken(digest=digest(raw), user_id=user.id, revision=account.credential_revision,

@@ -19,19 +19,36 @@ N13/N15/N17 tiếp tục Owner-only; grants max43, unique/sorted, không implica
 Old Staff grants không đổi; current catalogue mismatch cần refresh theo error hiện có.
 [Import](IMPORT_MAPPING_API_CONTRACT_VI.md) sở hữu payload và workflow A2.
 
+All six descriptors retain Import's History group, Vietnamese labels/descriptions,
+grantable_to_staff=true, required_with=[] and ordinary exposure. Empty descriptor
+required_with does not bypass composite operation fences. N15/N17 review must use
+v3; retained v2 offers fail PERMISSION_CATALOG_CHANGED until Owner reissue.
+
 ## CURRENT FACT / S4.11 authorization integration boundary
 
 A01 login returns `data.session.csrf_token`, current Store context and HttpOnly
 session cookie; A03 refreshes current authorization, A04 is204. N7 completes a
-verified holder credential. No Owner sets Staff passwords and no public reset,
-seed or operator endpoint exists. Internal provisioning issues audited Store/
+verified holder credential. No Owner sets Staff passwords. Public B2 reset requests use A07;
+no seed or operator endpoint exists. Internal provisioning issues audited Store/
 account evidence, then credential completion; Staff membership/grants are created
 only after an Owner invitation and authenticated Staff acceptance (N12-N19).
 Local integration private holder delivery uses the existing application delivery
 callback; it is not verification of SMTP or public email delivery.
+CURRENT FACT B1/B2: A02/A05/A06 public signup/verify/resend and A07 password reset
+request now exist separately from
+assisted provisioning. They create no Store/membership/grants; verification completes
+the holder credential without a session. Product policy/status:
+[self-service section](#auth-self-service); configuration/FE flow:
+[Auth feature](features/AUTH_SESSION.md). Fake delivery/PostgreSQL tests do not
+establish real SMTP or browser delivery.
+CURRENT FACT B3: IN01 is authenticated holder decline with no membership/grants;
+N16/N18 expose its terminal state, and N17 cannot resurrect that identity. The
+Gmail smoke is user inbox-confirmed; no real email is sent by B3 verification.
 
-Mutations require exact configured Origin plus current session/CSRF and their
-contract-specific Idempotency-Key/If-Match. Browser calls use credentials include.
+Mutations require exact configured Origin. Authenticated mutations additionally require
+current session/CSRF and their contract-specific Idempotency-Key/If-Match. Public
+auth operations A01/A02/A05/A06/A07/N7 do not require an existing session or CSRF
+token; follow their operation-specific rules. Browser calls use credentials include.
 Local test cookie is `shelfcash_dev_session` (HttpOnly, SameSite=lax, Path=/,
 no Secure); use localhost for both FE and BE. Production keeps the existing Secure
 `__Host-shelfcash_session`, HTTPS/Origin/CSRF rules. No staging role has DB-reset
@@ -189,7 +206,8 @@ commit. Không approve-once bypass cho v1 endpoints; details.approval_request_al
 <a id="auth-assisted"></a>
 ### 2. Assisted provisioning, delivery và reset — đủ onboarding tối thiểu
 
-Không A02 self-registration. Trusted operator dùng **application command có kiểm
+Assisted onboarding vẫn là luồng mở Store/Owner; A02 B1 self-registration chỉ tạo
+account, không thay luồng này. Trusted operator dùng **application command có kiểm
 soát**, không SQL thủ công/seed demo: verify yêu cầu mở quán và identity chủ quán
 qua kênh hỗ trợ; ghi request/evidence reference, operator ID, timestamp, Store và
 Owner được xác nhận. Một transaction tạo User chưa có credential usable + Store +
@@ -209,7 +227,9 @@ Giao qua kênh riêng đã xác minh của chính account; không đưa token ch
 Staff, không mật khẩu chung, không gửi qua logs/audit. Không password email/plaintext.
 Reset chỉ theo yêu cầu và kiểm chứng account holder, không cho Owner đọc/đặt mật
 khẩu Staff. Reissue invalidate token cũ; reset completion revoke mọi session account.
-Delivery chưa thành công account vẫn chưa login được. Không public reset-request
+Assisted setup delivery chưa thành công account vẫn chưa login được. Public B2
+reset request và policy hiện hành nằm ở self-service section; reset request không
+thu hồi session. Historical S4.1 không có public reset-request
 endpoint v1; FE hiển thị hướng dẫn liên hệ hỗ trợ. Fragment token trên FE link
 được đọc rồi xóa khỏi URL trước POST, Referrer-Policy:no-referrer.
 
@@ -234,7 +254,7 @@ invalid rồi khách login với mật khẩu đã đặt; không thay password 
 | A04 POST /auth/logout | Không body/query; Origin+CSRF nếu session tồn tại; revoke session hiện tại, clear cookie; 204 không envelope. Session đã hết/hết cookie:204 sau Origin check, không lỗi logout vô hạn. |
 | T01 GET /stores | limit50/max100,cursor; active accessible Store của account; sort name,UUID; no arbitrary Store filter. 200 {items:StoreSummary[]}; pagination theo FE, total_count exact hoặc null. |
 | T02 GET /stores/{store_id} | 200 StoreContext; chỉ membership active; không yêu cầu quyền xem cost để chọn Store; không budget/cost/settings nhạy cảm. |
-| A02 POST /auth/register | DEFERRED đã chốt assisted onboarding; không registered route v1, không auto-owner. |
+| A02 POST /auth/register | IMPLEMENTED B1 account signup, không auto-owner; wire/workflow ở self-service section. |
 
 AuthContext={user:{user_id,email,display_name},session:{expires_at,absolute_expires_at,
 csrf_token},default_store_id:UUID|null,accessible_store_count:int,
@@ -282,10 +302,12 @@ required_with:string[],exposure:"ordinary"|"cost"|"budget"}. Catalogue chỉ act
 đã có contract v1, không checkbox giả cho features chưa review. Active toggle chỉ
 read ở đây; quản lý membership lifecycle không bị lẫn vào PUT grants.
 
-Catalogue `permissions-v3`, technical action mapping, không quyền runtime có thật:
+CURRENT FACT: catalogue `permissions-v3` có43 keys. Technical action mapping không
+chứng minh mọi API/tác vụ tương ứng đã có runtime implementation:
 
 | Nhóm | có thể cấp cho Staff action keys |
 | --- | --- |
+| History | calendar.read,calendar.write,usage.history.read,usage.history.write,purchase.history.read,purchase.history.write |
 | Catalog/Menu | ingredient.read,ingredient.create,menu.read,product.create,recipe.read,recipe.create_version,recipe.manage_effectivity |
 | Kho | inventory.read,inventory.receive,inventory.count.correct; procurement.cost.read riêng |
 | Sales | sales.read,sales.record,sales.correct,sales.merge |
@@ -375,7 +397,8 @@ invitation_id UUID; invitation_version opaque đổi mỗi lần reissue/revoke/
 store_id immutable; target_email canonical như A01; role cố định STAFF;
 permission_catalog_version pin catalogue review; offered_grants unique sorted,
 chỉ Staff-grantable keys. Không role/user_id/membership_id do client đặt. Catalogue
-HISTORICAL INFORMATION: permissions-v2 thêm recipe.manage_effectivity theo Catalog12; current permissions-v3 thêm6 A2 history keys, versions
+HISTORICAL INFORMATION: permissions-v2 thêm recipe.manage_effectivity theo contract Catalog12;
+CURRENT FACT: permissions-v3 thêm sáu History keys đã được Product duyệt; versions
 trước giữ history, không suy invitation dùng latest keys khi accept.
 
 States pending→accepted|revoked|expired. expired là server_now≥expires_at, không
@@ -419,18 +442,16 @@ accept. Không trả account_exists/Stores khác trong Owner create/delivery res
 | Nhãn / method / route | Request và response |
 | --- | --- |
 | N15 POST /stores/{store_id}/staff-invitations | Owner-only, Idempotency-Key; body {email,grants:string[],permission_catalog_version:Version,reason:string}. 201 {invitation:Invitation,delivery:DeliveryReceipt}; không token/account_exists. |
-| N16 GET /stores/{store_id}/staff-invitations | Owner-only; view=invitations default, status pending/accepted/revoked/expired comma-separated, email?,limit50/max100,cursor,sort=-issued_at. 200 {items:Invitation[]}; metadata pagination. view=events cần invitation_id, chỉ limit/cursor, trả {items:InvitationEvent[]}, sort -occurred_at/UUID. |
-| N17 POST /stores/{store_id}/staff-invitations/{invitation_id}/actions | Owner-only, If-Match+Idempotency-Key; union {action:"reissue",grants:string[],permission_catalog_version,reason} hoặc {action:"revoke",reason}. 200 {invitation,delivery:DeliveryReceipt|null,event_id}; reissue pending/expired/revoked được, accepted409. Revoke pending, revoked replay/no-op không duplicate event; expired409. |
-| N18 GET /staff-invitations/{invitation_id} | Authenticated active verified target account, không đòi membership chưa tồn tại; header X-Invitation-Token required. 200 {invitation:InvitationOffer,can_accept:boolean,reason_codes:string[]}, ETag invitation_version. Không body/query, không delivery/audit/Staff list. |
+| N16 GET /stores/{store_id}/staff-invitations | Owner-only; view=invitations default, status pending/accepted/revoked/expired/declined comma-separated, email?,limit50/max100,cursor,sort=-issued_at. 200 {items:Invitation[]}; metadata pagination. view=events cần invitation_id, chỉ limit/cursor, trả {items:InvitationEvent[]}, sort -occurred_at/UUID. |
+| N17 POST /stores/{store_id}/staff-invitations/{invitation_id}/actions | Owner-only, If-Match+Idempotency-Key; union {action:"reissue",grants:string[],permission_catalog_version,reason} hoặc {action:"revoke",reason}. 200 {invitation,delivery:DeliveryReceipt|null,event_id}; reissue pending/expired/revoked được, accepted/declined409. Revoke pending, revoked replay/no-op không duplicate event; expired409. |
+| N18 GET /staff-invitations/{invitation_id} | Authenticated active verified target account, không đòi membership chưa tồn tại; header X-Invitation-Token required. 200 {invitation:InvitationOffer,can_accept:boolean,can_decline:boolean,reason_codes:string[]}, ETag invitation_version. Không body/query, không delivery/audit/Staff list. |
 | N19 POST /staff-invitations/{invitation_id}/accept | Active verified target account; Origin+CSRF+If-Match+Idempotency-Key, body {token:string,accept:true}. 201 AcceptanceReceipt; không grants/Store/role từ payload. |
 
-TECHNICAL DEBT: N19 OpenAPI hiện khai báo accept:boolean, trong khi
-AcceptInvitation.consent chỉ cho true và false bị422. Đây là structural drift,
-không decline capability; accepted lifecycle vẫn pending→accepted/revoked/expired.
-Review schema true-only cần slice sửa DTO/OpenAPI/acceptance; runtime vẫn chưa có
-decline. Contract Đợt 2 đã chốt decline riêng tại [self-service](#auth-self-service),
-chưa sửa DTO/generated OpenAPI. Historical gap review ở
-[TD-BE-002](../008_TechDebt.md#td-be-002--người-nhận-từ-chối-lời-mời).
+CURRENT FACT B4: N19 OpenAPI declares accept with const:true. The strict before
+validator rejects false, numeric1 and string"true" with422. This corrects the
+structural representation of the accepted consent policy; decline remains IN01.
+HISTORICAL INFORMATION: B3 preserved boolean OpenAPI with a true-only validator;
+the historical review is recorded in [TD-BE-002](../008_TechDebt.md).
 
 Owner reason1..1000 nonblank; email1..320 canonical/validated; grants=[] hợp lệ
 nếu Owner chọn không quyền tính năng (Staff sau accept vẫn thấy Store context).
@@ -542,16 +563,18 @@ CURRENT FACT: invitation/delivery-intent/token/receipt/audit storage, applicatio
 ## Self-service account và invitation decline — Đợt 2
 
 ACCEPTED DECISION: thêm signup/email verification/forgot/reset và decline; account
-mới không membership/grants/Owner. DESIGN_READY dưới đây thay phần **tương lai**
-A02 deferred/assisted-only reset, không sửa các CURRENT FACT v1. Assisted provisioning
+mới không membership/grants/Owner. A02/A05/A06 đã IMPLEMENTED B1; A07 và
+self-service RESET qua N7 đã IMPLEMENTED B2. IN01 decline đã IMPLEMENTED B3.
+Policy self-service thay mô tả lịch sử A02 deferred/assisted-only reset; không
+thay semantics assisted provisioning. Assisted provisioning
 và invitation vẫn hoạt động; một account có nhiều Store, verify/reset chỉ account
 scope. Không mở Store creation/subscription/onboarding toàn quán.
 
-CURRENT FACT: `app/api/auth.py` chỉ đăng ký A01/A03/A04/T01/T02/N7;
-`app/api/staff.py` có N15–N19. `AcceptInvitation.accept:StrictBool` có validator
-true-only; `false` trả422, không persisted declined. N16 status chỉ
-pending/accepted/revoked/expired, N17 chỉ reissue/revoke. Không gọi accept:false
-để decline hoặc trình bày structural OpenAPI boolean như capability decline.
+CURRENT FACT: `app/api/auth.py` đăng ký A01/A02/A03/A04/A05/A06/A07/T01/T02/N7;
+`app/api/staff.py` có N15–N19 và IN01. `AcceptInvitation.accept:Literal[True]` có strict before validator
+true-only; `false` trả422. Decline dùng IN01 riêng; N16 hỗ trợ
+pending/accepted/revoked/expired/declined, N17 chỉ reissue/revoke và chặn declined. Không gọi accept:false
+để decline; OpenAPI const:true biểu diễn đúng capability accept.
 
 ### Account identity, verification và delivery
 
@@ -587,7 +610,10 @@ safe error_code và recovery theo durable callback, không provider/raw error/to
 trong public response/logs/audit. Delivery lỗi giữ account/token state, không fake
 verify. Pending được tiếp tục sau restart; failed retry bằng public resend/forgot
 theo rate limit, phát token mới; mail cũ tới muộn không có hiệu lực.
-Không hứa SMTP hoặc delivery đã implement. Payload secret cho delivery lưu private
+CURRENT FACT B1: durable intent, shared local dispatcher và TLS SMTP adapter có
+source implementation; Gmail SMTP smoke đã được người dùng xác nhận nhận trong inbox ngày 2026-10-13.
+Smoke chỉ chứng minh email thử được gửi/nhận; browser signup/verification/reset
+end-to-end chưa kiểm chứng. Payload secret cho delivery lưu private
 encrypted với key từ operational config, không trong application audit. Sau expiry/
 delivery bỏ secret transport copy; giữ digest/provenance, không purge history.
 
@@ -599,17 +625,17 @@ Không gửi thông tin nhạy cảm qua notification inbox để thay email pro
 
 ### Operations và DTO
 
-Các new endpoints đều **DESIGN_READY**, kế thừa envelope/errors/size limits
+A02/A05/A06 **IMPLEMENTED B1**; A07 **IMPLEMENTED B2**; IN01 **IMPLEMENTED B3**. Tất cả kế thừa envelope/errors/size limits
 [quy ước chung](API_CONTRACT.md#dot2-common). Không Store/actor/role trong payload.
 
 | ID/status | Method/path | Request → response data |
 | --- | --- | --- |
-| A02 DESIGN_READY | POST /auth/register | {email:string1..320,display_name:string1..200} → 202 PublicEmailAcceptance. |
-| A05 DESIGN_READY | POST /auth/email-verifications/complete | {token:string1..512 UTF-8 bytes,password:string theo N7} → 200 {next_action:"login",completed_at:Timestamp}; atomic verify proof+set holder credential, không session. |
-| A06 DESIGN_READY | POST /auth/email-verifications/request | {email:string1..320} → 202 PublicEmailAcceptance, resend verification. |
-| A07 DESIGN_READY | POST /auth/password-reset-requests | {email:string1..320} → 202 PublicEmailAcceptance. |
-| N7 IMPLEMENTED route, reset self-service DESIGN_READY | POST /auth/credentials/complete | Giữ {token,password} → 200 {next_action:"login",completed_at}; SETUP/assisted RESET hiện có, self-service RESET dùng cùng consumer. |
-| IN01 DESIGN_READY | POST /staff-invitations/{invitation_id}/decline | {token:string1..512 bytes,reason:string1..1000} → 200 DeclineReceipt; active verified target account, không cần membership. |
+| A02 IMPLEMENTED B1 | POST /auth/register | {email:string1..320,display_name:string1..200} → 202 PublicEmailAcceptance. |
+| A05 IMPLEMENTED B1 | POST /auth/email-verifications/complete | {token:string1..512 UTF-8 bytes,password:string theo N7} → 200 {next_action:"login",completed_at:Timestamp}; atomic verify proof+set holder credential, không session. |
+| A06 IMPLEMENTED B1 | POST /auth/email-verifications/request | {email:string1..320} → 202 PublicEmailAcceptance, resend verification. |
+| A07 IMPLEMENTED B2 | POST /auth/password-reset/request | {email:string1..320} → 202 PublicEmailAcceptance. |
+| N7 IMPLEMENTED setup/assisted RESET và B2 self-service RESET | POST /auth/credentials/complete | Giữ {token,password} → 200 {next_action:"login",completed_at}; SETUP/assisted RESET hiện có, self-service RESET dùng cùng consumer. |
+| IN01 IMPLEMENTED B3 | POST /staff-invitations/{invitation_id}/decline | {token:string1..512 bytes,reason:string1..1000} → 200 DeclineReceipt; active verified target account, không cần membership. |
 
 PublicEmailAcceptance={next_action:"check_email",delivery:{status:"accepted"},
 retry_after_seconds:int>=0}; giá trị retry_after_seconds=60 cho mọi kết quả hợp lệ.
@@ -628,13 +654,18 @@ IN01 yêu cầu cookie+CSRF+If-Match invitation.version+Idempotency-Key như N19
 GET N18/T01/T02/A03 giữ no-store/current authorization. Token từ email đặt trong
 fragment FE, xóa khỏi URL ngay, no-referrer, không query/token trong JSON responses.
 Email templates dùng configured FE URL, không nhận redirect_url từ client.
+Đường dẫn trang FE không bị cố định bởi API contract: BE cấu hình callback theo
+route thực tế đội FE bàn giao. Callback demo hiện tại là /verify-email,
+/setup-password và /reset-password trên https://localhost:5173; đây là cấu hình
+môi trường, không chứng minh các trang FE đã được triển khai. API demo hiện tại
+là https://localhost:8102, Origin được phép https://localhost:5173.
 
 Rate limit kỹ thuật: public email request3/email/15 phút,20/IP/15 phút và cooldown
 60s/email. Account-key limiter sau ngưỡng vẫn trả generic202, không leak account;
 IP/global limiter429 RATE_LIMITED + Retry-After. Verify/credential completion
 10 attempts/IP/15 phút, không lock account vĩnh viễn; invalid token generic400.
 Định dạng email/password không hợp lệ422 INVALID_EMAIL/PASSWORD_POLICY_VIOLATION,
-không tiết lộ tồn tại account. DESIGN_READY: A02/A06/A07 kiểm service-wide email
+không tiết lộ tồn tại account. A02/A06 IMPLEMENTED B1 và A07 IMPLEMENTED B2 kiểm service-wide email
 delivery capability sau Origin/input validation nhưng **trước account lookup**.
 Adapter chưa cấu hình/bị disable hoặc service-wide circuit unavailable →503
 EMAIL_DELIVERY_UNAVAILABLE và Retry-After:60 cho **mọi email**; cùng code/message/
@@ -662,9 +693,13 @@ Ví dụ lỗi service-wide A02/A06/A07 (cùng JSON cho mọi email, không acce
 ```
 
 Client retry sau Retry-After, giữ email/ý định, không tạo polling spinner vô hạn.
-Acceptance tương lai phải kiểm disabled/unavailable mọi account classes cho cùng
+Acceptance invariants phải kiểm disabled/unavailable mọi account classes cho cùng
 503 trước lookup, available202 không claim delivered, outage sau acceptance giữ
-intent và retry an toàn. Đây là sửa thiết kế, chưa có public self-service runtime.
+intent và retry an toàn. CURRENT FACT B1: A02/A06 kiểm capability trước account
+lookup; B2 A07 dùng cùng capability guard và encrypted dispatch loop. A05/N7
+không phụ thuộc SMTP. Acceptance
+source: test_email_verification.py, test_email_verification_schema.py và
+test_self_service_auth.py; kết quả/giới hạn lần chạy thuộc conversation.
 
 Ví dụ request A02, A05, A06/A07, N7, và response data email acceptance:
 
@@ -692,7 +727,7 @@ Ví dụ request A02, A05, A06/A07, N7, và response data email acceptance:
 {"next_action":"login","completed_at":"2026-10-13T02:00:00Z"}
 ```
 
-### Invitation lifecycle extension — DESIGN_READY
+### Invitation lifecycle extension — IMPLEMENTED B3
 
 Add declined terminal cho **invitation identity cũ**, declined_at:Timestamp|null
 vào Invitation/InvitationOffer, can_decline:boolean vào N18; Event kind DECLINED.

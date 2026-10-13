@@ -28,7 +28,8 @@ def test_independent_revision_parent():
     assert migration.depends_on is None
     graph = ScriptDirectory(str(ROOT / 'alembic'))
     assert graph.get_revision(migration.revision).down_revision == migration.down_revision
-    assert migration.revision in graph.get_heads()
+    assert migration.revision in {r.revision for r in graph.walk_revisions(base='base', head='heads')}
+    assert graph.get_heads() == ['0024_integrate_import_auth']
 
 
 def test_upgrade_only_adds_nullable_observation_without_default_or_backfill():

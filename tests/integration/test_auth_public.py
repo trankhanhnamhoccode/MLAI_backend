@@ -169,7 +169,7 @@ def test_origin_cors_payload_validation_and_no_secret_echo(env):
     assert client.get("/api/v1/stores?store_id="+str(uuid4())).status_code == 422
     assert client.get("/api/v1/stores?limit=101").status_code == 422
     assert client.get("/api/v1/auth/me").status_code == 401
-    assert client.post("/api/v1/auth/register", json={}).status_code == 404
+    assert client.post("/api/v1/auth/register", json={}).status_code == 403
 
 
 @pytest.mark.parametrize("remember,advance", [(False, timedelta(minutes=31)), (True, timedelta(days=8))])
@@ -499,7 +499,7 @@ def test_ip_and_completion_rate_limits_survive_new_service_instance(env):
         assert login(env, f"synthetic-{index}@example.test").status_code == 401
     limited = login(env, "fresh-address@example.test")
     assert limited.status_code == 429 and limited.json()["error"]["code"] == "RATE_LIMITED"
-    for _ in range(20):
+    for _ in range(10):
         response = env[5].post("/api/v1/auth/credentials/complete", headers={"Origin": ORIGIN}, json=dict(token="synthetic-invalid", password=PASSWORD))
         assert response.status_code == 400
     replacement = AuthUseCases(env[1], clock=lambda: env[4][0])

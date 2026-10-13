@@ -38,8 +38,18 @@ def upgrade():
 def downgrade():
     if op.get_bind().scalar(sa.text('SELECT EXISTS(SELECT 1 FROM import_history_records)')):
         raise RuntimeError('Retained A2 history prevents downgrade')
-    if op.get_bind().scalar(sa.text('SELECT EXISTS(SELECT 1 FROM membership_grants WHERE permission = ANY(:permissions))'), {'permissions': list(NEW_PERMISSIONS)}):
+    # Integration-only repair of this unreleased revision: a surviving Auth
+    # branch still requires v3. Version heads can be descendants of its v3 step.
+    from alembic.script import ScriptDirectory
+    script = ScriptDirectory.from_config(op.get_context().config)
+    auth_requires_v3 = any(
+        revision.revision == '0023_auth_permissions_v3'
+        for head in op.get_context().get_current_heads()
+        for revision in script.walk_revisions(base='base', head=head)
+    )
+    if not auth_requires_v3 and op.get_bind().scalar(sa.text('SELECT EXISTS(SELECT 1 FROM membership_grants WHERE permission = ANY(:permissions))'), {'permissions': list(NEW_PERMISSIONS)}):
         raise RuntimeError('A2 granted permissions prevent downgrade')
     op.drop_table('import_history_records')
-    op.drop_constraint('ck_membership_grants_catalogue', 'membership_grants', type_='check')
-    op.create_check_constraint('ck_membership_grants_catalogue', 'membership_grants', OLD_CATALOGUE)
+    if not auth_requires_v3:
+        op.drop_constraint('ck_membership_grants_catalogue', 'membership_grants', type_='check')
+        op.create_check_constraint('ck_membership_grants_catalogue', 'membership_grants', OLD_CATALOGUE)

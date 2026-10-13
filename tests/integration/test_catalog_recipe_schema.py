@@ -1,4 +1,5 @@
 """S1.2: real PostgreSQL integrity, deterministic fixtures, fresh-session reads."""
+from sqlalchemy.engine import make_url
 from datetime import date, timedelta
 from decimal import Decimal
 from uuid import uuid4
@@ -51,12 +52,12 @@ def recipe(engine, **changes):
     return store, other, product, ingredient, identifier
 
 
-def test_fresh_schema_and_downgrade_reupgrade(engine):
-    tables = {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints", "forecast_runs", "forecast_predictions", "decision_runs", "forecast_run_inputs", "forecast_execution_metadata", "planning_runs", "auth_accounts", "auth_sessions", "credential_tokens", "membership_grants", "auth_audit", "staff_invitations", "permission_events", "invitation_events", "staff_request_receipts", "invitation_delivery_intents", "auth_rate_limits", "public_read_revisions", "import_batches", "import_blobs", "import_files", "import_profiles", "import_profile_versions", "import_source_contexts", "import_jobs", "import_previews", "import_receipts", "import_audit", "supplier_source_records", "term_source_records", "payable_fee_records", "scope_declaration_records", "inventory_receipt_records", "inventory_thresholds", "stock_request_receipts", "inventory_audit", "recipe_schedule_changes", "recipe_schedule_request_receipts", "forecast_serving_identities", "model_serving_configurations", "planning_budgets", "planning_configuration_events", "planning_configuration_receipts", "planning_configuration_revisions", "planning_defaults", "saved_requirements", "planning_exports"}
+def test_fresh_schema_and_downgrade_reupgrade(engine, test_database_url):
+    tables = {"users", "stores", "store_memberships", "products", "ingredients", "recipes", "recipe_lines", "suppliers", "supplier_terms", "sales_daily", "inventory_lots", "inventory_movements", "business_constraints", "forecast_runs", "forecast_predictions", "decision_runs", "forecast_run_inputs", "forecast_execution_metadata", "planning_runs", "auth_accounts", "auth_sessions", "credential_tokens", "membership_grants", "auth_audit", "staff_invitations", "permission_events", "invitation_events", "staff_request_receipts", "invitation_delivery_intents", "auth_rate_limits", "public_read_revisions", "import_batches", "import_blobs", "import_files", "import_profiles", "import_profile_versions", "import_source_contexts", "import_jobs", "import_previews", "import_receipts", "import_audit", "supplier_source_records", "term_source_records", "payable_fee_records", "scope_declaration_records", "inventory_receipt_records", "inventory_thresholds", "stock_request_receipts", "inventory_audit", "recipe_schedule_changes", "recipe_schedule_request_receipts", "forecast_serving_identities", "model_serving_configurations", "planning_budgets", "planning_configuration_events", "planning_configuration_receipts", "planning_configuration_revisions", "planning_defaults", "saved_requirements", "planning_exports", "email_verification_tokens", "email_verification_deliveries", "password_reset_deliveries", "import_history_records"}
     assert set(inspect(engine).get_table_names()) == tables | {"alembic_version"}
     with engine.connect() as fresh:
-        assert fresh.scalar(text("SELECT current_database()")) == "shelfcash_test"
-        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0017_planning_exports"
+        assert fresh.scalar(text("SELECT current_database()")) == make_url(test_database_url).database
+        assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0024_integrate_import_auth"
         assert fresh.scalar(text("SELECT count(*) FROM pg_constraint WHERE conname = 'ex_recipes_product_period' AND contype = 'x'")) == 1
     command.downgrade(migration_config(), "0002_identity_store")
     assert set(inspect(engine).get_table_names()) == {"alembic_version", "users", "stores", "store_memberships"}

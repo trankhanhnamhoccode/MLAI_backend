@@ -1,5 +1,13 @@
 # Verification policy and coverage
 
+CURRENT FACT — integration profile: use backend-integrate-import-auth's ignored
+.env with shelfcash_integration_test/shelfcash_integration_tester and runtime/integration,
+all workers/provider OFF. Never reuse Auth/Import/demo/development DB URLs. Explicit
+identity/allowlist guards run before reset/migration; tests remain sequential.
+[Integrated gate, exact results and source-WIP adaptations](runbooks/FULL_TEST_FLOW.md#integrated-acceptance)
+own this milestone. Historical shelfcash_test commands below retain their original
+scope and do not select the integration DB without effective TEST_DATABASE_URL.
+
 ACCEPTED DECISION: choose tests for changed behavior and affected callers. After
 small fixes rerun affected/failed tests, not full pytest without new evidence.
 Full suite is for integration milestones or broad shared-contract/schema/
@@ -9,7 +17,9 @@ and the reason for broadening; historical PASS is not a fresh result.
 
 [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) owns runnable setup/DB guards/API/
 manual/browser/restart commands. Integration fixtures run sequentially and own
-only local shelfcash_test, never development/S4.11 demo data. Assert committed
+only the effective, explicitly allowlisted local test DB. The legacy profile owns
+shelfcash_test; this integration owns shelfcash_integration_test with its dedicated
+tester role, never development/S4.11 demo data. Assert committed
 state through a new Session; HTTP2xx is insufficient. API changes require explicit
 approval, source DTO/OpenAPI tests and before/after diff.
 

@@ -1338,7 +1338,7 @@ def test_exact_daily_total_replacement_not_addition(imp):
         )
         s.commit()
     ident = analyzed(imp)
-    approved(imp, ident)
+    approved(imp, ident, context={"missing_stockout": "not_provided"})
     read = previewed(imp, ident)
     row = read["preview"]["rows"][0]
     assert row["before"]["quantity"] == "100" and row["after"]["quantity"] == "105"
@@ -1363,10 +1363,11 @@ def test_missing_zero_duplicates_and_future_rows_are_blockers(imp):
     codes = {b["code"] for r in rows for b in r["blockers"]}
     assert {
         "MISSING_REQUIRED_VALUE",
-        "DUPLICATE_DAILY_OBSERVATION",
+        "SALES_OVERLAP_UNRESOLVED",
         "FUTURE_SALES_NOT_OBSERVED",
     } <= codes
-    assert any(r["after"] and r["after"]["quantity"] == "0" for r in rows)
+    # A1 projects one logical Product/day effect, retaining each raw contribution.
+    assert any(c["quantity"] == "0" for r in rows for c in r["sales_contributions"])
 
 
 def test_cas_idempotency_and_commit_requires_import_review(imp):
