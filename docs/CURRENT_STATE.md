@@ -1,28 +1,73 @@
 # Current state
 
-## CURRENT FACT — mốc phát hành v1.0, 12/10/2026
+CURRENT FACT: isolated local Gmail smoke is SMTP-accepted (one non-token email to
+the configured username); inbox arrival is confirmed by the user. No further
+smoke email is authorized. Auth demo uses its own
+DB/role `shelfcash_auth_demo` at5434 and HTTPS backend8102, with only email delivery
+enabled. HTTPS health/CORS and graceful shutdown were exercised on the empty DB.
+The Gmail demo is retained at its B2 schema; B3/B4 migrations are applied only to the
+guarded Auth acceptance DB. A demo restart using current source requires a separately
+authorized demo upgrade; this slice neither migrates nor resets that database.
+Real credential-email/browser acceptance remains unverified: the inspected FE
+lacks signup/verify/setup/forgot/reset pages/adapters and HTTPS setup. Scope is
+BE only; the BE launcher neither configures nor starts FE. Account workflow email to
+the configured test username is authorized. See
+[Auth local demo instructions](features/AUTH_SESSION.md#local-gmail-smokedemo-profile).
 
-The source composes 53 core HTTP operations plus health (54 operations/50 paths).
-Alembic has one head `0017_planning_exports`; registered metadata has 60 application
+## CURRENT FACT — source B1/B2/B3/B4 trên nền v1.0, 13/10/2026
+
+The source composes 58 core HTTP operations plus health (59 operations/55 paths).
+Alembic has one Auth head `0023_auth_permissions_v3`; registered metadata has 63 application
 tables. This source inventory is not proof of the schema/data in a running DB.
+CURRENT FACT B4: backend/fake-delivery acceptance is COMPLETE / VERIFIED on
+shelfcash_auth_test/shelfcash_auth_tester. Linked HTTP flows cover verified and
+not-yet-registered invitees, exact grants/live revocation, two-Store isolation,
+decline/new identity and password-reset session revocation, with fresh-session reads.
+Catalogue v3/43 descriptors exactly matches Import A2 and retains all37 v2
+descriptors; existing Staff receives no automatic grants. Additive Auth0023 extends
+only the grants CHECK, preserves pending/token/membership state, and refuses unsafe
+downgrade. Pending invitation delivery also recovers in a fresh fake-delivery process.
+Affected Auth/Staff/API/schema regressions passed. No new route: N19 const:true
+corrects its schema while keeping strict consent. The Import0021 CHECK overlap is
+an explicit central BE merge concern, not a head merge performed here. Browser and
+real credential-email workflow acceptance remain pending; targeted results are not
+a new full-suite pass. Coverage and commands belong to the existing runbook.
+CURRENT FACT B3: backend/fake-delivery acceptance is COMPLETE on
+shelfcash_auth_test/shelfcash_auth_tester. Fresh-session state proves decline gives
+no membership/grants/access; targeted tests cover token/proof/authority/expiry/CAS,
+Origin/CSRF, replay/key conflict, rollback/lost acknowledgment, accept/decline/revoke
+races, terminal offer/filter/events and later new-invitation acceptance. Related
+invitation/B1/B2/session and migration/schema regressions passed after fixture and
+route-inventory fixes. This is targeted coverage, not a fresh full-suite pass.
 
 | Area | Implemented source and relevant acceptance coverage |
 | --- | --- |
-| Auth/Store/Staff | Cookie sessions, current Store grants, assisted setup, invitations/consent/audit; auth/staff API and persistence tests |
+| Auth/Store/Staff | B1 signup/verify/resend and B2 forgot/reset with no automatic membership, cookie sessions, current Store grants, assisted setup, invitations/consent/audit; auth/staff API and persistence tests |
 | Catalog/Inventory | Menu, live recipes, inventory/lots/movements, receipt/opening/threshold and future recipe calendar; public-read/stock/schedule tests |
 | Import | Upload quota/seal/ACK, parser, typed descriptors/manual mappings, Owner profile approval, preview/confirm_review, nine-schema atomic commit, completion/history; Import API/unit/persistence tests |
 | Forecast/Planning | Baseline/trained serving, explicit versioned configuration, readiness, durable acceptance/capture/worker, BOM/FEFO/procurement/2/comparison/winner, retained reads; forecast/planning tests |
 | Retained/PDF | Ingredient/detail/reasons, Run/Import history, durable private PDF publication/download with current rights and hash/size proof; inspection/history/export durability tests |
 
 Composition: `app/main.py`; one backend process with independent default-OFF
-Import, Planning and PDF thread flags. No automatic migration/reset/seed, model
+Import, Planning, PDF and account-email delivery thread flags. B1 atomically stores
+unverified account/token/encrypted intent, then dispatches outside transactions using
+the invitation dispatch loop. Completion verifies email and sets holder password
+without issuing a session. B2 reuses RESET credential tokens and N7; requests
+preserve credentials/sessions, completion atomically changes the password and
+revokes all account sessions. B3 adds holder decline through IN01 with atomic terminal/event/receipt and no
+membership/grants/Store access; Store creation remains outside these slices. Backend B1/B2 acceptance is COMPLETE with fake delivery on the isolated
+`shelfcash_auth_test` database using role `shelfcash_auth_tester`. Coverage includes
+fresh-session state, delivery recovery in a new process, token lifecycle, retry,
+concurrency and auth/session/invitation regressions. Real credential-email workflows and browser delivery
+remain unverified; the separate Gmail non-token smoke is inbox-confirmed. Configuration/FE flow:
+[Auth feature](features/AUTH_SESSION.md). No automatic migration/reset/seed, model
 activation, paid provider, order placement or customer selection persistence.
 
 ## CURRENT FACT ? local workflow and acceptance limits
 
 The supported S4.11 environment uses `shelfcash_integration_s411` on port5433,
 owned private runtime and explicit per-Store BASELINE. Automated persistence tests
-own `shelfcash_test`; neither target is the development database.
+own explicitly allowlisted `shelfcash_test`, `shelfcash_import_test` or `shelfcash_auth_test`; neither target is the development database.
 See [the runbook](runbooks/FULL_TEST_FLOW.md).
 
 CURRENT FACT: người dùng đã thử FE thật thành công ít nhất tới mapping lần đầu.
@@ -85,13 +130,14 @@ cannot certify the whole UI. No FE repository changes are part of cleanup.
 
 ## TECHNICAL DEBT / known discrepancies
 
-- [Review TD-BE-001–013](../008_TechDebt.md) giữ tất cả OPEN: Store-wide mapping
+- [Historical review TD-BE-001–013](../008_TechDebt.md): Store-wide mapping
   queue, supplier discovery, detailed preview projections, export discovery và
   Today facts chưa có public capability tương ứng. V01 canonical Ingredient paging,
   M02 auto filter/batch counters và C01 budget absence/create đã có source contract;
   không đồng nghĩa FE integration acceptance hoặc deployment đã xác minh.
-- N19 OpenAPI accept:boolean rộng hơn validator true-only; false trả422, không
-  persisted decline. Authorization contract ghi drift; chưa sửa business lifecycle.
+- CURRENT FACT B4: N19 structural drift is corrected with const:true and strict
+  validation; B3 implements decline separately through IN01. Historical review
+  status outside this worktree does not override these source/test facts.
 - Cold deep retained validation measured about13s for a synthetic50-Product Run;
   this is historical diagnostic evidence, not a capacity/SLA guarantee.
 - Privileged SQL/tracked ORM can bypass some internal application guards. Public

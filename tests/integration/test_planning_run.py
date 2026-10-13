@@ -1,4 +1,5 @@
 """Real guarded shelfcash_test persistence/lifecycle, synthetic business values."""
+from sqlalchemy.engine import make_url
 from tests.planning_process_cases import child_claim
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
@@ -29,7 +30,7 @@ from tests.planning_persistence_cases import case,computation
 @pytest.fixture
 def db(database_settings):
     engine=create_database_engine(database_settings)
-    with engine.connect() as c:assert c.scalar(text('select current_database()'))=='shelfcash_test'
+    with engine.connect() as c:assert c.scalar(text('select current_database()')) == make_url(database_settings.database_url).database
     request,resolution,_,_,_=case()
     actor=uuid4();store=resolution.configuration.store_id
     with Session(engine) as s,s.begin():

@@ -30,6 +30,69 @@ Nếu `.venv` đã có thì dùng lại. Không cần activate; gọi thẳng py
 Store là quán; Owner là chủ quán; Staff là nhân viên. Quyền product không bao gồm
 quyền reset/seed/admin DB. Không dùng dữ liệu khách thật trong profile demo.
 
+
+ACCEPTED DECISION (explicit user authorization): different owned test DBs may run
+in parallel; this extends ADR-007's original sequential test workflow only across
+isolated DBs. No change to persistence or transaction architecture.
+
+CURRENT FACT: parallel Auth/Import worktrees use one existing local PostgreSQL
+instance on 127.0.0.1:5432. Import owns `shelfcash_import_test` (role
+`shelfcash_import_tester`); Auth owns `shelfcash_auth_test` (role
+`shelfcash_auth_tester`). Each ignored `.env` supplies its TEST_DATABASE_URL;
+process environment overrides `.env`, so verify the effective target before writes.
+Dedicated roles have no superuser/CREATEDB/CREATEROLE rights and own only their DB.
+Local pg_hba rules restrict these roles to their corresponding database.
+Tests/reset are sequential within each DB; different owned DBs may run in parallel.
+Legacy `shelfcash_test` remains supported. Stop both clients before setup changes;
+do not start another Compose on port5432 or touch shared/development DBs.
+
+Run from the intended worktree (no credentials in commands):
+```powershell
+.\.venv\Scripts\python.exe -m scripts.dev status --test-database
+.\.venv\Scripts\python.exe -m scripts.dev reset --test-database
+# PowerShell wrapper: .\scripts\reset_db.ps1 -TestDatabase
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_database_config.py
+```
+Status prints actual database/current_user and this tree's migration heads.
+Reset explicitly selects effective TEST_DATABASE_URL, validates the allowlist,
+checks connected identity, and migrates only that tree's head. Bare reset still
+uses DATABASE_URL: use --test-database for worktree test setup. Never print URLs.
+Auth0023 descends from0022/0020/0018/0017; Import0021 descends from0019/0017; do not copy
+branch migrations across trees or merge heads for this setup.
+
+### B4 Auth/Staff acceptance without FE or SMTP
+
+Run in backend-auth-self-service. Confirm status reports only shelfcash_auth_test /
+shelfcash_auth_tester before tests. These fixtures reset that guarded database;
+run one pytest process at a time and leave Gmail demo/Import/development untouched.
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.dev status --test-database
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_auth_combined_acceptance.py tests/integration/test_auth_catalogue_v3_schema.py tests/unit/test_auth_catalogue_v3.py tests/api/test_staff_openapi.py -q
+```
+
+Combined HTTP cases capture fake verification/invitation/reset mail; provision
+synthetic Owner Stores through AssistedProvisioning, not public signup. They verify
+registered/unregistered invitees, exact grants, live changes on existing sessions,
+two-Store isolation, decline/new invitation, receipt replay after grant revocation,
+and reset/session revocation through fresh-session reads. The schema test checks
+additive preservation, downgrade retention and pending delivery in a fresh process.
+Public membership deactivation is not implemented; the test exercises the existing
+persisted membership boundary and does not invent a new endpoint.
+
+| Invariant / existing coverage to reuse | Responsible test module |
+| --- | --- |
+| Signup enumeration, expiry/reissue/single-use, rollback/lost acknowledgment, rates, service-wide unavailable, restart/bounded delivery | test_email_verification.py |
+| RESET lifecycle/purpose/session revocation, rollback/lost acknowledgment, bounded claims and process restart | test_password_reset.py |
+| Session/proof/current grants, assisted setup, cookie/Origin/CSRF and logout | test_auth_public.py; test_self_service_auth.py |
+| Accept/reissue/revoke, no ghost access, pinned catalogue, grant CAS, replay, delivery uncertainty and locking | test_staff_public.py |
+| Decline fences/replay, accept/decline/revoke races, rollback/lost acknowledgment, N16/N18 terminal reads | test_invitation_decline.py |
+
+Select affected nodes when changing these boundaries; do not rerun every module
+just to total cases. Existing evidence is reusable coverage, not a new full-suite
+pass. Browser and real credential-email workflow acceptance remain pending; one
+user-confirmed Gmail smoke inbox delivery proves only that smoke message.
+
 ## 1. Thiết lập demo mới — chỉ thực hiện một lần
 
 Nếu đã có `runtime/s411/private/settings.json` và demo data thì sang mục2.
@@ -231,7 +294,7 @@ Chỉ khi chủ động thiết lập DB development mới: cấu hình root `.e
 `alembic.exe upgrade head` trong venv, rồi `scripts/db_status.ps1`. BE chạy bằng
 python venv `-m uvicorn app.main:app --host 127.0.0.1 --port 8000`. Worker flags
 cần bật rõ nếu thực hiện jobs; `seed_demo` chỉ kiểm schema, không tạo dataset.
-Schema source head0017/60 bảng; health không xác nhận DB. Volume development
+Schema Auth source head0023/63 bảng ứng dụng; health không xác nhận DB. Volume development
 `shelfcash-postgres-data` giữ qua restart; đổi Compose password không đổi role
 password trong volume đã init. POSIX wrappers tồn tại nhưng runtime chưa certified.
 
@@ -242,6 +305,7 @@ password trong volume đã init. POSIX wrappers tồn tại nhưng runtime chưa
 | Port/PID ownership conflict | Dùng process hiện có nếu đúng config; không kill/đổi port tùy tiện |
 | CORS/login không giữ cookie | localhost cả FE/BE, đúng Origin5173, credentials include, không thêm /api/v1 vào base URL |
 | Staff403 | Refresh quyền, Owner cấp đúng grants; không bypass bằng key/membership giả |
+| Signup/resend503 EMAIL_DELIVERY_UNAVAILABLE | Kiểm opt-in/TLS SMTP/key/HTTPS verification-page Origin theo [Auth feature](../features/AUTH_SESSION.md); không chờ email hoặc tạo Store từ response này |
 | Job queued mãi | Kiểm worker flags/private log và native lifespan; không chạy worker thứ hai trên cùng DB |
 | Mapping/preview bị stale | Refresh revision, review lại thay đổi, preview lại; không reuse confirmation cũ |
 | Readiness bị chặn | Xem missing/unknown/ambiguous facts và evidence, không bịa unit/date/MOQ/fee |

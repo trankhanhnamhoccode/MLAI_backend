@@ -70,7 +70,7 @@ class StaffUseCases:
             offered_grants=tuple(row.offered_grants), permission_catalog_version=row.permission_catalog_version,
             version=row.version, status=state, issuer_user_id=row.issuer_user_id, created_at=row.created_at,
             issued_at=row.issued_at, expires_at=row.expires_at, accepted_at=row.accepted_at,
-            revoked_at=row.revoked_at, reason=row.reason, delivery_status=row.delivery_status)
+            revoked_at=row.revoked_at, declined_at=row.declined_at, reason=row.reason, delivery_status=row.delivery_status)
 
     def _page(self, items, token, actor, summary, filters, limit, cursor):
         if type(limit) is not int or not 1 <= limit <= 100:
@@ -266,7 +266,7 @@ class StaffUseCases:
                 if match != row.version:
                     raise AuthError("INVITATION_REVISION_CONFLICT", 412)
                 state = self._invitation(row).status
-                if state == "accepted" or (body.action == "revoke" and state == "expired"):
+                if state in {"accepted", "declined"} or (body.action == "revoke" and state == "expired"):
                     raise AuthError("INVITATION_STATE_CONFLICT", 409)
                 event, delivery = None, None
                 before_version, before_grants = row.version, tuple(row.offered_grants)
@@ -327,7 +327,7 @@ class StaffUseCases:
         if error:
             raise error
 
-    def _recipient(self, s, token, identifier, raw, csrf=None):
+    def _recipient(self, s, token, identifier, raw, csrf=None, *, hide_mismatch=False):
         # Discovery determines lock order only. Validity is rechecked after locks.
         repo, authrepo = StaffRepository(s), AuthRepository(s)
         actor_id = authrepo.session_user(digest(token)) if token else None
@@ -341,6 +341,8 @@ class StaffUseCases:
         if not row or not raw or len(raw.encode()) > 512 or not hmac.compare_digest(row.token_digest, digest(raw)):
             raise AuthError("INVITATION_NOT_FOUND", 404)
         if user.email != row.target_email:
+            if hide_mismatch:
+                raise AuthError("INVITATION_NOT_FOUND", 404)
             raise AuthError("INVITATION_ACCOUNT_MISMATCH")
         account = s.get(AuthAccount, user.id)
         if not account.verified_at or not account.verification_reference or account.verified_email != user.email:
@@ -382,7 +384,8 @@ class StaffUseCases:
                 store=dto.InvitationStore(store_id=store.id, name=store.name), target_email=row.target_email,
                 offered_grants=tuple(row.offered_grants), permission_catalog_version=row.permission_catalog_version,
                 permission_descriptors=descriptors(row.offered_grants), version=row.version, status=state,
-                issued_at=row.issued_at, expires_at=row.expires_at), can_accept=not reasons, reason_codes=tuple(reasons))
+                issued_at=row.issued_at, expires_at=row.expires_at, declined_at=row.declined_at),
+                can_accept=not reasons, can_decline=not reasons, reason_codes=tuple(reasons))
             s.commit()
         return result
 
@@ -403,6 +406,8 @@ class StaffUseCases:
                 state = self._invitation(row).status
                 if state == "accepted":
                     raise AuthError("INVITATION_ALREADY_ACCEPTED", 409)
+                if state == "declined":
+                    raise AuthError("INVITATION_STATE_CONFLICT", 409)
                 if state in {"expired", "revoked"}:
                     raise AuthError("INVITATION_"+state.upper(), 410)
                 if match != row.version:
@@ -435,3 +440,46 @@ class StaffUseCases:
                 replay = False
             s.commit()
         return result, replay
+
+    def decline(self, token, identifier, body, key, match, csrf, ip, request_id):
+        body = dto.DeclineInvitation.model_validate(body.model_dump())
+        kd, fp, match = self._request(body, key, match, cas=True)
+        self._recipient_rate(token, ip)
+        op = f"POST /staff-invitations/{identifier}/decline"
+        with auth_session(self.engine) as s:
+            actor, user, store, row = self._recipient(s, token, identifier, body.token,
+                csrf or "", hide_mismatch=True)
+            # Preserve accept's first-execution state/CAS error order. A retained
+            # receipt bypasses terminal/unused checks, never current authority.
+            retained = StaffRepository(s).receipt(actor.user_id, store.id, op, kd)
+            if retained is None:
+                state = self._invitation(row).status
+                if state in {"expired", "revoked"}:
+                    raise AuthError("INVITATION_"+state.upper(), 410)
+                if state != "pending":
+                    raise AuthError("INVITATION_STATE_CONFLICT", 409)
+                if match != row.version:
+                    raise AuthError("INVITATION_REVISION_CONFLICT", 412)
+            # Current proof/authority precede both first execution and receipt replay.
+            if not self._authority(s, row):
+                raise AuthError("INVITATION_AUTHORITY_CHANGED", 409)
+            self._catalog(row.permission_catalog_version)
+            dto.GrantsRequest(grants=tuple(row.offered_grants), reason=row.reason)
+            old = self._old(s, actor, store.id, op, kd, fp)
+            if old:
+                result = dto.DeclineReceipt.model_validate(old)
+            else:
+                if StaffRepository(s).membership_for_email(store.id, user.email):
+                    raise AuthError("MEMBERSHIP_ALREADY_EXISTS", 409)
+                before = row.version
+                row.version, row.status, row.declined_at, row.reason = (
+                    str(uuid4()), "declined", self.clock(), body.reason)
+                event = invitation_event(s, row, actor=user.id, now=row.declined_at,
+                    kind="DECLINED", before_version=before, before_grants=tuple(row.offered_grants),
+                    recipient=user.id, reason=body.reason)
+                StaffRepository(s).cancel_delivery(row.id)
+                result = dto.DeclineReceipt(invitation_id=row.id, store_id=store.id,
+                    declined_at=row.declined_at, version=row.version, event_id=event.event_id)
+                self._save(s, actor, store.id, op, kd, fp, result)
+            s.commit()
+        return result

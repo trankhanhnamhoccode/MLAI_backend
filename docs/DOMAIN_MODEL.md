@@ -6,6 +6,16 @@ A User may belong to several Stores; Owner/Staff authority is scoped to current
 active membership and granular grants. Operator support is an audited identity,
 not another Store role. Stored membership alone never authorizes data exposure.
 [Authorization](AUTHORIZATION_CONTRACT_VI.md) owns permissions/consent/approval.
+CURRENT FACT B1: signup creates an unverified credential-unset account, without
+Store/membership/grants. Mailbox proof and holder password become usable atomically
+at verification; a verified email does not constitute invitation acceptance.
+CURRENT FACT B2: active verified holders can request account-scoped RESET without
+changing password or sessions. N7 consumes it, advances credential revision and
+revokes every account session atomically; Store membership/grants stay unchanged.
+CURRENT FACT B3: a verified active invitation holder may decline a valid pending
+offer without membership. Declined is terminal for that identity, consumes mutation
+capability and retains an atomic event/receipt; it gives no Store access or grants.
+A new invitation identity can subsequently be created and accepted independently.
 
 Products/Ingredients/Suppliers belong to a Store. Names are not unique; nullable
 SKUs are case-sensitive Store-scoped keys. Product.selling_unit is the sales/

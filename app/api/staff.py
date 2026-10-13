@@ -78,7 +78,7 @@ async def invitations(store_id: UUID, request: Request, view: Literal["invitatio
     elif invitation_id is not None:
         raise AuthError("INVALID_FILTER", 422)
     statuses = tuple(status.split(",")) if status is not None else ()
-    if statuses and (len(set(statuses)) != len(statuses) or not set(statuses) <= {"pending","accepted","revoked","expired"}):
+    if statuses and (len(set(statuses)) != len(statuses) or not set(statuses) <= {"pending","accepted","revoked","expired","declined"}):
         raise AuthError("INVALID_FILTER", 422)
     if email is not None:
         try:
@@ -119,4 +119,16 @@ def accept(invitation_id: UUID, body: dto.AcceptInvitation, request: Request, re
     data, replay = staff.accept(token, invitation_id, body, key, match, csrf,
         request.client.host if request.client else "unknown", request.state.request_id)
     response.status_code = 200 if replay else 201
+    return envelope(request, data)
+
+
+@router.post("/staff-invitations/{invitation_id}/decline", operation_id="IN01",
+    response_model=Envelope[dto.DeclineReceipt], responses={**ERRORS,200:{"headers":ETAG}},
+    dependencies=[Depends(mutations)])
+def decline(invitation_id: UUID, body: dto.DeclineInvitation, request: Request, response: Response,
+    key: Key=None, match: Match=None, csrf: CSRF=None, staff=Depends(service), token=Depends(session_token)):
+    strict_query(request)
+    data = staff.decline(token, invitation_id, body, key, match, csrf,
+        request.client.host if request.client else "unknown", request.state.request_id)
+    response.headers["ETag"] = '"'+data.version+'"'
     return envelope(request, data)

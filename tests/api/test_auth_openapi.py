@@ -14,10 +14,11 @@ def test_s41_openapi_exact_methods_envelopes_headers_and_cookie():
         "/api/v1/stores": ("get", "T01", "200"),
         "/api/v1/stores/{store_id}": ("get", "T02", "200"),
     }
+    b1_paths = {"/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"}
     staff_paths = {"/api/v1/stores/{store_id}/memberships", "/api/v1/stores/{store_id}/memberships/{membership_id}/permissions",
         "/api/v1/stores/{store_id}/permission-events", "/api/v1/stores/{store_id}/staff-invitations",
         "/api/v1/stores/{store_id}/staff-invitations/{invitation_id}/actions", "/api/v1/staff-invitations/{invitation_id}",
-        "/api/v1/staff-invitations/{invitation_id}/accept"}
+        "/api/v1/staff-invitations/{invitation_id}/accept", "/api/v1/staff-invitations/{invitation_id}/decline"}
     import_paths = {'/api/v1/stores/{store_id}/imports', '/api/v1/imports/{import_id}/files', '/api/v1/imports/{import_id}/mappings/{mapping_id}', '/api/v1/stores/{store_id}/mapping-profiles/{profile_id}/decisions', '/api/v1/imports/{import_id}/sheets/{sheet_id}/field-options', '/api/v1/jobs/{job_id}', '/api/v1/imports/{import_id}/mapping-summary', '/api/v1/imports/{import_id}/mappings', '/api/v1/imports/{import_id}', '/api/v1/imports/{import_id}/analyze', '/api/v1/imports/{import_id}/process'}
     import_paths |= {'/api/v1/stores/{store_id}/procurement-plans','/api/v1/procurement-plans/{plan_id}'}
     import_paths |= {'/api/v1/procurement-plans/{plan_id}/ingredients',
@@ -31,7 +32,7 @@ def test_s41_openapi_exact_methods_envelopes_headers_and_cookie():
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule',
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes',
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes/{change_id}',
-        *['/api/v1/stores/{store_id}/products', '/api/v1/stores/{store_id}/products/{product_id}', '/api/v1/stores/{store_id}/inventory', '/api/v1/stores/{store_id}/inventory/{ingredient_id}', '/api/v1/stores/{store_id}/inventory/{ingredient_id}/lots', '/api/v1/stores/{store_id}/inventory/{ingredient_id}/movements']}
+        *b1_paths, *['/api/v1/stores/{store_id}/products', '/api/v1/stores/{store_id}/products/{product_id}', '/api/v1/stores/{store_id}/inventory', '/api/v1/stores/{store_id}/inventory/{ingredient_id}', '/api/v1/stores/{store_id}/inventory/{ingredient_id}/lots', '/api/v1/stores/{store_id}/inventory/{ingredient_id}/movements']}
     for path, (method, identity, status) in expected.items():
         assert set(schema["paths"][path]) == {method}
         operation = schema["paths"][path][method]

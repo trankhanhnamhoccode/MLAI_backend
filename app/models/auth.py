@@ -11,13 +11,17 @@ from app.domain.permissions import PERMISSIONS
 
 class AuthAccount(Base):
     __tablename__ = "auth_accounts"
-    __table_args__ = (CheckConstraint("credential_revision >= 1", name="ck_auth_accounts_revision"),)
+    __table_args__ = (
+        CheckConstraint("credential_revision >= 1", name="ck_auth_accounts_revision"),
+        CheckConstraint("proof_revision >= 1 AND ((verified_at IS NULL AND verified_email IS NULL AND verification_reference IS NULL AND NOT credential_ready) OR (verified_at IS NOT NULL AND verified_email IS NOT NULL AND verification_reference IS NOT NULL))", name="ck_auth_accounts_proof"),
+    )
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), primary_key=True)
     credential_revision: Mapped[int] = mapped_column(Integer, nullable=False)
     credential_ready: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    verified_email: Mapped[str] = mapped_column(String(320), nullable=False)
-    verification_reference: Mapped[str] = mapped_column(String(1000), nullable=False)
+    proof_revision: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    verified_email: Mapped[str | None] = mapped_column(String(320))
+    verification_reference: Mapped[str | None] = mapped_column(String(1000))
 
 
 class AuthSession(Base):

@@ -1,4 +1,4 @@
-"""TLS SMTP delivery to the already verified account holder only."""
+"""TLS SMTP link formatter; application resolves the workflow's target address."""
 from email.message import EmailMessage
 import smtplib
 import ssl

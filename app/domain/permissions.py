@@ -1,7 +1,7 @@
 """Canonical contract v1 catalogue. No implicit grants or runtime adapters."""
 from dataclasses import dataclass
 
-CATALOG_VERSION = "permissions-v2"
+CATALOG_VERSION = "permissions-v3"
 
 
 @dataclass(frozen=True)
@@ -16,6 +16,7 @@ class PermissionDescriptor:
 
 
 _GROUPS = (
+    ("History", "calendar.read calendar.write usage.history.read usage.history.write purchase.history.read purchase.history.write"),
     ("Catalog/Menu", "ingredient.read ingredient.create menu.read product.create recipe.read recipe.create_version recipe.manage_effectivity"),
     ("Kho", "inventory.read inventory.receive inventory.count.correct procurement.cost.read"),
     ("Sales", "sales.read sales.record sales.correct sales.merge"),
@@ -25,6 +26,9 @@ _GROUPS = (
     ("Budget", "budget.read budget.update"),
 )
 _LABELS = {
+    "calendar.read": "Xem lịch nghiệp vụ", "calendar.write": "Ghi lịch nghiệp vụ",
+    "usage.history.read": "Xem lịch sử sử dụng", "usage.history.write": "Ghi lịch sử sử dụng",
+    "purchase.history.read": "Xem lịch sử mua", "purchase.history.write": "Ghi lịch sử mua",
     "ingredient.read": "Xem nguyên liệu", "ingredient.create": "Tạo nguyên liệu",
     "menu.read": "Xem menu và giá bán", "product.create": "Tạo món",
     "recipe.read": "Xem công thức", "recipe.create_version": "Tạo phiên bản công thức",

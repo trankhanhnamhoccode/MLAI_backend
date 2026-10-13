@@ -10,7 +10,7 @@ from app.infrastructure.database.base import Base
 class StaffInvitation(Base):
     __tablename__ = "staff_invitations"
     __table_args__ = (
-        CheckConstraint("status IN ('pending','accepted','revoked','expired')", name="ck_staff_invitations_status"),
+        CheckConstraint("status IN ('pending','accepted','revoked','expired','declined')", name="ck_staff_invitations_status"),
         CheckConstraint("jsonb_typeof(offered_grants) = 'array'", name="ck_staff_invitations_grants"),
         Index("uq_staff_invitations_pending", "store_id", "target_email", unique=True, postgresql_where=text("status = 'pending'")),
     )
@@ -28,6 +28,7 @@ class StaffInvitation(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    declined_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reason: Mapped[str] = mapped_column(String(1000), nullable=False)
     delivery_status: Mapped[str] = mapped_column(String(16), nullable=False)
 

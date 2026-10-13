@@ -169,7 +169,7 @@ def test_origin_cors_payload_validation_and_no_secret_echo(env):
     assert client.get("/api/v1/stores?store_id="+str(uuid4())).status_code == 422
     assert client.get("/api/v1/stores?limit=101").status_code == 422
     assert client.get("/api/v1/auth/me").status_code == 401
-    assert client.post("/api/v1/auth/register", json={}).status_code == 404
+    assert client.post("/api/v1/auth/register", json={}).status_code == 403
 
 
 @pytest.mark.parametrize("remember,advance", [(False, timedelta(minutes=31)), (True, timedelta(days=8))])
@@ -499,7 +499,7 @@ def test_ip_and_completion_rate_limits_survive_new_service_instance(env):
         assert login(env, f"synthetic-{index}@example.test").status_code == 401
     limited = login(env, "fresh-address@example.test")
     assert limited.status_code == 429 and limited.json()["error"]["code"] == "RATE_LIMITED"
-    for _ in range(20):
+    for _ in range(10):
         response = env[5].post("/api/v1/auth/credentials/complete", headers={"Origin": ORIGIN}, json=dict(token="synthetic-invalid", password=PASSWORD))
         assert response.status_code == 400
     replacement = AuthUseCases(env[1], clock=lambda: env[4][0])
@@ -533,7 +533,7 @@ def test_grant_revoke_waits_for_authorization_fence_and_next_request_denies(env)
         deadline, waiting = monotonic()+5, False
         while monotonic() < deadline:
             with env[1].connect() as monitor:
-                waiting = bool(monitor.scalar(text("SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = 'shelfcash_test' AND application_name = 's41-revoke-test' AND wait_event_type = 'Lock')")))
+                waiting = bool(monitor.scalar(text("SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND application_name = 's41-revoke-test' AND wait_event_type = 'Lock')")))
             if waiting:
                 break
             sleep(.02)

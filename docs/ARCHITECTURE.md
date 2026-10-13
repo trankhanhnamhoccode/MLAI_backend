@@ -33,13 +33,26 @@ service locator, implicit global mutable business state or default async domain.
 
 `app/main.py` wires Auth/Staff, public reads/stock/calendar, Import, configuration/
 readiness, forecast serving, durable public Planning, history and private PDF.
-Each Import/Planning/PDF worker flag independently opts into one bounded local
+Each Import/Planning/PDF/account-email flag independently opts into one bounded local
 lifespan thread in the same backend process. Default flags are OFF.
 
 ## CURRENT FACT ? computation and transaction boundaries
 
 - Public reads/mutations use current User/session/Store/membership/grant fences.
   Trusted internal S1/S2/S3 commands are separate entrypoints, not permission APIs.
+- B1 signup accepts account/token/encrypted email intent atomically. A shared local
+  dispatcher serves invitation and verification queues; SMTP runs outside Sessions.
+  User/account/token fences serialize verification with proof/credential changes;
+  successful verification gives no session or Store authority. B2 reuses this
+  dispatch loop with RESET credential tokens and a separate FK-bound encrypted
+  intent table; N7 owns atomic password transition/session revocation.
+- B3 reuses the Staff recipient User/session/Store/invitation fences and existing
+  append-only invitation-event/idempotency storage for a decline terminal. It
+  does not write membership/grants or dispatch new email; sorted locks serialize
+  it with accept/revoke, and current proof/issuer authority precede receipt replay.
+- B4 synchronizes the Product-approved permissions-v3 catalogue and persisted
+  grants CHECK. It adds no domain workflow or automatic Staff grants; HTTP/PG
+  acceptance links the existing Auth/Staff boundaries with fake delivery.
 - Import stores original blobs/profiles/preview/audit in PostgreSQL; reviewed
   mappings execute deterministically. Canonical batch commit and its receipt/
   audit are atomic. Upload, mapping approval and preview are not canonical writes.

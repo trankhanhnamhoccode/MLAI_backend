@@ -19,6 +19,8 @@ from app.models.forecast_run_input import ForecastRunInput
 from app.models.forecast_execution_metadata import ForecastExecutionMetadata
 from app.models.planning_run import PlanningRun
 from app.models.auth import AuthAccount, AuthSession, CredentialToken, MembershipGrant, AuthAudit, AuthRateLimit
+from app.models.email_verification import EmailVerificationToken, EmailVerificationDelivery
+from app.models.password_reset import PasswordResetDelivery
 from app.models.staff import StaffInvitation, StaffRequestReceipt, InvitationEventRecord, PermissionEventRecord, InvitationDeliveryIntent
 from app.models.read_revision import PublicReadRevision
 from app.models.import_staging import (ImportBatch, ImportFile, ImportBlob, ImportProfile, ImportProfileVersion,

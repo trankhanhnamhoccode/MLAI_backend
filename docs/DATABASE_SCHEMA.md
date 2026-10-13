@@ -1,6 +1,48 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
-## CURRENT FACT — S4.10 migration0017
+## CURRENT FACT — Auth B2/B3/B4 schema
+
+Auth source head `0023_auth_permissions_v3` has parent `0022_invitation_decline`,
+then `0020_password_reset_delivery` (parent0018); Import owns0019/0021 separately.
+No historical revisions are edited or heads merged. Metadata has63 application
+tables,64 with Alembic; this inventory does not mean the Gmail demo was migrated.
+
+B2 adds password_reset_deliveries: encrypted durable transport per canonical
+RESET credential token, email/proof binding, claim/lease/attempts/expiry/outcome.
+It reuses credential_tokens and stores no plaintext token. N7 atomically changes
+the credential and revokes sessions. Downgrade refuses RESET delivery evidence.
+
+B3 adds nullable staff_invitations.declined_at and extends the status CHECK with
+declined. Existing tokens/versions/grants and the pending-only unique index stay
+intact. Terminal state consumes mutation capability while retaining digest proof
+for holder offer reads/replay. Transition, DECLINED event and existing idempotency
+receipt commit atomically, with no membership/grants write or new table.
+Downgrade refuses retained declined state/event/receipt evidence.
+
+B4 extends only ck_membership_grants_catalogue to the43 approved v3 keys.
+No grants, memberships, invitation versions or token bindings are backfilled.
+Downgrade to0022 refuses retained grants using the six new keys. Import0021 also
+extends this same CHECK alongside its history tables: central BE integration must
+reconcile the overlapping catalogue constraint and migration graph explicitly;
+this Auth worktree does not merge heads or import those domain tables.
+
+## HISTORICAL INFORMATION — B1 migration0018 inventory
+
+`0018_email_verification` has parent `0017_planning_exports`, coordinated for the
+Auth worktree. Two account-scoped tables: email_verification_tokens (digest-only
+EMAIL_VERIFY purpose, email/proof/credential binding, expiry/consumption) and
+email_verification_deliveries (one encrypted transport intent/token, claim/lease,
+attempts/outcome/safe error code). No invitation/Store/membership/grants backfill.
+AuthAccount proof fields may be NULL together for an unverified credential-unset
+account; a CHECK enforces that state. Existing verified proofs stay unchanged;
+proof_revision defaults to1 and application proof writers advance it. Current
+metadata has62 application tables,63 with Alembic; one head0018. Synthetic tests
+compare ORM/Alembic metadata and fresh committed state. Development DB is untouched.
+Downgrade refuses retained verification tokens/delivery or unverified accounts;
+operational evidence is not disposable test output. Configuration/flow belongs to
+[Auth feature](features/AUTH_SESSION.md), product policy to [Authorization](AUTHORIZATION_CONTRACT_VI.md#auth-self-service).
+
+## HISTORICAL INFORMATION — S4.10 migration0017
 
 One additive purpose-specific planning_exports aggregate: export/job/Run/Store/
 actor UUID identity, canonical accepted request/original receipt, key/request

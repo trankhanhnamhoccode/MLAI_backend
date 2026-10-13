@@ -2,6 +2,13 @@
 
 ## CURRENT FACT
 
+Local Gmail preparation: one SMTP smoke message accepted, inbox user-confirmed;
+isolated Auth demo DB and HTTPS8102 lifecycle checked. BE-only scope: FE HTTPS/API configuration,
+self-service pages/adapters and real workflow-email/browser acceptance remain
+open with the FE team. No further smoke email; account workflow email to the configured
+test username is authorized. Operational steps belong
+to [Auth feature](features/AUTH_SESSION.md#local-gmail-smokedemo-profile).
+
 | Scope | State | Boundary |
 | --- | --- | --- |
 | S0/S1 | Implemented | PostgreSQL/local tooling, operational models/repositories and typed internal application paths |
@@ -9,6 +16,10 @@
 | S3.1-S3.6.4 | Implemented internal paths | Validated decision/BOM/serving/FEFO, procurement/1 and /2, comparison/selector, operational capture/setup and durable PlanningRun |
 | S4.1-S4.10 | Implemented backend scope | Auth/Staff, public Menu/Inventory, Import/commit, calendar/config/readiness, public Planning, retained history/PDF |
 | S4.11 | PARTIAL | Local integration/API coverage exists; whole mapping browser continuation NOT_RUN; PDF/planning-history UI incomplete |
+| B1 | COMPLETE backend/fake-delivery acceptance | A02/A05/A06 signup/email verify/resend; isolated Auth DB, fresh-session persistence, token/retry/concurrency/transport coverage and auth/session/invitation regressions; no Store/grants/session from signup or verify; real workflow email/browser unverified |
+| B2 | COMPLETE backend/fake-delivery acceptance | A07 public RESET request via encrypted durable intent, existing N7 completion/session revocation; token/retry/concurrency/recovery/transport and schema coverage, B1/auth/session/invitation regressions; no Store/grants changes; isolated Auth DB; real workflow email/browser unverified |
+| B3 | COMPLETE backend/fake-delivery acceptance | IN01 explicit holder decline; terminal fields/capabilities/events/filter, immutable receipt/current-authority replay; fences/rollback/uncertain commit/races/new-identity acceptance and related auth/schema regressions; no membership/grants/access/email; Auth-only test DB; browser UI unverified |
+| B4 | COMPLETE backend/fake-delivery VERIFIED | Linked HTTP/PostgreSQL signup/invitation/grants/multi-Store/decline/reset flows and fresh reads; Product-approved v3/43 catalogue sync, additive Auth0023 CHECK and restart recovery; affected auth/Staff/API/schema regressions; no full-suite claim; browser/real workflow email pending; central BE must reconcile Import0021 CHECK overlap |
 
 These are functional checkpoints, not a claim each is a Git commit or every route
 passed a fresh full suite. Current runtime/debt is in [CURRENT_STATE](CURRENT_STATE.md).
@@ -99,10 +110,18 @@ và forecast compatibility còn PROPOSAL; không mở rộng forecast trong core
   do not activate trained artifacts merely because training code exists.
 - Owner lifecycle/reactivation, one-time approval allowlist/TTL and sensitive audit
   retention need separate reviewed scope. Stored membership alone is not authority.
+- Notification, permission requests and public Store onboarding remain separate
+  slices. B4 does not authorize starting them. Email delivery is
+  opt-in and requires the configured HTTPS verification page and private encryption
+  key; [Auth feature](features/AUTH_SESSION.md) owns configuration and FE flow.
 - AI wording/copilot, deterministic hypothetical what-if, customer selection and
   draft/actual purchase orders are not silently enabled by current Planning/PDF.
 - Stock/correction/purchase history extensions, unsupported supplier conditions,
   safety-stock semantics and latency improvements require explicit slices.
+
+CURRENT FACT: isolated worktree test DB setup is supported; effective target, dedicated
+roles and reset commands are documented in [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md).
+Parallel tests require different owned DBs; each DB remains sequential.
 
 ## Acceptance policy ? ACCEPTED DECISION
 

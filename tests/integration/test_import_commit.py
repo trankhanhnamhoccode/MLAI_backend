@@ -395,18 +395,18 @@ from datetime import datetime
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from app.config import Settings
-from scripts.dev import validate_reset_target
+from scripts.dev import TEST_DATABASE_NAMES, validate_reset_target
 from app.infrastructure.database.engine import create_database_engine
 from app.application.use_cases.auth import AuthUseCases
 from app.application.use_cases.import_staging import ImportStaging
 cfg = Settings(_env_file=None, openrouter_api_key=None, import_worker_enabled=False)
 url = make_url(cfg.database_url)
-assert cfg.environment == 'test' and url.database == 'shelfcash_test'
+assert cfg.environment == 'test' and url.database in TEST_DATABASE_NAMES
 assert url.host in {'localhost','127.0.0.1','::1'} and not url.query
 validate_reset_target(cfg)
 engine = create_database_engine(cfg)
 with engine.connect() as c:
-    assert c.scalar(text('SELECT current_database()')) == 'shelfcash_test'
+    assert c.scalar(text('SELECT current_database()')) == url.database
 class CrashBeforeWrites(ImportStaging):
     def _execute_commit(self, job_id, claim):
         os._exit(86)

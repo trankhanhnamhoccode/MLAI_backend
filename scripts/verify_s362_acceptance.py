@@ -11,17 +11,17 @@ sys.path.insert(0, str(ROOT))
 def main():
     from sqlalchemy.engine import make_url
     from app.config import Settings
-    from scripts.dev import inspect_database, validate_reset_target
+    from scripts.dev import TEST_DATABASE_NAMES, inspect_database, validate_reset_target
 
     url = make_url(Settings().test_database_url)
-    if url.database != 'shelfcash_test' or url.host not in {'localhost', '127.0.0.1', '::1'}:
+    if url.database not in TEST_DATABASE_NAMES or url.host not in {'localhost', '127.0.0.1', '::1'}:
         raise ValueError('Refusing nonlocal or non-disposable database target')
     settings = Settings(_env_file=None, environment='test',
                         database_url=url.render_as_string(hide_password=False))
     validate_reset_target(settings)
     # inspect_database uses a fresh READ ONLY transaction and releases its engine.
     state = inspect_database(settings)
-    if state['database'] != 'shelfcash_test' or not state['at_head']:
+    if state['database'] != url.database or not state['at_head']:
         raise ValueError('Test database identity/schema verification failed')
     if any(count for name, count in state['tables'].items() if name != 'alembic_version'):
         raise ValueError('Test fixture cleanup left business rows')

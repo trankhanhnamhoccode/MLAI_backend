@@ -1,4 +1,5 @@
 """S4.8 schema roundtrip and retained evidence; exact guarded local test DB."""
+from sqlalchemy.engine import make_url
 import pytest
 from alembic import command
 from alembic.autogenerate import compare_metadata
@@ -12,20 +13,20 @@ from app.models.planning_configuration import SavedRequirement,PlanningConfigura
 from scripts.dev import migration_config
 from tests.integration.test_planning_configuration_public import env,config,save
 
-TABLES={'planning_exports','planning_defaults','planning_budgets','saved_requirements','planning_configuration_events','planning_configuration_revisions','planning_configuration_receipts','model_serving_configurations','forecast_serving_identities'}
+TABLES={'email_verification_tokens','email_verification_deliveries', 'password_reset_deliveries','planning_exports','planning_defaults','planning_budgets','saved_requirements','planning_configuration_events','planning_configuration_revisions','planning_configuration_receipts','model_serving_configurations','forecast_serving_identities'}
 
 
 def test_clean_roundtrip_exact_schema_metadata(database_settings):
     engine=create_database_engine(database_settings)
     try:
-        with engine.connect() as c:assert c.scalar(text('SELECT current_database()'))=='shelfcash_test'
+        with engine.connect() as c:assert c.scalar(text('SELECT current_database()')) == make_url(database_settings.database_url).database
         before=set(inspect(engine).get_table_names())
         command.downgrade(migration_config(),'0015_recipe_schedule')
         assert set(inspect(engine).get_table_names())==before-TABLES
         command.upgrade(migration_config(),'head')
         assert set(inspect(engine).get_table_names())==before
         with engine.connect() as c:
-            assert c.scalar(text('SELECT version_num FROM alembic_version'))=='0017_planning_exports'
+            assert c.scalar(text('SELECT version_num FROM alembic_version'))=='0023_auth_permissions_v3'
             assert compare_metadata(MigrationContext.configure(c,opts={'compare_server_default':True}),Base.metadata)==[]
     finally:engine.dispose()
 
@@ -44,5 +45,5 @@ def test_creator_and_audit_immutable_and_evidence_refuses_downgrade(config):
         s.rollback()
     with pytest.raises(DBAPIError):command.downgrade(migration_config(),'0015_recipe_schedule')
     with Session(c[0][1]) as s:
-        assert s.scalar(text('SELECT version_num FROM alembic_version'))=='0017_planning_exports'
+        assert s.scalar(text('SELECT version_num FROM alembic_version'))=='0023_auth_permissions_v3'
         assert 'tampered' not in s.scalar(select(PlanningConfigurationEvent)).record_json

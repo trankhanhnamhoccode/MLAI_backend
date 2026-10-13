@@ -26,6 +26,10 @@ class AuthRepository:
     def account(self, user_id: UUID) -> AuthAccount | None:
         return self.session.get(AuthAccount, user_id)
 
+    def lock_account(self, user_id: UUID) -> AuthAccount | None:
+        return self.session.scalar(select(AuthAccount).where(AuthAccount.user_id == user_id)
+            .with_for_update().execution_options(populate_existing=True))
+
     def session_user(self, digest):
         return self.session.scalar(select(AuthSession.user_id).where(AuthSession.digest == digest))
 

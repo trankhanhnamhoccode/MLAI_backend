@@ -44,6 +44,40 @@ class CredentialCompletion(DTO):
         return value
 
 
+class PublicEmailRequest(DTO):
+    email: StrictStr = Field(min_length=1, max_length=320)
+
+    @field_validator("email")
+    @classmethod
+    def email_shape(cls, value: str) -> str:
+        return canonical_email(value)
+
+
+class RegistrationRequest(PublicEmailRequest):
+    display_name: StrictStr = Field(min_length=1, max_length=200)
+
+    @field_validator("display_name")
+    @classmethod
+    def nonblank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("VALIDATION_ERROR")
+        return value
+
+
+class AcceptedDelivery(DTO):
+    status: Literal["accepted"] = "accepted"
+
+
+class PublicEmailAcceptance(DTO):
+    next_action: Literal["check_email"] = "check_email"
+    delivery: AcceptedDelivery = AcceptedDelivery()
+    retry_after_seconds: Literal[60] = 60
+
+
+class EmailDeliveryErrorDetails(DTO):
+    reason_codes: tuple[Literal["EMAIL_DELIVERY_UNAVAILABLE"], ...] = ("EMAIL_DELIVERY_UNAVAILABLE",)
+
+
 class UserSummary(DTO):
     user_id: UUID
     email: str
@@ -86,7 +120,7 @@ class StoreContext(StoreSummary):
     server_now: datetime
     as_of_date: date
     membership: MembershipContext
-    permission_catalog_version: Literal["permissions-v2"] = "permissions-v2"
+    permission_catalog_version: Literal["permissions-v3"] = "permissions-v3"
 
 
 class StoreList(DTO):
@@ -139,6 +173,18 @@ class ErrorEnvelope(DTO):
     data: None
     meta: Meta
     error: ErrorInfo
+
+
+class PublicEmailErrorInfo(DTO):
+    code: str
+    message: str
+    details: ErrorDetails | EmailDeliveryErrorDetails
+
+
+class PublicEmailErrorEnvelope(DTO):
+    data: None
+    meta: Meta
+    error: PublicEmailErrorInfo
 
 
 class AuthError(Exception):

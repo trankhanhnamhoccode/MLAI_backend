@@ -11,7 +11,7 @@ from app.config import Settings
 from app.infrastructure.database.engine import create_database_engine
 from app.application.use_cases.auth import AuthUseCases
 from app.application.use_cases.import_staging import ImportStaging
-from scripts.dev import validate_reset_target
+from scripts.dev import TEST_DATABASE_NAMES, validate_reset_target
 from sqlalchemy.engine import make_url
 from sqlalchemy import text
 
@@ -27,11 +27,11 @@ def main():
     base = Settings()
     url = make_url(base.test_database_url)
     if (
-        url.database != "shelfcash_test"
+        url.database not in TEST_DATABASE_NAMES
         or url.host not in {"localhost", "127.0.0.1", "::1"}
         or url.query
     ):
-        parser.error("only exact local shelfcash_test supported")
+        parser.error("only allowlisted local test databases supported")
     config = base.model_copy(
         update={
             "database_url": url.render_as_string(hide_password=False),
@@ -42,7 +42,7 @@ def main():
     engine = create_database_engine(config)
     try:
         with engine.connect() as c:
-            if c.scalar(text("SELECT current_database()")) != "shelfcash_test":
+            if c.scalar(text("SELECT current_database()")) != url.database:
                 raise RuntimeError("database guard mismatch")
         service = ImportStaging(AuthUseCases(engine), config)
         recovered = service.recover() if args.recover else ()
