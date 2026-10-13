@@ -33,6 +33,7 @@ class ParsedFile:
     format: Literal["csv", "xlsx"]
     sheets: tuple[ParsedSheet, ...]
     warnings: tuple[str, ...] = ()
+    excel_date_system: Literal["1900", "1904"] | None = None
 
 
 class SourceParseError(ValueError):

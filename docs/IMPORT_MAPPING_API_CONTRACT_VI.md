@@ -64,8 +64,9 @@ không cần chứa UUID. Binding hiện resolve token trong cột; không gener
 Store/actor/file IDs/profile versions và semantic/parsing context không phải cột
 business bắt buộc. Không tự điền date/unit/currency/zero từ context chưa hỗ trợ.
 Chi tiết đủ fields, validation, writer và gaps:
-[inventory](features/IMPORT_SCHEMA_INVENTORY.md). Opening/actual receipt theo N6
-chờ S4.6; purchase-history Import OPEN. Không map các nhóm này sang inventory_count.
+[inventory](features/IMPORT_SCHEMA_INVENTORY.md). Opening_stock Excel đã nối writer N6;
+actual receipt Excel và purchase-history Import chưa triển khai. Không map các nhóm
+này sang inventory_count.
 
 ## ĐÃ CHỐT — bổ sung classification/review theo task ngày10/10/2026
 
@@ -110,9 +111,12 @@ CURRENT FACT: Qwen adapter cố định `qwen/qwen3.5-9b`, chỉ proposals index
 targets. Cần `IMPORT_LLM_SUGGESTIONS_ENABLED=true` và key; mặc định OFF. Approved
 exact unique Store profile reuse không gọi provider; rule trước, phần chưa gán mới
 có thể dùng model. Không thay type/target rules đã xác định hoặc duplicate ambiguity;
-không gửi sample cells của target rules đã biết. Off/no-key/timeout/invalid output
-giữ manual flow. Tối đa hai sheet/batch, hai transport attempts/sheet; không live
-provider/cost/quality claim. Trước khi bật thật phải duyệt model/dữ liệu/calls/chi phí.
+không gửi sample cells của target rules đã biết. Semantic ambiguity chưa có target
+được đề xuất candidates/reason; duplicate ambiguity vẫn cần người xử lý.
+Headers/cells/README là dữ liệu không tin cậy, không phải chỉ dẫn. Off/no-key/timeout/invalid output
+giữ manual flow. Tối đa hai sheet/batch, hai transport attempts/sheet. Một live
+gateway probe POS demo đã validate đề xuất SLX; không phải guarantee chất lượng
+model hoặc browser end-to-end. Live calls chỉ trong approved model/data/calls/cost scope.
 Không dùng filename làm source-system authority, không rows rewrite/entities/
 conversions/catalog gửi LLM. Chi tiết ở [feature](features/IMPORT_STAGING_PREVIEW.md).
 
@@ -127,11 +131,27 @@ miễn điều kiện này. Staff có thể đề xuất theo grants nhưng N5 v
 CURRENT FACT: M01/I04 SheetInfo thêm header_row/preamble_rows/preamble_samples;
 samples tối đa1000 ký tự/dòng để review cùng source file, raw đầy đủ giữ staging.
 M02 MappingIssue thêm
-suggestion_reason/candidate_targets, giữ indices/status/routes. Header detection
+suggestion_reason/candidate_targets/model_reason và field_category A/B/C/D,
+suggested_ignore; giữ indices/status/routes. A là supported alias/target, B là
+semantic/date ambiguity, C là chưa có target/workflow, D là informational README
+hint. D chỉ đề xuất ignore, không tạo IGNORE; ignore cần M04 và reason.
+SheetInfo có excel_date_system và safe suggestion_diagnostic (status, model,
+prompt/schema version, input digest, attempts, usage nếu provider trả về,
+HTTP status/failure stage/code; không key/raw response/sample). Header detection
 chỉ tìm trong tám dòng đầu, không vượt qua dòng đa cột để bỏ dữ liệu. Raw preamble
 giữ riêng trong staging; dữ liệu không bị sửa. Scope đã khai báo có active profile
 nhưng structure hoặc semantics không khớp sẽ báo PROFILE_STRUCTURE_OR_SEMANTICS_DRIFT;
-không bind sai version hoặc sửa profile cũ. Numeric Excel serial chưa được convert.
+không bind sai version hoặc sửa profile cũ. Header reorder là drift: indexed mapping
+không tự remap. Signature XLSX có workbook epoch; profile XLSX duyệt trước khi có
+epoch cần review lại một lần, không sửa retained version.
+
+ACCEPTED DECISION trong slice này: M04 source_context.date_format=EXCEL_SERIAL là
+khai báo rõ để tạo normalization theo workbook epoch 1900/1904 rồi Owner duyệt.
+Chỉ áp dụng date fields sales_date/effective_from/effective_to; không biến ngày
+kiểm kê thành observed_at hay tạo receipt timestamp. CURRENT FACT: giữ numeric raw,
+preview dùng exact deterministic conversion với provenance; serial60 của1900,
+fractional time, giá trị ngoài phạm vi bị block. CSV thiếu workbook epoch bị
+EXCEL_DATE_SYSTEM_REQUIRED. Styles không tự quyết định semantics.
 
 <a id="flow"></a>
 ## 2. Policy đã chốt và luồng khách dùng
@@ -236,8 +256,11 @@ can_commit; không đổi progress green thành permission grant.
 <a id="mapping"></a>
 ## 5. Store profile, reuse và Owner approval
 
-Profile scope={store_id,source_system_key,report_type,schema_version}; schema
-fingerprint có sheet/table role, headers/column types và layout declaration.
+ACCEPTED DECISION: Profile scope={store_id,source_system_key,report_type,schema_version};
+schema fingerprint có sheet/table role, headers/column types và layout declaration.
+Signature chỉ chứng minh cấu trúc, không chứng minh source/semantics, entity identity
+hoặc hai contributions bán hàng độc lập. Nhiều profile **khác nguồn** cùng signature
+là hợp lệ; không chọn arbitrary/first/latest/confidence khi context chưa phân biệt.
 
 ĐÃ CHỐT bổ sung S4.4: source context thuộc proposal của profile cho một cấu trúc
 nguồn/sheet, không phải tên file hoặc identity từng upload. `source_system_key`
@@ -252,18 +275,108 @@ SOURCE_IDENTITY_CONFLICT; không tự chọn. Context change tạo proposal revi
 invalidate analysis bindings/preview usability của batch; không sửa immutable
 approved version hoặc retained preview cũ.
 Matching theo approved rules, không filename hoặc fuzzy name identity. Nếu nhiều
-profiles matches với semantics khác nhau thì PROFILE_MATCH_AMBIGUOUS, cần Owner,
-không chọn confidence cao nhất. New draft profile không active vì first import.
+profiles matches với semantics khác nhau thì PROFILE_MATCH_AMBIGUOUS, cần người
+có mapping.propose làm rõ; sửa reusable semantics vẫn cần Owner approval. New draft
+profile không active vì first import. Không bắt popup xác nhận nguồn mỗi lần: dùng
+lựa chọn người dùng hoặc workflow/declaration đã xác lập cho **nguồn batch này** có
+provenance; profile cũ đã approved không tự chứng minh file mới cùng nguồn.
+
+<a id="source-reuse"></a>
+### 5.1. Source declaration → candidate → compatibility → row validation
+
+| Bước/operation hiện hữu | Fields/FE và giới hạn authority |
+| --- | --- |
+| I01/I02/I03 | I01 chỉ data_date, I02 chỉ bytes/client_file_ids, I03 chỉ seal file set/ACK; chưa có source picker field ở ba request này. filename/client_file_id/file hash không source identity. |
+| M01/M02 | M02 issue_type=source_context có mapping_id; M01 sheets/profile_proposals/approved_contexts/approved_profiles và binding_refs cho FE biết declared scope/pins. include_profile_details=true để xem full spec; M02 review_only=false đọc đủ issues, không chỉ page samples. |
+| M04 PATCH /imports/{import_id}/mappings/{mapping_id} | Resolve đúng source_context issue bằng SourceContext: source_system_key, report_type, evidence_reference, semantic/parsing declarations theo DTO. Có mapping.propose/current sensitive reads; Origin/CSRF/If-Match mapping_revision/Idempotency-Key như mục9.2. Không source endpoint mới. |
+| N5 | Owner approves exact reusable spec/source provenance; không xác nhận mọi file/report cùng nguồn, không command correction/commit. |
+| I05/I04/I06 | Preview dùng declared context+approved pin, row identity/domain validation và captured read-set. I04 preview/current usability cho FE review; I06 chỉ báo durable commit sau completion, không profile approval success. |
+
+Ví dụ request M04 SourceContext (không chứng nhận tự động từ header):
+
+```json
+{"resolution":{"kind":"source_context","source_system_key":"POS-A","report_type":"sales-daily","evidence_reference":"staff-declaration:POS-A:daily-export","sales_semantics":"disjoint_contribution","inventory_semantics":null,"decimal_locale":"dot","date_format":"ISO"}}
+```
+
+ACCEPTED DECISION: candidate lookup chỉ tìm tập approved active/nonretired trong
+Store + declared source_system_key + report_type + compatible schema/version.
+Compatibility kiểm selected schema, indexed headers/layout/epoch, declared parsing/
+unit/basis/sales semantics và profile drift; unique candidate chưa đủ nếu semantic
+declaration conflict. Sau compatible reuse vẫn đọc rows mới, resolve references/
+reservations, validate current facts, quyền và business correction. Không reuse
+commercial values, recipe facts, source report key hoặc confirmation batch cũ.
+Rules/Qwen có thể đề xuất context, không attest source. Chỉ signature/context
+absent/untrusted/ambiguous phải làm rõ trước bind; không search/fuzzy engine mới.
+
+CURRENT FACT — source-before-reuse trong WIP lát3: I03 không có attested source
+context nên analyze chỉ discover/candidate, giữ source_context unresolved kể cả
+chỉ một profile cùng signature. Metadata columns chỉ phát hiện conflict, không
+positive source proof; không copy source evidence của version cũ vào file mới.
+Signature cũng không còn là điều kiện skip provider; semantic proposals vẫn opt-in,
+không attest nguồn. M04 SourceContext lưu declaration/evidence/actor của batch,
+lọc Store+source_system_key+report_type+signature, kiểm compatible declarations/
+recipe/supplier basis rồi bind unique active/nonretired version. Nhiều candidate
+không phân biệt được trả PROFILE_MATCH_AMBIGUOUS; source chưa rõ không bind/preview.
+_bindings kiểm source declaration + actor + exact scope trên pin khi preview/confirm/
+commit/worker; pending artifact chỉ có signature không source proof trả
+SOURCE_CONTEXT_REQUIRED. Summary báo đúng source blocker, không giả retirement.
+
+CURRENT FACT trên routes hiện có, không operation/DTO field mới: FE dùng M02
+source_context issue rồi M04 khai báo/chọn nguồn, không N5 lại nếu spec unchanged.
+Classification/column review compatible trước source declaration không tự làm
+đổi spec; genuine draft edits giữ approval path. Context đã resolve trong batch
+không bị hỏi lại để preview/commit. I03 vẫn chưa nhận established context/provenance
+trước analyze; không suy nguồn từ filename, signature hoặc client trust flag.
+
+Trước preview/commit FE hiển thị scope nguồn/report + evidence do ai khai báo,
+profile_id/version/content_digest/reuse-or-new, schema và semantics/basis đang áp,
+source/report contribution identity, unresolved blockers/warnings và planned effects.
+Nguồn lấy từ M01 details/SheetInfo, M02 source_context resolution và I04 preview
+provenance; không suy source từ filename hay màu auto_mapped. Context/source declaration
+đổi làm mapping/proposal revision đổi, remove affected binding, confirmation unusable;
+preview cũ retained nhưng không commit được. Phải compatible lookup/reapproval khi
+spec đổi rồi preview/confirm mới; source/dependency đổi ở commit trả PREVIEW_STALE.
+
+### 5.2. Interpretation, entity binding và batch facts
+
+ACCEPTED DECISION: tên món mới không tự chứng minh structural profile sai. Tách
+reusable interpretation (columns/grain/conversion), Store entity binding, authorized
+creation và current batch facts/effects. Canonical Product/Ingredient/Supplier UUID
+đã biết và đúng Store có thể đi qua profile cũ mà không sửa spec; rows vẫn validate.
+Thay quantity/price/date/source report fact ở rows không tự là mapping-spec change.
+Không tự match spelling, merge gần tên hoặc tạo entity từ tên chưa xác lập.
+
+CURRENT FACT: ProfileSpec **hiện chứa** identity_rules/aliases/entity_proposals và
+reserved_canonical_id/metadata/approval_revision. Sau M04 source selection, approved
+spec được pin và row identities được resolve lại. Canonical UUID đúng Store hoặc
+alias/reservation đã approved dùng spec cũ; unknown token giữ identity issue và
+chặn preview, không tự fork draft chỉ vì file có entity mới. M04 identity_binding/
+new_entity_proposal thêm alias/binding/reservation vào spec sẽ fork draft, giữ
+base_spec và source declaration/evidence của batch hiện tại; proposal/lifecycle/
+mapping revisions mới cần N5 approval. Đây là spec change thực theo storage hiện
+hành, không kết luận columns cũ sai. Đổi target UUID/alias/source_business_key/
+metadata/unit/reservation hoặc interpretation/conversion/PROFILE_CONSTANT cũng
+thực sự đổi spec. IMPORT_VALUE chỉ batch facts, không reusable constant.
+
+Không có batch-only identity approval store thứ hai hoặc separate creation command
+trong clarification này. New entity cần explicit metadata/Store binding/declarations,
+Owner-reviewed reservation như mục6.1 và current product.create/ingredient.create/
+supplier.create cùng domain write rights. N5 không grant quyền cho Staff, không
+approve overwrite metadata existing hoặc facts tất cả rows; người nhập phải tiếp
+tục preview/resolutions/confirm_review/commit. Row validation/dependencies quyết
+batch effect; mapping queue không giải business data conflict thay người nhập.
 
 ProfileSpec REQUIRED:
 
 ```text
 scope: {source_system_key, report_type, schema_version}
 structure: {sheet_roles[], header_rules[], schema_signature}
-field_bindings[]: {source_selector, target_field, requiredness, ignored:boolean}
-identity_rules[]: {entity:product|ingredient|lot, key_fields[], bindings[]}
-entity_proposals[]: {proposal_id, entity:product|ingredient, source_business_key,
-  reserved_canonical_id, metadata, field_provenance, approval_revision}
+field_bindings[]: {source_column_index, source_header, target_field, requiredness,
+  ignored:boolean, evidence_reference, origin, confidence}
+identity_rules[]: {entity:product|ingredient|supplier|lot, source_token,
+  canonical_id, reference_state:existing|reserved}
+entity_proposals[]: {proposal_id, entity:product|ingredient|supplier, source_business_key,
+  reserved_canonical_id, metadata, evidence_reference, approval_revision}
 aliases[]: {entity, source_token, canonical_id}
 normalizations[]: {rule_id, kind, fields[], parameters, provenance}
 conversions[]: {rule_id, from_unit, to_unit, factor:{numerator,denominator}, provenance}
@@ -300,11 +413,33 @@ decision_id,decided_at,audit_id}`; rejected/retired active_version nullable đú
 Approval không rebind batch khác hoặc commit input đang pending. Staff403 dù có
 mapping.propose; không approval token/key tự bypass role. Owner scope đúng Store.
 
-Already approved matching version không reapproval. Replaced active version sau
-preview không làm batch pin chuyển latest: nếu pinned version chỉ superseded, còn
-được phép sử dụng thì commit đúng pin; **explicit retired** blocks new preview/
-uncommitted commit409 MAPPING_VERSION_RETIRED. Owner retirement là chủ ý thôi dùng;
-không silently migrate batch. Completed import/audit giữ version cũ dù retired.
+<a id="profile-retirement"></a>
+### 5.3. Retirement — giữ command và guards hiện hành
+
+ACCEPTED DECISION / CURRENT FACT: already approved compatible version không reapproval.
+Replaced active pointer không tự chuyển pin latest: version cũ **chỉ superseded nhưng
+chưa retired** vẫn được pending batch dùng đúng pin, nếu mọi rights/read-set/checks
+còn hợp lệ. N5 retire active_version đặt chính ImportProfileVersion.retired=true và
+active pointer=null. Fresh lookup chỉ active/nonretired; pending batch pin version
+đó cũng bị chặn, không grandfather. _bindings rechecks exact version/digest/Store
+và retired ở preview, confirm_review, _commit_preview trước acceptance **và worker
+canonical commit**. Trả409 MAPPING_VERSION_RETIRED; I04 giữ preview retained nhưng
+stale/confirmation_usable=false và bỏ confirm_review/commit khỏi allowed_actions.
+
+Case: B đã preview/confirm V1; retire V1 trước canonical commit → B không được ghi,
+phải dùng approved version còn hợp lệ rồi re-preview/confirm. Nếu chỉ activate V2,
+V1 không retired → B không tự chuyển V2, vẫn có thể commit V1 theo guards. B đã
+completed V1 → không undo dữ liệu/audit hoặc rewrite historical receipt vì retire.
+Retire và canonical commit phải serialize qua current profile lifecycle/transaction
+fence: trường hợp chạy race cần acceptance targeted, không tuyên bố đã kiểm race
+chỉ từ code read. Durable already-committed replay không thực hiện lại mutation;
+current authorization luôn kiểm trước receipt, không dùng replay để ghi lại V1.
+
+Khái niệm A “ngừng dùng cho imports mới” khác B “profile sai, chặn pending”. Command
+retire hiện hành có tác động chặn **cả fresh reuse và pending dùng version retired**;
+không phải new-only switch. Không thêm revoke action, grace period hoặc hai commands
+từ phân biệt khái niệm. Policy/guard hiện tại rõ nên không cần hỏi lại để sửa docs;
+nếu sản phẩm muốn A-only phải được duyệt ở scope khác, không gọi technical choice.
 
 <a id="schemas"></a>
 ## 6. Phạm vi dữ liệu hỗ trợ trong design
@@ -316,7 +451,7 @@ parser/domain-specific boundary/auth/audit/atomic commit đã wired, hiện chư
 | --- | --- | --- |
 | sales daily_total/disjoint_contribution | Existing Product hoặc new Product đã Owner duyệt tạo trong cùng batch, Store-local date, nonnegative quantity trong selling_unit, source/report identity; policy mục 8. | Retail price/revenue/stockout/promotion từ FE không có SalesDaily fields; không tự ghi Product.price hoặc invented history. |
 | inventory lot_stock_count | Existing Ingredient + uniquely identified received lot, target on_hand≥0 exact base_unit; COUNT_CORRECTION reason/observation/version. | Không receipt/inbound, tự tạo lot từ batch_id, warehouse table hoặc source total→lot allocation. |
-| recipes | Existing hoặc new Product/Ingredient được Owner duyệt tạo trong cùng batch, explicit version/from/to/yield/loss, unique lines exact base_unit, yield unit=Product.selling_unit. | Không auto-close overlap/retroedit; nhóm entire recipe atomically, không one-row-one-version. |
+| recipes | Existing hoặc new Product/Ingredient được Owner duyệt tạo trong cùng batch, explicit quantity_basis/version/from/to/yield/loss, unique lines exact base_unit, yield unit=Product.selling_unit. | Không auto-close overlap/retroedit; nhóm entire recipe atomically, không one-row-one-version. |
 | new Product/Ingredient identity | **ĐÃ CHỐT**, mục 6.1: Owner duyệt explicit identity/đơn vị/metadata; preview creation; executor có quyền tạo catalog toàn phạm vi. | Không tạo từ tên lạ hoặc mapping confidence, không silently map gần giống; không tạo lot hoặc đổi đơn vị entity cũ. |
 | supplier / supplier_terms / payable_fees / scope_declarations | HỖ TRỢ v1 theo mục13; explicit identity/Owner review, typed engine-supported semantics. | Không generic supplier Excel hoặc tự suy fees0; unsupported business rules vẫn blocker. |
 | other schemas | UNSUPPORTED_SCHEMA | Không PO/payment/budget/default/saved/forecast/model/Run writes. |
@@ -347,6 +482,71 @@ CSV virtual sheet; empty sheet báo warning EMPTY_SHEET_SKIPPED và không có c
 rows, all empty blocked NO_DATA_ROWS. Diagnostics physical worksheet row_number
 one-based gồm header rows; CSV logical record_number one-based tách physical line
 start/end để quoted multiline không sai vị trí.
+
+### Recipe source basis và canonical whole-yield
+
+ACCEPTED DECISION: `recipes.quantity_basis` là required source semantics, nhận đúng
+`PER_SERVING` hoặc `WHOLE_BATCH`. Field không tạo cột canonical mới. Cột nguồn đã map
+hoặc M04 `shared_value` đều được phép; PROFILE_CONSTANT dành cho semantics ổn định
+được Owner duyệt, IMPORT_VALUE dành cho facts của lần nhập. Header “lượng 1 sp” chỉ
+proposal. Không có default basis/yield/loss/unit. Profile lịch sử thiếu basis vẫn
+đọc được, nhưng không auto-reuse; `RECIPE_BASIS_REVIEW_REQUIRED` yêu cầu review lại.
+
+CURRENT FACT: sau lexical/date normalization và validation, ingredient conversion
+theo exact declared factor; PER_SERVING nhân lượng với yield đúng một lần để tạo
+`RecipeValue.lines[].quantity` toàn mẻ. WHOLE_BATCH giữ lượng toàn mẻ. Loss là ratio
+`0 <= process_loss_rate < 1`, giữ nguyên ở DB; BOM dùng
+`demand * canonical_quantity / yield / (1-loss)`. Không chuyển `20%` thành `0.2`,
+không rounding/epsilon. Yield/line >0; loss=0 hợp lệ khi explicit. Missing/null/zero
+không thay thế nhau. Exponent không được conversion làm thành lexical hợp lệ.
+
+Yield unit phải bằng Product.selling_unit; output conversion chưa hỗ trợ,
+`UNIT_MISMATCH` chặn. Recipe conversion giữa known mass mg/g/kg và volume ml/l bị
+`INCOMPATIBLE_RECIPE_UNIT_CONVERSION`; không có density authority. Supported Recipe
+ingredient conversions: mg/g/kg trong mass; ml/mL/l/L trong volume; same exact label
+với factor1. Factor phải bằng tỷ lệ vật lý exact, sai → `INVALID_RECIPE_UNIT_FACTOR`.
+Label khác/packaging/count-label conversion → `UNSUPPORTED_RECIPE_UNIT_CONVERSION`;
+chưa có typed packaging/density authority. Mọi conversion vẫn cần Owner review,
+khớp Ingredient.base_unit. Không đổi đơn
+vị canonical hay dated BOM policy.
+
+I04 preview và I06 canonical references giữ `line_provenance[].quantity_basis` và
+`provenance[field].source_value` (raw lexical hoặc scalar declaration trước transforms),
+cùng source index/declaration ID/rule IDs. `after` giữ resolved IDs, canonical quantity/
+unit, yield, loss, version/from/to; shared declarations và evidence đọc ở M01 full spec
+và sheets.import_values. Loss provenance không biến thành quantity đã áp loss.
+Field mới nullable/default-null chỉ để đọc retained evidence cũ; không suy basis cũ.
+
+Ví dụ M04 trên bất kỳ mapping_id của sheet Recipe, trước N5 Owner approval:
+
+```json
+{"resolution":{"kind":"shared_value","target_field":"recipes.quantity_basis","scope":"IMPORT_VALUE","value":"PER_SERVING","evidence_reference":"Owner xác nhận mỗi 100g là định lượng của một đơn vị bán"}}
+```
+
+Khai báo tương tự yield="10", yield_unit="cup", loss="0" (PROFILE_CONSTANT hoặc
+IMPORT_VALUE); version=1, effective_from="2026-01-01", effective_to=null chỉ IMPORT_VALUE
+nếu không lấy từ cột. Sau N5, I05 preview → confirm_review → commit dùng existing
+CAS/rights/read-set/idempotency/atomic batch. Staff không approve_activate. Preview
+đã normalize được commit từ retained typed values, không chạy lại transform/provider.
+
+100g/serving × yield10 và 1000g/WHOLE_BATCH yield10 cùng lưu line1000g, demand40 →
+4000g. Batch1000ml/yield10/loss0.2 → 5000ml. Readiness chỉ hết recipe gap khi version
+bao phủ đủ horizon và lines hợp lệ; sales/kho/supplier/config blockers vẫn độc lập.
+
+Profile reuse kiểm tra từng dòng: column basis/unit mới được đọc lại, sai enum/unit
+bị chặn. IMPORT_VALUE luôn yêu cầu declaration mới; PROFILE_CONSTANT đổi cần proposal
+mới và Owner approval. Header reorder/header-row/epoch change là structure drift,
+không tự remap. Nếu nguồn thay nghĩa mà không đổi cột/giá trị và không khai báo,
+backend không thể quan sát thay đổi; dùng IMPORT_VALUE cho basis chưa ổn định.
+
+CURRENT FACT về lịch sử: RecipeUseCases.create_in_transaction không đặt lower bound
+effective_from theo ngày hiện tại. Import có thể tạo initial historical recipe từ ngày
+nguồn explicit nếu chưa conflict; same version/content NO_OP, khác content hoặc overlap
+bị chặn. Không thay ngày nguồn bằng hôm nay. Legacy RecipeVersionService cũng không
+cấm initial historical date; nó chặn ngày <= một existing.effective_from và tự đóng
+kỳ trước đang mở (ZIP `app/services/recipe_service.py:55–66`). Bản mới không auto-close;
+không port policy đó. N21 calendar tương lai là workflow
+riêng, không ghép import để đóng/sửa kỳ hay đổi historical Run.
 
 ### 6.1. Tạo Product/Ingredient mới qua import — ĐÃ CHỐT
 
@@ -444,6 +644,27 @@ request chứa explicit sales resolutions mới, frozen commit plan = preview + 
 đã validate; receipt giữ exact effective plan digest, không cập nhật preview ngầm.
 DB expected before/source-membership phải vẫn đúng; resolution không bypass race.
 
+ACCEPTED DECISION: Owner profile approval chỉ chấp nhận reusable interpretation/
+bindings trong exact spec. Không xác nhận row hợp lệ, business overwrite/correction,
+grant Staff write hoặc commit. Người nhập tiếp tục I05 preview → I04 kiểm tác động
++ resolutions theo schema → confirm_review → commit; required rights/facts/version
+kiểm lại ở commit. M04 mapping/source/context/PROFILE_CONSTANT changes invalidate
+bindings và preview/confirmation; IMPORT_VALUE/declaration change cũng phải revalidate
+batch facts; canonical dependency đổi làm read-set stale. Không sửa retained preview
+ngầm hoặc coi allowed_actions lúc đọc là authority lâu dài.
+
+Batch có bất kỳ blocker thì chặn **atomic toàn scope**; không bỏ row lỗi tự động.
+Explicit IGNORE khác null/empty/unresolved. Whole sheet chọn qua M04 sheet_type với
+ignored=true,sheet_type=null,acknowledgment=true,reason, đúng own-uncommitted-Staff
+policy CA-020; đây là batch scope choice, không retire approved profile. Optional/
+source-only column dùng M04 ignored_optional_field với evidence_reference; required
+target không được né bằng ignore, missing required vẫn block ở build_spec/preview.
+Nếu ignore là thay reusable field_bindings thì fork spec/Owner approval; không
+auto-approved từ suggestion_ignore/README/Qwen. Mọi scope/field/declaration thay đổi
+đòi preview/confirmation mới và đánh giá lại completeness **phạm vi còn lại**;
+không xóa row thực tế khỏi kho hoặc gọi ignored scope là toàn Store CONFIRMED.
+I03 ACK rejected upload chỉ seal source set, không giải business row blocker.
+
 Atomic transaction bao gồm canonical writes + contribution revision/audit + inventory
 movements/balance + commit receipt/provenance/status. Fresh-session verified receipt
 trước durable completion. Preview0 write và all UNCHANGED commit kết thúc
@@ -498,8 +719,46 @@ Không tự tạo independent baseline hoặc đếm overlapping source thêm l�
 Daily-total covering toàn ngày và partial contributions không được cộng chung
 trừ khi covered-set đã declared/reconciled; conflict phải giữ. Same key/new bytes
 update không làm mất old versions. Canonical daily identity Store/Product/date giữ
-unique; full correction/source provenance writer mới là IMPLEMENTATION BACKLOG,
-không gọi writer insert-only hiện tại rồi coi đã support replace/merge.
+unique. CURRENT FACT: import_sales_sources.classify_sales và write_plan sales branch
+đã classify/replace/merge, append ImportSalesSource revisions và audit trong transaction;
+không còn mô tả cả correction writer là insert-only backlog. Source-before-reuse và
+multi-file/grain acceptance vẫn là gap riêng, không vì writer có mặt mà đủ proof nguồn.
+
+Evidence tối thiểu: source_system_key/report_type có declaration/provenance của
+nguồn hiện tại; business_report_key ổn định định danh đúng **phần report/contribution**,
+Product/date/selling unit/grain đã xác lập; biết phiên bản incoming thay phần nào.
+Để merge phải khai coverage/phần độc lập, reason/evidence reference đủ trace và
+commit SalesResolution={row_id,action:"confirm_disjoint_merge",report_business_key,
+evidence_reference,disjoint_assertion:true,reason}. Đây là human assertion có audit, không algorithm
+chứng minh disjoint từ source_system_key khác nhau. Correction cùng phần dùng
+action:"replace_daily_total",disjoint_assertion:false; report key trùng đúng preview.
+Nếu overlap không xác định, retained sources không còn giải thích canonical base,
+hoặc chuyển daily_total↔contribution chưa reconcile thì SALES_OVERLAP_UNRESOLVED.
+Không đổi namespace/source key để biến bản sửa thành phần mới hoặc lách conflict.
+
+| Trường hợp có evidence hợp lệ | Preview/effect đã chốt |
+| --- | --- |
+| Cùng phần report100 sửa105 | Replace phần100 bằng105; canonical105, không205. |
+| A100 và B105 thực sự độc lập, explicit confirm | Canonical205, MERGE_DISJOINT_SALES. |
+| B đã105 sửa110, A vẫn100 | Replace source contribution B, canonical210; giữ A và source revisions cũ. |
+| B110 upload lại giống | UNCHANGED/NO_OP, canonical210; không thêm contribution. |
+| Source key khác nhưng covered-set overlap/unknown | Blocker; source namespace không disjoint proof. |
+| File mới vắng phần/record cũ | Không delete, không zero record vắng, không replace-all. |
+
+CURRENT FACT: trong một batch preview `seen` sales theo (Product,date) chặn duplicate
+daily observation, kể cả hai report khai contribution riêng; không có merge nhiều
+file cùng ngày trong một commit chỉ bằng order upload. Guard duplicate này có thể
+chỉ đánh dấu row gặp sau, nhưng bất kỳ blocker vẫn chặn toàn batch. DESIGN_READY
+handoff không hứa một resolution mới để chọn winner/cộng rows: dùng nguồn/scope
+report hợp lệ hoặc các imports riêng đã preview/confirm, không drop row lỗi để chạy.
+Nếu mở rộng aggregate nhiều contributions cùng batch cần slice riêng giữ exact
+source identity/overlap evidence và toàn-group order-independent preview/commit.
+
+Ví dụ các effects sales đã chuẩn hóa (minh họa dữ liệu nguồn/tổng, không I05 payload):
+
+```json
+[{"business_report_key":"B","source_quantity_before":"105","source_quantity_after":"110","canonical_quantity_before":"205","canonical_quantity_after":"210","proposed_action":"REPLACE_DAILY_TOTAL","classification":"CHANGED"},{"business_report_key":"B","source_quantity_before":"110","source_quantity_after":"110","canonical_quantity_before":"210","canonical_quantity_after":"210","proposed_action":"NO_OP","classification":"UNCHANGED"}]
+```
 
 ### 8.3. Inventory — ĐÃ CHỐT snapshot theo lô đã định danh
 
@@ -515,6 +774,67 @@ Không sửa cost/received_date/expiry bằng inventory count payload. Sale/depl
 movement sau observation làm count stale, phải re-preview/new observation, không
 apply captured delta vào balance đã đổi. Import count không tạo/nhận lô mới;
 v1 có N6 riêng trong contract Kho cho lô ban đầu/hàng thực nhận.
+
+<a id="schema-correction"></a>
+### 8.4. Identity/correction theo schema — không generic upsert
+
+ACCEPTED DECISION: hai bản cùng business key nhưng nội dung khác mặc định CONFLICT,
+không last-write-wins theo row/file/upload order. Chỉ các schema có resolution
+nghiệp vụ đã duyệt mới được correction sau preview; nếu không có resolution thì
+blocker và hướng dẫn sửa nguồn hoặc tạo batch source scope hợp lệ. Explicit scope
+selection không cho bỏ row lỗi tự động trong sealed batch. Preview phải giữ source
+locations/normalized_source_quantity/before/after/provenance/action/blockers và
+expected versions; commit rechecks read-set, lifecycle/current rights và resolution
+set chính xác. Không sửa metadata/recipe/price history immutable để làm import pass.
+
+| Schema/key, scope Store implicit | Reimport/no-op và correction/conflict | Source trace / trạng thái |
+| --- | --- | --- |
+| products/ingredients: source_system_key + source_business_key bound canonical UUID; SKU chỉ Store-scoped key nullable | Same established identity+same typed metadata NO_OP. Khác metadata ENTITY_METADATA_CONFLICT; unknown binding OWNER_ENTITY_APPROVAL_REQUIRED. Không tên giống=merge, không import update metadata existing. | import_preview catalog branch, write_plan Product/Ingredient insert adapters; identity_rules/entity_proposals như mục5.2/6.1. |
+| suppliers: source_system_key + source_supplier_key bound canonical UUID | Same identity/name/active NO_OP; khác metadata SOURCE_IDENTITY_CONFLICT/ENTITY_METADATA_CONFLICT, không supplier name upsert hoặc tự rebind sourcekey. | import_preview supplier/catalog branch, import_configuration_preview, OperationalConfiguration.supplier; SupplierSourceRecord provenance. |
+| recipes: canonical Product + integer version; lines Ingredient trong version; effectivity inclusive | Same version/header/normalized complete line set NO_OP; khác content RECIPE_VERSION_CONFLICT, không update version cũ. Version mới không overlap assigned applicability, otherwise RECIPE_PERIOD_OVERLAP; header inconsistency RECIPE_HEADER_CONFLICT, duplicate Ingredient DUPLICATE_RECIPE_INGREDIENT. Thay lịch dùng recipe-calendar commands hiện hữu với future-only guard, không import tự đóng lịch cũ. | import_preview.recipe_groups, write_plan→RecipeUseCases.create_in_transaction; recipe-source basis/whole-yield/loss policy tại mục6 giữ nguyên. |
+| supplier_terms: source_system_key + source_term_key; canonical Supplier/Ingredient/version + period | Exact canonical payload/source identity NO_OP; same values nhưng thiếu source provenance có REGISTER_TERM_SOURCE audited, không overwrite commercial facts. Khác source binding SOURCE_IDENTITY_CONFLICT; same key changed phải future dated version với explicit old-period amendment/reason/CAS/confirmation khi cần. Historical backdate/overwrite HISTORICAL_TERM_CORRECTION; overlap TERM_PERIOD_OVERLAP, amendment không hợp lệ TERM_AMENDMENT_CONFLICT. | import_preview TermSource branch, OperationalConfiguration.term/close_term, write_plan REGISTER_TERM_SOURCE; details/basis/term_period_amendments ở mục13. |
+| inventory_count: canonical lot_id + Ingredient/unit; observation known | Target balance=current NO_OP, vẫn giữ observation evidence; khác balance signed COUNT_CORRECTION có reason và freshness. Unknown/ambiguous lot block; không tạo lot, nhận hàng hoặc đổi expiry/cost/date. | import_preview CountSource, write_plan→adjust_in_transaction, stock_observation; temporal guards/read-set phải recheck ở commit. |
+| opening_stock: source_system_key + source_record_id trong shared N6 receipt ledger | CURRENT FACT WIP lát3 có OpeningSource/OpeningValue, same identity+normalized payload NO_OP/retained lot; khác RECEIPT_IDENTITY_CONFLICT. Lot quantity là physical remainder; newlot + COUNT_CORRECTION baseline0, không historical RECEIPT. Duplicate identity/ambiguous physical lot block. | import_opening_stock.receipt_semantics/write_opening, import_preview opening branch; phải đối chiếu lại finalized lát3 và public acceptance trước gọi implemented release. |
+| scope_declarations: source_system_key + source_declaration_key + kind/scoped dependencies | Same payload+same dependency evidence NO_OP; changed declaration/dependencies phải explicit SET_SCOPE_DECLARATION/review, không assume complete từ receipt/count. Kind/Ingredient identity khác DECLARATION_IDENTITY_CONFLICT. | import_configuration_preview, OperationalConfiguration.declaration, post-write declaration_dependency; WIP lát3 cần kiểm canonical dependency digest. |
+| inventory_receipts actual receipt | DESIGN_READY mục16; shared receipt source identity/dedupe, không sửa receipt cũ từ new file. Không dùng inventory_count/opening để giả actual receipt. | N6 ACTUAL_RECEIPT hiện có; Excel variant chưa implemented. |
+
+CURRENT FACT: supplier term duplicate source key/active-period overlap được block;
+configuration preview namespace=(domain,source_system_key,key) chặn duplicate trong
+batch. Không có chọn winning file endpoint. Recipe assembler nhóm (Product,version),
+checks header/duplicate Ingredient/DB version/period và giữ mọi source_locations.
+CURRENT FACT — recipe nhiều nguồn cùng version: assembler vẫn nhóm
+(Product,version), nhưng group đi qua nhiều sheet/file bị
+RECIPE_SOURCE_SCOPE_AMBIGUOUS với source location của các lines và không commit.
+Matching headers/source scope/version không chứng minh full report hay split parts;
+không union hai full reports có ingredients khác nhau và không chọn winning file.
+Single-sheet reviewed report tiếp tục assemble lines với header/duplicate Ingredient/
+DB version/period checks. TECHNICAL DEBT: chưa có typed split-part/full-report grain
+resolution hoặc manifest để cho phép cross-sheet assembly; không suy grain từ
+filename hoặc dùng reason tùy ý để bypass. Patch không đổi BOM/recipe normalization.
+
+Supplier trace chưa thấy thiếu guard khiến source key khác payload được silently
+overwrite: namespace/source/canonical equality/version/effectivity/period amendment
+đã có. Trong scope clarification này cần **bổ sung targeted acceptance** cho same-key
+changed payload giữa nhiều files, same-signature different-source và preview/commit
+race; không căn cứ code read để yêu cầu rewrite supplier runtime. Source-before-reuse
+gap ở mục5.1 là shared orchestration, cũng ảnh hưởng recipe/supplier; phải sửa guard
+shared này khi implement, không cho source basis đã đúng che gap nguồn.
+
+Coverage hiện hữu đọc tĩnh: test_import_recipe_basis.py có normalized persistence,
+fresh-row reuse, invalid-line atomicity, revoke/dependency guards; test_import_supplier_basis.py
+có exact MOQ/price, fresh commercial values, historical profile review, fee dependency
+và future-period amendment. Chưa chạy lại và không chứng minh cross-file conflict/source
+proof. Lát3 test_import_setup_identity.py/test_import_setup_stock.py đang bổ sung
+whole-batch identity/dependency order, opening↔N6 no-op/count/completeness chain;
+review source/tests sau khi finalized, không ghi PASS hoặc overwrite WIP hiện tại.
+
+Acceptance cần thêm đúng boundaries: declared-source trước bind (same signature
+khác nguồn, absent/multiple contexts), entity mới vs unchanged interpretation,
+same-key two-file conflicts ở cả upload orders, recipe full-report conflicting line
+sets, sales contribution replacement100→105/205→210/retry, IGNORE requiredness và
+completeness scope, retire trước preview/confirm/worker commit. Không full-suite
+rerun trong task tài liệu; future implementation chọn tests ảnh hưởng guard/consumer
+và fresh-session persistence như AGENTS/FULL_TEST_FLOW.
 
 <a id="wire"></a>
 ## 9. Endpoint workflow semantics — current approved contract
@@ -632,6 +952,12 @@ resolution_origin,profile_ref. Samples≤5 values×200 chars/issue, plain text n
 not whole rows. Truncation sample là display metadata, không approval full spec.
 Successful global pairs sheet_id omitted, review_only=false/status=auto_mapped;
 add file/sheet refs. Counts trước status filter, không page counts.
+CURRENT FACT: MappingList.counts là Progress của toàn bộ issues trong batch, kể cả
+khi có sheet_id/review_only/status filter; chỉ items và meta.pagination.total_count
+theo filtered result. completed_fields gồm resolved và auto_mapped, không phải số
+auto/approved. Có thể đọc auto items với review_only=false&status=auto_mapped;
+không cộng items.length để suy totals. Per-file/per-sheet/origin/filter aggregates
+chưa có contract. Source: ImportStagingUseCases.mappings/_progress.
 
 M03 query mapping_id optional; returns schema/schema_version/schema_context_id,
 mapping_revision,duplicate_mapping_allowed:false,options descriptors mục6. Target
@@ -652,7 +978,9 @@ lấy từ session/import. Source-context issue cũng dùng được để chọ
 trong trường hợp matching mơ hồ; context không thay header/identity/unit validation.
 TECHNICAL CHOICE S4.4: optional sales_semantics= daily_total|disjoint_contribution,
 inventory_semantics=lot_stock_count, decimal_locale=dot|comma,
-date_format=ISO|DMY_SLASH|MDY_SLASH, pack_cost_basis=PER_PACK|PER_SOURCE_UNIT.
+date_format=ISO|DMY_SLASH|MDY_SLASH|EXCEL_SERIAL. HISTORICAL INFORMATION:
+pack_cost_basis=PER_PACK|PER_SOURCE_UNIT còn đọc được trong DTO cũ; proposal mới
+trả USE_EXPLICIT_SUPPLIER_PRICE_BASIS. Dùng source columns/shared declarations ở §13.2.
 Owner review chúng trong full spec; không đoán khi thiếu. Omitted/null optional
 format không khai báo thay đổi rule; chọn approved context giữ approved rules.
 Declared policy khác phải proposal/reapproval, không bị bỏ qua như simple selection.
@@ -1066,24 +1394,27 @@ unchanged NO_OP, metadata conflict blocker SUPPLIER_METADATA_CONFLICT; v1 không
 generic supplier rename/deactivate từ row. sourceactive của entity mới phải explicit
 hoặc accepted visibledefaulttrue; existingactive không bị fileoverwrite.
 
-SupplierTermSource={source_term_key:string1..1000,supplier_ref,ingredient_ref,
-effective_from:date,effective_to:date|null,unit:Ingredient.base_unit,
-pack_size_base_quantity:PositiveQuantity,pack_cost:MoneyText,currency,
-minimum_order_packs:int1..2147483647,lead_time_days:int0..2147483647,
-shelf_life_days:int0..2147483647|null,active:boolean,
-maximum_order_base_quantity:Quantity|null}. Storecurrencyexact; effective_to inclusive
+CURRENT FACT: registry dùng `TermImportSource` cho nguồn; `TermSource`/`TermValue`
+giữ canonical/retained contract cũ. Nguồn có source_term_key, supplier_id,
+ingredient_id, effective_from/to, unit, pack_size_base_quantity, pack_cost, currency,
+lead_time_days, shelf_life_days, active, maximum_order_base_quantity như trước;
+`unit` ở source là đơn vị lượng trong pack, sau normalize phải đúng Ingredient.base_unit.
+MOQ nguồn dùng `minimum_order_quantity` decimal text thay `minimum_order_packs`;
+thêm required `price_basis`, `price_quantity`, `price_unit`, `moq_basis`, `moq_unit`.
+Ba quantity/unit nullable vẫn cần cột hoặc explicit null declaration.
+`pack_label` optional-nullable chỉ giữ nhãn bao/thùng, không là physical unit.
+Storecurrencyexact; effective_to inclusive
 ≥from; no datefallback fromupload. last optional maximum quantity, nếu declared
 thì explicit SupplierLimit ONE_ORDER_SUPPLIER_INGREDIENT theo engine; null phải
 scope_declaration EXPLICIT_NOT_CONFIGURED hoặc UNKNOWN, không “unlimited” ngầm.
-Counts integer thật không string/bool; finite dates/arith overflow blockers.
+Lead/shelf days integer thật không bool/fraction/truncate; canonical MOQ integer1..2147483647.
 Canonical internalversion SYSTEM_ASSIGNED positive sequence per supplier+ingredient,
 không trust Excel version để overwrite UUID; source_term_key là external recordidentity,
 không version/schema ID. Newsource cùng Supplier/Ingredient ngày hiệu lực chồng lấn block TERM_PERIOD_OVERLAP.
 
-Pack cost là giá **một pack trọn**. Source15kg/pack,28000VND/kg→420000VND/pack chỉ
-khi units/source pricingbasis+exact conversion Owner-approved, provenance giữ
-inputs/operator. MOQ baseqty có thể ceil(dividepack) nếu rule explicit và khách
-thấy derivation; MOQ không có không default1. Lead0 hợp lệ known same-day; missing
+Canonical pack cost là giá **một pack trọn**, riêng với payable fees. Source15kg/pack,
+28000VND cho 1kg→420000VND/pack chỉ khi inputs/conversion Owner-approved.
+MOQ physical chuyển exact ceil thành điều kiện mua pack nguyên; không default1. Lead0 hợp lệ known same-day; missing
 không0. Shelf life null không đủ suy expiry; planned arrival của Ingredient tracked
 phải có rule expiry đã được khai báo rõ. Mapping profile có optional
 planned_arrival_expiry_rule={basis:"ARRIVAL_PLUS_DECLARED_SHELF_LIFE_DAYS",
@@ -1096,6 +1427,94 @@ orderdate của captured policy, actual dates/overflow được validate; không
 plannedarrival thành inventory hay PO. Captured source references giữ ruleversion,
 termversion và derivation. SupplierTerm strict input hiện có không tự lưu rule này;
 registry/config adapter nằm trong backlog.
+
+#### Supplier source basis và FE projection
+
+ACCEPTED DECISION: Supplier slice được người dùng duyệt; không đổi procurement
+objectives/constraints hoặc diễn giải lại term/Run đã lưu. CURRENT FACT:
+
+| Source declaration | Validation và canonical derivation |
+| --- | --- |
+| price_basis=PER_PACK | pack_cost nguồn là giá trọn pack; price_quantity/price_unit phải explicit null |
+| price_basis=PER_QUANTITY | price_quantity>0, price_unit rõ; canonical pack_cost = source price × canonical pack quantity / canonical denominator quantity |
+| moq_basis=PACKS | minimum_order_quantity>0 và nguyên; moq_unit phải explicit null |
+| moq_basis=PHYSICAL_QUANTITY | quantity>0, moq_unit rõ; minimum_order_packs = ceil(canonical MOQ quantity / canonical pack quantity) |
+
+Fraction/Decimal giữ exact, độc lập ambient precision. Hỗ trợ mg/g/kg và ml/mL/l/L
+cùng dimension; count labels piece/pcs/unit/each/cái chỉ giữ khi exact same label.
+Đổi unit cần M04 declared_conversion tới canonical unit và đúng known physical factor;
+price_unit/moq_unit cũng sinh UNIT_CONVERSION_REQUIRED, kể cả shared declarations.
+Không đoán density, packaging factor, currency FX hoặc unit aliases.
+Unknown units, wrong factor/mass-volume block; zero pack/denominator/MOQ block,
+zero price vẫn hợp lệ nhưng readiness đòi finite offer bound. Nonterminating price
+block NON_TERMINATING_CONVERSION; terminating price vượt Money18/18 block
+INVALID_SOURCE_VALUE. DB NUMERIC/pack_cost DTO cần decimal, engine rational output
+không là rational canonical price input; không làm tròn để vượt giới hạn này.
+
+| Ví dụ explicit | Canonical / consumer |
+| --- | --- |
+| Pack1kg, base g; 100000VND/PER_PACK | 1000g,100000VND/pack; hai pack goods200000 |
+| Pack1000g; 100VND/PER_QUANTITY, denominator1g | Cùng canonical trên |
+| Pack2l, base ml; 60000VND/PER_QUANTITY, denominator1l | 2000ml,120000VND/pack |
+| Pack1000g; MOQ2 PACKS hoặc2000g PHYSICAL_QUANTITY | Cùng minimum_order_packs2 |
+| Pack1000g; MOQ1500g PHYSICAL_QUANTITY | minimum_order_packs2; giữ source minimum1500g; zero basket được phép, một pack không được |
+
+M03/M04 giữ endpoints: source columns hoặc shared_value declaration. price_basis,
+price_quantity, price_unit, moq_basis, moq_unit, pack_label cho PROFILE_CONSTANT hoặc
+IMPORT_VALUE. Commercial price/MOQ/pack quantity/lead/shelf/date/maximum facts chỉ
+source column hoặc IMPORT_VALUE; profile chỉ giữ requirement, không reuse giá trị.
+Ví dụ phần nguồn cho pack1kg/base g (identity/dates/lead/shelf/currency/active/max-order
+vẫn phải cung cấp theo contract):
+
+```json
+{"unit":"kg","pack_size_base_quantity":"1","pack_cost":"100000","price_basis":"PER_PACK","price_quantity":null,"price_unit":null,"minimum_order_quantity":"1500","moq_basis":"PHYSICAL_QUANTITY","moq_unit":"g","pack_label":"thùng"}
+```
+
+Owner duyệt kg→g factor1000/1; `after` có unit=g, pack_size_base_quantity="1000",
+pack_cost="100000", minimum_order_packs=2. MOQ nguồn luôn decimal text, kể cả "2"
+pack; canonical MOQ mới là integer. Không lấy phần JSON ví dụ làm defaults.
+Ví dụ M04 (các nullable declarations phải khai báo riêng, không tự điền):
+
+```json
+{"resolution":{"kind":"shared_value","target_field":"supplier_terms.price_basis","scope":"PROFILE_CONSTANT","value":"PER_QUANTITY","evidence_reference":"Bảng giá này luôn báo theo lượng khai báo"}}
+```
+
+FE lấy descriptors/scopes; thêm selectors price/MOQ basis, denominator quantity/unit,
+MOQ source quantity/unit và nhãn pack riêng. N5 Owner review như hiện hành; Staff
+không activate. Profile cũ thiếu các bindings mới không auto-pin/execute, warning
+SUPPLIER_BASIS_REVIEW_REQUIRED; Owner map lại MOQ và basis, không backfill old terms.
+SourceContext.pack_cost_basis cũ không đủ denominator/MOQ authority. Header/index/
+kind/header row/epoch/source changes vẫn drift; không hứa phát hiện hidden semantics.
+
+I04 preview và I06 canonical_references thêm nullable `supplier_term_semantics`:
+source_pack_quantity/unit, pack_label, source_price, price_basis, price_quantity/unit,
+canonical_price_quantity, moq_basis, source_moq_quantity, moq_unit,
+canonical_moq_quantity, minimum_order_packs, fee_coverage/date. `after` giữ canonical
+pack quantity/unit/cost/MOQ; identities/actions/version/blockers dùng fields hiện có.
+provenance giữ source_value/index hoặc declaration_id, ordered applied_rule_ids.
+TermSourceRecord.payload vẫn canonical; immutable provenance giữ semantic projection
+và frozen spec. fee_coverage chỉ đánh giá tại effective_from, không chứng minh toàn
+horizon readiness; không unique COMPLETE evidence thì UNKNOWN và warning
+PAYABLE_FEES_NOT_ESTABLISHED. Explicit NONE+COMPLETE khác missing fee. Preview read-set
+có fees; fee thay đổi làm stale. Canonical term có thể commit khi fees unknown;
+planning readiness/capture vẫn block PAYABLE_FEE_COVERAGE_UNKNOWN.
+
+Commit dùng frozen validated plan và cùng canonical writer validation, recheck
+read-set/revisions/rights; không reparse/rerun model. Atomic rollback/retry giữ nguyên.
+Fresh-session acceptance và small fixed-basket oracle nằm ở
+`tests/{unit,integration}/test_import_supplier_basis.py`; retained Planning capture
+giữ giá/quantity/version tại thời điểm Run, future term change không viết lại Run.
+Whole FE/browser, dữ liệu quán thật và mọi business units khác chưa được acceptance.
+
+HISTORICAL INFORMATION: đã trace `IMPORT_QWEN_REPRO_20261012.zip`,
+`backend/app/services/business_persistence.py:415–460`: legacy tách packaging label
+khỏi physical conversion, MOQ nguồn là pack count rồi lưu physical quantity.
+Lines489–494 cast price/lead qua int; `services/procurement_planning_service.py:111`
+tính physical order quantity × unit_cost. Bản mới giữ tách packaging/physical và
+Store identity/provenance, chủ động thay bằng explicit independent price/MOQ basis,
+exact denominator conversion, integer-pack ceil và dated versions/Owner review.
+Không port integer truncation, giá không rescale, implicit defaults hoặc auto-deactivate
+term cũ. Legacy source là evidence, không architectural authority.
 
 ### 13.3. Phí/coverage — không đồng nhất phí với delivery
 
@@ -1199,6 +1618,99 @@ forfees; declarations inventory.count.correct/sales.record/supplier.fees.manage
 respectively plus whole domainreads, procurementcontext additionally budget.read.
 Owner-only mapping approval remains; Staff granted canonical actions can commit
 approvedmapping rows, no hidden escalation/automaticOwnerfactapproval.
+
+#### Setup identity, Excel opening stock và lot count — CURRENT FACT
+
+ACCEPTED DECISION: lát import setup được người dùng duyệt, dùng writers hiện có;
+không mở Excel actual receipts, stockout hoặc forecast mới. Registry thêm
+`opening_stock`; `inventory_count` tiếp tục chỉ chỉnh lô existing. M03 descriptors,
+M04 resolutions, Owner activation và I01–I06/J01 dùng endpoints hiện hành.
+
+Identity binding theo Store/entity/token exact trong profile được duyệt. Các spelling
+khác nhau cần binding explicit; tên trùng không tự merge. Product selling_unit và
+Ingredient base_unit là metadata bắt buộc trong proposal/master. Candidate tạo cùng
+canonical identity, cùng SKU cho các IDs khác nhau, metadata reservations mâu thuẫn
+hoặc binding một token tới nhiều IDs đều BLOCKED với source location. Dependencies
+được nối trên toàn batch, gồm master rows thực và synthetic Owner reservations;
+writer dùng thứ tự dependency, current permissions/read-set fence và atomic receipt.
+Batch sau dùng canonical entities đã commit; thiếu identity vẫn phải review dù
+headers/profile reuse đúng. Không bắt upload mọi domain hoặc dùng UUID nội bộ trong file.
+
+Source `opening_stock` có required fields `source_record_id`, `ingredient_id`,
+`supplier_id`, `lot_code`, `quantity`, `unit`, `received_date`, `expiry_date`,
+`unit_cost`, `currency`, `observed_at`, `reason`. Supplier/lot label/received date/
+expiry/unit cost nullable nhưng vẫn cần source hoặc declaration rõ; expiry tracking
+đòi expiry date. `source_record_id` nonblank1..128; namespace lấy từ approved
+profile `scope.source_system_key`, không filename/row number/lot label. Quantity>0;
+zero toàn Ingredient dùng declaration, không tạo lot0. Currency exact Store.
+Owner chọn rõ schema opening; ngày nhận không derive từ as-of/upload date.
+observed_at cần timezone, không tương lai; nguồn date-only phải bổ sung declaration
+IMPORT_VALUE có thời điểm thực đã xác nhận, không tự EXCEL_SERIAL thành timestamp.
+received_date/expiry_date date-only hỗ trợ date-format/Excel epoch đã duyệt.
+
+unit/currency cho PROFILE_CONSTANT hoặc IMPORT_VALUE; observed_at/reason/received_date/
+expiry_date/supplier_id/unit_cost chỉ IMPORT_VALUE nếu shared. Quantity, source lot key
+và label là row facts. Profile không giữ as-of/giá/dates của lượt import. Physical
+conversions dùng known factors của recipe/supplier: không density/FX/pack factor;
+opening unit_cost theo đơn vị vật lý đổi inverse factor, quantity đổi forward factor,
+exact hoặc blocked. Không đổi Ingredient canonical unit hoặc metadata lô existing.
+
+```json
+{"domain":"opening_stock","source_record_id":"MILK-LOT-1","ingredient_id":"MILK","supplier_id":null,"lot_code":"LOT-1","quantity":"12","unit":"l","received_date":null,"expiry_date":null,"unit_cost":null,"currency":"VND","observed_at":"2026-10-13T02:00:00Z","reason":"Owner xác nhận số còn thực tế của lô vật lý riêng"}
+```
+
+`MILK` phải có reviewed binding/proposal; fixture example không là facts của workbook.
+Preview canonical after thêm system-reserved `lot_id`. CREATE_OPENING_STOCK nối
+InventoryUseCases.receive_in_transaction(opening=True): lot balance12,
+COUNT_CORRECTION +12/reference OPENING_STOCK; không RECEIPT giả. Dùng cùng
+InventoryReceiptRecord/source identity với N6: same normalized payload NO_OP/replay,
+khác payload RECEIPT_IDENTITY_CONFLICT. New key không đủ để rebaseline lot đã có;
+duplicate source key hoặc lô không phân biệt rõ trong batch bị chặn. Opening và
+count cùng Ingredient trong một batch bị STOCK_OBSERVATION_UNVERIFIABLE: tách
+observations đã xác minh, không chọn thứ tự file. N6 form/actual receipt giữ semantics.
+
+PreviewRow và CommitRowReference thêm nullable `inventory_effect`:
+{origin:OPENING_STOCK|IMPORT_COUNT,lot_id,before_quantity:null|Quantity,
+after_quantity:Quantity,quantity_delta:SignedDeltaText,movement_type:
+COUNT_CORRECTION|null,unit,observed_at}. Opening12 có before null, after12, delta+12;
+count12→10 có delta−2; NO_OP không movement. Reimport opening sau count giữ source
+quantity12 trong retained source, effect phản ánh live balance10→10/delta0. Frozen
+effect, IDs, raw values, source index/declaration/rule chain và binding nằm trong
+preview/completion/audit; commit không parse/model/normalize lại. Receipt stock
+version của import là retained import effect marker; V01/V02 refresh cấp current
+session-bound inventory CAS version khi khách thực hiện N6 tiếp theo.
+
+Count unknown lot không tạo lot. Historical observation trước lot update, movement
+occurred/recorded time hoặc NO_OP count audit bị STALE_STOCK_OBSERVATION, không đổi
+timestamp. Preview stale/CAS/metadata conflicts giữ blockers và whole-batch rollback;
+retry không apply delta lần hai. Lô received/expiry metadata không là count targets.
+
+Declarations JSON hiện có cho phép name/code tại các typed Ingredient/Product/lot/
+Supplier reference paths; M04 tạo identity issues và Owner-reviewed bindings, giữ
+raw JSON/nested refs/provenance. Không flatten arbitrary nested fields. INVENTORY
+scope exact Ingredient+lot set+as-of+evidence; actor/profile/commit audit giữ provenance.
+Coverage tính cả planned opening/count; CONFIRMED_EMPTY không thể che opening dương.
+Chưa declaration, partial lots hoặc nonunique current scopes giữ UNKNOWN; approved
+profile/import completed không đồng nghĩa completeness. EMPTY với retained lots có
+balance0 là known zero và operational/2 consumer nhận đúng; historical capture /1
+giữ nguyên. R01/capture cùng yêu cầu một current dependency-matching scope; R01 inventory
+warning chỉ cho Ingredient chưa có scope đó. Sales coverage không zero-fill gaps.
+
+FE cần selector opening/count riêng, source lot key, nullable received/expiry/cost
+facts, timezone/as-of declaration, Owner binding/create metadata và inventory_effect
+projection. Scope declaration editor giữ lot picker/reference review; chỉ gỡ missing
+facts đã có bằng chứng. Store mới có thể import từng batch, khai báo completeness/
+procurement/fees và budget, rồi chạy custom Planning. Không có default configuration
+vẫn DEFAULT_CONFIGURATION_UNAVAILABLE ở R01; không seed để tuyên bố whole READY.
+Recipe gaps/fee UNKNOWN giữ exclusions/blockers. HTTP acceptance không browser PASS.
+
+Trace legacy: [handoff §4](../IMPORT_SCHEMA_LEGACY_HANDOFF_VI.md#4-liên-kết-nhiều-file-và-setup-store)
+ghi name/alias creation và handler order dependence. Static source ZIP
+`app/services/business_persistence.py:98–116` iterate handlers theo sheets;
+`:145–171` có ingredient create_if_missing theo source name/unit; `:220` inventory
+handler là luồng legacy riêng. Current dùng approved IDs/units
+và whole-batch dependencies, không port first-file units/name auto-create/default dates.
+Legacy là evidence lịch sử; N6 và ADR-008/009/010/013 là authority cho lát này.
 
 ### 13.6. Acceptance và backlog
 
@@ -1426,6 +1938,341 @@ có thể trả503 representation/integrity error, không giả thành null/roun
 Các absence/current clauses của S4.4/S4.5 bên trên là lịch sử ở thời điểm slice;
 CURRENT FACT thực tế xem CURRENT_STATE/feature hiện hành, không dùng làm authority
 rằng commit vẫn unsupported. Handoff ZIP cũ chưa phát hành lại.
+
+<a id="mapping-queue"></a>
+## 15. Submit và queue duyệt mapping toàn Store — DESIGN_READY
+
+ACCEPTED DECISION: Staff chuẩn bị → explicit “Gửi chủ quán duyệt” → Owner đọc pinned
+proposal → N5 quyết định → Staff xem kết quả/sửa/resubmit. Draft không tự thành
+queue task. CURRENT FACT: N5/M01–M04 đã có source ở `app/api/import_staging.py`,
+`ImportStagingUseCases.decision/summary/mappings`; N5 nhận approve_activate/reject/
+retire, không request_changes; source chưa có submission aggregate/Store queue.
+N5 approve_activate là approve và activate cùng command, không thêm approve endpoint.
+
+TECHNICAL CHOICE: một submission là **một profile proposal đầy đủ**, có toàn bộ
+column mappings/declarations/identity/normalizations/entity reservations theo
+ProfileSpec hiện có. Group approval trong N5 nghĩa toàn full spec của proposal
+đó, không bulk nhiều profile. Batch có nhiều profile gửi từng profile riêng; queue
+không giả một quyết định atomic cross-profile. Owner tự duyệt draft trong batch
+qua N5 vẫn được (ADR-013), draft đó không vào queue nếu chưa submit.
+
+```text
+MappingSubmission={submission_id:UUID,store_id:UUID,profile_id:UUID,
+ import_id:UUID,sheet_id:UUID,file_id:UUID,submitted_by_user_id:UUID,
+ submitted_at:Timestamp,reason:string,version:Version,
+ state:submitted|changes_requested|approved|rejected|stale|withdrawn,
+ proposal_revision:Version,mapping_revision:Version,import_revision:Version,
+ file_set_version:Version,lifecycle_revision_at_submission:Version,
+ spec_digest:Version,expected_active_version:Version|null,
+ review_eligibility:{eligible:boolean,reason_codes:string[]},
+ current_profile:{lifecycle_revision:Version,active_version:Version|null,
+                  reviewed_version_retired:boolean},
+ decision:{decision_id:UUID,decision:approve_activate|reject|request_changes,
+           actor_user_id:UUID,reason:string,decided_at:Timestamp}|null,
+ allowed_actions:string[]}
+MappingReviewDetail={submission:MappingSubmission,
+ source:{file_id:UUID,filename:string,sheet_id:UUID,sheet_name:string,
+         source_system_key:string,report_type:string,schema_signature:Version,
+         evidence_references:string[]},
+ spec:ProfileSpec,warnings:Notice[],missing_fields:string[],
+ evidence:{cells:SourceEvidenceCell[],next_cursor:string|null,total_count:int}}
+```
+
+ProfileSpec/Notice dùng current DTO (extensions receipt xem mục16); không duplicate
+source schema. EvidenceCell dùng [projection mục17](#mapping-projections), không
+full workbook. Submitted eligibility: analyzed/sealed immutable bytes, batch chưa
+commit/active job, complete source scope+spec, mọi required semantic unresolved đã
+giải quyết hoặc là deterministic candidate có evidence đầy đủ đủ Owner duyệt nhóm;
+missing_fields=[]; không đòi đã active profile hay preview row-valid mới submit.
+Invalid data rows vẫn do preview xử lý, không giả mapping review đã validate stock.
+
+| ID/status | Method/path | Request → response |
+| --- | --- | --- |
+| MQ01 DESIGN_READY | POST /imports/{import_id}/mapping-submissions | Staff own batch (Owner cũng được), import.read+mapping.read+mapping.propose và batch sensitive reads như M04; Origin/CSRF/Idempotency-Key/If-Match import_revision. {action:"submit",profile_id:UUID,proposal_revision:Version,mapping_revision:Version,reason:string} hoặc {action:"withdraw",submission_id:UUID,expected_submission_version:Version,reason:string} → 201 submit/200 withdraw MappingSubmission. |
+| MQ02 DESIGN_READY | GET /stores/{store_id}/mapping-submissions | Owner toàn Store, Staff own submissions; import.read+mapping.read+domain read rights theo nguồn; query state?:enum,file_id?:UUID,import_id?:UUID,limit/cursor; sort -submitted_at/UUID. → 200 {items:MappingSubmission[]}. |
+| MQ03 DESIGN_READY | GET /stores/{store_id}/mapping-submissions/{submission_id} | Same scope; query evidence_limit1..100 default20,evidence_cursor? → 200 MappingReviewDetail, ETag submission.version. |
+| N5 IMPLEMENTED; queue extension DESIGN_READY | POST /stores/{store_id}/mapping-profiles/{profile_id}/decisions | Owner-only hiện hành; giữ If-Match lifecycle_revision + Idempotency-Key. Queue decision thêm submission_id:UUID,expected_submission_version:Version; union approve_activate/reject hiện có + request_changes với proposal_revision/reason. → 200 DecisionResult hiện có + submission:MappingSubmission|null,notification_delivery. |
+
+MQ02 omitstate: Owner chỉ submitted **eligible hiện hành**, Staff tất cả own;
+explicit state cho lịch sử. Mọi rows check batch-sensitive permissions trước trả
+source/evidence; danh sách có scope forbidden không silent page filter/count leak:
+deny whole response403 như Import hiện hành. Owner toàn catalogue vẫn đủ đọc.
+MQ03 trả pinned spec/evidence của submission, current_profile để báo drift; không
+thay spec bằng live proposal. Queue snapshot pin submissions/profile/batch/revisions;
+GET không mutation. MQ03 evidence pagination pin spec_digest/versions/actor.
+
+Submit lưu immutable spec/content digest và mọi pins + audit + notification intent
+atomic; một live submitted/profile, duplicate newkey409 MAPPING_ALREADY_SUBMITTED,
+trả existing_submission_id trong own scope. Same key retry không tạo task/event mới.
+Submit stale pins409 MAPPING_SUBMISSION_STALE, unresolved409 REVIEW_NOT_READY với
+missing fields/blockers; If-Match mismatch412 IMPORT_REVISION_CONFLICT. Withdraw chỉ
+submitter hoặc Owner, submitted→withdrawn; không reject profile, không notification
+bắt buộc. MQ01 trả current import ETag; submit/withdraw không đổi import/mapping
+content revision, chỉ đổi submission revision. Response submission.version riêng,
+không nhầm hai CAS domains hoặc tự làm pins stale do submit. Không edit immutable submission.
+
+M04/scope/analyze thay pinned content sau submit: atomically mark submitted stale
+(giữ historical pinned spec), tăng affected revisions và invalidate preview như cũ.
+Chỉ lifecycle active pointer đổi cũng làm eligibility stale cho approve vì
+expected_active_version/lifecycle fence; không tự approve revision mới. Nếu phát
+hiện drift ở read, effective state stale, không write từ GET. Owner refetch MQ03,
+UI disable stale decision. Staff sửa xong explicit submit mới (new submission ID),
+không auto-resubmit/auto-task từ M04. changes_requested/rejected/withdrawn/stale
+terminal cho submission cũ; profile draft mới có proposal_revision mới.
+
+N5 queue extension kiểm tất cả pins/current authority dưới profile+batch locks cùng
+command hiện hành, atomically update profile lifecycle + submission + decision audit
++ notification intent + receipt. Queue callers bắt buộc hai submission fields;
+direct batch N5 không cần submission fields, nhưng nếu profile có live submitted
+thì decision vẫn phải resolve/pin chính submission đó, không bypass queue fence.
+request_changes không activate/reject profile, giữ active version cũ, terminal
+changes_requested và reason; Staff tiếp tục M04 rồi submit mới. reject giữ active
+version cũ như hiện hành. approve_activate tạo immutable version từ exact pinned
+spec, không commit batch. N5 retire vẫn chỉ active_version/reason và current
+lifecycle ETag, không cần submission ID; đánh dấu affected live submission stale.
+Approved submission vẫn approved khi version bị retire; current_profile flag true,
+allowed_actions không approve lại. Retired version không dùng cho fresh reuse;
+retained historical import/decision vẫn giữ facts.
+
+N5 stale request412 PROFILE_REVISION_CONFLICT, submission stale409
+MAPPING_SUBMISSION_STALE, incompatible terminal409 MAPPING_SUBMISSION_STATE_CONFLICT.
+Concurrent Owner decisions một winner; replay trước stale CAS sau current rights
+trả retained receipt, không tạo version/notification thứ hai. Notification failure
+sau commit không undo activation; audit/notification cùng decision_id.
+Queue/detail và mapping approval notification dùng wording **“Profile đã được duyệt;
+mở batch để kiểm tra và tiếp tục nhập.”**, không “Dữ liệu đã nhập thành công”.
+Link notification trỏ submission_id, MQ03 đọc current state/eligibility với pinned
+spec/digest; stale/resubmit không thay pin của submission cũ. Read/unread hoặc mất
+notification không approve/reject/withdraw và không xóa task: MQ02/MQ03 mới là task
+discovery/detail authority, N5 là decision command. Row correction/conflict vẫn
+do I04/I05/resolutions đúng schema, không đưa business overwrite vào queue approval.
+
+Ví dụ MQ01 request → MappingSubmission; MQ02.items reuse cùng DTO:
+
+```json
+{"action":"submit","profile_id":"00000000-0000-0000-0000-000000000061","proposal_revision":"proposal-3","mapping_revision":"mapping-3","reason":"Đã kiểm tra nguồn và quy ước"}
+```
+
+```json
+{"submission_id":"00000000-0000-0000-0000-000000000062","store_id":"00000000-0000-0000-0000-000000000001","profile_id":"00000000-0000-0000-0000-000000000061","import_id":"00000000-0000-0000-0000-000000000063","sheet_id":"00000000-0000-0000-0000-000000000064","file_id":"00000000-0000-0000-0000-000000000065","submitted_by_user_id":"00000000-0000-0000-0000-000000000002","submitted_at":"2026-10-13T02:00:00Z","reason":"Đã kiểm tra nguồn và quy ước","version":"submission-1","state":"submitted","proposal_revision":"proposal-3","mapping_revision":"mapping-3","import_revision":"import-5","file_set_version":"files-2","lifecycle_revision_at_submission":"profile-1","spec_digest":"spec-3","expected_active_version":null,"review_eligibility":{"eligible":true,"reason_codes":[]},"current_profile":{"lifecycle_revision":"profile-1","active_version":null,"reviewed_version_retired":false},"decision":null,"allowed_actions":["withdraw"]}
+```
+
+Ví dụ N5 queue approval và yêu cầu sửa (hai variants; If-Match="profile-1"):
+
+```json
+{"decision":"approve_activate","proposal_revision":"proposal-3","expected_active_version":null,"reason":"Đồng ý full spec","submission_id":"00000000-0000-0000-0000-000000000062","expected_submission_version":"submission-1"}
+```
+
+```json
+{"decision":"request_changes","proposal_revision":"proposal-3","reason":"Bổ sung bằng chứng đơn vị nguồn","submission_id":"00000000-0000-0000-0000-000000000062","expected_submission_version":"submission-1"}
+```
+
+Ví dụ MQ03 phần `data.source` và `data.evidence` (response còn có submission đầy
+đủ như ví dụ MQ01 và spec theo typed ProfileSpec, không phải response rút gọn runtime):
+
+```json
+{"source":{"file_id":"00000000-0000-0000-0000-000000000065","filename":"suppliers.xlsx","sheet_id":"00000000-0000-0000-0000-000000000064","sheet_name":"Suppliers","source_system_key":"supplier-a","report_type":"supplier-catalog","schema_signature":"headers-1","evidence_references":["source-catalog:SUP-A"]},"evidence":{"cells":[{"location":{"file_id":"00000000-0000-0000-0000-000000000065","sheet_id":"00000000-0000-0000-0000-000000000064","row_number":2,"source_column_index":1,"record_number":null,"line_start":null,"line_end":null},"column_label":"Mã nhà cung cấp","raw_value":"SUP-A","cell_kind":"text","formula_present":false}],"next_cursor":null,"total_count":1}}
+```
+
+Ví dụ N5 response fields hiện có (queue extension còn có submission và
+notification_delivery cùng decision_id):
+
+```json
+{"profile_id":"00000000-0000-0000-0000-000000000061","approved_version":"approved-1","active_version":"approved-1","lifecycle_revision":"profile-2","decision_id":"00000000-0000-0000-0000-000000000066","decided_at":"2026-10-13T02:05:00Z","audit_id":"00000000-0000-0000-0000-000000000067"}
+```
+
+Allowed actions computed: submitted eligible Owner approve_activate/reject/
+request_changes (+withdraw), submitter withdraw; terminal chỉ view (resubmit là
+new submission sau sửa draft). Audit submit/withdraw/stale giữ actor/source/pins;
+decisions vẫn ImportAudit, không permission grant/audit. Acceptance tương lai:
+draft absent queue; pin edit/active pointer drift; own Staff isolation; grouped
+full-spec approval; N5 race/retry/revoke; returned reason/resubmit; no batch commit.
+
+<a id="excel-actual-receipt"></a>
+## 16. Excel hàng thực nhận — DESIGN_READY, reuse pipeline
+
+ACCEPTED DECISION: Excel actual receipt bổ sung workflow **hàng đã thực nhận**;
+opening stock/count của phiên import hiện tại giữ nguyên. CURRENT FACT: registry
+Schema hiện có mười variants gồm opening_stock, `inventory_count` chỉnh canonical lot đã định danh;
+không `inventory_receipts`. N6 public receipt hỗ trợ OPENING_STOCK/ACTUAL_RECEIPT
+và source identity/durable receipt; implementation ở StockWrites.receive và
+InventoryUseCases.receive_in_transaction. Không mở receipt import endpoint riêng.
+
+DESIGN_READY extension: thêm schema `inventory_receipts` (import_schema/1 giữ version
+registry chung, reusable receipt profile khai inventory_semantics="actual_receipt").
+M03 descriptors advertise fields chỉ khi slice implement supported=true, không
+pretend target mới hiện available. Mapping/ProfileSpec giữ reviewed constants,
+batch-only IMPORT_VALUE, source provenance/exact conversion như pipeline hiện có.
+Không biến timestamp từ serial date-only, không derive expiry/observed_at từ upload.
+
+```text
+ActualReceiptValue={origin:"ACTUAL_RECEIPT",
+ receipt_identity:{source_system_key:string1..128,source_record_id:string1..128},
+ ingredient_id:UUID,supplier_id:UUID|null,lot_code:string1..128|null,
+ quantity:PositiveQuantityText,unit:string exact Ingredient.base_unit,
+ received_date:date|null,expiry_date:date|null,unit_cost:MoneyText|null,
+ currency:string exact Store.currency,observed_at:Timestamp,reason:string}
+ReceiptEffect={action:CREATE_RECEIPT|REUSE_RECEIPT|BLOCKED,
+ source_identity:{source_system_key:string1..128,source_record_id:string1..128},
+ receipt_id:UUID|null,lot_id:UUID|null,movement_id:UUID|null,
+ origin:"ACTUAL_RECEIPT",movement_kind:"receipt",
+ quantity_delta:PositiveQuantityText,unit:string,
+ occurred_at:Timestamp,recorded_at:Timestamp|null,
+ conflict_code:string|null}
+```
+
+Nullable keys vẫn bắt buộc có null. Unknown supplier/cost không0, không bắt Supplier
+Term cho receipt; cost known0 hợp lệ. Quantity>0, exact unit, currency; known received
+date≤Store today, expiry≥known receipt; tracked ingredient required expiry như N6.
+observed_at phải known≤server now, là event hàng thực nhận (occurred_at), không ngày
+upload. Late receipt cho phép đúng CA-019 với LATE_RECEIPT_RECORDED warning; không
+silently backdate recorded_at hoặc sửa Run lịch sử. Location/warehouse unsupported,
+source columns chỉ source-only/explicit IGNORE reviewed, không mandatory fake values.
+Không nhận opening stock bằng origin khác trong schema actual receipt.
+
+I01–I03 bytes/seal/analyze, M01–M04 và N5 mapping review **IMPLEMENTED routes**;
+schema receipt mới DESIGN_READY. I05 body giữ các phases hiện hành:
+preview{phase,mapping_revision}, confirm_review{phase,preview_id,preview_digest,
+mapping_revision,confirm:true,reason}, commit{phase,preview_id,preview_digest,
+confirm:true,reason?,resolutions:SalesResolution[],supplier_changes?:SupplierConfirmation[]}.
+Receipt-only resolutions=[]; không post canonical row từ FE hoặc gọi N6 từng dòng.
+I05 preview/commit202 job acceptance, confirm_review200; J01 poll2s; I04 đọc pinned
+preview, I06 durable completion. Request JSON/phases xem mục9.3 và current DTO;
+chỉ thêm receipt variant trong rows/effects/completion, không thêm operation.
+
+Preview pin inventory_version/read-set dùng chung trong batch, không yêu cầu user
+nhập CAS từng dòng Excel. Owner đọc source→canonical→lot/movement effect trước
+confirm. New planned IDs stable trong immutable preview (reserved, không chứng
+minh inserted); recorded_at=null tới commit, không giả server time tương lai.
+Existing same identity+normalized payload REUSE_RECEIPT có retained IDs/recorded_at;
+different payload BLOCKED RECEIPT_IDENTITY_CONFLICT, không upsert quantity/cost.
+File hash/filename/row_number/lot_code không business identity. Owner phải khai
+source namespace và per-receipt source_record_id ổn định, không tự tạo từ new file.
+Rows trong batch trùng identity cùng payload coalesce một action, giữ mọi physical
+source_locations; khác payload blocker toàn batch. Identity phải dùng chung N6
+ledger: Excel rồi form/reverse retry cũng chỉ một receipt/lot/movement.
+
+Commit dùng cùng receipt identity/domain writer **trong transaction toàn import**,
+không HTTP loop hoặc một commit/dòng. Current auth fence và canonical locks/receipt
+CAS/read-set chung; stale409 PREVIEW_STALE, FE refresh preview và confirm lại.
+Recheck import.commit+inventory.receive+inventory.read+ingredient.read; supplier_id
+nonnull thêm supplier.read để đọc/bind locator; unit_cost nonnull thêm cost.read;
+Import whole-response sensitive rights như mục10 vẫn áp toàn affected schema (cả
+preview/history/completion), không dùng N6 lot redaction để leak mixed workbook.
+Không bypass vì Owner đã approve profile; row validation/preview/write rights giữ.
+
+Replay I05 cùng key trả retained job acceptance sau current rights; job publish
+identity+lot+movement+receipt+audit+completion atomically. Crash uncertain commit
+đối chiếu durable import và shared receipt ledger trước retry, không tạo new receipt
+do key khác. Completion extension row reference={source_identity,receipt_id,lot_id,
+movement_id,action:"CREATED"|"REUSED",audit_reference:UUID}; actual created effects
+khác raw row count. Không receipt khácunits quantity sum, không tổngunknowncost0.
+NO_OP batch duplicate vẫn có outcome riêng; không xác nhận stock completeness từ
+một receipt. PlanningRun purchases/hypothetical arrival không input actual receipts.
+
+Ví dụ canonical receipt row sau mapping (không phải I05 request):
+
+```json
+{"origin":"ACTUAL_RECEIPT","receipt_identity":{"source_system_key":"supplier-a-deliveries","source_record_id":"DN-20261013-001-L1"},"ingredient_id":"00000000-0000-0000-0000-000000000003","supplier_id":null,"lot_code":"DELIVERY-01","quantity":"5","unit":"l","received_date":"2026-10-13","expiry_date":"2026-10-20","unit_cost":null,"currency":"VND","observed_at":"2026-10-13T02:00:00Z","reason":"Nhận thực tế theo phiếu DN-001"}
+```
+
+```json
+{"action":"CREATE_RECEIPT","source_identity":{"source_system_key":"supplier-a-deliveries","source_record_id":"DN-20261013-001-L1"},"receipt_id":"00000000-0000-0000-0000-000000000071","lot_id":"00000000-0000-0000-0000-000000000072","movement_id":"00000000-0000-0000-0000-000000000073","origin":"ACTUAL_RECEIPT","movement_kind":"receipt","quantity_delta":"5","unit":"l","occurred_at":"2026-10-13T02:00:00Z","recorded_at":null,"conflict_code":null}
+```
+
+Errors: N6 domain codes INVALID_UNIT/REQUIRED_EXPIRY_MISSING422,
+RECEIPT_IDENTITY_CONFLICT409 hoặc preview blocker, PREVIEW_STALE409,
+PERMISSION_DENIED403, RESOURCE_NOT_FOUND404 scoped; common key/CSRF/job errors
+mục9–11. FE sửa declaration/source identity có evidence, không đổi key để lách
+duplicate. Acceptance tương lai: nullable supplier/cost/date; observed timestamp;
+tracked expiry/unit constraints; Excel↔N6 dedupe; mixed group atomic rollback;
+revoke/CAS race; fresh-session receipt/lot/movement/ledger evidence khi implement.
+
+<a id="mapping-projections"></a>
+## 17. Counters và source→canonical→effect — DESIGN_READY extensions
+
+CURRENT FACT: M01 có Progress/files/sheets/profile details; M02 có sheet_id,
+review_only/status/include_details/limit/cursor và MappingList.counts; issue origins
+tách resolution_origin APPROVED_PROFILE|USER_PROPOSAL|UNRESOLVED và suggestion_origin
+RULE|QWEN|REUSED|MANUAL|NONE. I04 có include_preview/preview_id/rows_limit/rows_cursor/
+classification/configurations; PreviewRow có source_location/provenance/before/after,
+supplier_term_semantics và recipe provenance. Không mô tả các tiện ích mới đã có.
+
+M01 GET extension query file_id?:UUID,sheet_id?:UUID,review_only?:boolean,
+status?:MappingStatus,origin?:SuggestionOrigin; filters AND, cùng enum hiện có.
+M02 GET thêm file_id/origin, giữ queries hiện hữu. `origin` lọc **suggestion_origin**,
+không nhầm resolution_origin. response extension:
+{mapping_revision:Version,counter_scope:{file_id:UUID|null,sheet_id:UUID|null,
+review_only:boolean,status:MappingStatus|null,origin:SuggestionOrigin|null},
+counters:{batch:{total:int,by_status:StatusCounts,by_origin:OriginCounts},
+filtered:{total:int,by_status:StatusCounts,by_origin:OriginCounts}}}.
+StatusCounts có đủ five status keys; OriginCounts đủ five origin keys, known zero0.
+Counter đơn vị **mapping issues**, classification/identity/conversion issues cùng
+phạm vi M02, không số rows/cells/files. review_only defaulttrue như M02; batch
+unfiltered, filtered áp chính filters request, không page-length. M01 legacy
+progress không đổi nghĩa. M01 counters và M02 page pin cùng mapping_revision;
+M02 thêm snapshot_id? để bind, changed409 SNAPSHOT_NOT_AVAILABLE.
+
+Ví dụ counter extension M02 (một column issue từ RULE, filter cùng revision):
+
+```json
+{"mapping_revision":"mapping-3","counter_scope":{"file_id":null,"sheet_id":null,"review_only":true,"status":"needs_confirmation","origin":"RULE"},"counters":{"batch":{"total":1,"by_status":{"auto_mapped":0,"resolved":0,"needs_confirmation":1,"ambiguous":0,"unmatched":0},"by_origin":{"RULE":1,"QWEN":0,"REUSED":0,"MANUAL":0,"NONE":0}},"filtered":{"total":1,"by_status":{"auto_mapped":0,"resolved":0,"needs_confirmation":1,"ambiguous":0,"unmatched":0},"by_origin":{"RULE":1,"QWEN":0,"REUSED":0,"MANUAL":0,"NONE":0}}}}
+```
+
+I04 GET extension preview query file_id?:UUID,sheet_id?:UUID,projection?:
+summary|source_effect (defaultsummary); chỉ hợp lệ khi include_preview=true cùng
+preview_id. Response rows PreviewRow current + source_cells:SourceEvidenceCell[]
+và planned_effect: typed union ReceiptEffect|CatalogEffect|CountEffect|RecipeEffect|
+SupplierEffect|SalesEffect|DeclarationEffect. summary không cells/effect extension;
+source_effect chỉ selected rows page, không toàn workbook.
+
+```text
+SourceEvidenceCell={location:SourceLocation,column_label:string|null,
+ raw_value:string|null,cell_kind:text|numeric|boolean|date|empty|error,
+ formula_present:boolean}
+CatalogEffect={kind:"catalog",entity:product|ingredient|supplier,id:UUID,
+ action:create|reuse,expected_version:Version|null}
+CountEffect={kind:"count",lot_id:UUID,before_quantity:QuantityText,
+ after_quantity:QuantityText,delta:SignedQuantityText,unit:string,
+ expected_version:Version}
+RecipeEffect={kind:"recipe",product_id:UUID,recipe_id:UUID,action:"create_version",
+ effective_from:date,effective_to:date|null,dependency_ids:UUID[]}
+SupplierEffect={kind:"supplier",entity:supplier_term|payable_fee,id:UUID,
+ action:create_version|close_period|reuse,expected_version:Version|null}
+SalesEffect={kind:"sales",product_id:UUID,date:date,
+ action:record|replace|merge|reuse,before_quantity:QuantityText|null,
+ after_quantity:QuantityText,unit:string,expected_version:Version|null}
+DeclarationEffect={kind:"declaration",id:UUID,action:declare|reuse,
+ dependency_ids:UUID[],expected_version:Version|null}
+```
+
+ReceiptEffect thêm kind="receipt" khi union; canonical before/after giữ typed
+current CanonicalValue+ActualReceiptValue, không dictionary tùy ý. Raw null là
+empty/unknown source, không unknown canonical0. Formula chỉ báo presence, raw_value
+là cached visible value, không formula expression/external links. Source không
+established/unsupported chỉ blocked row+Notice; planned_effect=null khi không thể
+xác định action, không fabricated type/value. Source cell tối đa200 chars display,
+nếu lớn trả raw_value=null kèm row warning SOURCE_CELL_DISPLAY_UNAVAILABLE, không
+truncate thành evidence đầy đủ; raw bytes vẫn retained private. Header label cùng
+guard. Sheet/file filters phải đúng import, foreign404, malformed422 INVALID_FILTER.
+
+Ví dụ extension `source_cells`/`planned_effect` của một I04 preview row
+(các fields PreviewRow hiện có vẫn trả đầy đủ, ReceiptEffect như mục16):
+
+```json
+{"source_cells":[{"location":{"file_id":"00000000-0000-0000-0000-000000000065","sheet_id":"00000000-0000-0000-0000-000000000064","row_number":2,"source_column_index":2,"record_number":null,"line_start":null,"line_end":null},"column_label":"Lượng thực nhận","raw_value":"5","cell_kind":"numeric","formula_present":false}],"planned_effect":{"kind":"receipt","action":"CREATE_RECEIPT","source_identity":{"source_system_key":"supplier-a-deliveries","source_record_id":"DN-20261013-001-L1"},"receipt_id":"00000000-0000-0000-0000-000000000071","lot_id":"00000000-0000-0000-0000-000000000072","movement_id":"00000000-0000-0000-0000-000000000073","origin":"ACTUAL_RECEIPT","movement_kind":"receipt","quantity_delta":"5","unit":"l","occurred_at":"2026-10-13T02:00:00Z","recorded_at":null,"conflict_code":null}}
+```
+
+Quyền M01/M02/I04 giữ current action+batch sensitive domain reads, own batch rules
+nếu applicable; không whitelist riêng từng cell để hạ quyền whole response. Page
+metadata pin preview_digest/mapping_revision/read_set versions, không live
+recanonicalize trên GET. Different filters cursor422; data changed409 PREVIEW_STALE
+hoặc snapshot unavailable; FE refresh preview, không ghép rows từ hai digests.
+No new mutations/audit business, no async job từ GET. MQ03 evidence dùng cùng
+SourceEvidenceCell và quyền full spec; không expose whole workbook qua queue.
+Acceptance tương lai: counts scope/filters/status/origin/empty; matching pages;
+source→exact canonical→effect provenance; finance denial; bounds không truncate
+audit facts; stale snapshot và no compute. Xem [bàn giao chung](API_CONTRACT.md#dot2-handoff).
 
 ## Canonical clarification for consumers
 

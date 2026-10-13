@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from app.application.contracts import readiness as dto
 from app.application.contracts import import_domains as domains
 from app.application.import_identity import content_digest
-from app.application.operational_import_facts import declaration_dependency,current_fees
+from app.application.operational_import_facts import declaration_dependency,current_fees,inventory_matches
 from app.application.planning_fee_bindings import fee_bindings
 
 ACTION_READS={
@@ -99,7 +99,7 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
     cutoff=start-timedelta(days=1)
     days=tuple(start+timedelta(days=i) for i in range(7))
     menu=[p for p in snapshot['products'] if p['active']]
-    declarations=latest_declarations(snapshot) if {'forecast','planning'}&set(actions) else ()
+    declarations=latest_declarations(snapshot) if {'forecast','planning','inventory'}&set(actions) else ()
     base_scope=[];planning_scope=[];forecast_exclusions=[];planning_exclusions=[];graph_unknown=False
     dependencies={}
     for p in (menu if {'forecast','planning'}&set(actions) else ()):
@@ -117,15 +117,9 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
         codes.extend(recipe_codes)
         if not recipe_codes:
             for ident in deps:
-                matching=[(r,d) for r,d in declarations if isinstance(d,domains.InventoryDeclaration) and str(d.ingredient_id)==ident and d.state!='UNKNOWN' and r['dependency_digest']==declaration_dependency(snapshot,d)]
+                matching=inventory_matches(snapshot,declarations,ident,now)
                 lots=[r for r in snapshot['inventory_lots'] if r['ingredient_id']==ident]
-                confirmed=False
-                for _,d in matching:
-                    if d.state=='COMPLETE_CURRENT_LOTS' and set(map(str,d.covered_lot_ids))=={r['id'] for r in lots}:
-                        confirmed=True
-                    if d.state=='CONFIRMED_EMPTY' and not d.covered_lot_ids and all(Decimal(r['on_hand_quantity'])==0 for r in lots):
-                        confirmed=True
-                if not confirmed:
+                if len(matching)!=1:
                     codes.append('INVENTORY_SCOPE_UNKNOWN')
                 ingredient=next(r for r in snapshot['ingredients'] if r['id']==ident)
                 if ingredient['expiry_tracking'] and any(r['expiry_date'] is None and Decimal(r['on_hand_quantity'])>0 for r in lots):
@@ -147,7 +141,9 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
         elif action=='menu':
             if not menu:warnings.append(issue('MENU_EMPTY','catalog'))
         elif action=='inventory':
-            warnings.append(issue('STOCK_COMPLETENESS_UNKNOWN','inventory'))
+            for ingredient in snapshot['ingredients']:
+                if len(inventory_matches(snapshot,declarations,ingredient['id'],now))!=1:
+                    warnings.append(issue('STOCK_COMPLETENESS_UNKNOWN','inventory',ingredient['id'],scope='INGREDIENT'))
         else:
             current_ids=planning_scope if action=='planning' else base_scope
             exclusions=planning_exclusions if action=='planning' else forecast_exclusions

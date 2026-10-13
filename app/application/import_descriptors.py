@@ -8,6 +8,7 @@ from app.application.contracts.import_field_values import allowed_scopes
 SCHEMAS = {
     "sales": ("Doanh số", "Observed sales theo Product/ngày; missing khác zero."),
     "inventory_count": ("Kiểm kê lô", "Count cho lô đã có; không receipt hoặc tạo lô."),
+    "opening_stock": ("Tồn đầu kỳ", "OPENING_STOCK của lô vật lý; không kiểm kê lô existing hoặc hàng thực nhận."),
     "recipes": ("Công thức", "Dated version; quantity mỗi Ingredient cho toàn yield."),
     "products": ("Món bán", "Định nghĩa Product, không doanh số."),
     "ingredients": ("Nguyên liệu", "Định nghĩa Ingredient và exact base unit."),
@@ -24,6 +25,11 @@ SCHEMAS = {
 }
 
 LABELS = {
+    "source_record_id": "Mã nguồn của lô tồn đầu kỳ",
+    "lot_code": "Nhãn lô vật lý",
+    "received_date": "Ngày thực nhận (có thể chưa biết)",
+    "expiry_date": "Ngày hết hạn",
+    "unit_cost": "Giá một đơn vị vật lý (có thể chưa biết)",
     "product_id": "Món bán (tên/mã đã nối)",
     "ingredient_id": "Nguyên liệu (tên/mã đã nối)",
     "supplier_id": "Nhà cung cấp (tên/mã đã nối)",
@@ -39,6 +45,7 @@ LABELS = {
     "effective_from": "Ngày bắt đầu hiệu lực",
     "effective_to": "Ngày kết thúc hiệu lực",
     "yield_quantity": "Sản lượng toàn mẻ",
+    "quantity_basis": "Cơ sở định lượng nguyên liệu",
     "yield_unit": "Đơn vị sản lượng",
     "process_loss_rate": "Tỷ lệ hao hụt",
     "name": "Tên",
@@ -51,10 +58,17 @@ LABELS = {
     "source_business_key": "Mã thực thể ở nguồn",
     "source_supplier_key": "Mã nhà cung cấp ở nguồn",
     "source_term_key": "Mã điều khoản ở nguồn",
-    "pack_size_base_quantity": "Số lượng cơ sở mỗi pack",
-    "pack_cost": "Giá mỗi pack",
+    "pack_size_base_quantity": "Lượng nguyên liệu trong một pack (đơn vị nguồn)",
+    "pack_cost": "Giá nguồn theo cơ sở giá",
     "currency": "Tiền tệ",
     "minimum_order_packs": "Số pack tối thiểu",
+    "minimum_order_quantity": "MOQ nguồn theo basis đã khai báo",
+    "price_basis": "Cơ sở giá nguồn",
+    "price_quantity": "Lượng mẫu số của giá",
+    "price_unit": "Đơn vị mẫu số của giá",
+    "moq_basis": "Cơ sở MOQ nguồn",
+    "moq_unit": "Đơn vị lượng MOQ",
+    "pack_label": "Nhãn pack (không đơn vị vật lý)",
     "lead_time_days": "Số ngày giao",
     "shelf_life_days": "Số ngày hạn dùng",
     "maximum_order_base_quantity": "Lượng mua tối đa",
@@ -87,7 +101,8 @@ ALIASES = {
     "recipes.effective_from": ("Áp dụng từ",),
     "supplier_terms.ingredient_id": ("Tên nguyên liệu", "Mã nguyên liệu", "Material"),
     "supplier_terms.supplier_id": ("Tên nhà cung cấp", "Mã nhà cung cấp", "Vendor"),
-    "supplier_terms.pack_size_base_quantity": ("Pack Size",),
+    "supplier_terms.pack_size_base_quantity": ("Pack Size", "Số lượng cơ sở mỗi pack"),
+    "supplier_terms.pack_cost": ("Giá mỗi pack",),
     "supplier_terms.unit": ("Base UOM",),
     "supplier_terms.lead_time_days": ("Lead time (days)",),
     "inventory_count.lot_id": ("Mã lô đã định danh", "Mã lô"),
@@ -139,7 +154,7 @@ def semantic_review_candidate(header, schema):
         ("inventory_count", "Ngày kiểm kê"): ("inventory_count.observed_at", "COUNT_TIME_AND_TIMEZONE_REQUIRED"),
         ("recipes", "Lượng / 1 SP"): ("recipes.quantity", "PER_SERVING_VS_WHOLE_YIELD_REVIEW"),
         ("recipes", "Ver"): ("recipes.version", "INTEGER_VERSION_REQUIRED"),
-        ("supplier_terms", "MOQ"): ("supplier_terms.minimum_order_packs", "MOQ_PACK_VS_BASE_UNIT_REVIEW"),
+        ("supplier_terms", "MOQ"): ("supplier_terms.minimum_order_quantity", "MOQ_PACK_VS_BASE_UNIT_REVIEW"),
         ("supplier_terms", "Giá mua"): ("supplier_terms.pack_cost", "PER_PACK_VS_UNIT_PRICE_REVIEW"),
     }
     return next((value for (kind, name), value in candidates.items()
@@ -155,14 +170,16 @@ def options(schema=None):
             if key == "domain":
                 continue
             full = name + "." + key
-            unit = key in {"unit", "yield_unit", "base_unit", "selling_unit"}
+            unit = key in {"unit", "yield_unit", "base_unit", "selling_unit", "price_unit", "moq_unit"}
             role = (
                 "resolve_only"
-                if key.endswith("_id")
+                if key.endswith("_id") and key != "source_record_id"
                 else (
                     "source_only"
-                    if key.startswith("source_")
-                    or key in {"business_report_key", "reason", "evidence_reference"}
+                    if key.startswith("source_") or name == "supplier_terms" and key in {
+                        "price_basis", "price_quantity", "price_unit", "moq_basis",
+                        "moq_unit", "minimum_order_quantity", "pack_label"}
+                    or key in {"business_report_key", "reason", "evidence_reference", "quantity_basis"}
                     else "canonical_candidate"
                 )
             )
@@ -192,7 +209,7 @@ def options(schema=None):
                 if unit
                 else (
                     "Tên/mã nguồn hoặc UUID được resolve bằng binding đã duyệt trong Store; không fuzzy-match hoặc tự tạo thực thể."
-                    if key.endswith("_id")
+                    if key.endswith("_id") and key != "source_record_id"
                     else (
                         "Explicit source reference, not automatically a canonical DB column."
                         if role == "source_only"
@@ -202,10 +219,26 @@ def options(schema=None):
             )
             if full == "inventory_count.observed_at":
                 description = "Thời điểm thực sự kiểm kê có timezone; không ngày nhận hàng, ngày mua hoặc ngày upload."
+            elif full == "opening_stock.observed_at":
+                description = "Thời điểm quan sát tồn đầu kỳ có timezone, khác ngày nhận; không tự dùng ngày upload."
+            elif full == "opening_stock.quantity":
+                description = "Số còn thực tế >0 của lô vật lý riêng; zero toàn nguyên liệu dùng completeness declaration, không tạo lô zero."
             elif full == "inventory_count.on_hand":
                 description = "Số còn thực tế của lô hiện có, không lượng nhận/mua; zero hợp lệ, không tạo lô mới."
             elif full == "sales.sales_date":
                 description = "Ngày bán đã quan sát; không ngày nhập file hoặc ngày mua nguyên liệu."
+            elif full == "recipes.quantity_basis":
+                description = "Explicit PER_SERVING (mỗi đơn vị bán) hoặc WHOLE_BATCH (toàn yield); Owner review, không suy từ header."
+            elif full == "recipes.quantity":
+                description = "Định lượng nguồn theo quantity_basis; preview chuyển PER_SERVING × yield sang lượng toàn mẻ, chưa áp loss."
+            elif full == "supplier_terms.pack_cost":
+                description = "Giá nguồn theo price_basis; canonical after luôn là giá trọn pack, không gồm payable fees."
+            elif full == "supplier_terms.price_basis":
+                description = "PER_PACK hoặc PER_QUANTITY. PER_QUANTITY bắt buộc price_quantity >0 và price_unit; PER_PACK cần hai giá trị null rõ ràng."
+            elif full == "supplier_terms.minimum_order_quantity":
+                description = "MOQ nguồn >0: PACKS phải nguyên; PHYSICAL_QUANTITY cần moq_unit và exact ceil thành minimum_order_packs. Zero basket vẫn hợp lệ."
+            elif full == "supplier_terms.unit":
+                description = "Đơn vị vật lý của lượng trong một pack; không phải nhãn thùng/bao. Quy đổi có evidence tới Ingredient.base_unit."
             prop = model.model_json_schema()["properties"][key]
             bounds = tuple(f"{name}={p[name]}" for p in prop.get("anyOf", (prop,))
                            for name in ("minLength", "maxLength", "pattern") if name in p)
@@ -226,7 +259,7 @@ def options(schema=None):
                     nullable=nullable,
                     input_sources=(
                         ("excel", "binding")
-                        if key.endswith("_id")
+                        if key.endswith("_id") and key != "source_record_id"
                         else (
                             ("excel", "shared_value")
                             if allowed_scopes(full)
@@ -236,7 +269,7 @@ def options(schema=None):
                     allowed_shared_scopes=allowed_scopes(full),
                     input_help=(
                         "Cột có thể chứa tên/mã nguồn đã nối với IdentityRule hoặc reservation được duyệt; không bắt Excel chứa UUID. Mã lô phải xác định duy nhất, lot_code không tự là identity."
-                        if key.endswith("_id")
+                        if key.endswith("_id") and key != "source_record_id"
                         else (
                             "Chọn rõ cột hoặc giá trị chung thuộc allowed_shared_scopes; không fallback ô trống, đoán defaults. IMPORT_VALUE không reuse giá trị; PROFILE_CONSTANT cần Owner duyệt. Null chỉ khi nullable."
                             if allowed_scopes(full)

@@ -1,5 +1,6 @@
 """Atomic received lots and justified corrections, without FEFO or expiry automation."""
 from sqlalchemy.orm import Session
+from uuid import UUID
 from app.application._validation import load_ingredient, require_idle_session, require_supplier, require_unit
 from app.application.contracts.inventory import AdjustInventoryInput, GetInventoryLotInput, InventoryLotResult, InventoryMovementResult, InventoryMutationResult, ReceiveInventoryInput
 from app.application.errors import ApplicationError, ErrorCategory
@@ -25,7 +26,7 @@ class InventoryUseCases:
             self.session.rollback()
             raise
 
-    def receive_in_transaction(self, data: ReceiveInventoryInput, *, opening: bool = False) -> InventoryMutationResult:
+    def receive_in_transaction(self, data: ReceiveInventoryInput, *, opening: bool = False, reserved_id: UUID | None = None) -> InventoryMutationResult:
         """Caller owns atomic transaction; opening is current stock, not receipt history."""
         data = ReceiveInventoryInput.model_validate(data)
         ingredient = load_ingredient(self.session, data.store_id, data.ingredient_id)
@@ -38,6 +39,8 @@ class InventoryUseCases:
             supplier_id=data.supplier_id, lot_code=data.lot_code, received_date=data.received_date,
             expiry_date=data.expiry_date, on_hand_quantity=data.quantity, unit=data.unit,
             unit_cost=data.unit_cost)
+        if reserved_id is not None:
+            lot.id = reserved_id
         self.inventory.add_lot(data.store_id, lot)
         self.session.flush()
         movement = InventoryMovement(store_id=data.store_id, lot_id=lot.id,

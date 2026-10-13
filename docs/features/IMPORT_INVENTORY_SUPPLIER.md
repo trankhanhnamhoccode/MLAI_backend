@@ -13,9 +13,11 @@ CURRENT FACT: source/DTO của S4.6; kết quả kiểm chứng và giới hạn
 2. I01 → I02 nhiều calls → I03 seal → worker analyze → M01–M05 review.
    Quota/source-set/seal/replay giữ semantics S4.4; không thêm route nhập theo từng bảng.
 3. I05 `phase=preview` → J01 → I04 `?include=preview,configurations`.
-   Preview không ghi canonical. Cả chín source schemas hiện có writer:
+   Preview không ghi canonical. Mười source schemas hiện có writer:
    products, ingredients, sales, recipes, inventory_count, suppliers,
-   supplier_terms, payable_fees, scope_declarations.
+   supplier_terms, payable_fees, scope_declarations và opening_stock.
+   Setup identity/Excel opening/count projection/completeness hiện hành thuộc
+   [Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#setup-identity-excel-opening-stock-và-lot-count--current-fact).
 4. M06 xác nhận evidence của chính import; activation không thay xác nhận này.
    I05 `phase=commit` phải có If-Match hiện hành, preview_id/digest và confirm=true.
    `supplier_changes=[{action_id: PreviewRow.row_id, reason}]` phải đúng toàn bộ
@@ -29,6 +31,12 @@ CURRENT FACT: source/DTO của S4.6; kết quả kiểm chứng và giới hạn
    Owner sửa ngưỡng cảnh báo bằng N8; ngưỡng không trở thành planning constraint.
 
 ## Nhóm ghi và provenance
+
+CURRENT FACT: Supplier source price/MOQ semantics đã bổ sung; source schema tách
+khỏi canonical payload, exact price denominator/unit conversion và physical MOQ
+ceil giữ provenance qua preview/completion/TermSourceRecord. Không thêm endpoint
+hoặc migration. FE fields, examples, unsupported units/pricing và readiness fee
+scope thuộc [canonical Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#supplier-source-basis-và-fe-projection).
 
 | Nhóm | CURRENT FACT canonical writes | Giới hạn chủ ý |
 | --- | --- | --- |
@@ -68,8 +76,8 @@ V01/V02 chỉ CONFIRMED nếu revision declaration mới nhất của identity c
 Ingredient/tập lô hiện tại. Thêm/đổi lô khiến evidence cũ UNKNOWN; GET không ghi.
 Conflicting declarations còn hiệu lực không tự chọn một nguồn. Cost không trả hoặc
 SELECT qua projection completeness nếu thiếu procurement.cost.read.
-SALES_COVERAGE và PROCUREMENT_CONTEXT được lưu typed/provenance nhưng chưa chạy
-readiness/forecast/planning. PRESENT_UNSUPPORTED không trở thành facts engine biết xử lý.
+SALES_COVERAGE và PROCUREMENT_CONTEXT hiện nối readiness/capture/planning qua
+scoped dependency evidence. PRESENT_UNSUPPORTED giữ blocker; không fake inbound.
 
 ## N6 — Ghi nhận lô thực tế
 

@@ -46,7 +46,10 @@ def shared(imp, ident, target, value, scope="IMPORT_VALUE", **extra):
 
 
 def review(imp, ident, identities=None, context=None, schema="sales"):
-    for item in listing(imp, ident):
+    for item in sorted(listing(imp, ident), key=lambda i: i["issue_type"] != "source_context"):
+        item = next((i for i in listing(imp, ident) if i["mapping_id"] == item["mapping_id"]), None)
+        if item is None:
+            continue  # Approved alias resolved this discovery-only issue.
         if item["status"] in ("auto_mapped", "resolved"):
             continue
         if item["issue_type"] == "classification":
@@ -182,9 +185,12 @@ def test_first_sales_then_reuse_requires_new_import_report_key(imp, monkeypatch)
     monkeypatch.setattr(
         import_suggestions,
         "suggest_sheet",
-        lambda *a, **kw: pytest.fail("reuse called Qwen"),
+        lambda *a, **kw: (None, "LLM_UNAVAILABLE"),
     )
     second = analyzed(imp, content)
+    assert not summary(imp, second)["binding_refs"]
+    monkeypatch.setattr(import_suggestions, "suggest_sheet", lambda *a, **kw: pytest.fail("source-selected reuse called Qwen"))
+    review(imp, second, ids, {"date_format": "DMY_SLASH"})
     m = summary(imp, second)
     assert m["binding_refs"] and not m["can_preview"]
     assert any(x["code"] == "MISSING_IMPORT_VALUE" for x in m["blockers"])
@@ -500,6 +506,7 @@ def test_recipe_missing_columns_need_explicit_sources_and_preserve_null(imp):
     assert not m["can_preview"]
     assert "recipes.yield_quantity" in m["profile_proposals"][0]["missing_fields"]
     for field, value, scope in [
+        ("quantity_basis", "WHOLE_BATCH", "PROFILE_CONSTANT"),
         ("yield_quantity", "10", "PROFILE_CONSTANT"),
         ("yield_unit", "cup", "PROFILE_CONSTANT"),
         ("process_loss_rate", "0.2", "PROFILE_CONSTANT"),

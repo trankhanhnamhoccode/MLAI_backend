@@ -62,7 +62,8 @@ def discover(file_id, parsed: ParsedFile):
             for i in range(width)
         ]
         signature = content_digest(
-            dict(headers=headers, kinds=kinds, header_row=header.row_number)
+            dict(headers=headers, kinds=kinds, header_row=header.row_number,
+                 **({'excel_date_system': parsed.excel_date_system} if parsed.excel_date_system else {}))
         )
         sid = uuid4()
         selected, proposals, confidence, _ = rule_classification(headers, sheet.name)
@@ -79,6 +80,7 @@ def discover(file_id, parsed: ParsedFile):
                 preamble_samples=tuple(" | ".join(c.raw or "" for c in r.cells
                     if c.raw not in (None, ""))[:1000] for r in sheet.rows[:index]),
                 profile_id=None,
+                excel_date_system=parsed.excel_date_system,
                 selected_type=selected,
                 suggested_type=selected,
                 classification_origin="RULE" if selected else "NONE",
@@ -131,6 +133,7 @@ def discover(file_id, parsed: ParsedFile):
             if target and target.endswith((".sales_date", ".effective_from", ".effective_to")):
                 if any(c.column_index == i and c.kind == "numeric" for r in body for c in r.cells):
                     reason += ";DATE_CONVENTION_REVIEW: numeric lexical value is not an approved date format"
+            informational = selected is None and sheet.name.casefold() == "readme"
             issues.append(
                 dto.MappingIssue(
                     mapping_id=uuid4(),
@@ -154,6 +157,8 @@ def discover(file_id, parsed: ParsedFile):
                     suggested_target_field=target,
                     candidate_targets=candidates,
                     suggestion_reason=reason,
+                    field_category="D" if informational else ("B" if candidates and not target or "DATE_CONVENTION_REVIEW" in reason else "A" if target else "C"),
+                    suggested_ignore=informational,
                     samples=tuple(
                         (
                             next((c.raw for c in r.cells if c.column_index == i), None)
@@ -172,7 +177,8 @@ def discover(file_id, parsed: ParsedFile):
                 file_id=str(file_id),
                 preamble=[source_row(r) for r in sheet.rows[:index]],
                 header=source_row(header),
-                rows=[source_row(r) for r in body],
+                excel_date_system=parsed.excel_date_system,
+                rows=[dict(source_row(r), excel_date_system=parsed.excel_date_system) for r in body],
             )
         )
     return sheets, issues, sources
@@ -296,7 +302,10 @@ def build_spec(
         if i.status not in {"resolved", "auto_mapped"} and not (
             i.status == "needs_confirmation" and i.suggestion_origin == "RULE"
             and i.target_field and i.candidate_targets == (i.target_field,)
-            and i.suggestion_reason in {"EXACT_CANONICAL_HEADER", "CONTROLLED_HEADER_ALIAS"}
+            and (i.suggestion_reason in {"EXACT_CANONICAL_HEADER", "CONTROLLED_HEADER_ALIAS"}
+                 or "DATE_CONVENTION_REVIEW" in (i.suggestion_reason or "")
+                 and context is not None and context.date_format == "EXCEL_SERIAL"
+                 and sheet.excel_date_system in {"1900", "1904"})
         ):
             missing.append("column:" + str(i.source_location.source_column_index))
     for i in own:
@@ -347,9 +356,12 @@ def build_spec(
                 "yield_quantity",
                 "process_loss_rate",
                 "price",
+                "unit_cost",
                 "pack_cost",
                 "pack_size_base_quantity",
                 "maximum_order_base_quantity",
+                "price_quantity",
+                "minimum_order_quantity",
             }
         )
         normalizations.append(
@@ -366,36 +378,25 @@ def build_spec(
         fields = tuple(
             k
             for k in SOURCE_MODELS[schema].model_fields
-            if k in {"sales_date", "effective_from", "effective_to"}
+            if k in {"sales_date", "effective_from", "effective_to", "received_date", "expiry_date"}
         )
+        if context.date_format == "EXCEL_SERIAL" and sheet.excel_date_system is None:
+            return None, ("EXCEL_DATE_SYSTEM_REQUIRED",)
         normalizations.append(
             dto.Normalization(
                 rule_id="declared_date_format",
                 kind="date_format",
                 fields=fields,
-                parameter=context.date_format,
+                parameter=("EXCEL_" + sheet.excel_date_system if context.date_format == "EXCEL_SERIAL" else context.date_format),
                 evidence_reference=context.evidence_reference,
             )
         )
-    if context.pack_cost_basis == "PER_SOURCE_UNIT":
-        normalizations = [
-            r for r in normalizations if r.rule_id != "declared_pack_pricing_basis"
-        ]
-        if schema != "supplier_terms":
-            return None, ("pricing_basis_requires_supplier_terms",)
-        normalizations.append(
-            dto.Normalization(
-                rule_id="declared_pack_pricing_basis",
-                kind="exact_scale",
-                fields=("pack_cost", "pack_size_base_quantity"),
-                parameter="PACK_COST_FROM_SOURCE_UNIT_PRICE",
-                evidence_reference=context.evidence_reference,
-            )
-        )
-    elif context.pack_cost_basis == "PER_PACK":
-        normalizations = [
-            r for r in normalizations if r.rule_id != "declared_pack_pricing_basis"
-        ]
+    if context.pack_cost_basis is not None:
+        return None, ("USE_EXPLICIT_SUPPLIER_PRICE_BASIS",)
+    if schema == "supplier_terms":
+        # A newly reviewed explicit source contract replaces the old implicit-one rule.
+        # Retained approved versions are never mutated by this proposal rebuild.
+        normalizations = [r for r in normalizations if r.parameter != "PACK_COST_FROM_SOURCE_UNIT_PRICE"]
     return (
         dto.ProfileSpec(
             shared_field_bindings=shared,
@@ -493,6 +494,42 @@ def identity_issues(sheets, issues, sources, snapshot, specs=None):
         rawsheet = next(
             raw for raw in sources if raw["sheet_id"] == str(sheet.sheet_id)
         )
+        # Nested declarations use the same reviewed Store bindings as flat references.
+        import json
+        declaration_column = next((b.source_column_index for b in bindings
+            if b.target_field == "scope_declarations.declaration"), None)
+        if declaration_column is not None:
+            for row in rawsheet["rows"]:
+                raw = next((c["raw"] for c in row["cells"] if c["column_index"] == declaration_column), None)
+                try:
+                    declaration = json.loads(raw)
+                    tokens = []
+                    if declaration.get("kind") == "INVENTORY":
+                        tokens = [("ingredient", declaration.get("ingredient_id"))] + [("lot", t) for t in declaration.get("covered_lot_ids", [])]
+                    elif declaration.get("kind") == "SALES_COVERAGE":
+                        tokens = [("product", t) for t in declaration.get("product_ids", [])]
+                    elif declaration.get("kind") == "PROCUREMENT_CONTEXT":
+                        for key in ("capacities", "supplier_limits"):
+                            for item in declaration.get(key, []):
+                                tokens.append(("ingredient", item.get("ingredient_id")))
+                                if key == "supplier_limits":tokens.append(("supplier", item.get("supplier_id")))
+                except (ValueError, TypeError, AttributeError):
+                    continue
+                for entity, token_value in tokens:
+                    if not isinstance(token_value, str) or not token_value:
+                        continue
+                    resolved = any(r["id"] == token_value for r in registries[entity]) or spec and any(
+                        r.entity == entity and r.source_token == token_value for r in spec.identity_rules + spec.aliases)
+                    token = (str(sheet.sheet_id), entity, token_value)
+                    if resolved or token in seen:
+                        continue
+                    seen.add(token)
+                    extra.append(dto.MappingIssue(mapping_id=uuid4(), sheet_id=sheet.sheet_id,
+                        issue_type="identity", code="UNKNOWN_" + entity.upper(), status="unmatched",
+                        source_location=dto.SourceLocation(file_id=sheet.file_id, sheet_id=sheet.sheet_id,
+                            row_number=row["row_number"], source_column_index=declaration_column),
+                        source_header=token_value, target_field="scope_declarations.declaration",
+                        samples=(token_value[:200],), resolution_origin="UNRESOLVED"))
         for bind in bindings:
             if not bind.target_field:
                 continue
@@ -649,4 +686,39 @@ def identity_issues(sheets, issues, sources, snapshot, specs=None):
                             resolution_origin="UNRESOLVED",
                         )
                     )
+        # Supplier denominator and physical MOQ units also need reachable M04 review.
+        # Shared declarations and reviewed identity aliases must follow the same path.
+        if any(b.target_field and b.target_field.startswith("supplier_terms.") for b in bindings):
+            def source_field(row, field):
+                target = "supplier_terms." + field
+                binding = next((b for b in bindings if b.target_field == target), None)
+                if binding:
+                    return next((c["raw"] for c in row["cells"] if c["column_index"] == binding.source_column_index), None), binding.source_column_index
+                rule = next((r for r in spec.shared_field_bindings if r.target_field == target), None) if spec else None
+                declaration = rule if rule and rule.scope == "PROFILE_CONSTANT" else next(
+                    (v for v in sheet.import_values if v.target_field == target), None)
+                return (declaration.value if declaration else None), None
+
+            for row in rawsheet["rows"]:
+                ident, _ = source_field(row, "ingredient_id")
+                if spec:
+                    ident = next((str(r.canonical_id) for r in spec.identity_rules + spec.aliases
+                        if r.entity == "ingredient" and r.source_token == ident), ident)
+                record = next((r for r in registries["ingredient"] if r["id"] == ident), None)
+                if record is None and spec:
+                    record = next(({"base_unit": r.metadata.base_unit} for r in spec.entity_proposals
+                        if r.entity == "ingredient" and r.source_business_key == ident), None)
+                unit = record["base_unit"] if record else None
+                for field in ("unit", "price_unit", "moq_unit"):
+                    raw, index = source_field(row, field)
+                    token = (str(sheet.sheet_id), "unit", raw)
+                    if raw and unit and raw != unit and token not in seen and not (
+                        spec and any(c.from_unit == raw and c.to_unit == unit for c in spec.conversions)):
+                        seen.add(token)
+                        extra.append(dto.MappingIssue(mapping_id=uuid4(), sheet_id=sheet.sheet_id,
+                            issue_type="conversion", code="UNIT_CONVERSION_REQUIRED", status="unmatched",
+                            source_location=dto.SourceLocation(file_id=sheet.file_id, sheet_id=sheet.sheet_id,
+                                row_number=row["row_number"], source_column_index=index),
+                            source_header=raw, target_field="supplier_terms." + field,
+                            samples=(raw[:200], unit), resolution_origin="UNRESOLVED"))
     return extra

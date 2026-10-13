@@ -32,12 +32,62 @@ FE, triển khai ngoài import hoặc deploy trong phạm vi này.
 
 CURRENT FACT: v1.0 đã push; nhánh import riêng đã có header/preamble discovery,
 controlled aliases/candidates/reasons, full-spec Owner review và scoped drift notice.
-Reuse không học từ proposal chưa duyệt. Numeric Excel dates, version `v1.2`, MOQ/
-pricing basis và per-serving recipe semantics vẫn cần dữ liệu/quyết định rõ ràng;
+Reuse không học từ proposal chưa duyệt. Slice analyze → rules/LLM proposal → Owner
+review → reuse đã có bounded candidates/reasons/diagnostics, late-result revision
+fence và offline HTTP/DB acceptance. Numeric Excel dates hỗ trợ explicit
+EXCEL_SERIAL + workbook epoch + Owner review; không tự chọn date semantics.
+Live gateway probe POS demo đã nhận proposal hợp lệ cho SLX và giữ unsupported
+columns null; không mở rộng workbook khác hay activate/commit. Whole browser flow
+và broader model quality chưa kiểm chứng; live calls theo approved scope. Version
+`v1.2` chưa release; Supplier source price/MOQ basis đã có explicit quantity/unit
+declarations và exact normalization; recipe source basis đã có explicit
+PER_SERVING/WHOLE_BATCH và Owner-reviewed scalar resolution → exact normalization
+→ preview/atomic commit → fresh recipe/BOM/recipe readiness. Không defaults/loss kép,
+old profiles thiếu basis cần review; output conversion chưa hỗ trợ. FE chưa có
+acceptance cho selector/provenance mới;
 consumption, purchase history, calendar/weather và tabular business rules chưa có
 writer import. Đưa các workflow này vào import là slice riêng, chưa được thực hiện.
 
+ACCEPTED DECISION: ưu tiên nghiệp vụ cốt lõi theo chuỗi schema → mapping/resolution
+→ validation → persistence → consumer → readiness, không theo số cột của sáu workbook.
+Giữ Owner approval/profile reuse/exact semantics; không port defaults, permissive
+conversions hoặc constraints chỉ lưu nhưng chưa enforce. Chín writer schemas hiện có
+được dùng làm nền; thiếu một alias không được xem là thiếu cả persistence/consumer.
+CURRENT FACT: Recipe serving/batch và SupplierTerm price/MOQ units đã implement
+trong các slices được người dùng duyệt. Supplier source/canonical contracts tách
+riêng; whole-pack price/MOQ normalization, Owner/profile review, preview/atomic
+commit và immutable evidence nối writer/capture/procurement/readiness hiện có.
+Acceptance gồm fresh-session persistence, exact MOQ/budget oracle và retained Run;
+không đồng nghĩa toàn browser flow hoặc full regression. Các nghiệp vụ ngoài phạm
+vi vẫn cần authorization riêng. Xem
+[field inventory/gaps](features/IMPORT_SCHEMA_INVENTORY.md).
+
+CURRENT FACT: lát setup identity/opening/count/completeness đã nối public intake
+đến custom Planning trên Store mới không seed business facts. Source opening_stock
+dùng writer/receipt identity N6, whole-batch dependencies và typed declaration
+bindings; count/stock CAS, quyền và atomic rollback giữ nguyên. R01/capture operational/2
+cùng kiểm một current completeness scope, nhận explicit zero trên retained lots.
+Source declaration M04 đi trước compatible reuse; signature không chứng minh nguồn.
+Recipe cross-sheet cùng version bị RECIPE_SOURCE_SCOPE_AMBIGUOUS; split-part grain
+chưa supported. Retirement giữ chặn cả fresh reuse và pending commit.
+Default configuration absence vẫn UNKNOWN; whole browser acceptance chưa chạy.
+Excel actual receipts và stockout vẫn là lát riêng, không được mở theo kết quả này.
+
+ACCEPTED DECISION: stockout là hạng mục tiếp theo riêng. Legacy có consumer
+reconstruction/rolling features trong training/inference, không chỉ storage.
+Thiết kế nullable observation, observed/reconstructed separation, provenance/as-of
+và forecast compatibility còn PROPOSAL; không mở rộng forecast trong core import.
+
 ## PROPOSAL / ngoài phạm vi đã duyệt
+
+- [TD-BE review](../008_TechDebt.md) là review/acceptance dependency, không ủy quyền
+  implement/deploy endpoint PROPOSED. Ưu tiên Product freeze queue semantics TD004
+  trước Staff→Owner→Staff; kế tiếp supplier/location TD007 và settings TD010,
+  preview/PDF discovery/Today TD006/008/009. Budget absence/create hiện có C01/N4,
+  Ingredient discovery có V01; FE cần current environment/rights/persistence evidence.
+  Product chốt assisted/public provisioning và decline TD001/002; AI/What-if/PO
+  TD011–013 phải chốt scope/design trước API. Owner cá nhân và ngày môi trường mới
+  chưa được xác nhận; không mục nào đủ điều kiện đề nghị đóng từ review tài liệu.
 
 - Dashboard D01/prototype screens and draft PO remain proposals unless separately
   approved; the retired v0 prototype contract is not implementation authority.

@@ -4,7 +4,8 @@ from datetime import date, datetime
 from typing import Literal, Annotated
 from uuid import UUID
 from decimal import Decimal
-from pydantic import Field, StrictBool, StrictInt, model_validator
+from fractions import Fraction
+from pydantic import Field, StrictBool, StrictInt, AwareDatetime, model_validator
 from app.application.contracts.import_scalars import ImportDTO as DTO
 from app.application.contracts.import_scalars import (
     Quantity,
@@ -41,8 +42,37 @@ class CountSource(DTO):
         return self
 
 
+class OpeningSource(DTO):
+    domain: Literal["opening_stock"] = "opening_stock"
+    source_record_id: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
+    ingredient_id: UUID
+    supplier_id: UUID | None
+    lot_code: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")] | None
+    quantity: Quantity
+    unit: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
+    received_date: date | None
+    expiry_date: date | None
+    unit_cost: Money | None
+    currency: Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
+    observed_at: AwareDatetime
+    reason: Text
+
+    @model_validator(mode="after")
+    def stock(self):
+        if Decimal(self.quantity) <= 0:
+            raise ValueError("POSITIVE_OPENING_REQUIRED")
+        if self.received_date and self.expiry_date and self.expiry_date < self.received_date:
+            raise ValueError("EXPIRY_BEFORE_RECEIPT")
+        return self
+
+
+class OpeningValue(OpeningSource):
+    lot_id: UUID
+
+
 class RecipeSource(DTO):
     domain: Literal["recipes"] = "recipes"
+    quantity_basis: Literal["PER_SERVING", "WHOLE_BATCH"]
     product_id: UUID
     version: StrictInt = Field(ge=1, le=2147483647)
     effective_from: date
@@ -100,7 +130,7 @@ class SupplierSource(SupplierMetadata):
     source_supplier_key: Text
 
 
-class TermSource(DTO):
+class TermFacts(DTO):
     domain: Literal["supplier_terms"] = "supplier_terms"
     source_term_key: Text
     supplier_id: UUID
@@ -111,7 +141,6 @@ class TermSource(DTO):
     pack_size_base_quantity: Quantity
     pack_cost: Money
     currency: str
-    minimum_order_packs: StrictInt = Field(ge=1, le=2147483647)
     lead_time_days: StrictInt = Field(ge=0, le=2147483647)
     shelf_life_days: StrictInt | None = Field(ge=0, le=2147483647)
     active: StrictBool
@@ -124,6 +153,60 @@ class TermSource(DTO):
         if self.effective_to is not None and self.effective_to < self.effective_from:
             raise ValueError("INVALID_PERIOD")
         return self
+
+
+class TermSource(TermFacts):
+    """Canonical procurement facts; retained evidence keeps its original meaning."""
+    minimum_order_packs: StrictInt = Field(ge=1, le=2147483647)
+
+
+class TermImportSource(TermFacts):
+    """Reviewed source semantics, distinct from persisted canonical term values."""
+    price_basis: Literal["PER_PACK", "PER_QUANTITY"]
+    price_quantity: Quantity | None
+    price_unit: str | None
+    moq_basis: Literal["PACKS", "PHYSICAL_QUANTITY"]
+    minimum_order_quantity: Quantity
+    moq_unit: str | None
+    pack_label: Text | None = None
+
+    @model_validator(mode="after")
+    def bases(self):
+        if self.price_basis == "PER_PACK":
+            if self.price_quantity is not None or self.price_unit is not None:
+                raise ValueError("UNEXPECTED_PRICE_DENOMINATOR")
+        elif self.price_quantity is None or Decimal(self.price_quantity) <= 0 or not self.price_unit:
+            raise ValueError("PRICE_DENOMINATOR_REQUIRED")
+        if Decimal(self.minimum_order_quantity) <= 0:
+            raise ValueError("INVALID_MOQ")
+        if self.moq_basis == "PACKS":
+            if self.moq_unit is not None or Fraction(Decimal(self.minimum_order_quantity)).denominator != 1:
+                raise ValueError("INTEGER_PACK_MOQ_REQUIRED")
+        elif not self.moq_unit:
+            raise ValueError("MOQ_UNIT_REQUIRED")
+        return self
+
+
+class SupplierTermSemantics(DTO):
+    pack_label: Text | None
+    source_pack_quantity: Quantity
+    source_pack_unit: str
+    source_price: Money
+    price_basis: Literal["PER_PACK", "PER_QUANTITY"]
+    price_quantity: Quantity | None
+    price_unit: str | None
+    canonical_price_quantity: Quantity | None
+    moq_basis: Literal["PACKS", "PHYSICAL_QUANTITY"]
+    source_moq_quantity: Quantity
+    moq_unit: str | None
+    canonical_moq_quantity: Quantity | None
+    minimum_order_packs: StrictInt
+    fee_coverage: Literal["UNKNOWN", "COMPLETE"] = "UNKNOWN"
+    fee_coverage_date: date | None = None
+
+
+class ResolvedTermSource(TermSource):
+    source_semantics: SupplierTermSemantics
 
 
 class FeeComponent(DTO):
@@ -266,11 +349,12 @@ class DeclarationSource(DTO):
 SourceValue = Annotated[
     SalesSource
     | CountSource
+    | OpeningSource
     | RecipeSource
     | ProductSource
     | IngredientSource
     | SupplierSource
-    | TermSource
+    | TermImportSource
     | FeeSource
     | DeclarationSource,
     Field(discriminator="domain"),
@@ -285,6 +369,7 @@ class TermValue(TermSource):
 CanonicalValue = Annotated[
     SalesSource
     | CountSource
+    | OpeningValue
     | RecipeValue
     | ProductSource
     | IngredientSource
@@ -297,11 +382,12 @@ CanonicalValue = Annotated[
 SOURCE_MODELS = {
     "sales": SalesSource,
     "inventory_count": CountSource,
+    "opening_stock": OpeningSource,
     "recipes": RecipeSource,
     "products": ProductSource,
     "ingredients": IngredientSource,
     "suppliers": SupplierSource,
-    "supplier_terms": TermSource,
+    "supplier_terms": TermImportSource,
     "payable_fees": FeeSource,
     "scope_declarations": DeclarationSource,
 }

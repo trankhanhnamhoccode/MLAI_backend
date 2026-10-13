@@ -106,12 +106,16 @@ def approved(
     listing = client.get(base + "/mappings?review_only=false&limit=100").json()["data"][
         "items"
     ]
-    for item in listing:
+    for item in sorted(listing, key=lambda i: i["issue_type"] != "source_context"):
         if item.get("ignored"):
             continue
         summary = client.get(
             base + "/mapping-summary?include_profile_details=true"
         ).json()["data"]
+        current = next((i for i in client.get(base + "/mappings?review_only=false&limit=100").json()["data"]["items"]
+            if i["mapping_id"] == item["mapping_id"]), None)
+        if current is None or current["status"] == "auto_mapped":
+            continue
         if item["issue_type"] == "classification":
             sheet = next(
                 sh for sh in summary["sheets"] if sh["sheet_id"] == item["sheet_id"]
@@ -153,6 +157,14 @@ def approved(
     summary = client.get(base + "/mapping-summary?include_profile_details=true").json()[
         "data"
     ]
+    if summary["can_preview"] and not summary["profile_proposals"]:
+        from app.models.import_staging import ImportProfile
+        ref = summary["binding_refs"][0]
+        with Session(imp[0][1]) as session:
+            profile = session.get(ImportProfile, UUID(ref["profile_id"]))
+            return dict(profile_id=ref["profile_id"], approved_version=ref["version"],
+                active_version=profile.active_version, lifecycle_revision=profile.lifecycle_revision,
+                content_digest=ref["content_digest"], proposal_revision=profile.proposal_revision)
     p = summary["profile_proposals"][0]
     assert (
         p["missing_fields"] == [] and p["spec"]["scope"]["source_system_key"] == source
@@ -236,6 +248,9 @@ def test_approved_structure_reuse_without_reapproval(imp, monkeypatch):
         ),
     )
     second = analyzed(imp)
+    # Source must be declared for this upload before compatible profile reuse.
+    from tests.integration.test_import_rule_review import declare_context
+    declare_context(imp, second, {'source_system_key': 'POS-A', 'report_type': 'daily-sales'})
     summary = (
         imp[0][5]
         .get(
@@ -331,7 +346,7 @@ def test_recipe_count_term_fee_and_declarations_are_retained_not_canonical(imp):
                 version=1,
                 effective_from="2026-10-11",
                 effective_to=None,
-                yield_quantity="10",
+                quantity_basis="WHOLE_BATCH", yield_quantity="10",
                 yield_unit="cup",
                 process_loss_rate="0.2",
                 ingredient_id=ingredient,
@@ -364,7 +379,7 @@ def test_recipe_count_term_fee_and_declarations_are_retained_not_canonical(imp):
                 pack_size_base_quantity="1000",
                 pack_cost="28000",
                 currency="VND",
-                minimum_order_packs=1,
+                minimum_order_quantity="1", price_basis="PER_PACK", price_quantity=None, price_unit=None, moq_basis="PACKS", moq_unit=None,
                 lead_time_days=1,
                 shelf_life_days=14,
                 active=True,

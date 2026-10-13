@@ -25,7 +25,7 @@ def changes_declaration_dependency(rows, declaration):
         if row.blockers or row.after is None or row.proposed_action == "NO_OP":continue
         value=row.after
         if declaration.kind=="INVENTORY":
-            if value.domain=="inventory_count" and value.ingredient_id==declaration.ingredient_id:return True
+            if value.domain in {"inventory_count", "opening_stock"} and value.ingredient_id==declaration.ingredient_id:return True
             if value.domain=="ingredients" and any(r.canonical_id==declaration.ingredient_id for r in row.entity_refs):return True
         elif declaration.kind=="SALES_COVERAGE":
             if value.domain=="sales" and value.product_id in declaration.product_ids and declaration.from_date<=value.sales_date<=declaration.to_date:return True
@@ -146,13 +146,20 @@ def finish_configurations(rows, specs, snapshot, normalized, now, store_timezone
             d=value.declaration
             if isinstance(d,domains.InventoryDeclaration):
                 counts={str(r.after.lot_id):r.after for r in rows if r.after and r.after.domain=="inventory_count" and not r.blockers}
+                openings={str(r.after.lot_id):r.after for r in rows if r.after and r.after.domain=="opening_stock" and not r.blockers}
                 from decimal import Decimal
-                empty=not d.covered_lot_ids and all(Decimal(counts[r["id"]].on_hand if r["id"] in counts else r["on_hand_quantity"])==0
+                actual={r["id"] for r in snapshot["inventory_lots"] if r["ingredient_id"]==str(d.ingredient_id)} | {
+                    key for key,value in openings.items() if value.ingredient_id==d.ingredient_id}
+                if d.state=="COMPLETE_CURRENT_LOTS":
+                    blockers=[n for n in blockers if n.code!="INVENTORY_COVERAGE_INCOMPLETE"]
+                    if set(map(str,d.covered_lot_ids))!=actual:block("INVENTORY_COVERAGE_INCOMPLETE")
+                empty=not d.covered_lot_ids and not any(value.ingredient_id==d.ingredient_id for value in openings.values()) and all(Decimal(counts[r["id"]].on_hand if r["id"] in counts else r["on_hand_quantity"])==0
                     for r in snapshot["inventory_lots"] if r["ingredient_id"]==str(d.ingredient_id))
+                if d.state=="CONFIRMED_EMPTY" and not empty and not any(n.code=="INVENTORY_NOT_EMPTY" for n in blockers):block("INVENTORY_NOT_EMPTY")
                 if d.state=="CONFIRMED_EMPTY" and empty and any(n.code=="INVENTORY_NOT_EMPTY" for n in blockers):
                     blockers=[n for n in blockers if n.code!="INVENTORY_NOT_EMPTY"]
                     changes.update(classification="NEW",proposed_action="SET_SCOPE_DECLARATION")
-                if any(count.observed_at>d.observed_at for count in counts.values() if count.ingredient_id==d.ingredient_id):block("STALE_STOCK_OBSERVATION")
+                if any(count.observed_at>d.observed_at for count in (*counts.values(), *openings.values()) if count.ingredient_id==d.ingredient_id):block("STALE_STOCK_OBSERVATION")
             old=latest_source(snapshot,"scope_declaration_records",system,value.source_declaration_key)
             dependency=declaration_dependency(snapshot,value.declaration)
             if old:

@@ -34,9 +34,47 @@ tám dòng đầu sau preamble đơn cột, giữ raw preamble/header và số d
 controlled aliases, indexed candidates/reasons, Owner full-spec group review,
 approved-profile reuse và cảnh báo drift theo scope đã khai báo. Lần đầu vẫn cần
 nguồn/định danh/conventions và xử lý mọi cột mơ hồ/ngoài phạm vi. Không auto-approval.
-Adapter OpenRouter cần opt-in mặc định OFF và key; không provider call thật trong
-task. Unknown/unsupported không tự IGNORE; atomic commit và permissions giữ nguyên.
+Adapter OpenRouter có bounded semantic candidates/reasons, safe diagnostics,
+configurable sample/token/timeout/provider bounds và stale mapping publication fence.
+Cần opt-in mặc định OFF và key. Live gateway probe trên POS demo qua Qwen3.5-9B /
+DeepInfra đã trả proposal hợp lệ: SLX → sales.quantity, giữ hai target RULE, bốn
+cột ngoài schema để null; không activate profile/commit. HTTP/DB lifecycle tests
+vẫn dùng mock; một live probe không chứng minh whole browser flow hoặc reliability.
+M04 EXCEL_SERIAL + workbook epoch cho Owner duyệt deterministic date-only normalization;
+không tạo count/receipt timestamp. Header reorder/epoch change là profile drift;
+profile XLSX cũ thiếu epoch cần review lại. Unknown/unsupported/README không tự IGNORE;
+atomic commit và permissions giữ nguyên. Sáu workbook gốc không bị sửa; 21/72 cột
+nghiệp vụ có target rules, 51 còn unresolved/ngoài workflow, 2 cột README chỉ ignore hints.
 Chi tiết/giới hạn tại [Import feature](features/IMPORT_STAGING_PREVIEW.md).
+
+CURRENT FACT: đối chiếu [legacy handoff](../IMPORT_SCHEMA_LEGACY_HANDOFF_VI.md) và
+current source xác nhận cả chín import schemas có canonical writers; core gaps cần
+tách source resolution, consumer và readiness khỏi registry/mapping coverage.
+Recipe per-serving/batch đã có explicit quantity_basis column/shared resolution,
+exact whole-yield normalization, source-value/line-basis provenance và old-profile
+review guard. Existing writer/BOM/readiness dùng canonical values; không migration,
+loss vẫn áp một lần ở BOM. Supplier price/MOQ có explicit source basis, denominator
+quantity/unit, exact pack price và physical MOQ ceil; source/canonical DTO tách riêng,
+preview/completion giữ semantics/raw/declaration/rule chains. Old profiles thiếu basis
+cần review; fees thuộc preview read-set. Coverage tại term start không thay horizon
+readiness. Excel opening_stock đã nối InventoryUseCases writer và receipt identity
+của N6; inventory_count giữ target/delta trên existing lots. Whole-batch dependencies
+gồm master rows/reservations, nested declaration bindings và current scoped completeness
+nối operational/2 capture. Analyze không auto-bind từ signature; M04 source
+declaration trước compatible reuse, unknown row identity không tự fork profile.
+Recipe cùng Product/version qua nhiều sheets bị RECIPE_SOURCE_SCOPE_AMBIGUOUS;
+split-part grain chưa hỗ trợ. Fresh Store public intake/custom Planning không seed
+business entities; R01 vẫn unknown nếu default configuration chưa có. Explicit EMPTY
+với retained zero lots dùng được ở operational/2; historical /1 giữ semantics cũ.
+Legacy stockout có consumer forecast
+thật theo source; bản mới chưa có observation/forecast chain tương ứng và giữ nó ở
+lát tiếp theo riêng. Sáu workbook là acceptance inputs, không schema authority.
+Đối chiếu legacy là static source audit, không chạy legacy runtime. Recipe source
+acceptance dùng synthetic public flow/guarded PostgreSQL test, fresh-session read,
+dated BOM và recipe-dependency readiness; Supplier acceptance dùng fresh-session term
+read, exact fixed-basket budget/MOQ oracle, public planning capture/retained Run và
+fee readiness. Không real-provider/whole FE acceptance.
+Danh mục và trace thuộc [Import schema inventory](features/IMPORT_SCHEMA_INVENTORY.md).
 
 HISTORICAL INFORMATION: prior S4.11 verification recorded API/native-worker/fresh-
 session/PDF/restart gates and twelve current-screen Edge gates. Those are previous
@@ -47,6 +85,13 @@ cannot certify the whole UI. No FE repository changes are part of cleanup.
 
 ## TECHNICAL DEBT / known discrepancies
 
+- [Review TD-BE-001–013](../008_TechDebt.md) giữ tất cả OPEN: Store-wide mapping
+  queue, supplier discovery, detailed preview projections, export discovery và
+  Today facts chưa có public capability tương ứng. V01 canonical Ingredient paging,
+  M02 auto filter/batch counters và C01 budget absence/create đã có source contract;
+  không đồng nghĩa FE integration acceptance hoặc deployment đã xác minh.
+- N19 OpenAPI accept:boolean rộng hơn validator true-only; false trả422, không
+  persisted decline. Authorization contract ghi drift; chưa sửa business lifecycle.
 - Cold deep retained validation measured about13s for a synthetic50-Product Run;
   this is historical diagnostic evidence, not a capacity/SLA guarantee.
 - Privileged SQL/tracked ORM can bypass some internal application guards. Public

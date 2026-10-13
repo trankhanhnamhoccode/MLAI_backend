@@ -405,6 +405,14 @@ accept. Không trả account_exists/Stores khác trong Owner create/delivery res
 | N18 GET /staff-invitations/{invitation_id} | Authenticated active verified target account, không đòi membership chưa tồn tại; header X-Invitation-Token required. 200 {invitation:InvitationOffer,can_accept:boolean,reason_codes:string[]}, ETag invitation_version. Không body/query, không delivery/audit/Staff list. |
 | N19 POST /staff-invitations/{invitation_id}/accept | Active verified target account; Origin+CSRF+If-Match+Idempotency-Key, body {token:string,accept:true}. 201 AcceptanceReceipt; không grants/Store/role từ payload. |
 
+TECHNICAL DEBT: N19 OpenAPI hiện khai báo accept:boolean, trong khi
+AcceptInvitation.consent chỉ cho true và false bị422. Đây là structural drift,
+không decline capability; accepted lifecycle vẫn pending→accepted/revoked/expired.
+Review schema true-only cần slice sửa DTO/OpenAPI/acceptance; runtime vẫn chưa có
+decline. Contract Đợt 2 đã chốt decline riêng tại [self-service](#auth-self-service),
+chưa sửa DTO/generated OpenAPI. Historical gap review ở
+[TD-BE-002](../008_TechDebt.md#td-be-002--người-nhận-từ-chối-lời-mời).
+
 Owner reason1..1000 nonblank; email1..320 canonical/validated; grants=[] hợp lệ
 nếu Owner chọn không quyền tính năng (Staff sau accept vẫn thấy Store context).
 Unknown/nondelegable keys422 UNKNOWN_PERMISSION/NON_DELEGABLE_PERMISSION;
@@ -510,6 +518,313 @@ link invitation→login/setup→reviewStore+grants→accept→refreshStorecontex
 
 CURRENT FACT: invitation/delivery-intent/token/receipt/audit storage, application commands, local dispatcher and current authority fences exist. No broker or one-time bypass. PROPOSAL: Owner lifecycle/reactivation and full invitation UI acceptance remain separate.
 
+
+<a id="auth-self-service"></a>
+## Self-service account và invitation decline — Đợt 2
+
+ACCEPTED DECISION: thêm signup/email verification/forgot/reset và decline; account
+mới không membership/grants/Owner. DESIGN_READY dưới đây thay phần **tương lai**
+A02 deferred/assisted-only reset, không sửa các CURRENT FACT v1. Assisted provisioning
+và invitation vẫn hoạt động; một account có nhiều Store, verify/reset chỉ account
+scope. Không mở Store creation/subscription/onboarding toàn quán.
+
+CURRENT FACT: `app/api/auth.py` chỉ đăng ký A01/A03/A04/T01/T02/N7;
+`app/api/staff.py` có N15–N19. `AcceptInvitation.accept:StrictBool` có validator
+true-only; `false` trả422, không persisted declined. N16 status chỉ
+pending/accepted/revoked/expired, N17 chỉ reissue/revoke. Không gọi accept:false
+để decline hoặc trình bày structural OpenAPI boolean như capability decline.
+
+### Account identity, verification và delivery
+
+TECHNICAL CHOICE: email normalize/validate như canonical_email hiện có; password
+policy/Argon2id như N7; display_name nonblank1..200. Signup chỉ nhận email/name,
+tạo account credential-unset/email_verified=false; holder đặt password trong A05
+với email token. Không kích hoạt mật khẩu do một người khác đăng ký trước cho email
+chưa chứng minh. Chỉ verified active holder mới login, trước đó A01 trả
+401 INVALID_CREDENTIALS chung. Email mới không tạo session. Email đã verified:
+signup không đổi name/password/proof/grants, không tạo account thứ hai. Existing
+unverified: signup cũng không thay credential/name; có thể gửi lại verification
+nếu account active. A05 proof+password hoàn tất credential cho chính holder,
+invalidates pending SETUP/RESET tokens và revokes sessions nếu có, không dùng
+password do requester trước để tự activate. Không reset/reactivate assisted account
+hoặc bind invitation chỉ vì email trùng.
+Proof đã được operator xác minh giữ nguyên; không ép verify lại account đã verified.
+
+Verify token random256-bit, digest stored, purpose EMAIL_VERIFY, TTL30 phút,
+bound account+email+proof revision+credential revision, single-use. A05 lock account,
+recheck vẫn unverified/active và exact revisions trước atomic proof+credential+
+consume+audit; account đã verified/credential đổi bởi flow khác làm token invalid,
+không ghi đè password verified. Resend/reissue tạo revision mới,
+invalidate token cũ **sau khi intent mới được lưu**, không hồi sinh consumed token.
+Forgot token dùng cơ chế credential-complete purpose RESET hiện có, TTL30 phút,
+bound credential revision; chỉ active verified account, invalidate reset token
+cũ khi reissue. Verified email chỉ chứng minh holder, không invitation consent.
+Reset không thay grants; hoàn tất tăng credential revision/revoke mọi sessions
+account và reset tokens; invitation còn hợp lệ vẫn cần login/accept riêng.
+
+Durable email intent cùng transaction tạo account/token; dispatch ngoài transaction
+trong một backend process. Internal delivery pending|delivered|failed + attempt,
+safe error_code và recovery theo durable callback, không provider/raw error/token
+trong public response/logs/audit. Delivery lỗi giữ account/token state, không fake
+verify. Pending được tiếp tục sau restart; failed retry bằng public resend/forgot
+theo rate limit, phát token mới; mail cũ tới muộn không có hiệu lực.
+Không hứa SMTP hoặc delivery đã implement. Payload secret cho delivery lưu private
+encrypted với key từ operational config, không trong application audit. Sau expiry/
+delivery bỏ secret transport copy; giữ digest/provenance, không purge history.
+
+Public anti-enumeration: signup/resend/forgot trả cùng202 và shape/thông điệp cho
+existing verified/unverified/absent/inactive, không account_id/account_exists/
+delivery status thực tế/job_id có thể poll. `delivery.status="accepted"` chỉ là
+đã nhận yêu cầu xử lý với phản hồi generic, không xác nhận đã tạo intent/gửi mail.
+Không gửi thông tin nhạy cảm qua notification inbox để thay email proof.
+
+### Operations và DTO
+
+Các new endpoints đều **DESIGN_READY**, kế thừa envelope/errors/size limits
+[quy ước chung](API_CONTRACT.md#dot2-common). Không Store/actor/role trong payload.
+
+| ID/status | Method/path | Request → response data |
+| --- | --- | --- |
+| A02 DESIGN_READY | POST /auth/register | {email:string1..320,display_name:string1..200} → 202 PublicEmailAcceptance. |
+| A05 DESIGN_READY | POST /auth/email-verifications/complete | {token:string1..512 UTF-8 bytes,password:string theo N7} → 200 {next_action:"login",completed_at:Timestamp}; atomic verify proof+set holder credential, không session. |
+| A06 DESIGN_READY | POST /auth/email-verifications/request | {email:string1..320} → 202 PublicEmailAcceptance, resend verification. |
+| A07 DESIGN_READY | POST /auth/password-reset-requests | {email:string1..320} → 202 PublicEmailAcceptance. |
+| N7 IMPLEMENTED route, reset self-service DESIGN_READY | POST /auth/credentials/complete | Giữ {token,password} → 200 {next_action:"login",completed_at}; SETUP/assisted RESET hiện có, self-service RESET dùng cùng consumer. |
+| IN01 DESIGN_READY | POST /staff-invitations/{invitation_id}/decline | {token:string1..512 bytes,reason:string1..1000} → 200 DeclineReceipt; active verified target account, không cần membership. |
+
+PublicEmailAcceptance={next_action:"check_email",delivery:{status:"accepted"},
+retry_after_seconds:int>=0}; giá trị retry_after_seconds=60 cho mọi kết quả hợp lệ.
+A02/A06/A07 không Idempotency-Key/If-Match; safe bounded duplicate requests không
+thay credential/grants, reissue chỉ sau cooldown, không gửi thêm mail trong cooldown.
+FE timeout chờ60s rồi resend cùng email, không suy account từ kết quả.
+A05/N7 token completion không idempotency receipt public: một concurrent request
+thắng, retry consumed/expired/invalid cùng400 EMAIL_VERIFICATION_TOKEN_INVALID hoặc
+CREDENTIAL_TOKEN_INVALID; FE hướng dẫn login với password đã đặt, nếu không được
+thì resend/reset, không hứa thành công lần trước. Không session cấp từ verify/reset.
+
+Mọi POST kể cả public đều exact Origin allowlist. A02/A05/A06/A07/N7 không yêu cầu
+session/CSRF và không dùng cookie đang có để resolve target; không tạo/rotate cookie.
+N7 RESET vẫn revoke server-side mọi session holder; cookie cũ được A03 phát hiện401.
+IN01 yêu cầu cookie+CSRF+If-Match invitation.version+Idempotency-Key như N19.
+GET N18/T01/T02/A03 giữ no-store/current authorization. Token từ email đặt trong
+fragment FE, xóa khỏi URL ngay, no-referrer, không query/token trong JSON responses.
+Email templates dùng configured FE URL, không nhận redirect_url từ client.
+
+Rate limit kỹ thuật: public email request3/email/15 phút,20/IP/15 phút và cooldown
+60s/email. Account-key limiter sau ngưỡng vẫn trả generic202, không leak account;
+IP/global limiter429 RATE_LIMITED + Retry-After. Verify/credential completion
+10 attempts/IP/15 phút, không lock account vĩnh viễn; invalid token generic400.
+Định dạng email/password không hợp lệ422 INVALID_EMAIL/PASSWORD_POLICY_VIOLATION,
+không tiết lộ tồn tại account. DESIGN_READY: A02/A06/A07 kiểm service-wide email
+delivery capability sau Origin/input validation nhưng **trước account lookup**.
+Adapter chưa cấu hình/bị disable hoặc service-wide circuit unavailable →503
+EMAIL_DELIVERY_UNAVAILABLE và Retry-After:60 cho **mọi email**; cùng code/message/
+details/headers, không account_exists hoặc trạng thái delivery riêng. Không trả202
+check_email khi toàn hệ thống biết không thể gửi; không tạo account/token/intent mới
+hoặc invalidate token cũ cho request bị từ chối trước acceptance. Không endpoint
+capability mới: FE lấy lỗi operation hiện có, hiển thị “Tạm thời chưa thể gửi email;
+thử lại sau hoặc liên hệ hỗ trợ”, không yêu cầu chờ email không thể phát hành.
+
+Khi service-wide capability available, vẫn trả generic202 PublicEmailAcceptance
+cho existing verified/unverified/absent/inactive như phần anti-enumeration. Đây là
+acceptance xử lý theo eligible state, không email delivered; eligible durable intent
+phải commit trước202. Account-specific failure/outcome vẫn private, không poll
+job hoặc khác response theo account. Provider outage **sau acceptance** có thể làm
+pending/failed internal delivery; giữ intent/audit để recovery, user resend theo
+cooldown khi service hoạt động lại, không token/grants side effect từ notification.
+DB/intent acceptance fail503 SERVICE_UNAVAILABLE đồng nhất service failure; không
+expose provider raw error. A05/N7 verify/credential token đã phát hành còn hợp lệ
+không phụ thuộc capability gửi mail hiện tại; completion/revocation guards giữ nguyên.
+
+Ví dụ lỗi service-wide A02/A06/A07 (cùng JSON cho mọi email, không acceptance):
+
+```json
+{"data":null,"meta":{"request_id":"req-email-unavailable"},"error":{"code":"EMAIL_DELIVERY_UNAVAILABLE","message":"Tạm thời chưa thể gửi email; thử lại sau hoặc liên hệ hỗ trợ.","details":{"reason_codes":["EMAIL_DELIVERY_UNAVAILABLE"]}}}
+```
+
+Client retry sau Retry-After, giữ email/ý định, không tạo polling spinner vô hạn.
+Acceptance tương lai phải kiểm disabled/unavailable mọi account classes cho cùng
+503 trước lookup, available202 không claim delivered, outage sau acceptance giữ
+intent và retry an toàn. Đây là sửa thiết kế, chưa có public self-service runtime.
+
+Ví dụ request A02, A05, A06/A07, N7, và response data email acceptance:
+
+```json
+{"email":"staff@example.com","display_name":"Linh"}
+```
+
+```json
+{"token":"synthetic-verification-token","password":"example-long-password"}
+```
+
+```json
+{"email":"staff@example.com"}
+```
+
+```json
+{"token":"synthetic-reset-token","password":"another-long-password"}
+```
+
+```json
+{"next_action":"check_email","delivery":{"status":"accepted"},"retry_after_seconds":60}
+```
+
+```json
+{"next_action":"login","completed_at":"2026-10-13T02:00:00Z"}
+```
+
+### Invitation lifecycle extension — DESIGN_READY
+
+Add declined terminal cho **invitation identity cũ**, declined_at:Timestamp|null
+vào Invitation/InvitationOffer, can_decline:boolean vào N18; Event kind DECLINED.
+IN01 cùng target proof/token/issuer active/Store active/expiry/grantability fence
+như N19. Pending→declined không membership/grants, consume token, tăng invitation
+version và atomic InvitationEvent+receipt. DeclineReceipt={invitation_id:UUID,
+store_id:UUID,status:"declined",declined_at:Timestamp,version:Version,event_id:UUID,
+next_action:"return_to_stores"}. Store đã không accessible qua membership vẫn
+được target đọc offer có proof; không cấp Store API access từ decline receipt.
+
+N16 thêm status=declined filter; N18 đúng holder/token đọc terminal offer và
+can_accept=false/can_decline=false. N17 reissue declined409 INVITATION_STATE_CONFLICT:
+Owner dùng N15 **invitation_id mới**, lời mời cũ không hồi sinh/token mới. Pending
+duplicate constraint chỉ invitation pending; declined không chặn invitation mới.
+N19 giữ accept:true, state declined409 INVITATION_STATE_CONFLICT; không thêm
+accept:false shortcut. Expired/revoked410 như hiện hành; wrong holder/token404;
+missing/stale If-Match428/412 INVITATION_REVISION_CONFLICT. Accept/decline/revoke
+race chỉ một transition; replay IN01 current holder/account/Store/issuer proof
+trước receipt (không đòi token còn unused), không grant hoặc đổi terminal lần hai.
+Thông báo invitation qua email channel hiện có; không bắt thêm inbox event v1.
+
+```json
+{"token":"synthetic-invitation-token","reason":"Tôi chưa tham gia quán này"}
+```
+
+```json
+{"invitation_id":"00000000-0000-0000-0000-000000000051","store_id":"00000000-0000-0000-0000-000000000001","status":"declined","declined_at":"2026-10-13T02:00:00Z","version":"invitation-2","event_id":"00000000-0000-0000-0000-000000000052","next_action":"return_to_stores"}
+```
+
+Audit signup/verify/RESET ghi actor holder nullable trước proof, target account,
+purpose/revisions/time/request ID/delivery reference; không fabricated Owner.
+Permission audit và invitation audit giữ riêng. Acceptance tương lai: anti-enumeration,
+verified/unverified/invited/assisted account collisions; many Store isolation;
+expired/reissued/consumed/concurrent tokens; RESET revoke mọi session; Origin/cookie
+cases; email failure/restart; accept/decline race và new invitation sau decline.
+
+<a id="permission-requests"></a>
+## Yêu cầu cấp quyền thường xuyên — DESIGN_READY
+
+ACCEPTED DECISION: Staff active trong Store yêu cầu tập quyền hợp lệ; submit không
+grant; Owner quyết định thường quyền. Không Owner role, Owner-key, delegation quản
+lý permissions hoặc one-time bypass. N13 và membership_grants/version là nguồn
+quyền duy nhất; PR04 approval sử dụng cùng grants application mutation, audit và
+authorization fence, không FE gọi PR04 rồi N13 để hoàn thành hai bước.
+
+TECHNICAL CHOICE: mỗi (Store,requester_membership) tối đa một request pending;
+requested_permissions sorted unique nonempty≤37 trong current catalogue,
+grantable_to_staff=true. Không implicit permission implications. Requester xem
+catalogue qua PR02 (không cấp N12 Owner-only cho Staff). Một request giữ nguyên
+requested_permissions khi pending, sửa bằng cancel rồi submit mới.
+
+```text
+PermissionRequest={request_id:UUID,store_id:UUID,requester_membership_id:UUID,
+ requester_user_id:UUID,requested_permissions:string[],
+ grants_at_submission:string[],current_grants:string[],
+ approved_permissions:string[],actually_added_permissions:string[],
+ permission_catalog_version:Version,grants_version_at_submission:Version,
+ current_grants_version:Version,version:Version,
+ state:pending|approved|rejected|cancelled|satisfied|invalidated,
+ reason:string,created_at:Timestamp,updated_at:Timestamp,
+ decision:{decision_id:UUID,actor_user_id:UUID,reason:string,decided_at:Timestamp,
+           permission_event_id:UUID|null}|null,allowed_actions:string[]}
+```
+
+Current_grants/current version là live authorization tại read, không đổi requested
+facts; decision additions là retained facts, không chứng minh quyền còn hiệu lực.
+Staff chỉ own requests; Owner toàn Store; không membership đọc request người khác.
+Inactive requester hoặc Store→invalidated tại lần command/reconciliation kế tiếp
+dưới fence, không grant; read có effective state invalidated nhưng không ghi.
+Nếu mọi requested_permissions đã có, pending→satisfied qua grants-change transaction
+hoặc reconciliation, không duplicate approval/audit grant. Tập thiếu một phần vẫn
+pending; Owner có thể approve subset. Requester cancel chỉ pending; reason required.
+Approved/rejected/cancelled/satisfied/invalidated terminal, không reopen; request mới
+cần reason/explicit submit. Không timeout nghiệp vụ tự reject.
+
+| ID | Method/path | Typed request → response |
+| --- | --- | --- |
+| PR01 | POST /stores/{store_id}/permission-requests | Staff active, không grant phụ; Origin/CSRF/Idempotency-Key; {requested_permissions:string[],permission_catalog_version:Version,expected_grants_version:Version,reason:string} → 201 PermissionRequest. |
+| PR02 | GET /stores/{store_id}/permission-requests | Owner hoặc Staff own; query state?:enum,limit/cursor; sort -created_at/UUID. → 200 {items:PermissionRequest[],permission_catalog_version:Version,permission_catalog:PermissionDescriptor[]}. |
+| PR03 | GET /stores/{store_id}/permission-requests/{request_id} | Same read scope, không query/body → 200 PermissionRequest, ETag request.version. |
+| PR04 | POST /stores/{store_id}/permission-requests/{request_id}/actions | Origin/CSRF/If-Match request.version/Idempotency-Key; union {action:"cancel",reason} requester, {action:"reject",reason} Owner, {action:"approve",approved_permissions:string[],expected_grants_version:Version,permission_catalog_version:Version,reason} Owner. → 200 {request:PermissionRequest,notification_delivery:{status:"pending"|"not_required",event_id:UUID|null}}, ETag mới. |
+
+PR01 grants version stale409 GRANTS_VERSION_CONFLICT; catalogue changed409
+PERMISSION_CATALOG_CHANGED; invalid key422 UNKNOWN_PERMISSION/NON_DELEGABLE_PERMISSION.
+Pending exists409 PERMISSION_REQUEST_ALREADY_PENDING với existing_request_id chỉ
+own scope, FE mở PR03; same key replay201 original không tạo request/event khác.
+Tất cả requested đã có409 PERMISSIONS_ALREADY_GRANTED, FE refresh T02; không tạo
+empty ask. PR02 state omit=tất cả authorized requests; [] là không match, không
+grant unknown. PR02 pagination snapshot pin requests/current grants/catalogue.
+
+PR04 approve subset nonempty thuộc requested_permissions; current grants được union,
+**không replace/remove** unrelated grants. Actually_added=approved-current trước
+fence; permissions đã có vẫn thuộc approved, không giả added. Stale grants409
+GRANTS_VERSION_CONFLICT kể cả request version đúng, FE refetch PR03/N12 rồi review.
+Nếu toàn requested đã được cấp thì satisfied, approve409 PERMISSION_REQUEST_SATISFIED;
+nếu subset được approve đã có nhưng requested khác còn thiếu, vẫn approved terminal,
+actually_added=[]/permission_event_id=null, không tăng grants version. Requester
+muốn phần chưa cấp gửi request mới. Reject không grant/revoke. N13 vẫn replace bộ
+grants hiện hữu; không biến PR04 thành nguồn cấp quyền thứ hai.
+
+Approval atomic: current Owner + requester active + request version + grants version
++ catalogue → grants union/no-op → PermissionEvent source PERMISSION_REQUEST_APPROVAL
+nếu changed + decision receipt + request terminal + notification intent. Decision_id
+link PermissionEvent extension `permission_request_id:UUID|null,decision_id:UUID|null`
+ở N14; N13 direct changes cũng sinh membership.grants_changed event khi changed,
+không thêm event cho no-op. Approval dùng permission_request.approved event để tránh
+hai thông báo cùng một cấp quyền. Rejection outcome cùng decision_id/audit/notification;
+cancel/satisfied/invalidated không notification bắt buộc. Revoke Owner/requester
+trước fence chặn; commit trước revoke giữ lịch sử, replay sau revoke không grant lại.
+Race N13/PR04 serialize grants; approve/reject/cancel chỉ một winner; stale request
+412 PERMISSION_REQUEST_REVISION_CONFLICT, terminal khác409 PERMISSION_REQUEST_STATE_CONFLICT.
+
+Ví dụ PR01 request; PR04 approve request (CAS header lấy PR03):
+
+```json
+{"requested_permissions":["inventory.read","inventory.receive"],"permission_catalog_version":"permissions-v2","expected_grants_version":"grants-7","reason":"Nhận và kiểm tra hàng thực tế"}
+```
+
+```json
+{"action":"approve","approved_permissions":["inventory.read","inventory.receive"],"expected_grants_version":"grants-7","permission_catalog_version":"permissions-v2","reason":"Cấp quyền cho ca nhập hàng"}
+```
+
+Ví dụ PermissionRequest dùng chung PR01/PR02.items/PR03/PR04.request (approved):
+
+```json
+{"request_id":"00000000-0000-0000-0000-000000000033","store_id":"00000000-0000-0000-0000-000000000001","requester_membership_id":"00000000-0000-0000-0000-000000000003","requester_user_id":"00000000-0000-0000-0000-000000000002","requested_permissions":["inventory.read","inventory.receive"],"grants_at_submission":["inventory.read"],"current_grants":["inventory.read","inventory.receive"],"approved_permissions":["inventory.read","inventory.receive"],"actually_added_permissions":["inventory.receive"],"permission_catalog_version":"permissions-v2","grants_version_at_submission":"grants-7","current_grants_version":"grants-8","version":"request-2","state":"approved","reason":"Nhận và kiểm tra hàng thực tế","created_at":"2026-10-13T02:00:00Z","updated_at":"2026-10-13T02:05:00Z","decision":{"decision_id":"00000000-0000-0000-0000-000000000034","actor_user_id":"00000000-0000-0000-0000-000000000004","reason":"Cấp quyền cho ca nhập hàng","decided_at":"2026-10-13T02:05:00Z","permission_event_id":"00000000-0000-0000-0000-000000000035"},"allowed_actions":[]}
+```
+
+Ví dụ PR02 empty data (catalogue đầy đủ trong response thực, không copy37
+descriptors vào ví dụ): catalogue excerpt là same PermissionDescriptor source.
+
+```json
+{"items":[],"permission_catalog_version":"permissions-v2","permission_catalog":[{"key":"inventory.receive","group":"Kho","label_vi":"Ghi nhận hàng nhận","description_vi":"Ghi nhận hàng nhận; chỉ trong Store được cấp quyền.","grantable_to_staff":true,"required_with":[],"exposure":"ordinary"}]}
+```
+
+Ví dụ PR04 response field notification_delivery (request là DTO đầy đủ ở trên):
+
+```json
+{"notification_delivery":{"status":"pending","event_id":"00000000-0000-0000-0000-000000000036"}}
+```
+
+PR04 cancel/reject dùng {action,reason}, không approved_permissions; pending
+decision=null/approved_permissions=[]/actually_added_permissions=[];
+allowed_actions requester=["cancel"], Owner=["approve","reject"] khi current valid.
+PR02 permission catalogue hiện có PermissionDescriptor, không new keys. Errors chung
+áp cả PR01–PR04; mutations audit actor/requester/version/reason không secrets;
+Staff xem decision trong own detail, không được đọc N14 toàn Store. FE thêm mục
+“Yêu cầu quyền”, Owner queue, subset review, CAS conflict/retry, refresh A03/T02 sau
+kết quả. Acceptance tương lai: no selfgrant/crossactor leak; partial/alreadygranted;
+one pending; N13 race/revoke; uncertain commit/replay; audited union và notification
+fault không undo committed decision. Không chạy acceptance trong task tài liệu.
 
 ## ACCEPTED DECISION / CURRENT FACT — Staff whole-sheet IGNORE, S4.7
 

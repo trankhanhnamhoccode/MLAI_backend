@@ -549,7 +549,8 @@ class PublicReads:
             build,
         )
 
-    def _lot(self, row, ingredient, today, first, currency, cost, snapshot):
+    @staticmethod
+    def _lot(row, ingredient, today, first, currency, cost, snapshot):
         if row["unit"] != ingredient["base_unit"]:
             raise ReadFactError()
         quantity = decimal_text(row["on_hand_quantity"])

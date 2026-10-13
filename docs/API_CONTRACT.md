@@ -83,6 +83,213 @@ One-time approval chưa allowlist/lifecycle: không automatically approval_allow
 true, không shared Owner key. Auth/catalogue/enforcement là dependency bắt buộc
 trước expose; màn hình Owner grant editor cũng đã giữ trong v1.
 
+<a id="dot2-handoff"></a>
+## Bàn giao FE — Đợt 2 cộng tác và vận hành
+
+ACCEPTED DECISION: phạm vi sản phẩm theo yêu cầu Đợt 2; technical choices được
+ủy quyền trong các sections liên kết dưới đây. **DESIGN_READY không phải runtime**.
+Các mô tả v1 hiện hành phía trên vẫn là CURRENT FACT; thiết kế Đợt 2 bổ sung hoặc
+thay thế phần tương lai đúng scope, không sửa source/generated OpenAPI/FE gốc.
+
+| Chủ đề canonical | Trạng thái và consumer FE |
+| --- | --- |
+| [Auth self-service/decline](AUTHORIZATION_CONTRACT_VI.md#auth-self-service) | DESIGN_READY: đăng ký, verify/resend, quên mật khẩu, decline. N7/N15–N19 routes IMPLEMENTED; mở rộng lifecycle/DTO chưa implement. |
+| [Yêu cầu quyền](AUTHORIZATION_CONTRACT_VI.md#permission-requests) | DESIGN_READY: Staff submit/cancel; Owner review/approve/reject; refresh grants. N12–N14 IMPLEMENTED và tiếp tục là grants/audit authority. |
+| [Inbox](NOTIFICATION_API_CONTRACT_VI.md#notification-v1) | DESIGN_READY: inbox/count/read; không approve qua notification. |
+| [Mapping queue](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-queue) | DESIGN_READY: explicit submit, Store queue, pinned detail, request changes. N5/M01–M04 IMPLEMENTED; extensions chưa implement. |
+| [Excel actual receipt](IMPORT_MAPPING_API_CONTRACT_VI.md#excel-actual-receipt) | DESIGN_READY schema/consumer trong pipeline hiện hữu; I01–I06/J01 và N6 IMPLEMENTED. |
+| [Counters/preview](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-projections) | M01/M02/I04 IMPLEMENTED; counters có scope/origin mới và detailed projection DESIGN_READY. |
+| [Today/supplier picker](#today-operations) | DESIGN_READY: D01/SU01; V01–V04/R01/C03/H02 reads IMPLEMENTED, không giả Today đã tồn tại. |
+| [Run history/export discovery](PROCUREMENT_API_CONTRACT_VI.md#planning-discovery) | N9/N10/N11/J01 IMPLEMENTED; N9 creator/date filters và EX01 DESIGN_READY. |
+
+Các clarification canonical để FE không nhầm approval/commit:
+[source-before-reuse và entity binding](IMPORT_MAPPING_API_CONTRACT_VI.md#source-reuse),
+[identity/correction theo schema](IMPORT_MAPPING_API_CONTRACT_VI.md#schema-correction),
+[profile retirement](IMPORT_MAPPING_API_CONTRACT_VI.md#profile-retirement).
+Policy đã duyệt không tự thành CURRENT FACT: analyze signature-only auto-bind còn
+gap source proof; recipe cross-file full-report assembly còn gap phân biệt bản cùng
+version. Lát3 identity/opening/count/completeness đang WIP, source có thêm opening_stock
+writer; không dùng static trace để tuyên bố public acceptance hoặc đổi lịch sử release.
+Clarification này không thêm route, permission, approval store hoặc operation count.
+Auth service-wide disabled/unavailable dùng503 EMAIL_DELIVERY_UNAVAILABLE đồng nhất
+mọi email trên A02/A06/A07 DESIGN_READY, không generic202 hứa check_email khi không
+thể gửi. Profile approved inbox mở submission hiện hành rồi batch, không “đã nhập”.
+
+Inventory bằng **static source inspection**, không khởi tạo FastAPI/OpenAPI:
+54 operations/50 paths hiện có, gồm 53 core + GET /health. Thêm đúng **18 operations**
+Đợt 2: NF01–NF03 (3), A02/A05–A07/IN01 (5), PR01–PR04 (4), MQ01–MQ03 (3),
+D01/SU01/EX01 (3). Có16 paths mới (POST/GET permission-requests chung path;
+GET exports dùng path POST N10 đã có). Surface dự kiến **72 operations/66 paths**,
+gồm71 core + health; đây là inventory thiết kế, không OpenAPI runtime72.
+Extension query/body/action trên route hiện có không cộng thêm operation.
+
+Routes reused trong scope: A01/A03/A04/T01/T02/N7/N12–N19; M01–M04/N5;
+I01–I06/H01/H02/J01; N6/V01–V04/N8; R01/C01/C02/C03;
+N9/N10/N11. DTO hiện hữu tra source Pydantic; những JSON bên dưới ghi rõ
+request, response `data` hoặc envelope, không masquerade toàn bộ DTO runtime.
+
+DEFERRED: AI chat/copilot endpoints, What-if, public PO lifecycle, Owner-key/
+one-time bypass, browser push/SMS, location/warehouse management, unified timeline,
+general settings CRUD và currency/timezone mutation sau operational history.
+Không cộng các mục này vào18 routes, không FE tự gọi route từ prototype cũ.
+Settings duy nhất dùng lại trong Đợt 2 là threshold N8, budget N4 và requirements
+N1–N3 hiện có với consumer rõ; không thêm general settings fields thiếu consumer.
+
+<a id="dot2-common"></a>
+### Quy ước bắt buộc cho DESIGN_READY operations
+
+Tất cả paths tương đối `/api/v1`. UUID, UTC Timestamp, Store-local DATE,
+MoneyText/QuantityText theo conventions hiện hành. Version opaque1..256 bytes;
+unknown fields422, JSON request≤64KiB, reason1..1000 nonblank, decimal strings exact.
+Typed objects liệt kê đầy đủ keys; `?` nghĩa optional query, `|null` nghĩa key
+bắt buộc nullable; không tùy tiện omit nullable fields. Examples synthetic.
+
+Success={data:<typed DTO>,meta:{request_id,...},error:null}; errors=
+{data:null,meta:{request_id},error:{code,message,details:{field_errors?,reason_codes?}}}.
+GET200, không body, Origin/CSRF không yêu cầu, không side effects/forecast/solver/LLM;
+cookies credentials include, Cache-Control private,no-store. Sensitive reads check
+User/session/Store/membership/current grants và actor scope; foreign resource404,
+known accessible resource nhưng thiếu permission403. Không tin allowed_actions,
+ETag, notification hoặc grants snapshot để bypass commit fence.
+
+Paginated new reads: limit integer1..100 default50, cursor opaque≤4096;
+items=[], next_cursor=null khi hết; total_count exact filtered int>=0.
+meta.pagination={limit,next_cursor,total_count}, meta.snapshot_id:Version,
+meta.observed_at:Timestamp. New cursor bind actor/Store/filters/sort/authorization/
+source revisions và page position. Đọc nhất quán trong một short transaction;
+snapshot token không hứa lưu historical copies. Đổi revision409
+SNAPSHOT_NOT_AVAILABLE, FE refresh từ đầu; cursor khác filter422 INVALID_CURSOR.
+Snapshot metadata không expose source revision của section forbidden.
+
+Authenticated mutations: exact Origin + X-CSRF-Token, Idempotency-Key UUID canonical;
+entity transitions thêm If-Match quoted current version, absent428/stale412.
+Create không If-Match. Không browser header do FE tùy đặt thành quyền.
+Key scope actor+Store resolved+method+resource/action, digest canonical body+CAS;
+replay current authorization trước trả original receipt và trước stale CAS.
+Same key/payload trả receipt cũ; changed409 IDEMPOTENCY_KEY_REUSED. Timeout giữ key,
+body, If-Match và retry; không newkey để đoán commit. Chỉ sau409/412 và review dữ
+liệu mới dùng key mới. CAS no-op giữ version. Local mutation/audit/receipt/intent
+atomic, không phát mail trước commit. Commands synchronous trừ khi section ghi202.
+Public self-service/token endpoints có ngoại lệ key/CSRF/retry được ghi ở Auth.
+
+| HTTP/code chung | Hành động FE |
+| --- | --- |
+| 400 INVALID_REQUEST | Sửa request/header, không auto retry. |
+| 401 UNAUTHENTICATED | Login rồi refetch context. |
+| 403 PERMISSION_DENIED / CSRF_CHECK_FAILED | Refresh A03/T02 hoặc phiên; không dùng Owner-key. |
+| 404 RESOURCE_NOT_FOUND | Hiện không truy cập được; không dò Store/actor khác. |
+| 409 IDEMPOTENCY_KEY_REUSED | Không đổi payload trên key cũ; đối chiếu ý định. |
+| 409 SNAPSHOT_NOT_AVAILABLE / *_STATE_CONFLICT | Refresh list/detail, review lại action. |
+| 412 *_REVISION_CONFLICT / 428 PRECONDITION_REQUIRED | Đọc version mới / gửi conditional header. |
+| 413 RESOURCE_LIMIT_EXCEEDED | Giảm request/scope, không truncate facts. |
+| 422 VALIDATION_ERROR / INVALID_FILTER / INVALID_CURSOR | Hiện field error; reset filter/cursor phù hợp. |
+| 429 RATE_LIMITED | Chờ Retry-After integer seconds, không retry tight loop. |
+| 503 SERVICE_UNAVAILABLE | Backoff GET; mutation retry nguyên key/payload sau timeout. |
+
+Không tự purge Run/input/result/idempotency hoặc audit/provenance. Technical design
+không tạo infrastructure mới: local PostgreSQL, một backend process, purpose-specific
+durable intents. Acceptance dưới các cụm là specifications tương lai; task này
+không xác minh persistence, email delivery, HTTP hoặc whole FE acceptance.
+
+<a id="today-operations"></a>
+## Today và supplier discovery — DESIGN_READY
+
+### D01 GET /stores/{store_id}/today
+
+FE tải projection xuyên luồng trong một response. Không body; query section?:
+comma-separated unique inventory,imports,mapping,permissions,readiness,planning
+(omit=tất cả), limit:int1..20 default5 cho **từng sample list**, snapshot_id?:Version.
+Chỉ cần current active membership để vào Today; mỗi section kiểm quyền riêng.
+Section forbidden vẫn hiện availability="forbidden", value=null, source=null,
+updated_at=null, completeness="unknown", reason_codes=["PERMISSION_DENIED"];
+không counts/tasks/timing/snapshot hints riêng làm lộ dữ liệu. Requested section
+không supported422 INVALID_FILTER. Response200 synchronous, không mutation/audit
+business; meta={request_id,snapshot_id,observed_at,as_of_date,timezone}.
+
+```text
+Today={store_id:UUID, sections:{
+ inventory: Section<InventoryAttention>, imports: Section<TaskList>,
+ mapping: Section<TaskList>, permissions: Section<TaskList>,
+ readiness: Section<Readiness>, planning: Section<LatestRun>
+}}
+Section<T>={availability:available|empty|unknown|forbidden|unavailable,
+ value:T|null, updated_at:Timestamp|null, completeness:confirmed|partial|unknown,
+ reason_codes:string[], source:{resource:string,version:Version}|null}
+InventoryAttention={as_of_date:date,expired_lot_count:int,near_expiry_lot_count:int,
+ low_stock_ingredient_count:int|null,unknown_assessment_ingredient_count:int,
+ items:{ingredient_id:UUID,status:string,reason_codes:string[],
+        usable_quantity:QuantityText|null,unit:string}[],has_more:boolean}
+TaskList={total_count:int,items:{type:import|mapping_submission|permission_request,
+ id:UUID,state:string,updated_at:Timestamp,allowed_actions:string[]}[],has_more:boolean}
+LatestRun={run_id:UUID,status:queued|running|completed|failed,accepted_at:Timestamp,
+ result_digest:Version|null}
+```
+
+Readiness type reuse R01 DTO, không định nghĩa lại blockers. Omitted section không
+có key; các sections requested có đủ keys Section. available yêu cầu value khác
+null; empty TaskList là total0/items[]/has_morefalse, latestRun empty value=null.
+Unknown không dùng zero. updated_at là last relevant recorded update hoặc null,
+observed_at là lúc đọc; không dùng observed_at để giả freshness data.
+completeness phản ánh declaration/coverage, không suy từ tồn tại một row.
+
+Inventory cần inventory.read+ingredient.read, dùng V01–V04 semantics: gần hạn
+0..7 inclusive, expired riêng, low threshold do Owner khai báo; không total quantity
+khác unit, cost hoặc valuation. imports dùng import.read + sensitive domain reads
+như H02/I04; Staff chỉ own batches actionable, Owner toàn Store. mapping Owner queue
+submitted eligible; Staff own submissions với mapping.read+import.read và sensitive
+domain reads. permissions Owner pending queue, Staff own pending requests, active
+membership không cần grant phụ. Readiness dùng nguyên action-specific authorization
+R01, chỉ trả actions được phép; thiếu finance permission không trả money blockers,
+scope details/counters hoặc versions nhạy cảm. planning section cần
+planning.result.read+budget.read+procurement.cost.read (cùng N9); latest by
+-accepted_at/UUID, không cần completed và không gửi cost trong Today.
+
+ACCEPTED DECISION / DESIGN_READY: Today dùng readiness hiện hành của R01 theo
+action/scope/date/source versions, không suy Store READY từ import completed hoặc
+profile approved. `blockers` chặn đúng action/scope; `warnings` không tự chặn action
+đã can_execute=true nhưng FE giữ impact/unknown/exclusions và limitations của input/
+dự báo, không gọi readiness là forecast accuracy. Warning PAYABLE_FEES_NOT_ESTABLISHED
+ở import preview có thể dẫn đến planning blocker PAYABLE_FEE_COVERAGE_UNKNOWN khi
+R01 đánh giá đủ dependencies; không suy mọi preview warning cho planning chạy được.
+Không đổi source data_status/result_assessment hoặc conceal blocker bằng notification.
+
+Một consistent read transaction dựng projection/current permissions và snapshot;
+không ghép cached readiness/planning/inventory từ thời điểm khác. Nếu revision
+không thể pin trả409 SNAPSHOT_NOT_AVAILABLE; lỗi đọc section kỹ thuật trả unavailable
+null/reason SERVICE_UNAVAILABLE, không silent0. Fresh authority từ API đích khi
+click; Today không command route. Nguồn planned purchase trong retained Run không
+được đưa vào inventory/inbound hoặc gọi “hàng thực đang về”.
+
+Ví dụ D01 data cho actor chỉ được xem yêu cầu quyền, query section=permissions:
+
+```json
+{"store_id":"00000000-0000-0000-0000-000000000001","sections":{"permissions":{"availability":"empty","value":{"total_count":0,"items":[],"has_more":false},"updated_at":null,"completeness":"confirmed","reason_codes":[],"source":{"resource":"permission_requests","version":"requests-1"}}}}
+```
+
+### SU01 GET /stores/{store_id}/suppliers
+
+Current membership + supplier.read; không suy từ inventory.read. Query q?:string
+1..200 (trim, case/diacritic-insensitive name), active?:boolean (omit=tất cả),
+limit/cursor, sort=name|-name defaultname, snapshot_id?:Version. Sort name/UUID.
+Response200 data={items:SupplierPickerItem[]}, metadata paging theo quy ước chung.
+SupplierPickerItem={supplier_id:UUID,name:string,active:boolean,
+version:Version}. Version là opaque digest của current supplier identity/name/
+active/updated_at, không giả Supplier có version column hoặc SKU hiện hữu.
+Không terms/price/MOQ/fees/bank/contact private trong picker;
+không thêm quyền procurement.cost.read chỉ để chọn supplier. Empty[] là known
+empty trong filters. Active flag phục vụ picker và lịch sử; receipt dùng same-Store
+reference validation hiện hành N6, không tự thêm business rule cấm inactive supplier.
+N6/Excel consumer kiểm lại reference, stale picker không authority. Không mutation
+hoặc business audit; 422 INVALID_FILTER/INVALID_CURSOR,409 snapshotchanged.
+
+```json
+{"items":[{"supplier_id":"00000000-0000-0000-0000-000000000041","name":"Nhà cung cấp A","active":true,"version":"supplier-1"}]}
+```
+
+Acceptance D01/SU01: quyền/Store isolation cả counts/versions; unknown threshold
+không zero; day rollover/snapshot conflict; latest queued/failed visible đúng quyền;
+GET không compute; supplier paging không leak terms; revoke sau picker chặn write.
+
 ## Catalog/Menu/Recipe
 
 <a id="catalog-semantics"></a>
@@ -676,6 +883,15 @@ có location model. batch_code adapter=lot_code nullable, không unique identity
 
 <a id="inventory-reads"></a>
 ## 3. V01–V04 requests/responses và snapshots
+
+CURRENT FACT: V01 cũng là nguồn discovery canonical Ingredient của Store cho
+picker hiện hành, không chỉ các Ingredient có stock lot hoặc đã xuất hiện trong
+P02. Query q/ingredient_id/status/sort/limit/cursor và metadata paging hiện hữu;
+FE đọc đủ pages theo snapshot và ingredient_active, không dựng ID từ tên. Ingredient
+không lot vẫn có row; completeness/unknown phải giữ, không suy confirmed zero stock
+từ không có lot. N6 nhận supplier_id/unit_cost nullable; supplier search độc lập
+và warehouse/location writer chưa có. Không suy quyền supplier từ inventory.read.
+Source: PublicReadRepository.stock/inventory, PublicReads.inventory và N6 DTO.
 
 Envelope/types/errors theo [Planning](PROCUREMENT_API_CONTRACT_VI.md#planning-types).
 V01 query q1..200 case/diacritic-insensitive name/SKU; repeated ingredient_id UUID,

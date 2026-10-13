@@ -122,6 +122,8 @@ def test_future_term_requires_explicit_pinned_amendment_and_no_retroactive_rewri
     }
     source.update(
         source_term_key="new-terms",
+        price_basis="PER_PACK", price_quantity=None, price_unit=None,
+        moq_basis="PACKS", minimum_order_quantity=str(source.pop("minimum_order_packs")), moq_unit=None,
         effective_from="2026-10-11",
         currency="VND",
         maximum_order_base_quantity=None,
@@ -245,7 +247,7 @@ def test_whole_recipe_group_yield_units_duplicate_and_overlap():
         version=1,
         effective_from="2026-10-11",
         effective_to=None,
-        yield_quantity="10",
+        quantity_basis="WHOLE_BATCH", yield_quantity="10",
         yield_unit="cup",
         process_loss_rate="0.2",
         ingredient_id=i1,
@@ -401,7 +403,8 @@ def test_supplier_term_pack_pricing_and_declared_unit_conversion_are_exact():
         pack_size_base_quantity="15",
         pack_cost="28000",
         currency="VND",
-        minimum_order_packs=1,
+        minimum_order_quantity="1", price_basis="PER_QUANTITY", price_quantity="1", price_unit="kg",
+        moq_basis="PACKS", moq_unit=None,
         lead_time_days=0,
         shelf_life_days=None,
         active=True,
@@ -423,7 +426,6 @@ def test_supplier_term_pack_pricing_and_declared_unit_conversion_are_exact():
         [source],
         snapshot,
         conversions=(conversion,),
-        context_fields={"pack_cost_basis": "PER_SOURCE_UNIT"},
     )[0]
     assert (
         not row.blockers
@@ -558,7 +560,8 @@ def test_two_new_terms_cannot_overlap_inside_same_batch():
         pack_size_base_quantity="6",
         pack_cost="180000",
         currency="VND",
-        minimum_order_packs=1,
+        minimum_order_quantity="1", price_basis="PER_PACK", price_quantity=None, price_unit=None,
+        moq_basis="PACKS", moq_unit=None,
         lead_time_days=1,
         shelf_life_days=14,
         active=True,
@@ -594,7 +597,7 @@ def test_recipe_numeric_equivalence_is_not_header_conflict():
         version=1,
         effective_from="2026-10-11",
         effective_to=None,
-        yield_quantity="10",
+        quantity_basis="WHOLE_BATCH", yield_quantity="10",
         yield_unit="cup",
         process_loss_rate="0.2",
         ingredient_id=i1,
@@ -660,7 +663,7 @@ def test_existing_catalog_numeric_equivalence_is_no_op_not_metadata_conflict():
 
 
 def test_incomplete_proposal_rebuild_retains_approved_optional_rules():
-    records = b"supplier_terms.source_term_key,supplier_terms.supplier_id,supplier_terms.ingredient_id,supplier_terms.effective_from,supplier_terms.effective_to,supplier_terms.unit,supplier_terms.pack_size_base_quantity,supplier_terms.pack_cost,supplier_terms.currency,supplier_terms.minimum_order_packs,supplier_terms.lead_time_days,supplier_terms.shelf_life_days,supplier_terms.active,supplier_terms.maximum_order_base_quantity\nT1,source-supplier,source-ingredient,2026-10-11,,l,6,100,VND,1,1,14,true,\n"
+    records = b"supplier_terms.source_term_key,supplier_terms.supplier_id,supplier_terms.ingredient_id,supplier_terms.effective_from,supplier_terms.effective_to,supplier_terms.unit,supplier_terms.pack_size_base_quantity,supplier_terms.pack_cost,supplier_terms.currency,supplier_terms.minimum_order_quantity,supplier_terms.price_basis,supplier_terms.price_quantity,supplier_terms.price_unit,supplier_terms.moq_basis,supplier_terms.moq_unit,supplier_terms.lead_time_days,supplier_terms.shelf_life_days,supplier_terms.active,supplier_terms.maximum_order_base_quantity\nT1,source-supplier,source-ingredient,2026-10-11,,l,6,100,VND,1,PER_PACK,,,PACKS,,1,14,true,\n"
     sheets, issues, _ = discover(uuid4(), parse_source(records, "csv"))
     context = dto.SourceContext(
         kind="source_context",

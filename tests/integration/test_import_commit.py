@@ -276,7 +276,7 @@ def test_recipe_creates_reserved_ingredient_and_preserves_zero_loss_then_blocks_
     with Session(imp[0][1]) as s:
         s.add(Ingredient(id=sugar, store_id=imp[1].store_id, name="Sugar", base_unit="g", expiry_tracking=False, active=True)); s.commit()
     source = dict(product_id=imp[4], version=1, effective_from="2026-10-11", effective_to=None,
-        yield_quantity="1", yield_unit="cup", process_loss_rate="0", ingredient_id="MILK-NEW", quantity="100", unit="ml")
+        quantity_basis="WHOLE_BATCH", yield_quantity="1", yield_unit="cup", process_loss_rate="0", ingredient_id="MILK-NEW", quantity="100", unit="ml")
     ident, read, revision = ready(imp, csv_source("recipes", [source, {**source, "ingredient_id": str(sugar), "quantity": "0.1", "unit": "g"}]), report="recipes",
         resolutions={"UNKNOWN_INGREDIENT": dict(kind="new_entity_proposal", entity="ingredient",
             source_business_key="MILK-NEW", metadata=dict(name="Milk", base_unit="ml", sku=None,
@@ -317,12 +317,12 @@ def test_disjoint_source_retry_revision_205_to_210_and_daily_total_mix_blocked(i
     done = finished(imp, ident, commit(imp, ident, read, revision, resolutions=[resolution]))
     assert done["updated_resources"]["sales"]["changed_record_count"] == 1
     # Same report reimport is source-aware NO_OP, not 205 + 105.
-    second = analyzed(imp); read2 = previewed(imp, second)
+    second = analyzed(imp); approved(imp, second, context={"sales_semantics": "disjoint_contribution"}); read2 = previewed(imp, second)
     assert read2["preview"]["rows"][0]["proposed_action"] == "NO_OP"
     reviewed = confirm(imp, second, read2)
     done2 = finished(imp, second, commit(imp, second, read2, reviewed.json()["data"]["import_revision"]))
     assert done2["outcome"] == "no_changes"
-    third = analyzed(imp, sales_bytes(imp, "110")); read3 = previewed(imp, third)
+    third = analyzed(imp, sales_bytes(imp, "110")); approved(imp, third, context={"sales_semantics": "disjoint_contribution"}); read3 = previewed(imp, third)
     r3 = read3["preview"]["rows"][0]
     assert r3["after"]["quantity"] == "210" and r3["normalized_source_quantity"] == "110"
     confirmation = confirm(imp, third, read3)
@@ -507,7 +507,7 @@ def test_retired_pin_blocks_uncommitted_but_completion_survives_profile_reapprov
     with Session(imp[0][1]) as fresh:
         assert fresh.get(ImportBatch, UUID(ident)).status == original_status
     assert imp[0][5].get("/api/v1/imports/" + ident + "/completion").json()["data"] == done
-    second = analyzed(imp); read2 = previewed(imp, second)
+    second = analyzed(imp); approved(imp, second); read2 = previewed(imp, second)
     reviewed = confirm(imp, second, read2); assert reviewed.status_code == 200
     with Session(imp[0][1]) as fresh:
         profile = fresh.get(ImportProfile, UUID(ref["profile_id"]))
@@ -547,7 +547,7 @@ def test_recipe_invalid_unit_or_dates_block_before_commit(imp, invalid):
     with Session(imp[0][1]) as s:
         s.add(Ingredient(id=iid, store_id=imp[1].store_id, name="Milk", base_unit="ml", expiry_tracking=False, active=True)); s.commit()
     value = dict(product_id=imp[4], version=1, effective_from="2026-10-11", effective_to=None,
-        yield_quantity="1", yield_unit="cup", process_loss_rate="0", ingredient_id=iid, quantity="100", unit="ml")
+        quantity_basis="WHOLE_BATCH", yield_quantity="1", yield_unit="cup", process_loss_rate="0", ingredient_id=iid, quantity="100", unit="ml")
     if invalid == "unit":
         value["unit"] = "L"
     else:

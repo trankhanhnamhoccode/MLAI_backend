@@ -125,6 +125,11 @@ def _xlsx(content: bytes) -> ParsedFile:
             return ET.fromstring(data)
 
         workbook = xml("xl/workbook.xml")
+        properties = workbook.find(MAIN + "workbookPr")
+        date1904 = properties.attrib.get("date1904", "0") if properties is not None else "0"
+        if date1904 not in {"0", "1", "true", "false"}:
+            raise SourceParseError("MALFORMED_WORKBOOK")
+        date_system = "1904" if date1904 in {"1", "true"} else "1900"
         relations = xml("xl/_rels/workbook.xml.rels")
         paths = {}
         for relation in relations:
@@ -240,4 +245,4 @@ def _xlsx(content: bytes) -> ParsedFile:
                         "RESOURCE_LIMIT_EXCEEDED", sheet=name, row=number
                     )
             result.append(ParsedSheet(name, index, tuple(rows)))
-        return ParsedFile("xlsx", tuple(result))
+        return ParsedFile("xlsx", tuple(result), excel_date_system=date_system)

@@ -33,6 +33,20 @@ def test_import_operations_and_typed_variants_preserve_boundaries():
         if ident in {"I01", "I02", "I03", "I04", "M01", "M04", "N5", "I05"}:
             assert "ETag" in operation["responses"][str(status)]["headers"]
     schemas = spec["components"]["schemas"]
+    line = schemas["RecipeLineProvenance"]["properties"]
+    assert line["quantity_basis"]["anyOf"][0]["enum"] == ["PER_SERVING", "WHOLE_BATCH"]
+    assert "source_value" in schemas["ProvenanceValue"]["properties"]
+    semantics = schemas["SupplierTermSemantics"]["properties"]
+    assert semantics["price_basis"]["enum"] == ["PER_PACK", "PER_QUANTITY"]
+    assert semantics["moq_basis"]["enum"] == ["PACKS", "PHYSICAL_QUANTITY"]
+    assert "supplier_term_semantics" in schemas["PreviewRow"]["properties"]
+    assert "supplier_term_semantics" in schemas["CommitRowReference"]["properties"]
+    assert "inventory_effect" in schemas["PreviewRow"]["properties"]
+    assert "inventory_effect" in schemas["CommitRowReference"]["properties"]
+    assert schemas["OpeningValue"]["properties"]["domain"]["const"] == "opening_stock"
+    assert "lot_id" in schemas["OpeningValue"]["required"]
+    assert "opening_stock" in schemas["SheetTypeResolution"]["properties"]["sheet_type"]["anyOf"][0]["enum"]
+    assert "price_basis" not in schemas["TermValue"]["properties"]
     context = schemas["SourceContext"]
     assert set(context["required"]) == {
         "kind",

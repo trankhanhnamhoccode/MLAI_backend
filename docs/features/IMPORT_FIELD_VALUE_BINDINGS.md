@@ -1,7 +1,10 @@
 CURRENT FACT11/10: consumer hiện hỗ trợ chín schemas; Money input18/18 tách
 Quantity200, source business keys1000 (namespace Code128). Retained evidence không
 rewrite; xem [compatibility](../CONTRACT_COMPATIBILITY_CHANGELOG_VI.md) và
-[feature current](IMPORT_INVENTORY_SUPPLIER.md). Shared allowlist không đổi.
+[feature current](IMPORT_INVENTORY_SUPPLIER.md).
+Recipe source extension thêm `recipes.quantity_basis` vào PROFILE_CONSTANT/IMPORT_VALUE;
+required enum PER_SERVING/WHOLE_BATCH. Không thêm source schema hoặc canonical DB field.
+Semantics, FE projection và ví dụ nằm tại [Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#recipe-source-basis-và-canonical-whole-yield).
 
 # Giá trị chung cho sheet — explicit field-value bindings
 
@@ -37,8 +40,19 @@ Allowlist/scopes theo từng schema đã freeze trước edit tại
 [schema inventory](IMPORT_SCHEMA_INVENTORY.md). Scalar tối đa1000 chars, integer
 signed32-bit, boolean strict hoặc null có điều kiện; float/array/object/extra fields
 bị reject. Tối đa64 declarations/rules mỗi sheet/profile; thực tế allowlist nhỏ hơn.
-Không identity refs, nested fees/declarations, quantities bán/tồn/line theo rows,
-expressions/executable transforms, calendar/purchase/opening/receipt schema mới.
+CURRENT FACT: Supplier price_basis/price_quantity/price_unit/moq_basis/moq_unit/pack_label
+cho PROFILE_CONSTANT hoặc IMPORT_VALUE. pack_cost/pack_size_base_quantity/
+minimum_order_quantity/lead/shelf/effective dates/max-order chỉ IMPORT_VALUE nếu
+shared; không reusable commercial defaults. Source row MOQ thay bằng decimal
+minimum_order_quantity; canonical minimum_order_packs vẫn integer. Chi tiết
+[Supplier source basis](../IMPORT_MAPPING_API_CONTRACT_VI.md#supplier-source-basis-và-fe-projection).
+
+opening_stock thêm unit/currency cho cả hai scopes; observed_at/reason/received_date/
+expiry_date/supplier_id/unit_cost chỉ IMPORT_VALUE. Row quantity/source record key/lot
+label không reusable defaults. Nested declarations vẫn JSON column, có typed reference
+binding qua M04; không shared object/array hoặc arbitrary nested injection.
+Không expressions/executable transforms hoặc calendar/purchase/actual receipt intake.
+Chi tiết tại [setup/opening contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#setup-identity-excel-opening-stock-và-lot-count--current-fact).
 
 ## M03/M04/N5 và review
 

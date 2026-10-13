@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import SecretStr, field_validator, model_validator
+from pydantic import SecretStr, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 
@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     import_llm_suggestions_enabled: bool = False
     openrouter_model: str | None = None
     openrouter_mapping_model: Literal["qwen/qwen3.5-9b"] = "qwen/qwen3.5-9b"
+    openrouter_mapping_timeout_seconds: float = Field(default=30, gt=0, le=30)
+    openrouter_mapping_deadline_seconds: float = Field(default=60, gt=0, le=60)
+    openrouter_mapping_sample_limit: int = Field(default=8, ge=1, le=8)
+    openrouter_mapping_max_tokens: int = Field(default=1800, ge=128, le=1800)
+    openrouter_mapping_providers: tuple[str, ...] = ()
     import_worker_enabled: bool = False
     planning_worker_enabled: bool = False
     pdf_export_worker_enabled: bool = False

@@ -15,15 +15,15 @@ def summary(imp, ident):
     return response.json()['data']
 
 
-def declare_context(imp, ident):
+def declare_context(imp, ident, context=None):
     base = '/api/v1/imports/' + ident
     items = imp[0][5].get(base + '/mappings?review_only=false&limit=100').json()['data']['items']
-    context = next(i for i in items if i['issue_type'] == 'source_context')
+    context_issue = next(i for i in items if i['issue_type'] == 'source_context')
     revision = summary(imp, ident)['mapping_revision']
-    response = imp[0][5].patch(base + '/mappings/' + context['mapping_id'], json={
+    response = imp[0][5].patch(base + '/mappings/' + context_issue['mapping_id'], json={
         'resolution': {'kind': 'source_context', 'source_system_key': 'POS-GROUP',
                        'report_type': 'daily-sales', 'evidence_reference': 'Synthetic explicit source',
-                       'sales_semantics': 'daily_total'},
+                       'sales_semantics': 'daily_total', **(context or {})},
     }, headers={**imp[3], 'Idempotency-Key': str(uuid4()), 'If-Match': '"' + revision + '"'})
     assert response.status_code == 200, response.text
     return summary(imp, ident)
@@ -51,7 +51,9 @@ def test_owner_reviews_group_reuses_without_provider_and_detects_drift(imp, monk
     reviewed = summary(imp, first)
     assert reviewed['can_preview'] and reviewed['progress']['unresolved'] == 0
     second = analyzed(imp)
-    reused = summary(imp, second)
+    unselected = summary(imp, second)
+    assert not unselected['can_preview'] and unselected['binding_refs'] == []
+    reused = declare_context(imp, second)
     assert reused['can_preview']
     assert reused['sheets'][0]['classification_origin'] == 'REUSED'
     with Session(imp[0][1]) as s:

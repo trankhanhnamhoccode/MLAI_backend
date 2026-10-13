@@ -27,6 +27,7 @@ Schema = Literal[
     "sales",
     "recipes",
     "inventory_count",
+    "opening_stock",
     "products",
     "ingredients",
     "suppliers",
@@ -219,8 +220,10 @@ class SourceContext(DTO):
     sales_semantics: Literal["daily_total", "disjoint_contribution"] | None = None
     inventory_semantics: Literal["lot_stock_count"] | None = None
     decimal_locale: Literal["dot", "comma"] | None = None
-    date_format: Literal["ISO", "DMY_SLASH", "MDY_SLASH"] | None = None
-    pack_cost_basis: Literal["PER_PACK", "PER_SOURCE_UNIT"] | None = None
+    date_format: Literal["ISO", "DMY_SLASH", "MDY_SLASH", "EXCEL_SERIAL"] | None = None
+    pack_cost_basis: Literal["PER_PACK", "PER_SOURCE_UNIT"] | None = Field(
+        default=None, json_schema_extra={"deprecated": True},
+        description="Historical readability only; new proposals require supplier price_basis/price_quantity/price_unit declarations.")
     planned_arrival_expiry_rule: PlannedArrivalExpiryRule | None = None
     term_period_amendments: tuple[TermPeriodAmendment, ...] = ()
     fee_period_amendments: tuple[FeePeriodAmendment, ...] = ()
@@ -410,6 +413,24 @@ class ProfileSpec(DTO):
     source_provenance: SourceProvenance
     shared_field_bindings: tuple[SharedRule, ...] = Field(default=(), max_length=64)
 
+    def supports_recipe_basis(self) -> bool:
+        """Historical profiles remain readable, but cannot execute implicit basis."""
+        return self.schema != "recipes" or any(
+            b.target_field == "recipes.quantity_basis" and not b.ignored
+            for b in self.field_bindings
+        ) or any(r.target_field == "recipes.quantity_basis" for r in self.shared_field_bindings)
+
+    def supports_supplier_basis(self) -> bool:
+        if self.schema != "supplier_terms":
+            return True
+        if any(r.parameter == "PACK_COST_FROM_SOURCE_UNIT_PRICE" for r in self.normalizations):
+            return False
+        targets = {b.target_field for b in self.field_bindings if not b.ignored}
+        targets.update(r.target_field for r in self.shared_field_bindings)
+        return {"supplier_terms." + f for f in (
+            "price_basis", "price_quantity", "price_unit", "moq_basis",
+            "minimum_order_quantity", "moq_unit")} <= targets
+
     @model_validator(mode="after")
     def shared_sources(self):
         shared = [r.target_field for r in self.shared_field_bindings]
@@ -556,6 +577,23 @@ class MappingIssue(DTO):
 
     suggestion_reason: str | None = None
     candidate_targets: tuple[str, ...] = ()
+    model_reason: Annotated[str, Field(max_length=200)] | None = None
+    field_category: Literal["A", "B", "C", "D"] | None = None
+    suggested_ignore: bool = False
+
+
+class SuggestionDiagnostic(DTO):
+    status: Literal["disabled", "unavailable", "invalid", "proposed"]
+    model: str
+    prompt_version: str = "mapping_prompt/2"
+    schema_version: str = "sheet_suggestion/1"
+    input_digest: str | None = None
+    attempts: int = 0
+    failure_code: str | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    http_status: int | None = None
+    failure_stage: Literal["configuration", "input", "transport", "validation"] | None = None
 
 
 class SheetInfo(DTO):
@@ -568,6 +606,8 @@ class SheetInfo(DTO):
     header_row: int = 1
     preamble_rows: tuple[int, ...] = ()
     preamble_samples: tuple[str, ...] = ()
+    excel_date_system: Literal["1900", "1904"] | None = None
+    suggestion_diagnostic: SuggestionDiagnostic | None = None
     profile_id: UUID | None
     selected_type: Schema | None = None
     suggested_type: Schema | None = None
@@ -694,7 +734,7 @@ class DecisionResult(DTO):
     audit_id: UUID
 
 
-from app.application.contracts.import_domains import CanonicalValue
+from app.application.contracts.import_domains import CanonicalValue, SupplierTermSemantics
 
 
 class Change(DTO):
@@ -706,6 +746,7 @@ class Change(DTO):
 
 class FieldProvenance(DTO):
     field: str
+    source_value: str | bool | int | None = None
     origin: Literal[
         "SOURCE_EXPLICIT",
         "DETERMINISTIC_DERIVED",
@@ -738,6 +779,7 @@ class EntityRefs(DTO):
 
 
 class ProvenanceValue(DTO):
+    source_value: str | bool | int | None = None
     origin: Literal[
         "SOURCE_EXPLICIT",
         "DETERMINISTIC_DERIVED",
@@ -761,8 +803,20 @@ class NestedRecordProvenance(DTO):
 
 class RecipeLineProvenance(DTO):
     ingredient_id: UUID
+    quantity_basis: Literal["PER_SERVING", "WHOLE_BATCH"] | None = None
     source_location: SourceLocation
     provenance: dict[str, ProvenanceValue]
+
+
+class InventoryEffect(DTO):
+    origin: Literal["OPENING_STOCK", "IMPORT_COUNT"]
+    lot_id: UUID
+    before_quantity: Quantity | None
+    after_quantity: Quantity
+    quantity_delta: Annotated[str, Field(pattern=r"^-?(0|[1-9][0-9]*)(\.[0-9]+)?$", max_length=201)]
+    movement_type: Literal["COUNT_CORRECTION"] | None
+    unit: str
+    observed_at: datetime
 
 
 class PreviewRow(DTO):
@@ -788,6 +842,8 @@ class PreviewRow(DTO):
     expected_version: str | None = None
     normalized_source_quantity: Quantity | None = None
     required_permissions: tuple[str, ...] = ()
+    supplier_term_semantics: SupplierTermSemantics | None = None
+    inventory_effect: InventoryEffect | None = None
 
     @field_validator("before", "after", mode="before")
     @classmethod
@@ -1091,7 +1147,7 @@ class CompletionReadiness(DTO):
 
 class CommitRowReference(DTO):
     row_id: UUID
-    canonical_domain: Literal["products", "ingredients", "recipes", "sales", "inventory_count", "suppliers", "supplier_terms", "payable_fees", "scope_declarations"]
+    canonical_domain: Schema
     canonical_id: UUID
     source_location: SourceLocation
     source_locations: tuple[SourceLocation, ...] = ()
@@ -1101,6 +1157,8 @@ class CommitRowReference(DTO):
     canonical_version: str | None = None
     movement_ids: tuple[UUID, ...] = ()
     nested_references: tuple[EntityRef, ...] = ()
+    supplier_term_semantics: SupplierTermSemantics | None = None
+    inventory_effect: InventoryEffect | None = None
 
 
 class ImportCompletion(DTO):

@@ -17,7 +17,7 @@ from app.application.forecast_preparation import prepare_observations
 from app.application.forecast_serialization import serialize_prepared
 from app.application.use_cases.forecast_serving import source_digest
 from app.application.readiness_evaluation import latest_declarations,contains,versions
-from app.application.operational_import_facts import declaration_dependency,current_fees
+from app.application.operational_import_facts import declaration_dependency,current_fees,inventory_matches
 from app.application.planning_fee_bindings import fee_bindings
 from app.application.decision_capture_v2_validation import project_capture_v2
 from app.application.contracts.auth import AuthError
@@ -57,10 +57,8 @@ def declarations_for(record,facts,forecast_id,now):
     valid=[(r,d) for r,d in rows if r['dependency_digest']==declaration_dependency(snap,d)]
     inventory=[]
     for ingredient in snap['ingredients']:
-        ident=UUID(ingredient['id']);lots=[r for r in snap['inventory_lots'] if r['ingredient_id']==str(ident)]
-        matches=[d for r,d in valid if isinstance(d,domains.InventoryDeclaration) and d.ingredient_id==ident and
-            d.observed_at<=now and ((d.state=='COMPLETE_CURRENT_LOTS' and set(map(str,d.covered_lot_ids))=={r['id'] for r in lots}) or
-            (d.state=='CONFIRMED_EMPTY' and not d.covered_lot_ids and not lots))]
+        ident=UUID(ingredient['id'])
+        matches=inventory_matches(snap,rows,ident,now)
         inventory.append(InventoryScopeDeclaration(ingredient_id=ident,state=matches[0].state if len(matches)==1 else 'UNKNOWN',
             provenance=matches[0].evidence_reference if len(matches)==1 else 'No unique current complete inventory evidence'))
     contexts=[d for r,d in valid if isinstance(d,domains.ProcurementDeclaration) and d.effective_from<=start and (d.effective_to is None or d.effective_to>=end)]

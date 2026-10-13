@@ -35,3 +35,16 @@ def declaration_dependency(snapshot, declaration):
             sales=[r for r in snapshot["sales_daily"] if r["product_id"] in ids
                 and str(declaration.from_date) <= r["sales_date"] <= str(declaration.to_date)]))
     return content_digest(dict(ingredients=snapshot["ingredients"], suppliers=snapshot["suppliers"]))
+
+
+def inventory_matches(snapshot, declarations, ingredient, now):
+    """Current scoped evidence; a recorded zero balance is not missing inventory."""
+    from fractions import Fraction
+    from app.application.contracts.import_domains import InventoryDeclaration
+    ident = str(ingredient)
+    lots = [r for r in snapshot["inventory_lots"] if r["ingredient_id"] == ident]
+    return tuple(d for r,d in declarations if isinstance(d, InventoryDeclaration)
+        and str(d.ingredient_id) == ident and d.observed_at <= now
+        and r["dependency_digest"] == declaration_dependency(snapshot, d)
+        and ((d.state == "COMPLETE_CURRENT_LOTS" and set(map(str,d.covered_lot_ids)) == {lot["id"] for lot in lots})
+             or (d.state == "CONFIRMED_EMPTY" and not d.covered_lot_ids and all(Fraction(lot["on_hand_quantity"]) == 0 for lot in lots))))

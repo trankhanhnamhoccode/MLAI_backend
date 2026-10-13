@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from app.application.import_identity import content_digest
 from app.application.import_sales_sources import sources_for, latest_source
 
-SUPPORTED = frozenset({"products", "ingredients", "sales", "recipes", "inventory_count", "suppliers", "supplier_terms", "payable_fees", "scope_declarations"})
+SUPPORTED = frozenset({"products", "ingredients", "sales", "recipes", "inventory_count", "opening_stock", "suppliers", "supplier_terms", "payable_fees", "scope_declarations"})
 
 
 def commit_rows(preview, body):
@@ -72,8 +72,8 @@ def effective_digest(preview, body, confirmation):
 
 def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None, recorded_at=None):
     """No commit/rollback here. Caller fences read-set and persists atomic receipts."""
-    rank = {"ingredients":0,"products":1,"suppliers":1,"supplier_terms":3,"recipes":4,"sales":5,"inventory_count":6,"payable_fees":7,"scope_declarations":8}
-    ordered = sorted(rows, key=lambda r: (2 if r.proposed_action.startswith("AMEND_") else rank[r.after.domain],str(r.row_id)))
+    from app.application.import_dependencies import order_dependencies
+    ordered = order_dependencies(rows)
     completed = set()
     sources, references = [], []
     inserted = changed = noops = products = ingredients = added_sales = changed_sales = recipes = 0
@@ -179,6 +179,21 @@ def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None,
                     else:inserted+=1;configuration_impacts["declarations"]["created"]+=1
                 elif row.proposed_action!="NO_OP":raise AuthError("PREVIEW_BLOCKED",409)
                 canonical_version=str(session.get(ScopeDeclarationRecord,canonical_id).version)
+            elif value.domain == "opening_stock":
+                canonical_id = value.lot_id
+                if row.proposed_action == "CREATE_OPENING_STOCK":
+                    from app.application.import_opening_stock import write_opening
+                    from zoneinfo import ZoneInfo
+                    now = recorded_at or datetime.now(timezone.utc)
+                    today = now.astimezone(ZoneInfo(snapshot["stores"][0]["timezone"])).date()
+                    result = write_opening(session, store_id, row,
+                        specs[str(row.source_location.sheet_id)].scope.source_system_key, actor_id, now, today)
+                    movement_ids = (result.movement.id,)
+                    inserted += 1
+                    inventory_changes += 1
+                    affected_ingredients.add(value.ingredient_id)
+                elif row.proposed_action != "NO_OP":
+                    raise AuthError("PREVIEW_BLOCKED", 409)
             elif value.domain == "inventory_count":
                 canonical_id = value.lot_id
                 if row.proposed_action == "COUNT_CORRECTION":
@@ -265,6 +280,8 @@ def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None,
             row_id=row.row_id, canonical_domain=value.domain, canonical_id=canonical_id,
             source_location=row.source_location, source_locations=row.source_locations,
             line_provenance=row.line_provenance, movement_ids=movement_ids,
+            supplier_term_semantics=row.supplier_term_semantics,
+            inventory_effect=row.inventory_effect,
             nested_references=row.nested_references,nested_provenance=row.nested_provenance,canonical_version=canonical_version,
             provenance=row.model_dump(mode="json")["provenance"],
         ))

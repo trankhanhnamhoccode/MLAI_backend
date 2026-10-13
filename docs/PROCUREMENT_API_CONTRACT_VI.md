@@ -126,13 +126,24 @@ Fields data đều REQUIRED; nullable chỉ khi nói rõ:
 | supported_horizon_days,supported_strategies,supported_paths | [7],[lean,balanced,protected],[LOW,BASE,HIGH]. |
 | default_requirements | Requirements/null; khi resolver định nghĩa, đúng default mục3. |
 | default_requirements_version,default_requirements_updated_at | Version/null,Timestamp/null; chưa biết không tạo ngày giả. |
-| budget_ceiling | {amount:MoneyText,currency,version:Version,updated_at:Timestamp}/null. Không số ví dụ thành cap thật. |
+| budget_ceiling | {amount:MoneyText,currency,version:Version,updated_at:Timestamp}/null. Trong C01 thành công, null là chưa có cap row tại snapshot; amount="0" là cap zero có version. Không số ví dụ thành cap thật. |
 | products | Toàn menu active {product_id,name,selling_unit}; name rồiUUID tăng dần; nguồn FE chọn override. |
 | custom_requirement_fields | FieldDescriptor[]/null;null chưa định nghĩa,[] xác nhận không field. |
 | requirements_modes | Đủ3 {mode:default/custom/saved,availability:available/unavailable/unknown,reason_codes:string[]}. |
 | saved_requirements | Saved[]/null; toàn bộ bộ active dùng chung Store trong scope quyền; [] đọc thành công/rỗng; null chưa hỗ trợ/chưa biết; không phân trang. Invalid active vẫn hiện, archived không hiện. |
 | capabilities | Boolean winner_selection,saved_requirements,include_open_purchase_orders,scenario_based_planning. Hai capability cuối false v1. |
 | readiness | Readiness dưới đây, không proof có winner/model tốt. |
+
+CURRENT FACT: C01 kiểm đủ planning.context.read, budget.read và procurement.cost.read
+trước projection và recheck authority trước trả response. Thiếu quyền trả403 toàn
+response, không budget_ceiling=null. Null trong200 không chứng minh budget.update;
+FE kiểm current effective permissions qua T02, N4 vẫn enforce budget.read+budget.update.
+Initial create dùng If-None-Match:*; concurrent create/replace trả412
+CONFIGURATION_VERSION_CHANGED. Không cần enum availability mới để suy absence;
+không có response thành công thì không được suy Store chưa tạo budget.
+Source: ReadinessReads.read, project_context và PlanningConfigurationWrites;
+acceptance: test_planning_configuration_public.py (create/CAS/zero/replay), kết quả
+chạy và điều kiện bàn giao xem [TD-BE-010](../008_TechDebt.md#td-be-010--store-profilegeneral-settings-writers-và-initial-budget-absence).
 
 FieldDescriptor={field,type,required,nullable,constraints,inheritance}. field là
 JSON path template;type decimal_text/path/product_override_array; constraints mô tả
@@ -1240,3 +1251,138 @@ engine. Bỏ expected_demand/demand_lower/demand_upper kiểu interval chưa có
 Không có simulation thì vùng chart unavailable, không zero/interpolation.
 CURRENT FACT: retained projection, pagination, captured display metadata và public
 C04/C05 đã triển khai; không dùng live labels thay historical facts.
+
+<a id="planning-discovery"></a>
+## 17. Planning history filters và export discovery — Đợt 2
+
+ACCEPTED DECISION: FE tìm lại Run theo creator/ngày tạo theo timezone Store,
+tìm lại PDF khi mất locator. Retention Run/input/result/idempotency không thời hạn
+giữ nguyên mục12/P3; không purge hoặc chỉnh historical facts.
+CURRENT FACT: `app/api/history.py` N9 chỉ limit/cursor/status/forecast_start_from/
+forecast_start_to/sort=-accepted_at. DTO RunSummary đã có created_by/accepted_at,
+không cần creator API thứ hai. `app/api/planning_exports.py` N10 POST nhận
+ExportRequest, N11 GET binary, J01 poll export job; chưa GET export collection.
+Download/job kiểm current Store rights, không token URL hoặc quyền cũ của creator.
+
+### N9 IMPLEMENTED route, query extension DESIGN_READY
+
+GET /stores/{store_id}/procurement-plans thêm created_by_user_id?:UUID,
+created_date_from?:date,created_date_to?:date (inclusive ordered). Omit creator lấy
+mọi creator trong Store như hiện hành; filter không cấp user discovery hoặc quyền
+đọc Store khác. Unknown creator UUID trả items[] trong authorized Store, không404
+account-existence. Có thể chọn “Tôi” bằng A03 user_id hoặc dùng creator labels từ
+RunSummary đã đọc; không bắt Staff gọi N12 Owner-only.
+
+Ngày tạo = **accepted_at** của durable Run, khác forecast_start_date. Convert
+from local midnight đến midnight sau to theo timezone Store rồi UTC half-open;
+thiếu một đầu là unbounded bên đó. DST boundary theo IANA, không cộng24h UTC mặc
+định; FE không browser timezone. AND với status/forecast date range/creator,
+giữ sort -accepted_at/UUID và RunHistory/RunSummary DTO hiện có. Meta extension
+{timezone:string,applied_filters:{created_by_user_id:UUID|null,
+created_date_from:date|null,created_date_to:date|null}}. Không rename accepted_at
+hoặc thêm timestamp giả bằng completed_at. Empty[] known no match, nullable
+result_digest/outcome như current DTO; total_count current int|null giữ nguyên.
+
+Permissions giữ planning.result.read+budget.read+procurement.cost.read và Store
+membership hiện hành. Missing whole response403; không cost aggregates trong
+filter suggestions. Snapshot bind filters/Store timezone/current authorization/
+Run revisions; new Run/status change409 SNAPSHOT_NOT_AVAILABLE, FE reload trang1.
+Query không mutation/audit business/job; retry GET an toàn, không rerun forecast.
+Malformed/date order422 INVALID_FILTER, cursor mismatch422 INVALID_CURSOR;
+401/403/404/503 theo [quy ước chung](API_CONTRACT.md#dot2-common).
+
+Ví dụ request query (không JSON body):
+`?created_by_user_id=00000000-0000-0000-0000-000000000004&created_date_from=2026-10-13&created_date_to=2026-10-13&limit=50`.
+Với Asia/Ho_Chi_Minh, UTC range [2026-10-12T17:00:00Z,2026-10-13T17:00:00Z).
+Response data reuse ví dụ N9 mục15.2; meta extension:
+
+```json
+{"timezone":"Asia/Ho_Chi_Minh","applied_filters":{"created_by_user_id":"00000000-0000-0000-0000-000000000004","created_date_from":"2026-10-13","created_date_to":"2026-10-13"}}
+```
+
+### EX01 DESIGN_READY — GET /procurement-plans/{plan_id}/exports
+
+FE tìm lại export/job/download locator của retained Run, không gọi POST chỉ để dò.
+No body, query option_id?:OptionId,status?:queued|running|completed|failed,
+limit/cursor; sort -created_at/UUID cố định. Mọi exports của đúng Run/Store accessible
+cho actor có planning.result.read+planning.export+budget.read+procurement.cost.read,
+giống N10/J01 PDF/N11. Không chỉ creator, không ngầm cấp planning.export từ result.read.
+Foreign Run404; missing known Store action403; option lạ thuộc Run422 INVALID_OPTION.
+Response200 data={items:ExportSummary[]}, meta pagination/snapshot_id/observed_at.
+
+```text
+ExportSummary={export_id:UUID,run_id:UUID,job_id:UUID,option_id:OptionId,
+ created_by_user_id:UUID,created_at:Timestamp,
+ status:queued|running|completed|failed,
+ result_digest:Version,render_version:string,version:Version,
+ artifact_availability:pending|available|missing|unverifiable|failed,
+ completed_at:Timestamp|null,error_code:string|null,
+ download_url:string|null,sha256:string|null,byte_count:int|null,
+ media_type:"application/pdf",allowed_actions:string[]}
+```
+
+Artifact fields null khi chưa verified binary, không byte_count0 cho unknown.
+Completed execution là retained terminal status; nếu bytes sau đó missing/corrupt,
+artifact_availability missing/unverifiable, download_url=null, không sửa historical
+job thành failed hoặc giả PDF recoverable. Local path không exposed. Available
+download_url là N11 relative API locator; không public/static presigned bearer URL.
+EX01 snapshot pin export revisions/authorization/result_digest, metadata availability
+kiểm private binary tồn tại và size/hash evidence bằng adapter read; không render.
+Race bytes mất sau discovery vẫn do N11 kiểm lại. Unknown statuses/cursors422,
+snapshot409; missing retained result evidence503 RESULT_INTEGRITY_UNAVAILABLE.
+EX01 không tạo job/audit business, [] known no exports match filters.
+
+Ví dụ EX01 data khi export đang queued:
+
+```json
+{"items":[{"export_id":"00000000-0000-0000-0000-000000000081","run_id":"00000000-0000-0000-0000-000000000082","job_id":"00000000-0000-0000-0000-000000000083","option_id":"option-balanced","created_by_user_id":"00000000-0000-0000-0000-000000000004","created_at":"2026-10-13T02:00:00Z","status":"queued","result_digest":"result-1","render_version":"planning-pdf/1","version":"export-1","artifact_availability":"pending","completed_at":null,"error_code":null,"download_url":null,"sha256":null,"byte_count":null,"media_type":"application/pdf","allowed_actions":["poll"]}]}
+```
+
+### N10/N11/J01 — IMPLEMENTED, giữ authority và retries
+
+N10 POST /procurement-plans/{plan_id}/exports: Origin/CSRF/Idempotency-Key,
+không If-Match/If-None-Match. Request {format:"pdf",option_id:OptionId|null,
+locale:"vi"}; null resolve winner tại acceptance, không winner409 WINNER_NOT_AVAILABLE
+theo source và contract mục15.4; unknown option404 OPTION_NOT_FOUND,
+known strategy không exportable409 OPTION_NOT_EXPORTABLE.
+202 data ExportAccepted={export_id,run_id,option_id,status:"queued",job_id,
+result_digest,render_version:"planning-pdf/1"}, meta.poll_after_ms=2000.
+Key/payload cũ trả original receipt/job; timeout retry samekey, không generate
+export mới. N10 không resurrect failed export; user muốn attempt mới phải chọn
+explicit generate lại với key mới sau review. Không chuyển Run hoặc selected option.
+
+```json
+{"format":"pdf","option_id":null,"locale":"vi"}
+```
+
+```json
+{"export_id":"00000000-0000-0000-0000-000000000081","run_id":"00000000-0000-0000-0000-000000000082","option_id":"option-balanced","status":"queued","job_id":"00000000-0000-0000-0000-000000000083","result_digest":"result-1","render_version":"planning-pdf/1"}
+```
+
+J01 GET /jobs/{job_id}: no body/query, current export permissions, returns JobView
+current DTO; queued/running poll2s, completed result resource_type planning_pdf_export
++resource_id/run_id/option_id/download_url/sha256/byte_count/media_type, failed
+safe error_code theo mục15.4. N11 GET /procurement-plans/{plan_id}/exports/{export_id}:
+no body/query, current rights on every download/retry;200 application/pdf,
+Content-Disposition/Content-Length/ETag hash/private,no-store/nosniff như source.
+Không JSON success hoặc token, không HTTP2xx fake missing artifact. Runtime errors
+EXPORT_NOT_READY409/EXPORT_ARTIFACT_UNAVAILABLE503/RESOURCE_NOT_FOUND404 theo current source;
+không redirect storage path hoặc tự render từ GET.
+
+Binary regenerate/cache là lựa chọn kỹ thuật **có điều kiện**, không promise
+automatic recovery: chỉ khi retained input/result/render implementation/evidence
+đủ và integrity verified, cùng captured Run/option/result digest. Nếu không đủ,
+explicit unavailable/reason, không dùng inventory/price/name hiện tại thay facts
+lịch sử. Trong Đợt 2 không thêm regenerate endpoint/recovery command; FE có thể
+request N10 key mới cho cùng option sau thông báo, vẫn có thể fail vì evidence thiếu.
+Giữ original export intent/proof/idempotency và historical facts, không tự purge.
+
+Allowed actions EX01: pending [poll]; available [download]; missing/unverifiable/
+failed [request_new_export] chỉ khi retained evidence đủ, nếu chưa xác định [] với
+reason qua error_code; không bảo đảm success. Audit tạo/export giữ actor/Run/option/
+result digest/job/time, GET discovery/download không permission changes; delivery
+notification import/PDF vẫn DEFERRED, không đăng ký inbox event ngoài v1.
+FE thêm creator/local-date filters, export list→resume J01→download N11 và missing
+artifact UI. Acceptance tương lai: Store time boundaries, filter cursor consistency,
+creator không email leak; locator recovery, grant revocation discovery/download,
+missing/corrupt bytes, no implicit rendering, no retained fact rewrite.

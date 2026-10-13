@@ -142,8 +142,8 @@ def project_capture_v2(request, wrapped):
         d=declarations.get(identifier);lots=[l for l in facts.lots if l.ingredient_id==identifier]
         if d is None or d.state=='UNKNOWN' or (not lots and d.state!='CONFIRMED_EMPTY'):
             problem('INVENTORY_BALANCE_MISSING','ingredient',identifier,'inventory_scope','Inventory missing is not zero; completeness required')
-        elif lots and d.state=='CONFIRMED_EMPTY':
-            problem('INVENTORY_DECLARATION_CONFLICT','ingredient',identifier,'inventory_scope','Confirmed-empty conflicts with captured lot rows')
+        elif any(l.on_hand_quantity > 0 for l in lots) and d.state=='CONFIRMED_EMPTY':
+            problem('INVENTORY_DECLARATION_CONFLICT','ingredient',identifier,'inventory_scope','Confirmed-empty conflicts with positive captured stock')
     if not set(declarations)<=scoped_ingredients:block('INVENTORY_DECLARATION_SCOPE_INVALID','Declaration outside Store Ingredient scope')
     for rows,entity in ((facts.lots,'inventory_lot'),(facts.supplier_terms,'supplier_term')):
         for row in rows:

@@ -131,6 +131,7 @@ def test_business_headers_resolve_without_excel_uuid_and_receipt_dates_are_not_c
     assert set(SOURCE_MODELS) == {
         "sales",
         "inventory_count",
+        "opening_stock",
         "recipes",
         "products",
         "ingredients",

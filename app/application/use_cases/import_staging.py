@@ -60,6 +60,7 @@ READS = {
     "sales": ("menu.read", "sales.read"),
     "recipes": ("menu.read", "ingredient.read", "recipe.read"),
     "inventory_count": ("ingredient.read", "inventory.read"),
+    "opening_stock": ("ingredient.read", "inventory.read", "supplier.read", "procurement.cost.read"),
     "products": ("menu.read",),
     "ingredients": ("ingredient.read",),
     "suppliers": ("supplier.read",),
@@ -83,6 +84,7 @@ WRITES = {
     "sales": "sales.record",
     "recipes": "recipe.create_version",
     "inventory_count": "inventory.count.correct",
+    "opening_stock": "inventory.receive",
     "products": "product.create",
     "ingredients": "ingredient.create",
     "suppliers": "supplier.create",
@@ -485,6 +487,7 @@ class ImportStaging:
 
     def _bindings(self, s, b):
         result = []
+        contexts = {i.sheet_id: i for i in self._issues(b) if i.issue_type == "source_context"}
         for item in b.analysis_json["bindings"]:
             ref = dto.BindingRef.model_validate(item)
             v = s.get(ImportProfileVersion, (ref.profile_id, ref.version))
@@ -494,6 +497,13 @@ class ImportStaging:
                 raise AuthError("RESOURCE_NOT_FOUND", 404)
             if content_digest(v.spec_json) != ref.content_digest:
                 raise AuthError("SOURCE_IDENTITY_CONFLICT", 409)
+            declared = contexts.get(ref.sheet_id)
+            if (declared is None or declared.resolved_by is None or declared.resolution is None
+                    or not isinstance(declared.resolution.resolution, dto.SourceContext)):
+                raise AuthError("SOURCE_CONTEXT_REQUIRED", 409)
+            context = declared.resolution.resolution
+            if context.source_system_key != v.source_system_key or context.report_type != v.report_type:
+                raise AuthError("SOURCE_CONTEXT_CONFLICT", 409)
             result.append((ref, dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True})))
         return result
 
@@ -549,8 +559,8 @@ class ImportStaging:
                 inspected = [
                     dto.InspectedProfile(binding=ref, spec=spec) for ref, spec in pairs
                 ]
-        except AuthError:
-            blockers.append(notice("MAPPING_VERSION_RETIRED", None))
+        except AuthError as error:
+            blockers.append(notice(error.code, None))
         active_sheets = [sh for sh in sheets if not sh.ignored]
         if len(bindings) != len(active_sheets):
             blockers.append(notice("OWNER_MAPPING_APPROVAL_REQUIRED", None))
@@ -1065,6 +1075,9 @@ class ImportStaging:
                         for v in candidates
                         if v.spec_json["schema"] == sheet.selected_type
                     ]
+                candidates = [v for v in candidates
+                    if dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True}).supports_recipe_basis()
+                    and dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True}).supports_supplier_basis()]
                 if len(candidates) == 1:
                     existing_spec = dto.ProfileSpec.model_validate(
                         candidates[0].spec_json
@@ -1108,6 +1121,8 @@ class ImportStaging:
                             else "PER_PACK"
                         ),
                     )
+                    if expected.get('date_format') in {'EXCEL_1900', 'EXCEL_1904'}:
+                        expected['date_format'] = 'EXCEL_SERIAL'
                     if any(
                         value != expected.get(key) for key, value in declared.items()
                     ):
@@ -1136,7 +1151,21 @@ class ImportStaging:
                 if (
                     len(candidates) == 1
                     and issue.issue_type == "source_context"
-                    and (p is None or p.import_id != b.id)
+                    and (p is None or p.import_id != b.id or (
+                        # A classification/column review before declaring source
+                        # is not itself a reusable-spec change. Keep genuine
+                        # draft edits on the approval path.
+                        p.proposal_json.get("spec") is None
+                        and p.proposal_json.get("base_spec") is None
+                        and not any(p.proposal_json.get(key) for key in ("identities", "entities", "conversions"))
+                        and (not sheet.shared_field_bindings or sheet.shared_field_bindings == existing_spec.shared_field_bindings)
+                        and sheet.selected_type == existing_spec.schema
+                        and all(any(f.source_column_index == i.source_location.source_column_index
+                            and f.target_field == i.target_field and f.ignored == i.ignored
+                            for f in existing_spec.field_bindings)
+                            for i in issues if i.sheet_id == sheet.sheet_id and i.issue_type == "column"
+                            and i.status == "resolved")
+                    ))
                 ):
                     v = candidates[0]
                     spec = dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True})
@@ -1152,15 +1181,27 @@ class ImportStaging:
                         ("date_format", context.date_format),
                     ):
                         if param is not None and not any(
-                            n.kind == kind and n.parameter == param
+                            n.kind == kind and (n.parameter == param or kind == 'date_format'
+                                and param == 'EXCEL_SERIAL' and n.parameter == 'EXCEL_' + (sheet.excel_date_system or ''))
                             for n in spec.normalizations
                         ):
                             raise AuthError("SOURCE_IDENTITY_CONFLICT", 409)
-                    if any(
-                        i.sheet_id == sheet.sheet_id and i.issue_type == "identity"
-                        for i in issues
-                    ):
-                        raise AuthError("OWNER_MAPPING_APPROVAL_REQUIRED", 409)
+                    from app.models import Product, Ingredient, InventoryLot, Supplier
+                    snapshot = {}
+                    for model in (Product, Ingredient, InventoryLot, Supplier):
+                        records = s.scalars(select(model).where(model.store_id == b.store_id).limit(100001)).all()
+                        if len(records) > 100000:
+                            raise AuthError("RESOURCE_LIMIT_EXCEEDED", 413)
+                        snapshot[model.__tablename__] = [{"id": str(record.id),
+                            "base_unit": getattr(record, "base_unit", None),
+                            "selling_unit": getattr(record, "selling_unit", None)} for record in records]
+                    # Re-evaluate row identities against this approved spec. New
+                    # tokens remain issues; canonical IDs/approved aliases need no
+                    # draft or profile approval merely because rows are new.
+                    issues = [i for i in issues if not (i.sheet_id == sheet.sheet_id
+                        and i.issue_type == "identity")]
+                    fresh_identities = identity_issues([sheet], issues,
+                        b.analysis_json["sources"], snapshot, {str(sheet.sheet_id): spec})
                     ref = dto.BindingRef(
                         sheet_id=sheet.sheet_id,
                         profile_id=v.profile_id,
@@ -1199,6 +1240,8 @@ class ImportStaging:
                                         for f in spec.field_bindings
                                     ),
                                     "profile_ref": ref,
+                                    "resolution": body if i.issue_type == "source_context" else i.resolution,
+                                    "resolved_by": actor.user_id if i.issue_type == "source_context" else i.resolved_by,
                                     "target_field": next(
                                         (
                                             f.target_field
@@ -1215,6 +1258,7 @@ class ImportStaging:
                         )
                         for i in issues
                     ]
+                    issues.extend(fresh_identities)
                     analysis = dict(b.analysis_json)
                     analysis["issues"] = [i.model_dump(mode="json") for i in issues]
                     analysis["sheets"] = [sh.model_dump(mode="json") for sh in sheets]
@@ -1231,7 +1275,7 @@ class ImportStaging:
                     b.revision = rev()
                     b.status = (
                         "ready_for_preview"
-                        if len(analysis["bindings"]) == len(sheets)
+                        if len(analysis["bindings"]) == len(sheets) and not self._progress(issues).unresolved
                         else "review_required"
                     )
                     target = s.get(ImportProfile, v.profile_id)
@@ -1287,6 +1331,11 @@ class ImportStaging:
                         fee_period_amendments=inherited_spec.fee_period_amendments,
                     )
                 )
+                declared_context = next((i.resolution for i in issues if
+                    i.sheet_id == sheet.sheet_id and i.issue_type == "source_context"
+                    and i.resolution and isinstance(i.resolution.resolution, dto.SourceContext)), None)
+                if declared_context is not None:
+                    inherited_context = declared_context
                 inherited = {"spec": v.spec_json, "base_spec": v.spec_json}
                 issues = [
                     (
@@ -2613,21 +2662,6 @@ class ImportStaging:
                     sources.extend(raw)
                 result = (sheets, issues, sources)
                 with auth_session(self.engine) as lookup:
-                    matching_signatures = set(
-                        lookup.scalars(
-                            select(ImportProfileVersion.schema_signature)
-                            .join(
-                                ImportProfile,
-                                ImportProfile.id == ImportProfileVersion.profile_id,
-                            )
-                            .where(
-                                ImportProfileVersion.store_id == store_id,
-                                ImportProfileVersion.retired.is_(False),
-                                ImportProfile.active_version
-                                == ImportProfileVersion.version,
-                            )
-                        ).all()
-                    )
                     job = lookup.get(ImportJob, job_id)
                     _, _, provider_permissions = self._job_authority(lookup, job)
                     lookup.commit()
@@ -2664,12 +2698,13 @@ class ImportStaging:
 
                 provider_sheets = 0
                 for index, sheet in enumerate(sheets):
-                    if sheet.schema_signature in matching_signatures:
-                        continue
                     _, _, _, low_quality = rule_classification(
                         sheet.headers, sheet.name
                     )
                     if not low_quality:
+                        continue
+                    own_columns = [i for i in issues if i.sheet_id == sheet.sheet_id and i.issue_type == 'column']
+                    if own_columns and all(i.suggested_ignore for i in own_columns):
                         continue
                     if self.settings.import_llm_suggestions_enabled:
                         if provider_sheets >= 2:
@@ -2686,15 +2721,24 @@ class ImportStaging:
                             dict(
                                 source_column_index=i.source_location.source_column_index,
                                 target_field=i.target_field,
+                                candidates=list(i.candidate_targets),
+                                reason=i.suggestion_reason,
                             )
                             for i in issues
                             if i.sheet_id == sheet.sheet_id and i.issue_type == "column"
                         ],
+                        related_sheets=[dict(sheet_type=other.selected_type, headers=list(other.headers[:16]))
+                                        for other in sheets if other.sheet_id != sheet.sheet_id
+                                        and other.selected_type is not None][:4],
                     )
                     filename = file_names[sheet.file_id]
+                    diagnostics = []
                     suggestion, unavailable = suggest_sheet(
-                        self.settings, sheet, rawsheet, filename, rule, sheet.selected_type
+                        self.settings, sheet, rawsheet, filename, rule, sheet.selected_type, diagnostics
                     )
+                    if diagnostics:
+                        sheet = sheet.model_copy(update={'suggestion_diagnostic': diagnostics[0]})
+                        sheets[index] = sheet
                     if unavailable:
                         warnings.append(
                             notice(
@@ -2727,6 +2771,8 @@ class ImportStaging:
                                     ].target_field,
                                     "suggestion_origin": "QWEN",
                                     "suggestion_reason": "MODEL_SEMANTIC_PROPOSAL_REQUIRES_REVIEW",
+                                    "model_reason": proposals[item.source_location.source_column_index].reason,
+                                    "candidate_targets": proposals[item.source_location.source_column_index].candidates or item.candidate_targets,
                                     "confidence": proposals[
                                         item.source_location.source_column_index
                                     ].confidence,
@@ -2742,7 +2788,7 @@ class ImportStaging:
                             if item.sheet_id == sheet.sheet_id
                             and item.issue_type == "column"
                             and item.target_field is None
-                            and item.status != "ambiguous"
+                            and (item.status != "ambiguous" or item.suggestion_reason != "DUPLICATE_OR_AMBIGUOUS_TARGET")
                             else (
                                 item.model_copy(
                                     update={
@@ -2823,183 +2869,28 @@ class ImportStaging:
             if (
                 b.active_job_id != j.id
                 or b.file_set_version != j.input_json["file_set_version"]
+                or operation == "import_analyze" and b.mapping_revision != mapping_revision
             ):
                 raise AuthError("IMPORT_STATE_CONFLICT", 409)
             if operation == "import_analyze":
                 sheets, issues, sources, snapshot, warnings = result
                 bindings = []
-                bound_specs = {}
-                for index, sheet in enumerate(sheets):
-                    versions = s.scalars(
-                        select(ImportProfileVersion)
-                        .join(
-                            ImportProfile,
-                            ImportProfile.id == ImportProfileVersion.profile_id,
-                        )
-                        .where(
-                            ImportProfileVersion.store_id == store_id,
-                            ImportProfileVersion.schema_signature
-                            == sheet.schema_signature,
-                            ImportProfileVersion.retired.is_(False),
-                            ImportProfile.active_version
-                            == ImportProfileVersion.version,
-                        )
-                    ).all()
-                    if len(versions) == 1:
-                        v = versions[0]
-                        spec = dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True})
-                        rawsheet = next(
-                            raw
-                            for raw in sources
-                            if raw["sheet_id"] == str(sheet.sheet_id)
-                        )
-                        if source_context_conflicts(sheet, rawsheet, spec.scope):
-                            issues = [
-                                (
-                                    i.model_copy(
-                                        update={
-                                            "code": "SOURCE_CONTEXT_CONFLICT",
-                                            "status": "ambiguous",
-                                        }
-                                    )
-                                    if i.sheet_id == sheet.sheet_id
-                                    and i.issue_type == "source_context"
-                                    else i
-                                )
-                                for i in issues
-                            ]
-                            continue
-                        if content_digest(v.spec_json) != v.content_digest:
-                            raise AuthError("SOURCE_INTEGRITY_ERROR", 409)
-                        ref = dto.BindingRef(
-                            sheet_id=sheet.sheet_id,
-                            profile_id=v.profile_id,
-                            version=v.version,
-                            content_digest=v.content_digest,
-                        )
-                        bindings.append(ref.model_dump(mode="json"))
-                        sheets[index] = sheet.model_copy(
-                            update={
-                                "profile_id": v.profile_id,
-                                "selected_type": spec.schema,
-                                "classification_origin": "REUSED",
-                                "confidence": None,
-                                "shared_field_bindings": spec.shared_field_bindings,
-                                "import_values": (),
-                            }
-                        )
-                        bound_specs[str(sheet.sheet_id)] = spec
-                        issues = [
-                            (
-                                i.model_copy(
-                                    update={
-                                        "status": "auto_mapped",
-                                        "resolution_origin": "APPROVED_PROFILE",
-                                        "suggestion_origin": "REUSED",
-                                        "confidence": None,
-                                        "ignored": any(
-                                            f.ignored
-                                            and f.source_column_index
-                                            == i.source_location.source_column_index
-                                            for f in spec.field_bindings
-                                        ),
-                                        "profile_ref": ref,
-                                        "target_field": next(
-                                            (
-                                                f.target_field
-                                                for f in spec.field_bindings
-                                                if f.source_column_index
-                                                == i.source_location.source_column_index
-                                            ),
-                                            None,
-                                        ),
-                                    }
-                                )
-                                if i.sheet_id == sheet.sheet_id
-                                else i
-                            )
-                            for i in issues
-                        ]
-                    elif len(versions) > 1:
-                        issues = [
-                            (
-                                i.model_copy(
-                                    update={
-                                        "code": "PROFILE_MATCH_AMBIGUOUS",
-                                        "status": "ambiguous",
-                                    }
-                                )
-                                if i.sheet_id == sheet.sheet_id
-                                and i.issue_type == "source_context"
-                                else i
-                            )
-                            for i in issues
-                        ]
-                unknown = identity_issues(
-                    sheets, issues, sources, snapshot, bound_specs
-                )
-                if unknown:
-                    unknown_sheets = {str(i.sheet_id) for i in unknown}
-                    bindings = [
-                        r for r in bindings if r["sheet_id"] not in unknown_sheets
-                    ]
-                    for index, sh in enumerate(sheets):
-                        if (
-                            str(sh.sheet_id) in unknown_sheets
-                            and str(sh.sheet_id) in bound_specs
-                        ):
-                            spec = bound_specs[str(sh.sheet_id)]
-                            context = dto.ResolveRequest(
-                                resolution=dto.SourceContext(
-                                    kind="source_context",
-                                    source_system_key=spec.scope.source_system_key,
-                                    report_type=spec.scope.report_type,
-                                    evidence_reference=spec.source_provenance.evidence_references[
-                                        0
-                                    ],
-                                    sales_semantics=spec.sales_semantics,
-                                    inventory_semantics=spec.inventory_semantics,
-                                    planned_arrival_expiry_rule=spec.planned_arrival_expiry_rule,
-                                    term_period_amendments=spec.term_period_amendments,
-                                    fee_period_amendments=spec.fee_period_amendments,
-                                )
-                            )
-                            p = ImportProfile(
-                                id=uuid4(),
-                                store_id=b.store_id,
-                                import_id=b.id,
-                                sheet_id=sh.sheet_id,
-                                lifecycle_revision=rev(),
-                                proposal_revision=rev(),
-                                proposal_json={
-                                    "spec": spec.model_dump(mode="json"),
-                                    "base_spec": spec.model_dump(mode="json"),
-                                    "missing_fields": ["unknown_identity"],
-                                },
-                                rejected=False,
-                            )
-                            s.add(p)
-                            sheets[index] = sh.model_copy(update={"profile_id": p.id})
-                            issues = [
-                                (
-                                    i.model_copy(
-                                        update={
-                                            "status": "resolved",
-                                            "resolution_origin": "USER_PROPOSAL",
-                                            "profile_ref": None,
-                                            "resolution": (
-                                                context
-                                                if i.issue_type == "source_context"
-                                                else i.resolution
-                                            ),
-                                        }
-                                    )
-                                    if i.sheet_id == sh.sheet_id
-                                    else i
-                                )
-                                for i in issues
-                            ]
-                    issues.extend(unknown)
+                # I03 carries no attested source context. Signature candidates are
+                # discovery only; M04 establishes source before binding a version.
+                for sheet in sheets:
+                    versions = s.scalars(select(ImportProfileVersion).join(
+                        ImportProfile, ImportProfile.id == ImportProfileVersion.profile_id
+                    ).where(
+                        ImportProfileVersion.store_id == store_id,
+                        ImportProfileVersion.schema_signature == sheet.schema_signature,
+                        ImportProfileVersion.retired.is_(False),
+                        ImportProfile.active_version == ImportProfileVersion.version,
+                    )).all()
+                    if len(versions) > 1:
+                        issues = [i.model_copy(update={"code": "PROFILE_MATCH_AMBIGUOUS",
+                            "status": "ambiguous"}) if i.sheet_id == sheet.sheet_id
+                            and i.issue_type == "source_context" else i for i in issues]
+                issues.extend(identity_issues(sheets, issues, sources, snapshot))
                 schemas = sorted(
                     {i.target_field.split(".")[0] for i in issues if i.target_field}
                 )

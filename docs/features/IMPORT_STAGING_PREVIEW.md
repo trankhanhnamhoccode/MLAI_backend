@@ -49,6 +49,19 @@ Owner approval remains distinct from per-import values/review. Missing batch val
 blocks reused preview; no Qwen constants or hidden canonical lookup. No writers,
 new schemas or migrations; generic/nested injections still absent.
 
+CURRENT FACT — Recipe source basis: M03 có required `recipes.quantity_basis`
+(`PER_SERVING`/`WHOLE_BATCH`), M04 nhận column mapping hoặc shared_value cùng Owner
+review. Normalize chuyển per-serving × yield thành whole-batch bằng exact fractions,
+giữ loss để BOM áp một lần. Preview/committed references bổ sung source_value ở field
+provenance và quantity_basis ở line_provenance. Không thay Recipe DB/BOM/readiness
+policy, không migration/new endpoint. Old profiles thiếu basis cần Owner review;
+IMPORT_VALUE không giữ facts của batch trước. Workflow/examples/limits nằm tại
+[Recipe contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#recipe-source-basis-và-canonical-whole-yield).
+FE cần selector basis và hiển thị nguồn → canonical quantity/unit/yield/loss cùng
+declaration evidence; version/dates là import-only. Output conversion và mass-volume
+Recipe conversion chưa hỗ trợ. Initial historical recipe được phép khi explicit và
+không conflict; không đóng kỳ đang mở hoặc sửa nội dung version đã tồn tại.
+
 ### HISTORICAL INFORMATION — descriptor follow-up before field-value extension
 
 CURRENT FACT / schema inventory follow-up: see
@@ -97,7 +110,10 @@ currency không đủ phân loại workflow; headers consumption/receipt/calenda
 business rules được nhận diện ngoài schema hiện hành, không auto-IGNORE hay ép sang
 sales/count. `SLX`, `MOQ`, giá mua theo đơn vị, lượng mỗi serving, version `v1.2`
 và ngày kiểm kê không timezone phải review; không tạo loss/fee/unit/source identity.
-Numeric Excel dates có target vẫn có DATE_CONVENTION_REVIEW và không tự convert.
+Numeric Excel dates có target vẫn có DATE_CONVENTION_REVIEW: cần M04 khai báo
+EXCEL_SERIAL, workbook epoch và Owner duyệt normalization. Raw numeric giữ nguyên;
+preview chuyển date-only theo1900/1904, giữ provenance. Fictitious serial60/1900,
+fractional time và overflow block; không tạo observed_at hoặc receipt timestamp.
 
 M01 exposes selected_type/suggested_type/classification_origin/confidence/ignored/
 ignore_reason. M02 review_only=false exposes all indexed column mappings, including
@@ -131,19 +147,22 @@ Unchanged approved parsing/conversion rules and manual/IGNORE origin are retaine
 Khi M04 khai báo scope có active profile nhưng cấu trúc/semantics không khớp,
 PROFILE_STRUCTURE_OR_SEMANTICS_DRIFT hiện warning; không auto-bind version. Scope
 khác/cross-Store không được dùng làm memory. Signature có raw headers, observed
-column kinds và physical header row; đổi layout/type/header cần review lại.
+column kinds, physical header row và XLSX epoch; đổi layout/type/header/epoch cần
+review lại. Header reorder cũng là drift, không tự remap indices. Profile XLSX từ
+bản chưa có epoch phải review lại một lần; immutable version cũ không bị sửa.
 
 ### Provider payload and failure boundary
 
 OPENROUTER_MAPPING_MODEL fixed qwen/qwen3.5-9b; backend Settings SecretStr API key.
-IMPORT_LLM_SUGGESTIONS_ENABLED mặc định false; key không tự bật provider. Chưa gọi
-thật trong task; trước khi bật cần duyệt model/dữ liệu/calls/chi phí. Adapter xử lý
-phần chưa gán; output thay RULE type/targets bị từ chối, duplicate ambiguity giữ
+IMPORT_LLM_SUGGESTIONS_ENABLED mặc định false; key không tự bật provider. Live
+gateway probe POS demo đã chạy trong approved model/data/calls/cost scope. Adapter xử lý
+phần chưa gán, kể cả semantic ambiguity có candidates; output thay RULE type/targets bị từ chối, duplicate ambiguity giữ
 review. Known unsupported sheets không gọi model. Hai eligible sheet/batch tối đa,
 mỗi sheet hai transport attempts; vượt cap có LLM_CALL_LIMIT và manual fallback.
 temperature0, reasoning.enabled=false, strict response_format JSON Schema,
-provider.require_parameters=true. No fallback to another model/API provider or schema
-weakening. OpenRouter upstream routing is not pinned to a particular inference vendor.
+provider.require_parameters=true. Không fallback model/API endpoint hay schema
+weakening. OPENROUTER_MAPPING_PROVIDERS mặc định rỗng dùng upstream routing;
+nếu khai báo allowlist thì provider.only + allow_fallbacks=false.
 Official [structured output docs](https://openrouter.ai/docs/guides/features/structured-outputs),
 [model page](https://openrouter.ai/qwen/qwen3.5-9b) and
 [reasoning docs](https://github.com/OpenRouterTeam/docs/blob/main/guides/best-practices/reasoning-tokens.mdx)
@@ -152,7 +171,9 @@ were checked; this is documentation evidence, not a live provider test.
 Payload sheet_profile/1: display filename/sheet name≤200 chars (hints only), stable
 source-column indices, lexical kind hints, at most8 evenly sampled rows with first/
 last where available, each cell≤200 chars, chỉ samples của columns chưa có RULE
-target, current descriptors và rule suggestion. Headers/indices vẫn giữ đầy đủ
+target, current descriptors và rule suggestion. Có header_row/row_count/epoch,
+rule candidates/reasons, missing required fields và tối đa4 related sheets cùng
+authorized batch (type/hint, tối đa16 headers mỗi sheet). Headers/indices vẫn giữ đầy đủ
 để validate whole output, known target samples không gửi.
 Optional selected type limits adapter targets; no separate remap/provider endpoint
 was added. Source facts are never normalized/imputed by the model. No raw workbook,
@@ -160,19 +181,37 @@ catalog, actor/session/token, Settings contents or operational read-set is sent.
 Provider authorization header carries only its required configured API key, never logs.
 
 Max32 columns for optional provider (parser/manual still support256); input96KB,
-response64KB, output1800 tokens. At most2 attempts,30s socket/open timeout within60s
+response64KB. Settings cho sample limit1..8, output128..1800 tokens, socket timeout
+>0..30s, deadline>0..60s; defaults8/1800/30/60. At most2 attempts within the
 monotonic acceptance/retry deadline. Chunk reads reset socket timeout to remaining
 budget and late results are rejected. DNS/OS scheduling are not hard-real-time SLA;
 no performance/live slow-network assertion. No retry on invalid output or ordinary
 4xx; transient429/502/503/504 and transport errors may retry within deadline.
 
-sheet_suggestion/1 has only type, indexed targets|null, confidence and warnings;
+sheet_suggestion/1 has type, indexed targets|null, confidence, warnings, optional
+bounded candidates (≤4) và reason (≤200 chars) mỗi cột;
 source/status/approval are backend controlled. Every source index exactly once,
 allowed schema targets, unique targets, finite strict numeric scores; extra fields,
 truncation, bad JSON/schema reject entire suggestion. No partial accepted output.
 No-key/outage/timeout/invalid output leaves durable analysis for manual review,
 with typed notice; does not discard uploaded batch. Sessions are released before
 provider calls. Provider notices are advisory, never canonical facts or status.
+Safe SheetInfo diagnostics expose model/prompt/schema versions/input digest/attempts/
+usage/status và controlled failure stage/code, never raw output or credentials.
+GET/polling và same analyze receipt không gọi lại provider. Publication kiểm active
+claim/file set và captured mapping revision: kết quả muộn sau mapping edit không
+được ghi đè. HTTP/DB tests dùng mock provider. Một live POS probe qua
+DeepInfra/bf16 nhận structured output hợp lệ, 1 completion POST không retry,
+2.777 input +370 output tokens, provider-reported cost $0,0003332; không phải
+giá cố định hoặc SLA. Proposal giữ hai RULE targets, SLX → sales.quantity cần review;
+đơn giá/doanh thu/stockout/CTKM null vì schema Sales chưa hỗ trợ. Tên món là
+identity token cần explicit Store binding, không canonical UUID do model tạo.
+Đối chiếu local 1.155/1.155 dòng có SLX × đơn giá = doanh thu hỗ trợ semantics,
+không tự phục hồi lost demand từ stockout hoặc biến promotion thành business rule.
+Probe giữ file gốc, không profile activation/canonical writes/browser acceptance.
+Isolated transport dùng price filter + pinned endpoint + no fallback, phí request0,
+output≤1.800; trần token-cost bảo thủ cho3 attempts dưới $0,10. Đây là guard của
+probe, không phải budget USD setting có sẵn trong application adapter.
 
 ### Per-import confirmation — preparation for S4.5, no commit
 
@@ -262,8 +301,10 @@ ACCEPTED DECISION: người dùng duyệt M04 resolution.kind=source_context; tr
 Store/actor, stable source_system_key/report_type regex
 [A-Za-z0-9][A-Za-z0-9._:-]*,1..128; meaningful evidence1..1000. Provenance
 verification=USER_DECLARED, Owner review không độc lập xác minh hệ thống nguồn.
-Không suy codes từ tên file/header similarity. Một approved structure match trong
-Store →reuse immutable version, không LLM/reapproval; nhiều match →
+Không suy codes từ tên file/header similarity. CURRENT FACT: analyze giữ source
+unresolved, signature chỉ structural candidate. M04 source declaration hợp lệ và
+unique compatible approved match trong Store/source/report →reuse immutable version
+không reapproval; signature không còn tự skip optional provider proposals. Nhiều match →
 PROFILE_MATCH_AMBIGUOUS, chọn explicit approved context, không tự chọn. Mâu thuẫn
 với explicit metadata columns source_context.source_system_key/report_type →
 SOURCE_CONTEXT_CONFLICT; columns này vẫn cần resolution/ignore, không verified fact.
@@ -271,7 +312,10 @@ SOURCE_CONTEXT_CONFLICT; columns này vẫn cần resolution/ignore, không veri
 TECHNICAL CHOICE: optional context fields Owner review cùng mapping:
 sales_semantics daily_total/disjoint_contribution; inventory_semantics lot_stock_count;
 decimal_locale dot/comma; date_format ISO/DMY_SLASH/MDY_SLASH;
-pack_cost_basis PER_PACK/PER_SOURCE_UNIT. Không đoán locale/unit/date/pricing.
+Supplier price/MOQ dùng explicit columns/shared declarations theo
+[Import §13.2](../IMPORT_MAPPING_API_CONTRACT_VI.md#supplier-source-basis-và-fe-projection).
+pack_cost_basis cũ chỉ retained readability; proposal mới cần basis/denominator/MOQ
+fields, không implicit đơn giá theo 1 source unit. Không đoán locale/unit/date/pricing.
 Omitted/null formats không khai báo rule mới; approved selection giữ approved rules.
 Khai báo semantics/rule khác phải proposal/reapproval. Scope khác fork profile family.
 Context edits invalidate binding/revision/preview usage, không sửa active spec hoặc
@@ -352,8 +396,8 @@ formulas only, không execute/cache-freshness claim; unsafe ZIP paths/DTD/entiti
 macro/external relationships/encryption/malformed coordinates rejected.20MiB/file,
 100MiB accepted batch/20files,200MiB expanded XLSX/batch,100sheets/100k data rows,
 256columns/4096ZIP entries per file. Native booleans handled. Date text ISO hoặc
-declared slash; numeric Excel serial dates/styles/epoch không tự đoán, phải cung cấp
-representation supported. Near-limit CPU/memory/latency chưa benchmark.
+declared slash hoặc explicit EXCEL_SERIAL theo workbook epoch đã duyệt; styles
+không tự chọn date semantics. Near-limit CPU/memory/latency chưa benchmark.
 
 Optional OpenRouter theo provider boundary phía trên: default OFF, bounded indexed
 semantic samples, không raw workbook/catalog/operational snapshot/credentials.

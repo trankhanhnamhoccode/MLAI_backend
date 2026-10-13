@@ -24,9 +24,13 @@ quyết định duyệt. Cột mơ hồ/không hỗ trợ vẫn phải giải qu
 định danh, unit/date và dữ liệu bắt buộc không được đoán.
 
 Profile đã duyệt reuse trong cùng Store khi scope/cấu trúc khớp; mỗi batch vẫn
-preview và xác nhận commit riêng. Drift cần review và Owner duyệt profile mới.
+preview và xác nhận commit riêng. Drift (kể cả header reorder hoặc đổi workbook
+epoch) cần review và Owner duyệt profile mới. Excel serial date cần khai báo
+EXCEL_SERIAL; preview chuyển theo1900/1904 sau Owner approval, không tự tạo timestamp.
 Adapter OpenRouter mặc định tắt (`IMPORT_LLM_SUGGESTIONS_ENABLED=false`), kể cả có
-key. Chưa gọi provider thật; cần duyệt model/dữ liệu/calls/chi phí trước khi bật.
+key. Một live probe POS demo đã nhận proposal hợp lệ cho SLX; đây không phải
+kiểm chứng toàn luồng browser hay chất lượng mọi workbook. Live calls chỉ trong
+phạm vi model/dữ liệu/calls/chi phí đã được duyệt.
 Rules/profile/manual flow hoạt động khi provider không có. Xem
 [Import contract](docs/IMPORT_MAPPING_API_CONTRACT_VI.md) và
 [giới hạn parser/mapping](docs/features/IMPORT_STAGING_PREVIEW.md).

@@ -12,6 +12,8 @@ class ColumnProposal(ImportDTO):
     source_column_index: Annotated[StrictInt, Field(ge=0, le=255)]
     target_field: Annotated[StrictStr, Field(max_length=128)] | None
     confidence: Confidence | None
+    candidates: Annotated[tuple[Annotated[StrictStr, Field(max_length=128)], ...], Field(max_length=4)] = ()
+    reason: Annotated[StrictStr, Field(max_length=200)] | None = None
 
 
 class SheetSuggestion(ImportDTO):

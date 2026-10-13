@@ -20,8 +20,8 @@ from app.infrastructure.database.auth_session import auth_session
 from app.application.contracts.auth import AuthError
 from app.application.import_identity import content_digest
 
-from app.models.operational_import import SupplierSourceRecord, TermSourceRecord, PayableFeeRecord, ScopeDeclarationRecord
-from app.models.import_staging import ImportBatch, ImportFile
+from app.models.operational_import import SupplierSourceRecord, TermSourceRecord, PayableFeeRecord, ScopeDeclarationRecord, InventoryReceiptRecord
+from app.models.import_staging import ImportBatch, ImportFile, ImportAudit
 from sqlalchemy.orm import Session
 
 
@@ -54,15 +54,17 @@ OPERATIONAL = (
     Supplier,
     SupplierTerm,
     SupplierSourceRecord, TermSourceRecord, PayableFeeRecord, ScopeDeclarationRecord,
+    InventoryReceiptRecord, ImportAudit,
 )
 SCHEMA_TABLES = {
     "sales": (Product, SalesDaily),
-    "inventory_count": (Ingredient, InventoryLot, InventoryMovement),
+    "inventory_count": (Ingredient, InventoryLot, InventoryMovement, ImportAudit),
+    "opening_stock": (Ingredient, Supplier, InventoryLot, InventoryMovement, InventoryReceiptRecord, ImportAudit),
     "recipes": (Product, Ingredient, Recipe, RecipeLine),
     "products": (Product,),
     "ingredients": (Ingredient,),
     "suppliers": (Supplier, SupplierSourceRecord),
-    "supplier_terms": (Supplier, Ingredient, SupplierTerm, SupplierSourceRecord, TermSourceRecord),
+    "supplier_terms": (Supplier, Ingredient, SupplierTerm, SupplierSourceRecord, TermSourceRecord, PayableFeeRecord),
     "payable_fees": (Supplier, SupplierTerm, SupplierSourceRecord, TermSourceRecord, PayableFeeRecord),
     "scope_declarations": OPERATIONAL,
     "scope_declarations.INVENTORY": (Ingredient, InventoryLot, InventoryMovement, ScopeDeclarationRecord),
@@ -113,9 +115,11 @@ def read_set_in_session(s, store_id, schemas=None, *, fence=False):
     for model in OPERATIONAL:
         if model not in selected:
             continue
+        query = select(model, text("xmin::text")).where(model.store_id == store_id)
+        if model is ImportAudit:
+            query = query.where(ImportAudit.kind == "IMPORT_CANONICAL_COMMITTED")
         rows = s.execute(
-            select(model, text("xmin::text"))
-            .where(model.store_id == store_id)
+            query
             .order_by(*model.__table__.primary_key.columns)
             .limit(100001)
         ).all()
@@ -133,7 +137,6 @@ def read_set_in_session(s, store_id, schemas=None, *, fence=False):
             for row, xmin in rows
         ]
     if "sales" in chosen:
-        from app.models.import_staging import ImportAudit
         audits = s.scalars(select(ImportAudit).where(
             ImportAudit.store_id == store_id,
             ImportAudit.kind == "IMPORT_CANONICAL_COMMITTED",

@@ -36,7 +36,7 @@ def supplier_sources(imp):
     sources=[("supplier.csv",csv_source("suppliers",[dict(source_supplier_key=str(supplier),name="Supplier synthetic",active=True)])),
         ("terms.csv",csv_source("supplier_terms",[dict(source_term_key="TERM-1",supplier_id=str(supplier),ingredient_id=str(ingredient),
             effective_from="2026-10-10",effective_to=None,unit="l",pack_size_base_quantity="6",pack_cost="100",currency="VND",
-            minimum_order_packs=1,lead_time_days=1,shelf_life_days=None,active=True,maximum_order_base_quantity=None)])),
+            minimum_order_quantity="1", price_basis="PER_PACK", price_quantity=None, price_unit=None, moq_basis="PACKS", moq_unit=None,lead_time_days=1,shelf_life_days=None,active=True,maximum_order_base_quantity=None)])),
         ("fees.csv",csv_source("payable_fees",[dict(source_fee_key="FEE-1",scope="STORE_PROCUREMENT",effective_from="2026-10-10",
             effective_to=None,mode="NONE",coverage="COMPLETE",currency="VND",components=[],covered_source_term_keys=["TERM-1"],
             covered_source_supplier_keys=[str(supplier)],evidence_reference="Supplier explicitly has no fees",reason="Reviewed full fee schedule")])),
@@ -172,7 +172,7 @@ def test_future_terms_and_fee_changes_require_exact_owner_amendments_and_executo
         policy=dict(term_period_amendments=[dict(supplier_term_id=str(term.id),expected_version=xmin,effective_to="2026-10-10",reason="New future price")],
             fee_period_amendments=[dict(fee_id=str(fee.id),expected_version=fxmin,effective_to="2026-10-10",reason="New future fee schedule")])
         old_term_id,old_fee_id=term.id,fee.id
-        new_term=s.get(TermSourceRecord,term.id).payload.copy();new_term.pop("domain");new_term.update(effective_from="2026-10-11",pack_cost="105")
+        new_term=s.get(TermSourceRecord,term.id).payload.copy();new_term.pop("domain");new_term.update(minimum_order_quantity=str(new_term.pop("minimum_order_packs")), price_basis="PER_PACK", price_quantity=None, price_unit=None, moq_basis="PACKS", moq_unit=None, effective_from="2026-10-11",pack_cost="105")
         new_fee=fee.payload.copy();new_fee.pop("domain");new_fee.update(effective_from="2026-10-11",mode="PER_OFFER",components=[dict(component_key="DELIVERY",label="Delivery",basis="PER_OFFER",source_term_key="TERM-1",source_supplier_key=None,amount="5",condition="WHEN_ORDERED")])
     sources=[("new-terms.csv",csv_source("supplier_terms",[dict(reversed(list(new_term.items())))])),
         ("new-fees.csv",csv_source("payable_fees",[dict(reversed(list(new_fee.items())))]))]
@@ -293,7 +293,10 @@ def existing_lot(imp):
         result = InventoryUseCases(s).receive(ReceiveInventoryInput(store_id=imp[1].store_id,
             ingredient_id=ingredient, quantity=Decimal(12),unit="l",occurred_at=observed,
             note="Synthetic physical stock"))
-        lot = s.get(InventoryLot,result.lot.id);lot.updated_at=observed;s.commit()
+        lot = s.get(InventoryLot,result.lot.id);lot.updated_at=observed
+        # Synthetic fixed-time receipt precedes the count in occurred and recorded time.
+        s.get(InventoryMovement,result.movement.id).created_at=observed
+        s.commit()
         return ingredient,result.lot.id
 
 

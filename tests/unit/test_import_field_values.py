@@ -150,6 +150,7 @@ def test_missing_null_zero_false_are_distinct_and_invalid_rows_still_fail():
             declared("recipes.effective_to", blank)
     fields = ("product_id", "ingredient_id", "quantity", "unit")
     rules = (
+        constant("recipes.quantity_basis", "WHOLE_BATCH"),
         constant("recipes.yield_quantity", "10"),
         constant("recipes.yield_unit", "ly"),
         constant("recipes.process_loss_rate", "0.2"),
@@ -271,6 +272,7 @@ def test_shared_recipe_dates_and_units_cannot_bypass_overlap_and_keep_derivation
     product, ingredient = uuid4(), uuid4()
     columns = ("product_id", "ingredient_id", "quantity", "unit")
     rules = (
+        constant("recipes.quantity_basis", "WHOLE_BATCH"),
         constant("recipes.yield_quantity", "1,25"),
         constant("recipes.yield_unit", "cup"),
         constant("recipes.process_loss_rate", "0"),
@@ -300,7 +302,7 @@ def test_shared_recipe_dates_and_units_cannot_bypass_overlap_and_keep_derivation
     origin = next(p for p in provenance if p.field == "yield_quantity")
     assert (
         origin.value_source == "PROFILE_CONSTANT"
-        and origin.declaration_id == rules[0].declaration_id
+        and origin.declaration_id == next(r for r in rules if r.target_field == "recipes.yield_quantity").declaration_id
         and origin.applied_rule_ids == ("decimal",)
     )
     parsed = parse_source(
