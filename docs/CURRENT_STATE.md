@@ -6,9 +6,25 @@ Branch `feat/integrate-import-auth` combines accepted Import126b0f2 and Auth0fbb
 on common base b1ede89, retaining both source histories and leaving both source
 worktrees unchanged. Source has59 operations/55 paths, permissions-v3/43 keys,
 64 application tables (65 with Alembic), one head `0024_integrate_import_auth`.
-Only `shelfcash_integration_test` / `shelfcash_integration_tester` is owned by
-this verification; no running unified BE/base URL or browser/email E2E is certified.
-Workers/provider default OFF; fake delivery is the automated email boundary.
+Automated acceptance owns `shelfcash_integration_test` / `shelfcash_integration_tester`.
+CURRENT FACT (2026-10-14): separate BE-only HTTPS runtime is prepared at
+`https://localhost:8103`, exact Origin `https://localhost:5173`, using
+`shelfcash_integration_demo` on the existing Docker PostgreSQL instance at5433.
+Separate limited migrator/runtime roles, DB marker and role-specific HBA guards
+protect the new target; old S4.11 data/schema/credentials are preserved. Demo has
+head0024/65 tables, Import/Planning/PDF lifespan workers, provider/email OFF.
+Synthetic assisted holders (two Owners/two empty Stores and one Staff) complete
+credentials and Staff invitation through HTTPS/private delivery; Staff receives
+only explicit `menu.read`. No operational facts/completeness/default config are seeded.
+Runtime probes verify certificate TLS, OpenAPI59/55, cookie/CORS/Origin/CSRF,
+login/me/Store isolation, fresh committed state, empty worker dependencies and
+graceful stop/start. Browser E2E, real email and nonempty job execution on this
+demo remain unverified. FE is failing in user testing and FE work is paused.
+Historical private Vite helper TLS/page/config probes do not establish browser
+E2E acceptance; BE launcher owns only HTTPS8103. Invitation SMTP
+formatter does not match its parameterized route, so that callback stays unset.
+See [runtime commands/trust/callbacks](runbooks/FULL_TEST_FLOW.md#integrated-demo-runtime).
+Source worker/provider defaults remain OFF; fake delivery is the acceptance boundary.
 
 Migration0024 joins0021 and0023. Integration-only repairs of these unreleased
 revisions preserve v3 CHECK while the other branch still requires it; the final
@@ -252,7 +268,8 @@ cannot certify the whole UI. No FE repository changes are part of cleanup.
 
 ## TECHNICAL DEBT / known discrepancies
 
-- [Historical review TD-BE-001–013](../008_TechDebt.md): Store-wide mapping
+- Historical review TD-BE-001–013 (`008_TechDebt.md`, original reference not
+  present in this repository): Store-wide mapping
   queue, supplier discovery, detailed preview projections, export discovery và
   Today facts chưa có public capability tương ứng. V01 canonical Ingredient paging,
   M02 auto filter/batch counters và C01 budget absence/create đã có source contract;

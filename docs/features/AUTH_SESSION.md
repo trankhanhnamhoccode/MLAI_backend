@@ -233,6 +233,24 @@ T01 signed cursor binds session/account/current list+permissions/limit, sorted
 name/UUID; changed list invalidates cursor with422 INVALID_CURSOR. No cached grant
 snapshot authorizes a later request.
 
+## CURRENT FACT — integrated BE runtime
+
+The integrated worktree has a separate BE-only HTTPS8103 demo on
+`shelfcash_integration_demo`, migration0024, limited runtime/migration roles,
+exact Origin `https://localhost:5173` and Secure __Host cookies. It preserves the
+older S4.11/Gmail demo databases. Commands, certificate trust, private synthetic
+holder credentials and current callback ownership are in
+[FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#integrated-demo-runtime).
+Current sibling FE source implements `/credentials/complete` and
+`/invitations/:invitationId`; this supersedes the historical missing-setup screen
+observation above for this runtime. FE HTTPS/verification remains pending.
+Integrated SETUP/RESET callbacks use `/credentials/complete`; EMAIL_VERIFY and SMTP
+invitation callbacks remain unset pending FE/formatter alignment. SMTP settings
+are reused privately where present, but delivery stays OFF: no real email in setup.
+Private assisted delivery and public credential/invitation completion provision
+synthetic holders; Staff has only explicitly offered `menu.read`. Browser E2E and
+real email remain unverified; runtime TLS/session/Store isolation probes pass.
+
 ## Configuration and assisted manual flow
 
 Set AUTH_ALLOWED_ORIGINS as JSON exact origins, e.g. `["https://fe.example.test"]`.

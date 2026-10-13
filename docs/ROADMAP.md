@@ -3,9 +3,18 @@
 ## CURRENT FACT
 
 Local unified source: Import126b0f2 + Auth0fbb979 on feat/integrate-import-auth;
-integration verification uses its dedicated DB/head0024. Branch milestones below
-remain their historical acceptance evidence. No unified running server, browser
-or real credential-email workflow is certified. FE artifacts: [response010](handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
+integration verification uses its dedicated DB/head0024. A separate integrated
+BE demo is prepared at HTTPS8103 on shelfcash_integration_demo/head0024, with
+limited runtime/migration roles, explicit synthetic accounts and three workers.
+Runtime TLS/Auth/isolation/idle dependencies and graceful lifecycle are verified;
+browser E2E, actual nonempty jobs on this demo and real credential-email workflow
+remain unverified. FE work is paused following errors in user testing.
+FE HTTPS/API configuration and verification/invitation delivery
+callback alignment remain FE integration prerequisites; email/provider stay OFF.
+Commands and private credential/trust instructions belong to
+[FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#integrated-demo-runtime).
+Branch milestones below remain their historical acceptance evidence.
+FE artifacts: [response010](handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
 
 Local Gmail preparation: one SMTP smoke message accepted, inbox user-confirmed;
 isolated Auth demo DB and HTTPS8102 lifecycle checked. BE-only scope: FE HTTPS/API configuration,
@@ -116,7 +125,8 @@ main merge, deployment or next product feature follows it.
 
 ## PROPOSAL / ngoài phạm vi đã duyệt
 
-- [TD-BE review](../008_TechDebt.md) là review/acceptance dependency, không ủy quyền
+- TD-BE review (`008_TechDebt.md`, original reference not present in this repo)
+  là review/acceptance dependency, không ủy quyền
   implement/deploy endpoint PROPOSED. Ưu tiên Product freeze queue semantics TD004
   trước Staff→Owner→Staff; kế tiếp supplier/location TD007 và settings TD010,
   preview/PDF discovery/Today TD006/008/009. Budget absence/create hiện có C01/N4,

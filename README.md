@@ -1,4 +1,4 @@
-# ShelfCash Competition Edition — v1.0
+# ShelfCash Competition Edition
 
 ShelfCash giúp quán F&B so sánh phương án mua nguyên liệu theo nhu cầu, công thức,
 tồn kho, hạn dùng, điều khoản nhà cung cấp và ngân sách. Backend tính toán và đề
@@ -7,13 +7,15 @@ xuất; khách hàng quyết định. Hệ thống không tự đặt hàng.
 CURRENT FACT: backend đã có đăng nhập và quyền theo Store (quán), Staff (nhân viên),
 đọc Menu/Kho, import có duyệt và ghi toàn batch trong một transaction, readiness
 (kiểm tra đủ dữ liệu), Planning (lập phương án), lịch sử và xuất PDF tiếng Việt.
-OpenAPI có 53 operations nghiệp vụ và health. Alembic head là
-`0017_planning_exports` (60 bảng ứng dụng, cộng bảng Alembic).
+CURRENT FACT bản tích hợp Import A1–A3/Auth B1–B4: OpenAPI có59 operations/55 paths,
+catalogue permissions-v3/43 quyền và Alembic head `0024_integrate_import_auth`
+(64 bảng ứng dụng, cộng bảng Alembic).
 
 CURRENT FACT: forecast hỗ trợ baseline (mô hình cơ sở) và trained artifacts (tệp
 mô hình đã huấn luyện). Demo chọn BASELINE; chất lượng dữ liệu thật chưa đánh giá.
 Người dùng đã thử FE thật tới mapping lần đầu. Toàn luồng browser import/Planning
-chưa kiểm chứng; S4.11 còn PARTIAL, UI lịch sử Planning/PDF chưa hoàn thiện.
+chưa kiểm chứng; S4.11 còn PARTIAL. FE đang lỗi khi người dùng test và tạm dừng
+xử lý trong scope BE này; không coi API/runtime probes là browser E2E pass.
 Xem [trạng thái](docs/CURRENT_STATE.md).
 
 HISTORICAL INFORMATION: tag `v1.0` giữ bản trước nâng cấp header/rules. CURRENT FACT
@@ -35,55 +37,40 @@ Rules/profile/manual flow hoạt động khi provider không có. Xem
 [Import contract](docs/IMPORT_MAPPING_API_CONTRACT_VI.md) và
 [giới hạn parser/mapping](docs/features/IMPORT_STAGING_PREVIEW.md).
 
-## Cài đặt development
+## Quick start BE local — hằng ngày sau setup một lần
 
-Cần Python 3.11+, Docker Desktop chạy Linux containers/Compose. Windows là nền
-tảng đã dùng kiểm chứng. Chạy PowerShell từ `backend/`. Đây là cài đặt development
-mới; hướng dẫn thao tác trên browser ở runbook bên dưới. Không migrate/reset DB
-development hiện có như một bước test release.
+Mở Docker Desktop; instance PostgreSQL hiện có phải đang chạy. Dùng PowerShell:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e '.[dev]'
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-docker compose up -d --wait --wait-timeout 90 postgres
-.\scripts\db_status.ps1 -AllowUnmigrated
-.\.venv\Scripts\alembic.exe upgrade head
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-integrate-import-auth
+.\.venv\Scripts\python.exe -m scripts.integrated_demo status
+.\.venv\Scripts\python.exe -m scripts.integrated_demo start
+# Khi cần dừng BE:
+.\.venv\Scripts\python.exe -m scripts.integrated_demo stop
 ```
 
-Development dùng PostgreSQL5432 và volume `shelfcash-postgres-data`; BE8000. Không
-seed dữ liệu nghiệp vụ. Health chỉ chứng minh process sống; `/openapi.json` mô tả
-routes/DTO, `/docs` và `/redoc` tắt. Import/Planning/PDF có flags riêng, mặc định
-OFF; không cần provider trả phí. POSIX dùng `.venv/bin/python` và
-`.venv/bin/alembic`; chưa kiểm chứng runtime POSIX.
+BE: **https://localhost:8103**. FE dự kiến: **https://localhost:5173**;
+launcher này chỉ BE, không khởi động/cấu hình FE. Expected status: DB
+`shelfcash_integration_demo`, head0024,65 bảng; sau start là server running và
+Import/Planning/PDF alive. Không reset/migrate/seed mỗi lần chạy.
 
-## Chạy và thử trên browser
-
-[FULL_TEST_FLOW](docs/runbooks/FULL_TEST_FLOW.md) hướng dẫn đầy đủ cài đặt FE,
-khởi động/reuse, tài khoản/Store, import → Planning, lỗi và cách dừng. Demo S4.11
-tách khỏi development/tests: FE `http://localhost:5173`, BE18001, DB5433. Launcher
-đọc private settings, không root `.env`; startup không reset/seed lại.
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-integration.ps1 docker
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-integration.ps1 status
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-integration.ps1 start
-```
-
-Chỉ dùng các lệnh này sau khi đã thiết lập demo theo runbook. Mở `/login` trên FE,
-đọc tài khoản riêng tư trong editor; không đưa credentials vào Git/logs.
+[**FULL_TEST_FLOW — hướng dẫn vận hành chính**](docs/runbooks/FULL_TEST_FLOW.md#integrated-demo-runtime)
+chứa setup lần đầu, trust certificate một lần, tài khoản local private,
+Origin/callback, credentials include và troubleshooting. Store demo trống cần
+import/cấu hình có nguồn; không seed để che readiness. Email delivery và
+OpenRouter/Qwen OFF mặc định. Gmail smoke lịch sử không phải email workflow E2E.
+Các profile development/S4.11 cũ có scope riêng trong runbook, không dùng làm
+startup bản tích hợp. Health chỉ liveness; OpenAPI là routes/DTO; docs/redoc tắt.
 
 ## Kiểm thử tự động
 
 ```powershell
-.\scripts\test.ps1 unit
-.\scripts\test.ps1 api
-.\scripts\test.ps1 integration
-.\.venv\Scripts\python.exe -m scripts.integration_contract_snapshot
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_integrated_demo.py tests/unit/test_database_config.py tests/api/test_auth_openapi.py tests/api/test_staff_openapi.py -q --tb=short --show-capture=no
 ```
 
-Integration tests chỉ sở hữu `shelfcash_test`, chạy tuần tự, cần PostgreSQL local.
+Integration tests của bản tích hợp chỉ sở hữu `shelfcash_integration_test`/
+`shelfcash_integration_tester` theo TEST_DATABASE_URL, chạy tuần tự, cần PostgreSQL.
+Demo riêng là `shelfcash_integration_demo`; không dùng tests/reset trên demo.
 Đây không phải lệnh mở browser hoặc seed demo. Output kiểm thử trong runtime khác
 với provenance import, audit, Runs/PDF và model artifacts; giữ các tài nguyên
 nghiệp vụ đó. Targeted passing không đại diện full regression passing.

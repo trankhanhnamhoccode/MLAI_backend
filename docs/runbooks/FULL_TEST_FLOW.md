@@ -1,5 +1,186 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="integrated-demo-runtime"></a>
+## CURRENT FACT — vận hành BE tích hợp HTTPS8103
+
+Chạy từ `D:\hocc_bk\ai\proj\projectMLAI\backend-integrate-import-auth`, branch
+`feat/integrate-import-auth`, source base `1f6135615e1bffd7251d9594d2cf2a0f1f40073f`.
+Đây là launcher **chỉ BE**; không dùng `scripts/local-integration.ps1` của demo S4.11
+cho nhánh tích hợp. Launcher cũ dùng settings.json riêng và volume demo cũ, không .env
+mới. DB cũ shelfcash_integration_s411/head0017 cùng hai Store được giữ nguyên.
+
+### Chạy hằng ngày — môi trường này đã setup
+
+Mở Docker Desktop, bảo đảm instance PostgreSQL hiện có đang chạy. Trong PowerShell:
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-integrate-import-auth
+.\.venv\Scripts\python.exe -m scripts.integrated_demo status
+.\.venv\Scripts\python.exe -m scripts.integrated_demo start
+# Khi cần dừng BE:
+.\.venv\Scripts\python.exe -m scripts.integrated_demo stop
+```
+
+Expected status: DB `shelfcash_integration_demo`, role runtime, revisions
+`["0024_integrate_import_auth"]`,65 bảng. Trước start có thể stopped; sau start là
+running, import_alive/planning_alive/pdf_alive=true, email_enabled=false.
+Start reuse đúng process do launcher sở hữu, không mở process trùng. Expected stop:
+`Owned BE and lifespan workers stopped; DB/data preserved` hoặc already stopped.
+Không reset/migrate/seed khi chạy hằng ngày. Launcher không khởi động/dừng FE.
+FE đang lỗi khi người dùng test và tạm dừng xử lý; browser E2E pending.
+
+### Profile, DB và cấu hình private
+
+API base `https://localhost:8103` (không thêm `/api/v1`), exact allowed Origin
+`https://localhost:5173`. Instance Docker hiện có: container
+`shelfcash-integration-s411-postgres-1`, loopback5433; không Compose thứ hai.
+DB riêng `shelfcash_integration_demo`, marker `ShelfCash integrated HTTPS demo v1`;
+runtime `shelfcash_integration_demo_runtime`, migration `shelfcash_integration_demo_migrator`.
+Cả hai NOSUPERUSER/NOCREATEDB/NOCREATEROLE/NOREPLICATION/NOBYPASSRLS, không membership
+role khác. Migrator sở hữu schema; runtime chỉ CONNECT/USAGE/DML/sequence, không CREATE.
+HBA rules dành riêng hai role đứng trước rules cũ, chỉ cho đúng DB với SCRAM và
+từ chối DB khác. Rules/credentials cũ không đổi; backup config/HBA trước chỉnh nằm
+ngoài repo tại sibling `.shelfcash-private-backups` (private, không đưa Git).
+
+Ignored `.env` chọn DB demo và runtime storage riêng; TEST_DATABASE_URL vẫn chỉ
+shelfcash_integration_test/shelfcash_integration_tester, không trỏ demo. Tests/reset
+không được dùng demo; guard reset hiện hành từ chối tên này. Process environment
+override .env nên launcher luôn kiểm effective target/security và connected identity.
+Runtime private secrets/keys/accounts ở `runtime/integrated-demo/private`, không in
+URL/password/token hoặc đưa vào report/FE/Git. HBA/DB provisioning cần container cũ
+đang chạy; launcher không tự khởi động/dừng Docker, reset hoặc migrate khi start.
+
+### Setup lần đầu — không chạy lại mỗi ngày
+
+Cần Python3.11+, Docker Desktop Linux engine, instance hiện có ở trên và ignored
+.env có TEST_DATABASE_URL đúng `shelfcash_integration_test`/
+`shelfcash_integration_tester`. Guard này được kiểm trước mọi provisioning.
+Clone/máy mới cần operator cấu hình instance và test credentials đúng trước init;
+profile không tự tạo instance/test DB, không dùng runtime secrets của người khác.
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-integrate-import-auth
+# Chỉ nếu chưa có venv/dependencies:
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e '.[dev]'
+# Chỉ nếu chưa có .env; sửa TEST_DATABASE_URL qua editor local trước init:
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Template .env.example dùng shelfcash_test, cần đổi sang integration test DB/role
+được cấp riêng; không in connection URL/password. Khi prerequisites đã đúng:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.integrated_demo init
+.\.venv\Scripts\python.exe -m scripts.integrated_demo migrate
+.\.venv\Scripts\python.exe -m scripts.integrated_demo start
+.\.venv\Scripts\python.exe -m scripts.integrated_demo_accounts provision
+```
+
+Init giữ credentials/cert/DB đã sở hữu, từ chối DB/role đã tồn tại không có private
+ownership credentials. Migrate kiểm current_database/current_user/marker/owner/role
+trước Alembic và chỉ upgrade tới head0024; không drop/reset/seed. Sau migration,
+runtime có65 bảng (64 application + Alembic). Migration credentials không dùng
+cho process BE. Chạy init lại chỉ khôi phục profile demo, giữ TEST_DATABASE_URL;
+không dùng để ghi đè tùy biến một môi trường khác.
+
+Port8103 được kiểm trước start; không kill process khác hay đổi port ngầm. Metadata
+PID/birth/run_id, worker observations và matched exit nằm private. Stop cooperative
+qua Uvicorn/lifespan, join workers; không forced kill. UNKNOWN/reused PID bị từ chối.
+DB/volume/audit/credentials giữ sau stop. Status kiểm DB identity/head/schema và
+incarnation/worker observation mới; health chỉ là liveness.
+
+### Trust certificate một lần và yêu cầu FE
+
+TLS cert self-signed localhost/127.0.0.1 SAN,30 ngày, sinh theo tooling Auth hiện có.
+BE/probe giữ TLS verification, probe trust đúng `localhost.pem`, không verify=False.
+Để browser tin certificate, người dùng cài public cert vào CurrentUser trust store:
+
+```powershell
+Import-Certificate -FilePath .\runtime\integrated-demo\private\localhost.cer -CertStoreLocation Cert:\CurrentUser\Root
+```
+
+Đây là thao tác trust trên máy người dùng, chưa được launcher thực hiện. Chỉ import
+public certificate, không private key. Certificate hết hạn cần thay có kiểm soát;
+init không tự overwrite key/cert.
+FE sở hữu HTTPS/config/cert và lỗi browser hiện tại; launcher BE không làm phần FE.
+HISTORICAL INFORMATION: private local helper từng kiểm page/config qua TLS mà
+không sửa FE files; đó không phải browser E2E pass và không thuộc luồng chạy BE.
+HTTP5173 bị từ chối đúng
+allowlist. Requests dùng credentials include; cookie __Host Secure/HttpOnly/
+SameSite=Lax/Path=/; CSRF token hiện hành bắt buộc cho protected mutations.
+
+Callbacks, đối chiếu source FE đọc ngày14/10 (browser chưa verify):
+
+| Purpose | FE route / trạng thái | API consumer |
+| --- | --- | --- |
+| SETUP/RESET | `https://localhost:5173/credentials/complete#token=<private>`; route có trong source, hai settings callback đã khớp | POST `/api/v1/auth/credentials/complete` |
+| Invitation private delivery | `https://localhost:5173/invitations/{invitationId}#token=<private>`; route có trong source | GET offer với X-Invitation-Token, POST `/api/v1/staff-invitations/{id}/accept` |
+| Invitation SMTP | Chưa configure: sender hiện hành dùng fixed page + fragment invitation_id/token, không tự thay path param. Cần chốt formatter/landing route với FE trước real delivery | N18/N19 như trên |
+| EMAIL_VERIFY | Chưa có route FE được xác nhận; callback unset. FE cần nối trang verification, không đoán /verify-email | POST `/api/v1/auth/email-verifications/complete` |
+
+### Tài khoản local, dữ liệu và workers
+
+```powershell
+notepad .\runtime\integrated-demo\private\accounts.json
+```
+
+Owner/Staff test đã có trong private `accounts.json`: Owner Store chính, Staff chỉ
+`menu.read` qua public invitation/acceptance, Owner thứ hai ở Store riêng để kiểm
+isolation. Provisioning dùng audited AssistedProvisioning với evidence **synthetic
+holder theo yêu cầu người dùng**, không giả proof của người thật; SETUP qua private
+capture rồi public N7. Private setup/invitation files giữ token/link cho recovery;
+token đã dùng không dùng lại, login bằng credentials ở accounts.json. Mở file bằng
+editor local riêng; không cat vào chat/log, không copy vào config FE/localStorage.
+Provision không reset password hoặc khôi phục grants đã revoke cho account hoàn tất.
+Store trống, cần import/configuration/completeness có nguồn; không tạo business facts,
+default budget/readiness hay operational fixtures để làm xanh.
+
+Import/Planning/PDF bật trong một process BE; idle dependency calls kiểm đúng DB,
+runtime writable và thread observation. Không chạy worker thứ hai trên DB này.
+OpenRouter/Qwen OFF, không live model call. SMTP fields có thể được init tái sử dụng
+từ ignored .env của backend-auth-self-service; Auth email delivery giữ OFF và không
+SMTP connect/send trong setup này. Public register/resend/forgot trả503
+EMAIL_DELIVERY_UNAVAILABLE đúng contract, không hứa check-email. Credential và
+invitation test dùng private capture; invitation dispatch không chạy SMTP tự động.
+Muốn bật real email cần xác nhận callback/FE và scope email riêng, không chỉ bật flag.
+Gmail smoke lịch sử chỉ chứng minh một email smoke, khác signup/setup/reset/
+invitation workflow E2E. Lượt hoàn thiện/merge không gửi email hoặc model thật.
+
+### Kiểm chứng BE — không browser E2E/full acceptance
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.integrated_demo_accounts verify
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_integrated_demo.py tests/unit/test_database_config.py tests/api/test_auth_openapi.py tests/api/test_staff_openapi.py -q --tb=short --show-capture=no
+```
+
+Verify dùng certificate trust rõ ràng; kiểm HTTPS health/OpenAPI59 operations/55
+paths, exact CORS preflight và wrong Origin/HTTP5173 rejection, login/me/cookie/CSRF,
+Owner/Staff isolation/read denial, fresh committed accounts/memberships/grants và
+absence operational facts. DB/queue probes là read-only và dùng live worker
+observations; không gọi run_one/recover cạnh workers đang chạy. Chỉ dùng khi chưa
+có jobs/runs/exports; sau user import, verify từ chối thay vì xử lý việc thật.
+Stop/start đã exercised trước lượt merge. Nonempty job execution, SMTP gửi thật,
+browser FE flow và real-data quality chưa verified trên runtime này; acceptance
+lịch sử trên DB test không thay thế chúng.
+
+### Troubleshooting
+
+| Dấu hiệu | Cách xử lý |
+| --- | --- |
+| Connection refused | Kiểm Docker instance hiện có/port5433; với8103 dùng BE status/start. Không mở Compose tranh port hoặc kill process khác. |
+| DB authentication failed | Kiểm effective .env đúng DB/role và credentials private đúng instance. Không đổi role/password cũ, reset volume hoặc migrate để sửa auth. |
+| Certificate error | Trust public localhost.cer trên máy browser; kiểm SAN/expiry. Không tắt TLS verification hoặc tự thay cert/key đang dùng. |
+| Origin/CORS | Đúng HTTPS5173 và credentials include; FE5173 khác BE8103. Không wildcard hoặc thêm /api/v1 vào base URL. |
+| 401 | Login lại bằng credentials private; session có thể expired/revoked. Kiểm cookie Secure/HTTPS và credentials include. |
+| 403 | Kiểm Origin/CSRF rồi current Store permissions; Staff chỉ menu.read. Owner cấp quyền qua boundary được hỗ trợ, không SQL/bypass. |
+| Job queued | Kiểm status worker observations/flags và private server.log. Không chạy thêm worker; email queued khi delivery OFF không tự gửi thật. |
+
+## HISTORICAL INFORMATION — profiles và acceptance có scope riêng
+
+Giữ các commands/evidence bên dưới theo đúng worktree/DB/profile được nêu;
+không dùng chúng làm startup bản tích hợp hoặc kết luận browser E2E pass.
+
 ## A3 — backend Import → readiness → Planning acceptance
 
 Run from `D:\hocc_bk\ai\proj\projectMLAI\backend-import-sales-stockout`, branch
