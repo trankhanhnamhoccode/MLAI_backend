@@ -2,7 +2,7 @@
 
 ## Authority and current surface
 
-CURRENT FACT: source OpenAPI has59 operations/55 paths (58 core plus health),
+CURRENT FACT C1: source OpenAPI has62 operations/58 paths (61 core plus health),
 registered by `app/main.py`. `/openapi.json` and source Pydantic DTOs are the
 structural reference. `GET /health` returns status=ok/service=shelfcash-backend;
 it is liveness, not DB/business readiness. `/docs` and `/redoc` are disabled.
@@ -127,6 +127,10 @@ B2 chỉ thêm A07 `POST /auth/password-reset/request`, tái sử dụng N7 và 
 Đường dẫn A07 này là user-approved B2 delta so với thiết kế plural trước đó;
 không đăng ký alias hoặc complete endpoint mới. B3 chỉ thêm IN01 và invitation schema extensions đã duyệt; operation cũ giữ nguyên. Còn13 operations thiết kế
 chưa implement để tới surface72/66 nêu trên; không gọi chúng từ FE như runtime.
+CURRENT FACT C1 local: NF01–NF03 thêm đúng3 operations/3 paths, source62/58;
+59 operations cũ giữ nguyên OpenAPI. Còn10 operations thiết kế chờ triển khai.
+Demo8103 retained vẫn59/55/head0024; C1 chưa được bật trên runtime đó.
+[Notification contract](NOTIFICATION_API_CONTRACT_VI.md) ghi producer/status/limits.
 
 Routes reused trong scope: A01/A03/A04/T01/T02/N7/N12–N19; M01–M04/N5;
 I01–I06/H01/H02/J01; N6/V01–V04/N8; R01/C01/C02/C03;

@@ -35,6 +35,12 @@ def permission_event(s, member, *, actor, now, reason, before, before_version,
         source=source, operator_reference=operator, issuer_user_id=issuer)
     s.add(PermissionEventRecord(id=result.event_id, store_id=member.store_id,
         membership_id=member.id, occurred_at=now, record_json=result.model_dump(mode="json")))
+    if source == "OWNER_CHANGE":
+        from app.domain.notifications import NotificationEvent, EventType
+        from app.repositories.notifications import enqueue
+        enqueue(s, NotificationEvent(event_id=result.event_id, event_type=EventType.GRANTS_CHANGED,
+            occurred_at=now, object_id=member.id, recipients=(member.user_id,),
+            store_id=member.store_id, object_revision=result.after_version))
     return result
 
 

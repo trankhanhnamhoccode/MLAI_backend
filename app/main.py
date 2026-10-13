@@ -53,10 +53,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         email_worker = EmailVerificationWorker(application.state.email_verification_dispatcher,
             reset_dispatcher=application.state.password_reset_dispatcher) if configuration.auth_email_delivery_enabled else None
         application.state.planning_worker=planning_worker
+        from app.infrastructure.notification_worker import NotificationWorker
+        notification_worker = NotificationWorker(application.state.notification_dispatcher) if configuration.notification_worker_enabled else None
         if worker:worker.start()
         if planning_worker:planning_worker.start()
         if pdf_worker:pdf_worker.start()
         if email_worker:email_worker.start()
+        if notification_worker:notification_worker.start()
         try:
             yield
         finally:
@@ -64,6 +67,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if planning_worker:planning_worker.stop()
             if pdf_worker:pdf_worker.stop()
             if email_worker:email_worker.stop()
+            if notification_worker:notification_worker.stop()
             engine.dispose()
     application = FastAPI(
         title=configuration.app_name,
@@ -74,6 +78,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.state.settings = configuration
     application.state.auth = AuthUseCases(engine)
+    from app.application.use_cases.notification_delivery import NotificationDispatcher
+    application.state.notification_dispatcher = NotificationDispatcher(engine)
     from app.infrastructure.email_verification_transport import VerificationEmailTransport
     from app.application.use_cases.email_verification import EmailVerification
     from app.application.use_cases.email_verification_delivery import EmailVerificationDispatcher
@@ -108,6 +114,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(health_router)
     application.include_router(auth_router)
     application.include_router(staff_router)
+    from app.api.notifications import router as notification_router
+    application.include_router(notification_router)
     application.include_router(public_read_router)
     application.include_router(stock_write_router)
     application.include_router(recipe_schedule_router)
@@ -148,6 +156,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if error.code == "EMAIL_DELIVERY_UNAVAILABLE":
             body = PublicEmailErrorEnvelope(data=None, meta=body.meta, error=PublicEmailErrorInfo(code=error.code,
                 message="Tạm thời chưa thể gửi email; thử lại sau hoặc liên hệ hỗ trợ.", details=EmailDeliveryErrorDetails()))
+        if request.url.path.startswith("/api/v1/notifications"):
+            from app.application.contracts.notifications import NotificationErrorEnvelope, NotificationErrorInfo, NotificationErrorDetails
+            body = NotificationErrorEnvelope(data=None, meta=body.meta,
+                error=NotificationErrorInfo(code=error.code, message=error.code, details=NotificationErrorDetails()))
         if public_read(request) or planning_surface(request):
             body = ReadErrorEnvelope(data=None,meta=EmptyMeta(),error=body.error)
         response = JSONResponse(status_code=error.status, content=body.model_dump(mode="json", exclude_none=False))
@@ -165,6 +177,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @application.exception_handler(RequestValidationError)
     async def validation_error(request, error):
         issues = error.errors()
+        if request.url.path.startswith("/api/v1/notifications"):
+            code = "INVALID_REQUEST" if any(i["type"] == "json_invalid" for i in issues) else "INVALID_RESOURCE_ID" if any(i["loc"][:1] == ("path",) for i in issues) else "INVALID_FILTER" if any(i["loc"][:1] == ("query",) for i in issues) else "VALIDATION_ERROR"
+            return failure(request, AuthError(code, 400 if code == "INVALID_REQUEST" else 422))
         if request.url.path in {"/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"} and any(i["type"] == "json_invalid" for i in issues):
             return failure(request, AuthError("INVALID_REQUEST", 400))
         if '/planning-requirements' in request.url.path or request.url.path.endswith('/planning-budget') or '/procurement-plans' in request.url.path:
@@ -238,7 +253,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 else:response=config_failure(ConfigurationError('RESOURCE_LIMIT_EXCEEDED' if '/procurement-plans/' in request.url.path and request.url.path.endswith('/exports') else 'REQUEST_TOO_LARGE',413))
             if getattr(request.state,'import_resource_limit',False):
                 response=failure(request,AuthError('RESOURCE_LIMIT_EXCEEDED',413))
-            response.headers["Cache-Control"] = "private, no-store" if public_read(request) or response.headers.get('Content-Type')=='application/pdf' else "no-store"
+            response.headers["Cache-Control"] = "private, no-store" if public_read(request) or (request.method == "GET" and request.url.path.startswith("/api/v1/notifications")) or response.headers.get('Content-Type')=='application/pdf' else "no-store"
             response.headers["Referrer-Policy"] = "no-referrer"
             response.headers["X-Request-ID"] = request.state.request_id
         return response

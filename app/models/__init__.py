@@ -47,3 +47,4 @@ from app.models.planning_configuration import (PlanningDefault, PlanningBudget, 
     PlanningConfigurationEvent, PlanningConfigurationRevision, PlanningConfigurationReceipt)
 from app.models.model_serving import ModelServingConfiguration,ForecastServingIdentity
 from app.models.planning_export import PlanningExport
+from app.models.notifications import NotificationIntent, NotificationRecord, NotificationReadReceipt

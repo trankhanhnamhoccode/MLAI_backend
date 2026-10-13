@@ -1,5 +1,102 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="notifications-c1"></a>
+## CURRENT FACT — C1 notifications, worktree test riêng
+
+Worktree `D:\hocc_bk\ai\proj\projectMLAI\backend-notifications-foundation`, branch
+`feat/notifications-foundation`, base main6f80735; source head0025/62 operations/58
+paths. Những commands này **không nâng cấp/bật C1 trên demo8103**. FE/browser E2E
+chưa chạy; OpenRouter/SMTP và Import/Planning/PDF/email workers OFF trong profile C1.
+
+### Setup lần đầu
+
+Phiên này đã provision `shelfcash_notifications_test`, role riêng
+`shelfcash_notifications_tester` (không superuser/CREATEDB/CREATEROLE), trên instance
+Docker PostgreSQL5433 hiện hữu. Role có HBA boundary chỉ đúng DB; DB marker xác nhận
+owned test target. Không chạy thêm Compose. `.env` ignored của worktree đã đặt
+DATABASE_URL và TEST_DATABASE_URL cùng target C1; credentials giữ local private ở
+`runtime/notifications/private/db.json`, không copy vào docs/Git/chat. Máy khác cần
+provision riêng DB/role này và cấu hình private trước; không reuse demo credentials.
+Không trỏ test/reset vào DB demo/development hoặc các DB test nhánh khác.
+
+Commands thực tế trên máy này dùng interpreter integration đã cài dependencies,
+nhưng import source/config theo working directory C1:
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-notifications-foundation
+$c1Python = (Resolve-Path ..\backend-integrate-import-auth\.venv\Scripts\python.exe).Path
+& $c1Python -m scripts.dev status --test-database --allow-unmigrated
+# Chỉ tiếp tục khi database/current_user đúng C1, DATABASE_URL cũng đúng target đó:
+& $c1Python -m alembic upgrade head
+& $c1Python -m scripts.dev status --test-database
+```
+
+Expected current_database/current_user: shelfcash_notifications_test /
+shelfcash_notifications_tester; head `["0025_notifications_foundation"]`,68 tables,
+at_head=true. Upgrade additive, không seed. Alembic kiểm effective target/role;
+không stamp/drop/reset để giải quyết mismatch. Tests dùng supported reset fixture
+chỉ trên DB này, không chạy song song với test session khác.
+
+### Dispatcher hằng ngày và ownership
+
+```powershell
+# Từ C1, sau khi đã đặt $c1Python như trên:
+& $c1Python -m scripts.dispatch_notifications --help
+& $c1Python -m scripts.dispatch_notifications --limit 20
+& $c1Python -m scripts.dev status --test-database
+```
+
+Command sở hữu một batch, tự kết thúc; không để lại process cần stop, không HTTP
+poll delivery endpoint. Empty DB expected `Completed notifications: 0`; count0
+không chứng minh không có pending/failed/not-due intent. Status đọc DB/head/table
+counts, không dùng health để xác nhận dispatch ready. Operator xem intent status,
+attempt/next_attempt_at/error_code qua local DB đã được authorize, không public API.
+Sau sửa dispatcher cho failed payload, retry giữ nguyên identity:
+`& $c1Python -m scripts.dispatch_notifications --retry-failed <intent-UUID> --limit 20`.
+Không sửa payload/audit hoặc tạo event mới để bypass lỗi.
+
+Long-running worker chỉ thuộc lifespan của ASGI process có explicit
+`NOTIFICATION_WORKER_ENABLED=true`; tên thread shelfcash-notifications, bounded batch
+20 mỗi1s, stop event + join khi process shutdown. Default false không connect DB từ
+startup/health. Chỉ bật trong profile C1 đã migrate, đúng DB/runtime directory;
+không bật flag hoặc restart demo8103 trong lát này. Lifecycle opt-in/stop được test
+bằng dispatcher double; DB dispatcher thật được kiểm qua batch/persistence tests.
+
+### FE API delta và giới hạn
+
+NF01 GET `/api/v1/notifications`: store_id/unread/limit/cursor, không body.
+NF02 GET `/api/v1/notifications/unread-count`: store_id/snapshot_id; dùng snapshot
+từ NF01 khi cần cùng observation. NF03 PATCH `/api/v1/notifications/{UUID}` với
+`{read:true|false}`, exact Origin, X-CSRF-Token, quoted If-Match và canonical UUID
+Idempotency-Key. Cookie requests luôn credentials include. PATCH trả ETag;
+refetch badge/list, không count theo độ dài page.409 snapshot đổi thì refetch từ
+đầu;412 đọc version mới/review trước key mới; retry timeout giữ key/body/CAS cũ.
+Contract/typed DTO/error/security details do
+[notification contract](../NOTIFICATION_API_CONTRACT_VI.md) và OpenAPI sở hữu.
+Không thêm notification grants. Membership locator chỉ current Store; PR/MQ
+link=null cho tới C2 target authority. N13 đổi grants là producer thật; event types
+PR/MQ còn internal synthetic acceptance, không public send endpoint hoặc giả task.
+Runtime8103 chưa có NF routes và browser E2E pending.
+
+### Verification có phạm vi, provider OFF
+
+```powershell
+& $c1Python -m pytest tests/unit/test_notifications.py tests/integration/test_notifications.py tests/api/test_notification_openapi.py -q --tb=short --show-capture=no
+& $c1Python -m scripts.integration_contract_snapshot
+git diff --check
+```
+
+CURRENT FACT: command pytest C1 trên pass25 cases. Schema/lifecycle changes có lý
+do chạy regressions Auth/Staff, guarded tooling và affected migration roundtrips;
+những nhóm liên quan đã pass, không gọi targeted pass là full regression.
+`integration_contract_snapshot` so với original baseline32 operations; C1 delta
+đã kiểm riêng với main6f80735: giữ nguyên59 operations/55 paths và DTO cũ, thêm3 NF
+operations/paths. GET list/count, read/no-op/replay và
+delivery được kiểm qua fresh sessions; không email/model/browser live call.
+
+HISTORICAL INFORMATION runtime8103 bên dưới thuộc worktree tích hợp, giữ0024 và
+daily commands cũ; không thay commands đó sang C1 source để vượt migration guard.
+
 <a id="integrated-demo-runtime"></a>
 ## CURRENT FACT — vận hành BE tích hợp HTTPS8103
 

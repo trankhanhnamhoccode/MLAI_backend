@@ -1,6 +1,19 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
-## CURRENT FACT — integrated head0024
+## CURRENT FACT — C1 head0025, retained integrated demo0024
+
+C1 source head `0025_notifications_foundation` adds `notification_intents`,
+`notifications` and `notification_read_receipts` to0024:67 application tables,
+68 including Alembic. Intent identity unique(event_id,recipient_user_id,event_type),
+projection unique intent_id; read receipt unique(actor_id,notification_id,key_digest).
+FKs RESTRICT preserve provenance; nullable Store supports account scope. Payload
+version1, delivery status/attempt and positive read revision CHECKs. DB triggers
+retain immutable event/content/receipt facts; read_at changes advance revision,
+no-op retains it. Downgrade refuses any retained C1 rows, no auto purge/backfill.
+Only own `shelfcash_notifications_test` was migrated/reset during C1; demo8103
+remains0024/65 tables. [Contract](NOTIFICATION_API_CONTRACT_VI.md) owns workflow.
+
+## HISTORICAL INFORMATION — integrated head0024 base
 
 One head `0024_integrate_import_auth`, parents0021_import_support_history and
 0023_auth_permissions_v3, branching from0017 via Import0019 and Auth0018/0020/0022.

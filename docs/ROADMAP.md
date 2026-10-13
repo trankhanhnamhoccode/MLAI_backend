@@ -2,6 +2,16 @@
 
 ## CURRENT FACT
 
+C1 notification foundation implemented locally on `feat/notifications-foundation`
+from main6f80735: NF01–NF03, source62 operations/58 paths, additive0025, own guarded
+notifications test DB. Inbox/read/current-authority and durable local delivery
+acceptance covered; existing N13 grants producer is connected atomically.
+PR/MQ producers and target authorization remain C2, not implemented by this slice.
+Notification worker default OFF; retained demo8103 remains0024/OpenAPI59.
+No browser/live email/provider/full-suite claim, no commit/merge/push yet.
+See [contract status](NOTIFICATION_API_CONTRACT_VI.md) and
+[verification/run commands](runbooks/FULL_TEST_FLOW.md#notifications-c1).
+
 Local unified source: Import126b0f2 + Auth0fbb979 on feat/integrate-import-auth;
 integration verification uses its dedicated DB/head0024. A separate integrated
 BE demo is prepared at HTTPS8103 on shelfcash_integration_demo/head0024, with
@@ -37,6 +47,7 @@ to [Auth feature](features/AUTH_SESSION.md#local-gmail-smokedemo-profile).
 | B2 | COMPLETE backend/fake-delivery acceptance | A07 public RESET request via encrypted durable intent, existing N7 completion/session revocation; token/retry/concurrency/recovery/transport and schema coverage, B1/auth/session/invitation regressions; no Store/grants changes; isolated Auth DB; real workflow email/browser unverified |
 | B3 | COMPLETE backend/fake-delivery acceptance | IN01 explicit holder decline; terminal fields/capabilities/events/filter, immutable receipt/current-authority replay; fences/rollback/uncertain commit/races/new-identity acceptance and related auth/schema regressions; no membership/grants/access/email; Auth-only test DB; browser UI unverified |
 | B4 | COMPLETE backend/fake-delivery VERIFIED | Linked HTTP/PostgreSQL signup/invitation/grants/multi-Store/decline/reset flows and fresh reads; Product-approved v3/43 catalogue sync, additive Auth0023 CHECK and restart recovery; affected auth/Staff/API/schema regressions; no full-suite claim; browser/real workflow email pending; CHECK overlap reconciled in integration-only0021/0023 plus merge0024 |
+| C1 | COMPLETE backend foundation, local review | NF01–NF03; durable intent/dispatcher/read receipt, N13 atomic producer, own DB0025 and25 C1 cases plus affected regressions; PR/MQ and browser integration pending C2/FE; no commit/push |
 
 These are functional checkpoints, not a claim each is a Git commit or every route
 passed a fresh full suite. Current runtime/debt is in [CURRENT_STATE](CURRENT_STATE.md).
@@ -145,8 +156,9 @@ main merge, deployment or next product feature follows it.
   do not activate trained artifacts merely because training code exists.
 - Owner lifecycle/reactivation, one-time approval allowlist/TTL and sensitive audit
   retention need separate reviewed scope. Stored membership alone is not authority.
-- Notification, permission requests and public Store onboarding remain separate
-  slices. B4 does not authorize starting them. Email delivery is
+- Notification C1 is now separately authorized/implemented as described above;
+  permission requests, mapping producers and public Store onboarding remain
+  separate future slices. B4 alone did not authorize them. Email delivery is
   opt-in and requires the configured HTTPS verification page and private encryption
   key; [Auth feature](features/AUTH_SESSION.md) owns configuration and FE flow.
 - AI wording/copilot, deterministic hypothetical what-if, customer selection and

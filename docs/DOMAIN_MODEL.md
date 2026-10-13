@@ -1,5 +1,15 @@
 # Domain model and business meaning
 
+## CURRENT FACT — notification event foundation C1
+
+`NotificationEvent` là immutable plain Python v1, event/decision/object/recipient
+references và occurred_at; fixed server templates không nhận business facts từ
+client/LLM. Inbox là projection lịch sử và read state riêng, không task/decision
+authority. N13 PermissionEvent là producer thật; PR/MQ workflows chờ C2.
+Recipient/object visibility luôn theo current authorization, không theo event
+snapshot. [Notification contract](NOTIFICATION_API_CONTRACT_VI.md) sở hữu vocabulary,
+DTO/visibility/retention; [database schema](DATABASE_SCHEMA.md) sở hữu persistence.
+
 ## ACCEPTED DECISION / CURRENT FACT — A2 recorded support history
 
 CalendarEvent is a Store-scoped declared inclusive event, distinct from observed

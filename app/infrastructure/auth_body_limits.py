@@ -7,7 +7,9 @@ class AuthBodyLimits:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or scope.get("method") != "POST" or not scope.get("path", "").startswith("/api/v1/auth/"):
+        auth_write = scope.get("method") == "POST" and scope.get("path", "").startswith("/api/v1/auth/")
+        notification_write = scope.get("method") == "PATCH" and scope.get("path", "").startswith("/api/v1/notifications/")
+        if scope["type"] != "http" or not (auth_write or notification_write):
             return await self.app(scope, receive, send)
         consumed = 0
 

@@ -1,10 +1,36 @@
 # Current state
 
+## CURRENT FACT — C1 notification foundation, local chưa commit
+
+Worktree `backend-notifications-foundation`, branch `feat/notifications-foundation`
+from main `6f807357e107e504349a9b154c820bacdfffbe86`. Source thêm NF01–NF03:
+OpenAPI62 operations/58 paths, permissions-v3/43 giữ nguyên. Additive single head
+`0025_notifications_foundation`,67 application tables/68 với Alembic. Owned test DB
+`shelfcash_notifications_test` / limited `shelfcash_notifications_tester` trên
+instance Docker hiện có5433; dedicated URL/current-user guards và HBA boundary.
+Demo8103 và các DB cũ vẫn head/data cũ, không migrate/reset.
+
+Own-recipient inbox/count/read-unread, current active Store membership, account
+scope, signed snapshots, CAS/idempotent read receipts và safe server templates đã
+implement. Durable business enqueue + separate bounded row-lock dispatcher có
+dedupe/backoff/restart/suppression và evidence retention. Producer thật: N13 đổi
+grants; PermissionEvent/intent cùng Session, không thay N13 DTO/grants policy.
+PR/MQ producers/target authority chờ C2, link=null; không triển khai workflow C2.
+Notification worker explicit opt-in, default OFF; không thêm email/provider call.
+
+Final targeted C1 gate pass25 cases; Auth/Staff/database guards/schema regressions
+đã chạy trên DB riêng;
+không claim full suite, browser E2E hoặc live delivery. Runtime8103 vẫn chạy snapshot
+tích hợp trước C1, OpenAPI59/head0024; các NF operations chưa có trên process đó.
+Canonical scope/API/producers ở [notification contract](NOTIFICATION_API_CONTRACT_VI.md),
+commands và exact verification ở [runbook](runbooks/FULL_TEST_FLOW.md#notifications-c1).
+WIP backend9/Import15 giữ nguyên; không commit/push/merge trong C1.
+
 ## CURRENT FACT — bản tích hợp Import/Auth local
 
 Branch `feat/integrate-import-auth` combines accepted Import126b0f2 and Auth0fbb979
 on common base b1ede89, retaining both source histories and leaving both source
-worktrees unchanged. Source has59 operations/55 paths, permissions-v3/43 keys,
+worktrees unchanged. Integrated base has59 operations/55 paths, permissions-v3/43 keys,
 64 application tables (65 with Alembic), one head `0024_integrate_import_auth`.
 Automated acceptance owns `shelfcash_integration_test` / `shelfcash_integration_tester`.
 CURRENT FACT (2026-10-14): separate BE-only HTTPS runtime is prepared at

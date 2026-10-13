@@ -28,14 +28,14 @@ def run_migrations_online() -> None:
     # Test migrations, including subprocess callers, recheck effective identity.
     # Normal development/demo migration behavior is unchanged.
     if settings.environment == "test":
-        from scripts.dev import validate_reset_target
+        from scripts.dev import validate_reset_target, DEDICATED_TEST_ROLES
         validate_reset_target(settings)
     engine = create_database_engine(settings)
     try:
         with engine.connect() as connection:
             if settings.environment == "test":
                 identity = connection.execute(text('SELECT current_database(), current_user')).one()
-                if identity[0] != url.database or (url.database == 'shelfcash_integration_test' and identity[1] != url.username):
+                if identity[0] != url.database or (url.database in DEDICATED_TEST_ROLES and identity[1] != url.username):
                     raise ValueError('Effective test migration identity mismatch')
                 connection.rollback()
             context.configure(

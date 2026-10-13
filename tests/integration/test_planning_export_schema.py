@@ -29,5 +29,5 @@ def test_additive_roundtrip_preserves_actual_historical_run_and_protects_export(
     accepted=export(c,response.headers['Location']);assert accepted.status_code==202,accepted.text
     with pytest.raises(RuntimeError,match='Refusing downgrade'):command.downgrade(migration_config(),'0016_planning_configuration')
     with Session(c[0][1]) as s:
-        assert s.scalar(text('SELECT version_num FROM alembic_version'))=='0024_integrate_import_auth'
+        assert s.scalar(text('SELECT version_num FROM alembic_version'))=='0025_notifications_foundation'
         assert s.query(PlanningExport).count()==1 and s.get(PlanningRun,record.run_id).record_json==before

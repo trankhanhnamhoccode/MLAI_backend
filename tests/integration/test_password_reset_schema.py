@@ -21,7 +21,7 @@ def test_additive_roundtrip_preserves_b1_proof_metadata_and_refuses_evidence_los
     assert "password_reset_deliveries" not in inspect(env[0]).get_table_names()
     command.upgrade(migration_config(), "head")
     with env[0].connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0024_integrate_import_auth"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0025_notifications_foundation"
         assert compare_metadata(MigrationContext.configure(connection, opts={"compare_server_default": True}), Base.metadata) == []
     with Session(env[0]) as fresh:
         account = fresh.get(AuthAccount, uid)

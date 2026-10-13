@@ -15,6 +15,7 @@ def test_s41_openapi_exact_methods_envelopes_headers_and_cookie():
         "/api/v1/stores/{store_id}": ("get", "T02", "200"),
     }
     b1_paths = {"/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"}
+    notification_paths = {"/api/v1/notifications", "/api/v1/notifications/unread-count", "/api/v1/notifications/{notification_id}"}
     staff_paths = {"/api/v1/stores/{store_id}/memberships", "/api/v1/stores/{store_id}/memberships/{membership_id}/permissions",
         "/api/v1/stores/{store_id}/permission-events", "/api/v1/stores/{store_id}/staff-invitations",
         "/api/v1/stores/{store_id}/staff-invitations/{invitation_id}/actions", "/api/v1/staff-invitations/{invitation_id}",
@@ -27,7 +28,7 @@ def test_s41_openapi_exact_methods_envelopes_headers_and_cookie():
         '/api/v1/procurement-plans/{plan_id}/exports',
         '/api/v1/procurement-plans/{plan_id}/exports/{export_id}',
         '/api/v1/stores/{store_id}/imports/calendar'}
-    assert set(schema["paths"]) == {"/health", '/api/v1/stores/{store_id}/planning-requirements', '/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}', '/api/v1/stores/{store_id}/planning-budget', '/api/v1/stores/{store_id}/readiness', '/api/v1/stores/{store_id}/planning-context', *expected, *staff_paths, *import_paths,
+    assert set(schema["paths"]) == {"/health", *notification_paths, '/api/v1/stores/{store_id}/planning-requirements', '/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}', '/api/v1/stores/{store_id}/planning-budget', '/api/v1/stores/{store_id}/readiness', '/api/v1/stores/{store_id}/planning-context', *expected, *staff_paths, *import_paths,
         '/api/v1/imports/{import_id}/completion', '/api/v1/stores/{store_id}/inventory/receipts', '/api/v1/stores/{store_id}/inventory/{ingredient_id}/threshold',
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule',
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes',
