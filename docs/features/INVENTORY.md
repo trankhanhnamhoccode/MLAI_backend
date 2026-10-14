@@ -1,5 +1,10 @@
 # Inventory lot state and movement history -- S1.3 / S1.7
 
+CURRENT FACT C4: SU01 canonical supplier picker trả identity/name/active/version,
+không terms/cost/contact. D01 inventory section reuse V01–V04 quantity/expiry/
+threshold semantics; unknown assessment không thành0, không trộn đơn vị hoặc
+Planning purchases vào physical stock. [API ownership](../API_CONTRACT.md#today-operations).
+
 CURRENT FACT C3: form N6 and Excel actual/opening compose the same
 `InventoryReceipts` → `InventoryUseCases.receive_in_transaction` writer and
 receipt identity ledger. Import owns the whole batch transaction, preview/read-set

@@ -34,7 +34,7 @@ def test_import_operations_and_typed_variants_preserve_boundaries():
             assert "ETag" in operation["responses"][str(status)]["headers"]
     schemas = spec["components"]["schemas"]
     # C1 adds NF01--03; C2 adds PR01--04/MQ01--03 and extends N5.
-    assert len([1 for path in spec['paths'].values() for method in path if method in {'get','post','put','patch','delete'}])==69
+    assert len([1 for path in spec['paths'].values() for method in path if method in {'get','post','put','patch','delete'}])==72
     assert 'history_corrections' in schemas['app__application__contracts__import_mapping__CommitRequest']['properties']
     assert 'history_record' in schemas['CommitRowReference']['properties']
     assert schemas['HistoryCorrectionConfirmation']['required']==['row_id','expected_version','reason']

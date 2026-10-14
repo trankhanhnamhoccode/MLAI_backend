@@ -8,6 +8,7 @@ from app.application.contracts.planning_public import OptionId
 from app.application.contracts.planning_setup import Version
 from app.application.contracts.planning_run import PlanningClaim
 from app.application.planning_serialization import digest
+from app.application.contracts.discovery import DiscoveryMeta
 
 
 class ExportRequest(DTO):
@@ -34,6 +35,37 @@ class ExportMeta(DTO):
 class ExportEnvelope(DTO):
     data: ExportAccepted
     meta: ExportMeta
+    error: None
+
+
+class ExportSummary(DTO):
+    export_id: UUID
+    run_id: UUID
+    job_id: UUID
+    option_id: OptionId
+    created_by_user_id: UUID
+    created_at: AwareDatetime
+    status: Literal['queued','running','completed','failed']
+    result_digest: Version
+    render_version: str
+    version: Version
+    artifact_availability: Literal['pending','available','missing','unverifiable','failed']
+    completed_at: AwareDatetime | None
+    error_code: str | None
+    download_url: str | None
+    sha256: str | None
+    byte_count: int | None
+    media_type: Literal['application/pdf']='application/pdf'
+    allowed_actions: tuple[Literal['poll','download','request_new_export'],...]
+
+
+class ExportCollection(DTO):
+    items: tuple[ExportSummary,...]
+
+
+class ExportCollectionEnvelope(DTO):
+    data: ExportCollection
+    meta: DiscoveryMeta
     error: None
 
 

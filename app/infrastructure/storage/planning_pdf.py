@@ -67,3 +67,12 @@ class PlanningPDFStore:
     def discard(self,prepared):
         path=self._path(prepared.path.name)
         path.unlink(missing_ok=True)
+
+    def availability(self,export_id,sha256,byte_count):
+        """Read proof only; distinguish absent bytes from unverifiable artifacts."""
+        try:
+            path=self._path(str(UUID(str(export_id)))+'.pdf')
+            if not path.exists():return 'missing'
+            self.read(export_id,sha256,byte_count)
+            return 'available'
+        except (PDFArtifactError,OSError,ValueError):return 'unverifiable'

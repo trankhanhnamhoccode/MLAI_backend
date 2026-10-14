@@ -1,5 +1,11 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
+CURRENT FACT C4: không migration/table/column mới, head0026/71 tables giữ nguyên.
+New immutable ImportPreview JSON pin source_evidence_digest/source_read_permissions;
+rows/canonical/read-set semantics giữ nguyên. History budget đọc retained acceptance;
+PDF discovery đọc retained exports và existing private bytes. Không backfill facts
+hoặc migrate/reset demo/development/DB test nhánh khác.
+
 CURRENT FACT C3: không DDL/migration mới; single head0026 và70 application
 tables/71 tổng giữ nguyên. Excel actual và form N6 dùng chung
 inventory_receipt_records (Store/source namespace/record unique), inventory_lots,

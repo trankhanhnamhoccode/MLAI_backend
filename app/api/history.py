@@ -39,7 +39,11 @@ async def imports(store_id:ResourceId,import_date:date,request:Request,category:
 async def runs(store_id:ResourceId,request:Request,limit:Limit=50,cursor:Cursor=None,
     status:Annotated[str | None,Query(min_length=1,max_length=64)]=None,
     forecast_start_from:date | None=None,forecast_start_to:date | None=None,
-    sort:Literal['-accepted_at']='-accepted_at',token=Depends(session_token)):
-    await read_query(request,{'limit','cursor','status','forecast_start_from','forecast_start_to','sort'})
+    sort:Literal['-accepted_at']='-accepted_at',created_by_user_id:ResourceId|None=None,
+    created_date_from:date|None=None,created_date_to:date|None=None,
+    snapshot_id:Annotated[str|None,Query(min_length=1,max_length=128)]=None,token=Depends(session_token)):
+    await read_query(request,{'limit','cursor','status','forecast_start_from','forecast_start_to','sort',
+        'created_by_user_id','created_date_from','created_date_to','snapshot_id'})
     return await run_in_threadpool(request.app.state.planning_public.history,token,store_id,request.state.request_id,
-        limit,cursor,status,forecast_start_from,forecast_start_to)
+        limit,cursor,status,forecast_start_from,forecast_start_to,
+        created_by_user_id,created_date_from,created_date_to,snapshot_id)

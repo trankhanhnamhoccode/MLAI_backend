@@ -613,13 +613,17 @@ class ImportStaging:
             ),
         )
 
-    def summary(self, token, ident, details=False, clean=False):
+    def summary(self, token, ident, details=False, clean=False, file_id=None, sheet_id=None, review=True, status=None, origin=None):
         with auth_session(self.engine) as s:
             b = self._batch(s, ident, False)
             _, _, permissions = self._authority(
                 s, token, b, "mapping.read", sensitive=True
             )
             result = self._summary(s, b, details)
+            from app.application.import_read_projection import mapping_selection
+            scope=dto.MappingCounterScope(file_id=file_id,sheet_id=sheet_id,review_only=review,status=status,origin=origin)
+            _,counters=mapping_selection(self._issues(b),self._sheets(b),scope,file_ids=[f.file_id for f in result.files])
+            result=result.model_copy(update={'counter_scope':scope,'counters':counters})
             result = result.model_copy(
                 update={
                     "allowed_actions": self._allowed(
@@ -653,7 +657,7 @@ class ImportStaging:
             s.commit()
             return result
 
-    def _page(self, items, token, actor, summary, binding, limit, cursor):
+    def _page(self, items, token, actor, summary, binding, limit, cursor, *, mapping_snapshot=False):
         if type(limit) is not int or not 1 <= limit <= 100:
             raise AuthError("INVALID_FILTER", 422)
         bound = [
@@ -674,13 +678,19 @@ class ImportStaging:
                     raise ValueError()
                 value = json.loads(base64.urlsafe_b64decode(payload))
                 if value["binding"] != bound:
+                    if mapping_snapshot:
+                        old=value['binding']
+                        # Filters are syntax; revisions/current authority are snapshot identity.
+                        if (old[:2]==bound[:2] and old[4:]==bound[4:]
+                            and old[3][:1]+old[3][2:]==bound[3][:1]+bound[3][2:]):
+                            raise AuthError('SNAPSHOT_NOT_AVAILABLE',409)
                     raise ValueError()
                 if value["fingerprint"] != fingerprint:
-                    raise AuthError("LIST_VERSION_CHANGED", 409)
+                    raise AuthError("SNAPSHOT_NOT_AVAILABLE" if mapping_snapshot else "LIST_VERSION_CHANGED", 409)
                 offset = value["offset"]
                 if type(offset) is not int or not 0 < offset < len(items):
                     raise ValueError()
-            except (ValueError, TypeError, KeyError):
+            except (ValueError, TypeError, KeyError, IndexError):
                 raise AuthError("INVALID_CURSOR", 422) from None
         next_cursor = None
         if offset + limit < len(items):
@@ -707,6 +717,9 @@ class ImportStaging:
         details=False,
         limit=50,
         cursor=None,
+        file_id=None,
+        origin=None,
+        snapshot_id=None,
     ):
         with auth_session(self.engine) as s:
             b = self._batch(s, ident, False)
@@ -716,27 +729,23 @@ class ImportStaging:
             if b.analysis_json is None:
                 raise AuthError("ANALYSIS_NOT_READY", 409)
             issues = self._issues(b)
-            if sheet_id and sheet_id not in {i.sheet_id for i in self._sheets(b)}:
-                raise AuthError("RESOURCE_NOT_FOUND", 404)
-            items = [
-                i
-                for i in issues
-                if (not sheet_id or i.sheet_id == sheet_id)
-                and (not review or i.status != "auto_mapped")
-                and (status is None or i.status == status)
-            ]
+            from app.application.import_read_projection import mapping_selection
+            if snapshot_id is not None and snapshot_id!=b.mapping_revision:raise AuthError('SNAPSHOT_NOT_AVAILABLE',409)
+            scope=dto.MappingCounterScope(file_id=file_id,sheet_id=sheet_id,review_only=review,status=status,origin=origin)
+            items,counters=mapping_selection(issues,self._sheets(b),scope,file_ids=[f.id for f in self._files(s,b)])
             page, pagination = self._page(
                 items,
                 token,
                 actor,
                 summary,
-                [str(b.id), b.mapping_revision, str(sheet_id), review, status, details],
+                [str(b.id), b.mapping_revision, str(sheet_id), review, status, details,str(file_id),origin],
                 limit,
                 cursor,
+                mapping_snapshot=True,
             )
             s.commit()
             return (
-                dto.MappingList(items=page, counts=self._progress(issues)),
+                dto.MappingList(items=page, counts=self._progress(issues),mapping_revision=b.mapping_revision,counter_scope=scope,counters=counters),
                 pagination,
             )
 
@@ -2145,6 +2154,13 @@ class ImportStaging:
         if content_digest(payload) != p.digest:
             raise AuthError("SOURCE_INTEGRITY_ERROR", 409)
 
+    @staticmethod
+    def _preview_read_authority(p,permissions):
+        needed=set(p.content_json.get('source_read_permissions',()))
+        needed.update(permission for schema in p.content_json['read_set']['_captured_schemas'] for permission in READS[schema])
+        needed.update(permission for row in p.content_json['rows'] for permission in row.get('required_permissions',()))
+        if not needed<=set(permissions):raise AuthError('PERMISSION_DENIED',403)
+
     def confirm_review(self, token, ident, body, key, match, csrf):
         body = dto.ConfirmReviewRequest.model_validate(body.model_dump())
         kd, fp, m = self._request(key, body.model_dump(mode="json"), match, True)
@@ -3047,6 +3063,8 @@ class ImportStaging:
                     rows=[r.model_dump(mode="json") for r in rows],
                     read_set=result[2],
                     read_set_digest=read_digest,
+                    source_evidence_digest=content_digest(b.analysis_json['sources']),
+                    source_read_permissions=self._sensitive_reads(b),
                     analysis_id=str(b.analysis_id),
                     file_set_version=b.file_set_version,
                     mapping_revision=b.mapping_revision,
@@ -3249,7 +3267,14 @@ class ImportStaging:
         rows_cursor=None,
         classification=None,
         configurations=False,
+        file_id=None,
+        sheet_id=None,
+        projection="summary",
     ):
+        if projection not in ('summary','source_effect') or ((file_id or sheet_id or projection!='summary') and not include_preview):
+            raise AuthError('INVALID_FILTER',422)
+        if (file_id or sheet_id or projection!='summary') and preview_id is None:
+            raise AuthError('INVALID_FILTER',422)
         with auth_session(self.engine) as s:
             b = self._batch(s, ident, False)
             # Keep the established User/session/Store-before-batch lock order.
@@ -3428,26 +3453,39 @@ class ImportStaging:
                 }
                 if content_digest(payload) != p.digest:
                     raise AuthError("SOURCE_INTEGRITY_ERROR", 409)
+                self._preview_read_authority(p,permissions)
                 items = [
                     dto.PreviewRow.model_validate(r, context={"retained_evidence": True}) for r in p.content_json["rows"]
                 ]
-                if classification:
-                    items = [r for r in items if r.classification == classification]
+                from app.application.import_read_projection import scoped_rows,pinned_sources,preview_aggregates,source_effect_rows
+                scope=dto.PreviewScope(file_id=file_id,sheet_id=sheet_id,classification=classification)
+                known=p.content_json.get('reviewed_sheets',())
+                if file_id and str(file_id) not in {f['file_id'] for f in p.content_json.get('source_files',())}:raise AuthError('RESOURCE_NOT_FOUND',404)
+                if sheet_id and str(sheet_id) not in {sh['sheet_id'] for sh in known}:raise AuthError('RESOURCE_NOT_FOUND',404)
+                sources=pinned_sources(p.content_json,b.analysis_json)
+                aggregates=preview_aggregates(p.content_json,items,sources,scope)
+                items=scoped_rows(items,scope)
                 rowpage, rp = self._page(
                     items,
                     token,
                     actor,
                     summary,
-                    [str(b.id), str(p.id), p.digest, classification, "rows"],
+                    [str(b.id), str(p.id), p.digest, classification, "rows",str(file_id),str(sheet_id),projection],
                     rows_limit,
                     rows_cursor,
                 )
+                if projection=='source_effect':
+                    rowpage=source_effect_rows(rowpage,p.content_json,sources)
                 stale = p.mapping_revision != b.mapping_revision
                 try:
                     self._bindings(s, b)
                 except AuthError:
                     stale = True
                 preview = dto.PreviewPage(
+                    aggregates=aggregates,
+                    mapping_revision=p.mapping_revision,
+                    read_set_digest=p.read_set_digest,
+                    source_evidence_digest=p.content_json.get('source_evidence_digest'),
                     summary=dto.PreviewSummary.model_validate(stored_summary),
                     rows=rowpage,
                     rows_page=rp,
@@ -3675,6 +3713,7 @@ class ImportStaging:
                     }
                 )
                 p = s.get(ImportPreview, preview.summary.preview_id)
+                self._preview_read_authority(p,permissions)
                 retired = False
                 try:
                     self._bindings(s, b)

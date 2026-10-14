@@ -48,9 +48,13 @@ def test_union_replay_after_revoke_and_atomic_notifications(staff_env):
     assert duplicate.json()['error']['details']['existing_request_id']==row['request_id']
     wire=ctx[0][5].get(f'/api/v1/stores/{ctx[2].store_id}/permission-requests').json()
     assert len(wire['data']['permission_catalog'])==43
+    today=f'/api/v1/stores/{ctx[2].store_id}/today?section=permissions'
+    task=ctx[0][5].get(today).json()['data']['sections']['permissions']['value']
+    assert task['total_count']==1 and task['items'][0]['id']==row['request_id']
     decision_key=str(uuid4()); approved=approve(ctx,row,key=decision_key)
     assert approved.status_code==200,approved.text
     result=approved.json()['data']; assert result['request']['actually_added_permissions']==['sales.read']
+    assert ctx[0][5].get(today).json()['data']['sections']['permissions']['value']['total_count']==0
     with Session(ctx[0][1]) as fresh:
         assert set(fresh.scalars(select(MembershipGrant.permission).where(MembershipGrant.membership_id==member.membership_id)))=={'menu.read','sales.read'}
         assert fresh.get(PermissionRequestRecord,UUID(row['request_id'])).state=='approved'

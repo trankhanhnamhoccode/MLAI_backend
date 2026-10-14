@@ -4,7 +4,7 @@
 
 C1 notification foundation committed locally at f85c7cdd on `feat/notifications-foundation`;
 C2 COMPLETE backend acceptance committed locally at b9fe048a6c64ffb79438068076ee3e9d99d75fda.
-C3 COMPLETE backend acceptance, uncommitted for review; final targeted105 passed,
+C3 COMPLETE backend acceptance, local commit b1c906a0ea65a3b20a46d161166668d26701f0a9; final targeted105 passed,
 affected regressions/fail→fix and limits in runbook; no full-suite/browser claim.
 NF01–NF03 + PR01–PR04/MQ01–MQ03, source69 operations/64 paths, additive0026, own guarded
 notifications test DB. Inbox/read/current-authority and durable local delivery
@@ -53,7 +53,8 @@ to [Auth feature](features/AUTH_SESSION.md#local-gmail-smokedemo-profile).
 | B4 | COMPLETE backend/fake-delivery VERIFIED | Linked HTTP/PostgreSQL signup/invitation/grants/multi-Store/decline/reset flows and fresh reads; Product-approved v3/43 catalogue sync, additive Auth0023 CHECK and restart recovery; affected auth/Staff/API/schema regressions; no full-suite claim; browser/real workflow email pending; CHECK overlap reconciled in integration-only0021/0023 plus merge0024 |
 | C1 | COMPLETE backend foundation, local commit f85c7cdd | NF01–NF03; durable intent/dispatcher/read receipt, N13 atomic producer, historical DB0025 and25 C1 cases plus affected regressions; no push/merge |
 | C2 | COMPLETE backend acceptance, local commit b9fe048 | PR01–PR04 union/grants/audit/receipt; MQ01–MQ03 full-spec pins, N5 queue decisions, current target rights and atomic producers; own DB0026; verification/limits in FULL_TEST_FLOW; no browser/runtime8103 upgrade |
-| C3 | COMPLETE backend acceptance, WIP for review | Fifteenth schema inventory_receipts; shared N6 writer/identity, typed effects/completion and current guards; no new route/grant/migration, retained head0026; targeted HTTP/PG verification in [runbook](runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3); browser/demo8103 pending |
+| C3 | COMPLETE backend acceptance, local commit b1c906a | Fifteenth schema inventory_receipts; shared N6 writer/identity, typed effects/completion and current guards; no new route/grant/migration, retained head0026; targeted HTTP/PG verification in [runbook](runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3); browser/demo8103 pending |
+| C4 | COMPLETE backend acceptance A–F, WIP for review | D01/SU01/EX01; I04/M01/M02/N9 extensions; source72/66, no catalogue/migration change; final focused24/related191 passed, commands/limits in FULL_TEST_FLOW; no full-suite/live runtime/browser claim |
 
 These are functional checkpoints, not a claim each is a Git commit or every route
 passed a fresh full suite. Current runtime/debt is in [CURRENT_STATE](CURRENT_STATE.md).
@@ -134,10 +135,10 @@ slice, FE work, commit/push/merge/deploy or ZIP was authorized by that A3 milest
 The separate integration task authorizes only its local branch merge/commit; no push,
 main merge, deployment or next product feature follows it.
 
-## ACCEPTED / DESIGN_READY — read projections chờ triển khai
+## CURRENT FACT C4 — read projections đã triển khai trong local source
 
-- [R05 file/sheet preview aggregates](IMPORT_MAPPING_API_CONTRACT_VI.md#preview-aggregates): retained raw rows and distinct logical actions, overlap semantics and same pinned digest; existing I04 extension, not runtime.
-- [R09 captured effective RunSummary budget](PROCUREMENT_API_CONTRACT_VI.md#history-captured-budget): acceptance limit/currency/availability, financial rights and list snapshot/pagination; not runtime.
+- [R05 file/sheet preview aggregates](IMPORT_MAPPING_API_CONTRACT_VI.md#preview-aggregates): retained raw rows and distinct logical actions, overlap semantics and same pinned digest; implemented I04 extension; demo8103 not upgraded.
+- [R09 captured effective RunSummary budget](PROCUREMENT_API_CONTRACT_VI.md#history-captured-budget): acceptance limit/currency/availability, financial rights and list snapshot/pagination; implemented local source C4, demo8103 not upgraded.
 - R10 recipe split-report identity/completeness and cross-file/sheet assembly are DEFERRED. Source-before-reuse/scope ambiguity guards and valid single-sheet assembly remain implemented; no Product question blocks handoff.
 
 ## PROPOSAL / ngoài phạm vi đã duyệt

@@ -1,10 +1,133 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="read-discovery-c4"></a>
+## CURRENT FACT — C4 Today và read discovery, source local
+
+C4 COMPLETE backend acceptance theo các nhóm A–F dưới đây; giữ source WIP để review.
+C3 đã commit local `b1c906a0ea65a3b20a46d161166668d26701f0a9` với message
+`feat(import): support Excel actual inventory receipts`; không rerun gate105 chỉ
+để commit. C4 giữ WIP để review, không commit/push/merge hoặc nâng cấp demo8103.
+Source đo được72 operations/66 paths, giữ69 C3 locators; thêm D01/SU01/EX01.
+Extensions trên I04/M01/M02/N9; catalogue permissions-v3/43 và head0026/71 tables
+không đổi, không migration C4. Browser E2E và live runtime C4 chưa chạy.
+
+### Chạy checks trong worktree này
+
+Setup DB/private config dùng [phần collaboration](#notifications-c1), không Compose
+thứ hai. Chỉ notifications test DB/limited role trên5433, tests/reset tuần tự;
+không trỏ sang demo, development hoặc DB test nhánh khác. Tests có fixtures explicit,
+không seed Store/defaults để che readiness. Provider/email/background flags OFF;
+workers trong tests chỉ chạy bounded run_one trên DB riêng, không gửi SMTP/model.
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-notifications-foundation
+$collaborationPython = (Resolve-Path ..\backend-integrate-import-auth\.venv\Scripts\python.exe).Path
+& $collaborationPython -m scripts.dev status --test-database
+
+# C4 linked acceptance + current grants/C1–C3 integration boundaries:
+& $collaborationPython -m pytest tests/integration/test_discovery_c4.py tests/integration/test_import_projections_c4.py tests/integration/test_planning_discovery_c4.py tests/integration/test_import_actual_receipts.py::test_receipt_mq_owner_approval_keeps_inventory_empty_until_commit tests/integration/test_permission_requests.py::test_union_replay_after_revoke_and_atomic_notifications tests/integration/test_planning_export_durability.py::test_staff_current_read_export_replay_worker_and_download_rights tests/unit/test_read_projections_c4.py tests/api/test_discovery_openapi.py -q --tb=short --show-capture=no --junitxml=runtime/notifications/c4-acceptance.xml -o junit_logging=system-out
+
+# Final C4 gate sau fixture fixes và typed blocked/opening-effect refinements:24 passed.
+& $collaborationPython -m pytest tests/integration/test_discovery_c4.py tests/integration/test_import_projections_c4.py tests/integration/test_planning_discovery_c4.py tests/unit/test_read_projections_c4.py tests/api/test_discovery_openapi.py -q --tb=short --show-capture=no --junitxml=runtime/notifications/c4-final-focused.xml -o junit_logging=system-out
+
+# Affected old readers/writers/rights/DTOs; source C4 changes justify these regressions:
+& $collaborationPython -m pytest tests/integration/test_notifications.py tests/integration/test_permission_requests.py tests/integration/test_mapping_submissions.py tests/integration/test_collaboration_boundaries.py tests/integration/test_import_actual_receipts.py tests/integration/test_import_setup_stock.py tests/integration/test_stock_writes.py tests/integration/test_retained_history.py tests/integration/test_planning_exports.py tests/integration/test_readiness_context.py tests/unit/test_application_contracts.py tests/unit/test_import_preview.py tests/unit/test_import_actual_receipts.py tests/unit/test_read_projections_c4.py tests/unit/test_integration_contract_snapshot.py tests/api/test_discovery_openapi.py tests/api/test_collaboration_openapi.py tests/api/test_notification_openapi.py tests/api/test_import_openapi.py tests/api/test_stock_writes_openapi.py -q --tb=short --show-capture=no --junitxml=runtime/notifications/c4-regressions.xml
+
+& $collaborationPython -m scripts.integration_contract_snapshot
+git diff --check
+```
+
+Expected database/current_user: shelfcash_notifications_test /
+shelfcash_notifications_tester, at_head=true/0026,71 tables. Không status/reset
+probe trong khi một pytest session đang chạy. Original32-operation baseline giữ
+nguyên; reusable C3 locator fixture có provenance checkpoint b1c906a, không thay
+historical OpenAPI/handoff artifacts bằng snapshot mới.
+
+### Luồng đọc cho FE
+
+- A — D01 `/api/v1/stores/{store}/today?section=inventory,imports,mapping,permissions,readiness,planning`.
+  Omit section lấy cả sáu, limit1..20/default5 cho mỗi sample. Chỉ active membership
+  để vào; từng section kiểm quyền. Forbidden không counts/names/versions/timing;
+  technical failure là unavailable, không zero. Current readiness không đồng nghĩa
+  import completed; latest Run có queued/running/completed/failed và outcome/error.
+  Snapshot bind section selection/current rights/Store day; stale409 refetch.
+- B — SU01 `/api/v1/stores/{store}/suppliers?q=...&active=true&limit=50`.
+  supplier.read, canonical same-Store ID/name/active/opaque version, folded name
+  sort/UUID tie-break; cursor/filter/snapshot bound. Không terms/cost/contact,
+  không yêu cầu chọn supplier nếu N6 fact cho phép null; inactive policy N6 giữ nguyên.
+- C — M01/M02 nhận file_id/sheet_id/review_only/status/origin AND filters. Origin
+  là suggestion_origin. M02 snapshot_id nhận mapping_revision từ M01; next cursor
+  giữ cùng filters/limit. New counters đếm issues, batch unfiltered/filtered rõ;
+  legacy Progress không đổi nghĩa và page length không phải total.
+  I04 `include_preview=true&preview_id={id}&projection=source_effect` đọc pinned
+  source → typed canonical → effect, không parser/model/recanonicalization từ GET.
+  Raw cached formula chỉ có value/kind/formula_present, không expression. Cell/header
+  >200 chars trả null + display warning; caps200 cells/action,2000/page, explicit
+  partial/unavailable/truncated. Old preview thiếu source pin trả unavailable,
+  không đoán lại từ file. Current và pinned sensitive permissions chặn whole response.
+- D — Cùng I04: preview.aggregates chứa batch/selected/files/sheets, raw source
+  rows và logical actions riêng. Hai file chung receipt: raw2/logical1 ở batch,
+  mỗi file raw1/logical1; child totals overlap. Master reservation là action riêng
+  nhưng raw row không nhân đôi. Classification áp sau grouping, records góp matched
+  actions chỉ đếm một lần trong selected scope. Filters chỉ đổi read view; confirm/
+  atomic commit vẫn toàn batch. Totals không phụ thuộc rows_limit hoặc page đã tải.
+- E — N9 thêm created_by_user_id/created_date_from/to (AND với status/forecast dates),
+  dùng accepted_at theo local midnight Store, upper bound exclusive ngày kế tiếp,
+  đúng DST. Unknown creator trả empty; Staff dùng A03/RunSummary, không cần N12.
+  captured_budget available/limit/currency là effective limit tại acceptance,
+  không current Store cap/spend/remaining; known0 khác unavailable/null. Giữ cả ba
+  finance/result permissions và list snapshot. Aggregate không hợp lệ vẫn integrity
+  error; absent-evidence fallback được kiểm ở projector, không backfill Run giả.
+- F — EX01 `GET /api/v1/procurement-plans/{run}/exports?option_id=...&status=...`.
+  Current export+result+finance rights; trả export/job locators và verified artifact
+  evidence. Queued/running=pending, completed bytes có thể available/missing/
+  unverifiable; execution status không bị sửa vì file mất. Hash/size/download URL
+  chỉ khi verified. GET không render/regenerate/tạo job; N11 kiểm lại bytes/rights.
+
+Recipe identity limit: existing preview chưa reserve recipe_id trước commit;
+RecipeEffect có Product/version/date/dependencies và identity_availability=
+not_reserved, recipe_id=null khi chưa pin ID. Không bịa UUID hoặc sửa writer để
+trang trí GET. Opening/count/history có typed effects riêng; không đổi nghiệp vụ.
+Canonical examples/DTO meaning thuộc [API](../API_CONTRACT.md#today-operations),
+[Import §17](../IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-projections) và
+[Planning §17](../PROCUREMENT_API_CONTRACT_VI.md#planning-discovery).
+
+### Verification và giới hạn
+
+Gate wire/architecture ban đầu60 passed. Linked C4 gate trước sửa fixture cuối:
+24 passed/2 failed; affected N12 fake-clock alignment + typed blocked receipt check
+sau sửa3 passed. Final C4 focused gate **24 passed (63.94s)**; related C1–C3/readiness/
+history/PDF/DTO/architecture regression **191 passed (614.68s)**. Không cộng các gate
+overlap thành unique/full-suite count. Query evidence và current grants/fresh-session
+reads nằm trong tests; generated results chỉ ở ignored runtime.
+
+Fail→fix trong setup/checks: Today basis có UUID/timestamp cần serialize trước digest;
+fixture giữ grants sorted, đúng nested membership DTO và cùng fake clock cho N6/N12;
+date-boundary fixture không lùi trước thời điểm config được tạo; export assertion
+theo IDs, không giả thứ tự hai rows cùng timestamp. Giữ assertions/guards nghiệp vụ.
+Review còn bổ sung pinned preview read permissions và known empty file/intersection
+để mapping change không hạ quyền preview cũ hoặc biến empty thành foreign scope.
+
+Query evidence (constant giữa page sizes trong fixtures): Today imports15 tasks,
+limit1/20:14 SQL statements; SU01 15 suppliers, limit1/100:8; N9 3 Runs,
+limit1/100:10; EX01 2 exports, limit1/100:10. Counts gồm authorization và transaction
+statements được engine hook quan sát; GET tests assert không INSERT/UPDATE/DELETE.
+Đây là focused fixtures, không production SLA. Matching-scope snapshot/hash work và
+PDF artifact verification vẫn tăng theo số records/bytes, dù không N+1 DB queries.
+Không browser/live runtime C4, real SMTP/model hoặc production-scale benchmark claim.
+Final `scripts.dev status --test-database` và owned read-only probe pass: đúng
+DB/role notifications5433, at_head=true/head0026,71 tables,0 application rows sau
+fixture cleanup; limited role và cả sáu flags vẫn OFF. OpenAPI giữ69 locators C3,
+thêm đúng D01/SU01/EX01, definitions cũ đổi chỉ I04/M01/M02/N9; N6 DTOs,
+ReceiptEffect/ProfileSpec C3 không đổi. Baseline32 không bị thay. Secrets/whitespace/
+local links/JSON examples và outside-WIP fingerprints được kiểm; main6f80735 và
+backend9/Import15/Auth0 WIP giữ nguyên, C4 index trống. Không commit C4 hoặc mở C5.
+
 <a id="excel-actual-receipt-c3"></a>
 ## CURRENT FACT — C3 Excel hàng thực nhận, source local
 
 C2 đã commit local `b9fe048a6c64ffb79438068076ee3e9d99d75fda` sau C1 f85c7cdd.
-C3 COMPLETE backend acceptance, giữ WIP để review, không push/merge. Source head0026,69 operations/64 paths,
+C3 COMPLETE backend acceptance, commit local b1c906a; không push/merge. Checkpoint source head0026,69 operations/64 paths,
 permissions-v3/43,70 application tables/71 tổng; không DDL/endpoint/grant mới.
 Demo8103 vẫn snapshot tích hợp cũ head0024/59 operations; không restart/upgrade.
 Browser E2E chưa chạy, Gmail smoke cũ không chứng minh workflow email E2E.

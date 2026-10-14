@@ -199,6 +199,8 @@ async def read(
         ]
         | None
     ) = None,
+    file_id:UUID|None=None,sheet_id:UUID|None=None,
+    projection:Literal['summary','source_effect']='summary',
     svc=Depends(service),
     token=Depends(session_token),
 ):
@@ -212,7 +214,7 @@ async def read(
             "rows_limit",
             "rows_cursor",
             "classification",
-            "include",
+            "include","file_id","sheet_id","projection",
         ),
     )
     data = await run_in_threadpool(
@@ -226,7 +228,7 @@ async def read(
         rows_limit,
         rows_cursor,
         classification,
-        bool(include and "configurations" in include),
+        bool(include and "configurations" in include),file_id,sheet_id,projection,
     )
     response.headers["ETag"] = '"' + data.import_revision + '"'
     return wrap(request, data)
@@ -244,12 +246,15 @@ async def summary(
     response: Response,
     include_clean_sheets: bool = False,
     include_profile_details: bool = False,
+    file_id:UUID|None=None,sheet_id:UUID|None=None,review_only:bool=True,
+    status:Literal['auto_mapped','resolved','needs_confirmation','ambiguous','unmatched']|None=None,
+    origin:Literal['RULE','QWEN','REUSED','MANUAL','NONE']|None=None,
     svc=Depends(service),
     token=Depends(session_token),
 ):
-    await read_query(request, ("include_clean_sheets", "include_profile_details"))
+    await read_query(request, ("include_clean_sheets", "include_profile_details","file_id","sheet_id","review_only","status","origin"))
     data = await run_in_threadpool(
-        svc.summary, token, import_id, include_profile_details, include_clean_sheets
+        svc.summary, token, import_id, include_profile_details, include_clean_sheets,file_id,sheet_id,review_only,status,origin
     )
     response.headers["ETag"] = '"' + data.mapping_revision + '"'
     return wrap(request, data)
@@ -275,12 +280,14 @@ async def mappings(
     include_details: bool = False,
     limit: int = Query(50, ge=1, le=100),
     cursor: str | None = Query(None, max_length=4096),
+    file_id:UUID|None=None,origin:Literal['RULE','QWEN','REUSED','MANUAL','NONE']|None=None,
+    snapshot_id:str|None=Query(None,min_length=1,max_length=128),
     svc=Depends(service),
     token=Depends(session_token),
 ):
     await read_query(
         request,
-        ("sheet_id", "review_only", "status", "include_details", "limit", "cursor"),
+        ("sheet_id", "review_only", "status", "include_details", "limit", "cursor","file_id","origin","snapshot_id"),
     )
     data, page = await run_in_threadpool(
         svc.mappings,
@@ -291,7 +298,7 @@ async def mappings(
         status,
         include_details,
         limit,
-        cursor,
+        cursor,file_id,origin,snapshot_id,
     )
     return wrap(request, data, page=page)
 

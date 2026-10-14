@@ -123,13 +123,12 @@ class MappingSubmissions:
                 location = mapping.SourceLocation(file_id=row.facts['file_id'], sheet_id=row.facts['sheet_id'],
                     row_number=record['row_number'], source_column_index=cell['column_index'],
                     record_number=record.get('record_number'), line_start=record.get('line_start'), line_end=record.get('line_end'))
-                if raw is not None and len(raw) > 200 or label is not None and len(label) > 200:
-                    warnings.append(mapping.Notice(code='SOURCE_CELL_DISPLAY_UNAVAILABLE', severity='WARNING',
-                        message='Source display exceeds 200 characters.', source_location=location).model_dump(mode='json'))
-                    if raw is not None and len(raw) > 200: raw = None
-                    if label is not None and len(label) > 200: label = None
-                cells.append(mapping.SourceEvidenceCell(location=location, column_label=label, raw_value=raw,
-                    cell_kind=cell['kind'], formula_present=cell.get('formula', False)))
+                from app.application.import_read_projection import source_evidence_cell
+                projected,partial=source_evidence_cell(cell,label,location)
+                if partial:
+                    warnings.append(mapping.Notice(code='SOURCE_CELL_DISPLAY_UNAVAILABLE',severity='WARNING',
+                        message='Source display exceeds 200 characters.',source_location=location).model_dump(mode='json'))
+                cells.append(projected)
             index += 1
         return tuple(cells), warnings, meta
 
@@ -234,6 +233,11 @@ class MappingSubmissions:
             actor,summary,_=self.auth.authorize_in_session(s,token,store,('import.read','mapping.read'))
             row=self._row(s,identity,store,actor,summary); batch=self.imports._batch(s,row.import_id); profile=self._profile(s,row.profile_id,batch)
             self.authority(s,token,batch,pinned=row.spec)
+            from app.application.import_analysis import receipt_sensitive_reads
+            spec=mapping.ProfileSpec.model_validate(row.spec)
+            required=receipt_sensitive_reads((batch.analysis_json or {}).get('sources',()),
+                {str(row.facts['sheet_id']):spec.field_bindings})
+            self.auth.authorize_in_session(s,token,store,tuple(sorted(required)))
             projection=self._dto(s,row,batch,profile,actor,summary)
             cells,warnings,meta=self._evidence_page(row,batch,projection,profile,token,summary.authorization_version,limit,cursor)
             data=mapping.MappingReviewDetail(submission=projection,source=row.facts['source'],spec=row.spec,warnings=warnings,missing_fields=row.facts['missing_fields'],

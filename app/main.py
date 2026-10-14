@@ -121,6 +121,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from app.api.mapping_submissions import router as mapping_submission_router
     application.include_router(mapping_submission_router)
     application.include_router(public_read_router)
+    from app.api.discovery import router as discovery_router
+    application.include_router(discovery_router)
     application.include_router(stock_write_router)
     application.include_router(recipe_schedule_router)
     application.include_router(import_router)

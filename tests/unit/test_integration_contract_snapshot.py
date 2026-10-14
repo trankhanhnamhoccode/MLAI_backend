@@ -9,9 +9,9 @@ def test_original_baseline_is_pinned_and_still_reports_real_changes(tmp_path, mo
     monkeypatch.setattr(wire, "ROOT", tmp_path)
     delta = wire.snapshot()
     assert delta["baseline_operations"] == 32
-    assert delta["current_operations"] == 69
-    assert len(delta["added_operations"]) == 37
-    assert delta["changed_operations"] == ["I01", "I02", "I03", "I04", "I05", "M04", "N5"]
+    assert delta["current_operations"] == 72
+    assert len(delta["added_operations"]) == 40
+    assert delta["changed_operations"] == ["I01", "I02", "I03", "I04", "I05", "M01", "M02", "M04", "N5"]
     assert not delta["removed_operations"]
 
 

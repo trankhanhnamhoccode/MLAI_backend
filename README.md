@@ -1,6 +1,10 @@
 # ShelfCash Competition Edition
 
-CURRENT FACT C3 WIP: Excel hàng thực nhận đã nối shared N6 receipt writer;
+CURRENT FACT C4 source WIP: Today/supplier/PDF discovery và Import/Planning read
+extensions đã có72 operations/66 paths, giữ head0026/catalogue43. Chưa commit hoặc
+nâng cấp demo8103; [commands và giới hạn C4](docs/runbooks/FULL_TEST_FLOW.md#read-discovery-c4).
+
+CURRENT FACT C3 local commit b1c906a: Excel hàng thực nhận đã nối shared N6 receipt writer;
 không endpoint/permission/migration mới. Xem luồng kiểm và giới hạn tại
 [FULL_TEST_FLOW — C3](docs/runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3).
 
@@ -16,7 +20,7 @@ PR01–PR04 yêu cầu quyền và MQ01–MQ03 queue mapping/N5 extension. Catal
 permissions-v3/43 giữ nguyên, head `0026_collaboration_requests` (70 bảng ứng dụng).
 C1 commit f85c7cdd, C2 local commit b9fe048; N13/PR/MQ producers và current target rights
 đã nối. Xem [commands/limits](docs/runbooks/FULL_TEST_FLOW.md#notifications-c1).
-Runtime demo8103 bên dưới vẫn0024/59 operations, chưa nâng cấp C1/C2/C3.
+Runtime demo8103 bên dưới vẫn0024/59 operations, chưa nâng cấp C1/C2/C3/C4.
 
 CURRENT FACT: forecast hỗ trợ baseline (mô hình cơ sở) và trained artifacts (tệp
 mô hình đã huấn luyện). Demo chọn BASELINE; chất lượng dữ liệu thật chưa đánh giá.

@@ -154,7 +154,7 @@ CONFIGURATION_VERSION_CHANGED. Không cần enum availability mới để suy ab
 không có response thành công thì không được suy Store chưa tạo budget.
 Source: ReadinessReads.read, project_context và PlanningConfigurationWrites;
 acceptance: test_planning_configuration_public.py (create/CAS/zero/replay), kết quả
-chạy và điều kiện bàn giao xem [TD-BE-010](../008_TechDebt.md#td-be-010--store-profilegeneral-settings-writers-và-initial-budget-absence).
+chạy và điều kiện bàn giao xem TD-BE-010 (`008_TechDebt.md`, tham chi?u ngo?i repo; xem [backlog hi?n h?nh](ROADMAP.md)).
 
 FieldDescriptor={field,type,required,nullable,constraints,inheritance}. field là
 JSON path template;type decimal_text/path/product_override_array; constraints mô tả
@@ -1004,12 +1004,10 @@ snapshotinvalid409 SNAPSHOT_NOT_AVAILABLE và refresh; không âm thầm skip du
 No DELETE/archive retention vì policy giữ Run vô thời hạn. Clickrow dùng C03 cùng
 UUID, C03 phản ánh latestlifecycle của Run, completedimmutable.
 
-RunSummary captured effective budget là extension ACCEPTED / DESIGN_READY ở mục17;
-chưa thuộc DTO/runtime N9 hiện hành. Không dùng C03 đã có để suy extension list đã
-implemented.
+RunSummary captured_budget IMPLEMENTED C4 tại mục17, projection từ cùng retained acceptance evidence với C03; không đọc current Store cap.
 
 ```json
-{"data":{"items":[{"run_id":"00000000-0000-4000-8000-000000000100","store_id":"00000000-0000-0000-0000-000000000001","status":"queued","accepted_at":"2026-10-09T03:01:00Z","started_at":null,"completed_at":null,"forecast_start_date":"2026-10-09","forecast_end_date":"2026-10-15","requirements_mode":"default","created_by":{"user_id":"00000000-0000-0000-0000-000000000004","display_name":"Owner"},"winner_option_id":null,"outcome":null,"error_code":null,"result_schema_version":null,"result_digest":null,"record_version":"run-1"}]},"meta":{"request_id":"req-history","snapshot_id":"run-list-1","pagination":{"limit":50,"next_cursor":null,"total_count":1}},"error":null}
+{"data":{"items":[{"run_id":"00000000-0000-4000-8000-000000000100","store_id":"00000000-0000-0000-0000-000000000001","status":"queued","accepted_at":"2026-10-09T03:01:00Z","started_at":null,"completed_at":null,"forecast_start_date":"2026-10-09","forecast_end_date":"2026-10-15","requirements_mode":"default","created_by":{"user_id":"00000000-0000-0000-0000-000000000004","display_name":"Owner"},"winner_option_id":null,"outcome":null,"error_code":null,"result_schema_version":null,"result_digest":null,"record_version":"run-1","captured_budget":{"availability":"available","limit":"100","currency":"VND"}}]},"meta":{"request_id":"req-history","snapshot_id":"run-list-1","pagination":{"limit":50,"next_cursor":null,"total_count":1},"timezone":"Asia/Ho_Chi_Minh","applied_filters":{"created_by_user_id":null,"created_date_from":null,"created_date_to":null}},"error":null}
 ```
 
 ### 15.3. C08 giữ route gốc — structured engine explanation
@@ -1273,13 +1271,12 @@ C04/C05 đã triển khai; không dùng live labels thay historical facts.
 ACCEPTED DECISION: FE tìm lại Run theo creator/ngày tạo theo timezone Store,
 tìm lại PDF khi mất locator. Retention Run/input/result/idempotency không thời hạn
 giữ nguyên mục12/P3; không purge hoặc chỉnh historical facts.
-CURRENT FACT: `app/api/history.py` N9 chỉ limit/cursor/status/forecast_start_from/
-forecast_start_to/sort=-accepted_at. DTO RunSummary đã có created_by/accepted_at,
-không cần creator API thứ hai. `app/api/planning_exports.py` N10 POST nhận
-ExportRequest, N11 GET binary, J01 poll export job; chưa GET export collection.
+CURRENT FACT C4: N9 đã thêm creator/created-local-date/snapshot query và captured
+budget summary. `app/api/planning_exports.py` có EX01 GET collection cùng path N10
+POST; N11 GET binary/J01 poll giữ nguyên. Không thêm creator/membership API cho Staff.
 Download/job kiểm current Store rights, không token URL hoặc quyền cũ của creator.
 
-### N9 IMPLEMENTED route, query extension DESIGN_READY
+### N9 creator/local-date filters — IMPLEMENTED C4
 
 GET /stores/{store_id}/procurement-plans thêm created_by_user_id?:UUID,
 created_date_from?:date,created_date_to?:date (inclusive ordered). Omit creator lấy
@@ -1316,14 +1313,19 @@ Response data reuse ví dụ N9 mục15.2; meta extension:
 ```
 
 <a id="history-captured-budget"></a>
-### R09 — Captured effective budget trong RunSummary — ACCEPTED / DESIGN_READY
+### R09 — Captured effective budget trong RunSummary — IMPLEMENTED C4
 
 ACCEPTED DECISION — Product 13/10/2026: RunSummary trả effective budget limit và
 currency của chính Run tại acceptance, projection từ captured acceptance evidence.
 Không lấy cap Store hiện tại, không diễn giải budget thành spend, reservation hoặc
 tiền còn lại. C03 BudgetAtAcceptance vẫn là consumer retained từng Run hiện hành.
-CURRENT FACT: RunSummary/N9 hiện chưa có extension này; không thay source DTO hoặc
-generated OpenAPI bằng mô tả DESIGN_READY.
+CURRENT FACT: RunSummary.captured_budget={availability:available|unavailable,
+limit:MoneyText|null,currency:string|null}. Available cần đủ hai values tại
+acceptance, unavailable giữ cả hai null. Projection chỉ đọc row.record_json đã
+verify, không C03 HTTP loop hoặc đọc PlanningBudget hiện tại. Supported public
+Run schema hiện giữ budget bắt buộc trong resolution; absent-evidence fallback
+được kiểm tại projector. Structurally corrupt/unsupported aggregate vẫn503
+RESULT_INTEGRITY_UNAVAILABLE, không giả một legacy Run hợp lệ hay backfill facts.
 
 Run cũ thiếu retained evidence phải trả availability rõ và nullable limit/currency
 theo evidence thực có; không đổi unknown/null thành zero hoặc fallback current cap.
@@ -1336,11 +1338,11 @@ whole-response denial, list snapshot/pagination/filter/cursor hiện hành N9. B
 projection thuộc cùng pinned list snapshot với RunSummary/page, không N+1 client reads
 để giả list contract. Không thêm budget writer hay endpoint riêng. Typed availability
 representation do DTO/OpenAPI sở hữu khi triển khai, với meaning đã chốt ở đây.
-Acceptance tương lai: budget snapshot không đổi khi Store cap đổi; available zero khác
+Acceptance C4: budget snapshot không đổi khi Store cap đổi; available zero khác
 missing evidence; old Run unavailable; currency cùng acceptance; financial denial;
-list snapshot/cursor parity. Chưa có executed acceptance cho extension trong lượt docs.
+list snapshot/cursor parity. [Commands/results/limits](runbooks/FULL_TEST_FLOW.md#read-discovery-c4) thuộc runbook hiện có.
 
-### EX01 DESIGN_READY — GET /procurement-plans/{plan_id}/exports
+### EX01 IMPLEMENTED C4 — GET /procurement-plans/{plan_id}/exports
 
 FE tìm lại export/job/download locator của retained Run, không gọi POST chỉ để dò.
 No body, query option_id?:OptionId,status?:queued|running|completed|failed,
@@ -1371,6 +1373,11 @@ kiểm private binary tồn tại và size/hash evidence bằng adapter read; kh
 Race bytes mất sau discovery vẫn do N11 kiểm lại. Unknown statuses/cursors422,
 snapshot409; missing retained result evidence503 RESULT_INTEGRITY_UNAVAILABLE.
 EX01 không tạo job/audit business, [] known no exports match filters.
+Current implementation dùng constant-query Store/Run-scoped reads và verify
+matching retained artifacts qua existing PlanningPDFStore; không render, mutate
+status, sửa historical names/cost hoặc lộ local path. Bytes/FS không atomic với
+DB snapshot: N11 luôn kiểm lại. Query-count fixtures không là production SLA;
+artifact verification work vẫn tăng theo matching exports và file sizes.
 
 Ví dụ EX01 data khi export đang queued:
 
@@ -1423,6 +1430,6 @@ reason qua error_code; không bảo đảm success. Audit tạo/export giữ act
 result digest/job/time, GET discovery/download không permission changes; delivery
 notification import/PDF vẫn DEFERRED, không đăng ký inbox event ngoài v1.
 FE thêm creator/local-date filters, export list→resume J01→download N11 và missing
-artifact UI. Acceptance tương lai: Store time boundaries, filter cursor consistency,
+artifact UI. Acceptance C4: Store time boundaries, filter cursor consistency,
 creator không email leak; locator recovery, grant revocation discovery/download,
 missing/corrupt bytes, no implicit rendering, no retained fact rewrite.

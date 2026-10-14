@@ -11,7 +11,7 @@ def test_nf_surface_typed_and_exact_delta():
     schema = app.openapi()
     operations = [(path, method, spec["operationId"]) for path, entry in schema["paths"].items()
                   for method, spec in entry.items() if method in {"get", "post", "put", "patch", "delete"}]
-    assert len(operations) == 69 and len(schema["paths"]) == 64
+    assert len(operations) == 72 and len(schema["paths"]) == 66
     assert {item for item in operations if item[2].startswith("NF")} == {
         ("/api/v1/notifications", "get", "NF01"),
         ("/api/v1/notifications/unread-count", "get", "NF02"),

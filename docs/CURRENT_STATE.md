@@ -1,11 +1,31 @@
 # Current state
 
+## CURRENT FACT — C4 COMPLETE backend acceptance, local source WIP
+
+C3 checkpoint b1c906a0ea65a3b20a46d161166668d26701f0a9; C4 chưa commit.
+Source72 operations/66 paths: giữ69 locators C3, thêm GET D01/SU01/EX01;
+extensions I04/M01/M02/N9. Catalogue permissions-v3/43, head0026/71 tables giữ nguyên.
+Today section authorization/partial snapshots, canonical supplier picker, scoped
+mapping issues, pinned raw/effect/overlap aggregates, creator/local-day/captured
+budget history và retained PDF discovery đã implement. GET không tạo jobs/canonical
+data hoặc render PDF. Current/pinned sensitive reads vẫn áp whole response.
+Owned notifications test DB duy nhất, provider/email OFF; main/demo8103/WIP nguồn
+giữ nguyên. Commands, coverage, fail→fix/query evidence và limits ở
+[FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#read-discovery-c4). Không full-suite,
+browser, runtime8103 upgrade hoặc production SLA claim. C5 chưa mở scope.
+Final C4 focused24 passed; affected C1–C3/stock/history/PDF/readiness/DTO/query-boundary
+regression191 passed. Own DB/role/head0026/71 tables/flags OFF đã kiểm sau cleanup.
+Giữ technical limits Recipe ID not_reserved và absent-evidence budget projector;
+structurally corrupt aggregates vẫn integrity error, không legacy facts giả.
+
+## HISTORICAL INFORMATION — C3 backend acceptance
+
 CURRENT FACT C3 COMPLETE backend acceptance: Excel `inventory_receipts` là schema thứ15, dùng cùng N6
 `InventoryReceipts`/receipt ledger; không thêm endpoint, permission hoặc migration.
 Source giữ69 operations/64 paths, permissions-v3/43, head0026/71 tables.
 Typed receipt preview/effect/completion, exact identity replay/conflict, C2 MQ/N5
 review và current grants/fences nối atomic Import. Không tự khai completeness,
-supplier/cost/date hoặc thay retained PlanningRun. C3 chưa commit; phạm vi kiểm
+supplier/cost/date hoặc thay retained PlanningRun. C3 commit local `b1c906a0ea65a3b20a46d161166668d26701f0a9`; phạm vi kiểm
 chứng và command tại [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3).
 Main/demo8103/DB cũ giữ nguyên; browser E2E chưa chạy.
 Final targeted gate105 passed; C1/C2/field/history regression196 passed/1 fixture
@@ -17,7 +37,7 @@ Own DB/role/head0026/71 tables và flags OFF đã probe sau test cleanup.
 
 Worktree `backend-notifications-foundation`, branch `feat/notifications-foundation`
 from main `6f807357e107e504349a9b154c820bacdfffbe86`. C1 checkpoint commit local
-`f85c7cdd7d9529404f5fd28e06f9156e97bb803e`; C2 commit `b9fe048a6c64ffb79438068076ee3e9d99d75fda`; C3 WIP để review; chưa merge/push.
+`f85c7cdd7d9529404f5fd28e06f9156e97bb803e`; C2 commit `b9fe048a6c64ffb79438068076ee3e9d99d75fda`; C3 checkpoint local b1c906a; chưa merge/push.
 Source NF01–NF03 + PR01–PR04/MQ01–MQ03: OpenAPI69 operations/64 paths,
 permissions-v3/43 giữ nguyên. Additive single head `0026_collaboration_requests`,
 70 application tables/71 với Alembic. Owned test DB
@@ -97,7 +117,7 @@ full invocations are not reported as full-suite passes.
 
 [FE010 response and artifacts](handoff/010_BE_CAPABILITY_RESPONSE_VI.md) distinguish
 implemented integrated source from DESIGN_READY backlog. R05 scoped preview
-aggregates and R09 captured budget summary are ACCEPTED/DESIGN_READY, not runtime.
+aggregates and R09 captured budget summary are IMPLEMENTED C4 in local source; demo8103 remains the older snapshot.
 R10 recipe split-report is deferred; source-proof/scope guards stay enforced.
 Historical branch acceptance below belongs to its named commit, not a deployment.
 

@@ -2,7 +2,7 @@
 
 ## Authority and current surface
 
-CURRENT FACT C3: source OpenAPI has69 operations/64 paths (68 core plus health),
+CURRENT FACT C4: source OpenAPI has72 operations/66 paths (71 core plus health),
 registered by `app/main.py`. `/openapi.json` and source Pydantic DTOs are the
 structural reference. `GET /health` returns status=ok/service=shelfcash-backend;
 it is liveness, not DB/business readiness. `/docs` and `/redoc` are disabled.
@@ -98,18 +98,19 @@ thay thế phần tương lai đúng scope, không sửa source/generated OpenAP
 | [Inbox](NOTIFICATION_API_CONTRACT_VI.md#notification-v1) | IMPLEMENTED C1/C2: inbox/count/read, atomic N13/PR/MQ producers và current target authorization; không approve qua notification. |
 | [Mapping queue](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-queue) | IMPLEMENTED C2: MQ01–MQ03 explicit submit/withdraw, Store queue, pinned detail; N5 request_changes và submission fences. |
 | [Excel actual receipt](IMPORT_MAPPING_API_CONTRACT_VI.md#excel-actual-receipt) | IMPLEMENTED C3 schema/typed effects/completion trong pipeline hiện hữu; I01–I06/J01 và N6 dùng cùng receipt writer/ledger, không route/grant mới. |
-| [Counters/preview](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-projections) | M01/M02/I04 IMPLEMENTED; counters có scope/origin mới và detailed projection DESIGN_READY. |
-| [Today/supplier picker](#today-operations) | DESIGN_READY: D01/SU01; V01–V04/R01/C03/H02 reads IMPLEMENTED, không giả Today đã tồn tại. |
-| [Run history/export discovery](PROCUREMENT_API_CONTRACT_VI.md#planning-discovery) | N9/N10/N11/J01 IMPLEMENTED; N9 creator/date filters và EX01 DESIGN_READY. |
+| [Counters/preview](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-projections) | IMPLEMENTED C4: M01/M02 scoped issue counters; I04 pinned source/effect và R05 aggregates. |
+| [Today/supplier picker](#today-operations) | IMPLEMENTED C4: D01 section authorization/partial snapshots và SU01 canonical picker; reuse V01–V04/R01/C03/H02 semantics. |
+| [Run history/export discovery](PROCUREMENT_API_CONTRACT_VI.md#planning-discovery) | IMPLEMENTED C4: N9 creator/local-date/captured budget; EX01 retained export discovery; N10/N11/J01 giữ lifecycle. |
 
 Các clarification canonical để FE không nhầm approval/commit:
 [source-before-reuse và entity binding](IMPORT_MAPPING_API_CONTRACT_VI.md#source-reuse),
 [identity/correction theo schema](IMPORT_MAPPING_API_CONTRACT_VI.md#schema-correction),
 [profile retirement](IMPORT_MAPPING_API_CONTRACT_VI.md#profile-retirement).
-Policy đã duyệt không tự thành CURRENT FACT: analyze signature-only auto-bind còn
-gap source proof; recipe cross-file full-report assembly còn gap phân biệt bản cùng
-version. Lát3 identity/opening/count/completeness đang WIP, source có thêm opening_stock
-writer; không dùng static trace để tuyên bố public acceptance hoặc đổi lịch sử release.
+Policy đã duyệt không tự thành CURRENT FACT. Trạng thái source-before-reuse,
+identity/opening/count/completeness hiện hành thuộc Import contract và CURRENT_STATE;
+không dùng nhận định WIP lịch sử để thay thế evidence của source hiện tại.
+Recipe cross-file split/full-report assembly (R10) còn DEFERRED, ngoài C4;
+không dùng read projections để tuyên bố đã hoàn tất nghiệp vụ này.
 Clarification này không thêm route, permission, approval store hoặc operation count.
 Auth service-wide disabled/unavailable dùng503 EMAIL_DELIVERY_UNAVAILABLE đồng nhất
 mọi email trên A02/A06 IMPLEMENTED B1 và A07 IMPLEMENTED B2, không generic202 hứa check_email khi không
@@ -120,9 +121,9 @@ HISTORICAL INFORMATION: inventory thiết kế trước B1 bằng static source 
 Đợt 2: NF01–NF03 (3), A02/A05–A07/IN01 (5), PR01–PR04 (4), MQ01–MQ03 (3),
 D01/SU01/EX01 (3). Có16 paths mới (POST/GET permission-requests chung path;
 GET exports dùng path POST N10 đã có). Surface dự kiến **72 operations/66 paths**,
-gồm71 core + health; đây là inventory thiết kế, không OpenAPI runtime72.
+gồm71 core + health. CURRENT FACT C4: đo OpenAPI source đúng72/66; giữ69 locators C3, thêm D01/SU01/EX01. Không suy các routes này đã có trên demo8103.
 Extension query/body/action trên route hiện có không cộng thêm operation.
-CURRENT FACT B1/B2/B3: source OpenAPI có59 operations/55 paths; B1 thêm A02/A05/A06,
+HISTORICAL INFORMATION B1/B2/B3: source OpenAPI có59 operations/55 paths; B1 thêm A02/A05/A06,
 B2 chỉ thêm A07 `POST /auth/password-reset/request`, tái sử dụng N7 và DTO hiện có.
 Đường dẫn A07 này là user-approved B2 delta so với thiết kế plural trước đó;
 không đăng ký alias hoặc complete endpoint mới. B3 chỉ thêm IN01 và invitation schema extensions đã duyệt; operation cũ giữ nguyên. Còn13 operations thiết kế
@@ -204,7 +205,7 @@ durable intents. Acceptance dưới các cụm là specifications tương lai; t
 không xác minh persistence, email delivery, HTTP hoặc whole FE acceptance.
 
 <a id="today-operations"></a>
-## Today và supplier discovery — DESIGN_READY
+## Today và supplier discovery — IMPLEMENTED C4
 
 ### D01 GET /stores/{store_id}/today
 
@@ -234,7 +235,7 @@ InventoryAttention={as_of_date:date,expired_lot_count:int,near_expiry_lot_count:
 TaskList={total_count:int,items:{type:import|mapping_submission|permission_request,
  id:UUID,state:string,updated_at:Timestamp,allowed_actions:string[]}[],has_more:boolean}
 LatestRun={run_id:UUID,status:queued|running|completed|failed,accepted_at:Timestamp,
- result_digest:Version|null}
+ result_digest:Version|null,outcome:string|null,error_code:string|null}
 ```
 
 Readiness type reuse R01 DTO, không định nghĩa lại blockers. Omitted section không
@@ -256,7 +257,7 @@ scope details/counters hoặc versions nhạy cảm. planning section cần
 planning.result.read+budget.read+procurement.cost.read (cùng N9); latest by
 -accepted_at/UUID, không cần completed và không gửi cost trong Today.
 
-ACCEPTED DECISION / DESIGN_READY: Today dùng readiness hiện hành của R01 theo
+ACCEPTED DECISION / CURRENT FACT C4: Today dùng readiness hiện hành của R01 theo
 action/scope/date/source versions, không suy Store READY từ import completed hoặc
 profile approved. `blockers` chặn đúng action/scope; `warnings` không tự chặn action
 đã can_execute=true nhưng FE giữ impact/unknown/exclusions và limitations của input/
@@ -297,6 +298,17 @@ hoặc business audit; 422 INVALID_FILTER/INVALID_CURSOR,409 snapshotchanged.
 ```json
 {"items":[{"supplier_id":"00000000-0000-0000-0000-000000000041","name":"Nhà cung cấp A","active":true,"version":"supplier-1"}]}
 ```
+
+CURRENT FACT implementation: `TodayReads` dùng một REPEATABLE READ transaction;
+current auth trước projection, savepoint mỗi section cho lỗi dependency thành
+unavailable mà không tạo zero. Readiness reuse evaluate/assessment của R01,
+chỉ actions được phép; versions/scope tài chính bị bỏ khi thiếu quyền tương ứng.
+Task updated_at dùng recorded audit/job/request timestamps, không observed_at.
+Latest Run giữ outcome/error_code cả queued/running/failed, không lọc winner.
+Source snapshot bind requested sections/limit/current authorization/Store day.
+SUPicker sort folded name theo chiều request, UUID ascending để tie-break;
+không caller-supplied name làm identity. API/DTO tại `app/api/discovery.py` và
+`contracts/discovery.py`; [commands/limits](runbooks/FULL_TEST_FLOW.md#read-discovery-c4).
 
 Acceptance D01/SU01: quyền/Store isolation cả counts/versions; unknown threshold
 không zero; day rollover/snapshot conflict; latest queued/failed visible đúng quyền;

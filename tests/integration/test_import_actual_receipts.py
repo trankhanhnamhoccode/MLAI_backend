@@ -146,11 +146,15 @@ def test_receipt_mq_owner_approval_keeps_inventory_empty_until_commit(fresh_stor
     response,profile,_=submit(context,ident);assert response.status_code==201,response.text
     row=response.json()['data'];base=f'/api/v1/stores/{context[1].store_id}/mapping-submissions'
     assert context[0][5].get(base).json()['data']['items'][0]['submission_id']==row['submission_id']
+    today=f'/api/v1/stores/{context[1].store_id}/today?section=mapping'
+    pending=context[0][5].get(today).json()['data']['sections']['mapping']['value']
+    assert pending['total_count']==1 and pending['items'][0]['id']==row['submission_id']
     decided=post(context,f'/stores/{context[1].store_id}/mapping-profiles/{profile["profile_id"]}/decisions',
         dict(decision='approve_activate',proposal_revision=profile['proposal_revision'],expected_active_version=None,
             submission_id=row['submission_id'],expected_submission_version=row['version'],reason='Owner reviews actual receipt spec'),
         match=profile['lifecycle_revision'])
     assert decided.status_code==200,decided.text
+    assert context[0][5].get(today).json()['data']['sections']['mapping']['value']['total_count']==0
     with Session(context[0][1]) as fresh:
         assert fresh.scalar(select(func.count()).select_from(InventoryLot))==0
         from app.models.notifications import NotificationIntent

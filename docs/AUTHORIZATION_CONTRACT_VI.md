@@ -1,5 +1,11 @@
 # Authorization — Store, session, Staff and approval
 
+CURRENT FACT C4: D01 section authorization, SU01 supplier picker, M01/M02/I04
+projections, N9 filters/budget và EX01 discovery reuse current Store/domain/finance
+grants; catalogue vẫn permissions-v3/43, không grant tự động hoặc quyền từ snapshot.
+[API](API_CONTRACT.md#today-operations), [Import](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-projections)
+và [Planning](PROCUREMENT_API_CONTRACT_VI.md#planning-discovery) sở hữu projection semantics.
+
 ## ACCEPTED DECISION / CURRENT FACT — A2 catalogue delta
 
 Catalogue `permissions-v3` có43 keys; thêm calendar.read/calendar.write,

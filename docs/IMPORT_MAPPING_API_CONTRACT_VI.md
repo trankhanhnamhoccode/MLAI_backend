@@ -1069,7 +1069,7 @@ khi có sheet_id/review_only/status filter; chỉ items và meta.pagination.tota
 theo filtered result. completed_fields gồm resolved và auto_mapped, không phải số
 auto/approved. Có thể đọc auto items với review_only=false&status=auto_mapped;
 không cộng items.length để suy totals. Per-file/per-sheet/origin/filter mapping
-counters chưa implemented; thiết kế extensions ở mục17. Preview aggregates R05
+counters IMPLEMENTED C4 ở mục17. Preview aggregates R05
 là đơn vị khác, xem mục17.1. Source: ImportStagingUseCases.mappings/_progress.
 
 M03 query mapping_id optional; returns schema/schema_version/schema_context_id,
@@ -2321,14 +2321,14 @@ và retained PlanningRun được kiểm tại [runbook](runbooks/FULL_TEST_FLOW
 Browser/runtime8103 chưa nâng cấp/kiểm C3; C4 projections không thuộc lát này.
 
 <a id="mapping-projections"></a>
-## 17. Counters và source→canonical→effect — DESIGN_READY extensions
+## 17. Counters và source→canonical→effect — IMPLEMENTED C4
 
 CURRENT FACT: M01 có Progress/files/sheets/profile details; M02 có sheet_id,
 review_only/status/include_details/limit/cursor và MappingList.counts; issue origins
 tách resolution_origin APPROVED_PROFILE|USER_PROPOSAL|UNRESOLVED và suggestion_origin
 RULE|QWEN|REUSED|MANUAL|NONE. I04 có include_preview/preview_id/rows_limit/rows_cursor/
 classification/configurations; PreviewRow có source_location/provenance/before/after,
-supplier_term_semantics và recipe provenance. Không mô tả các tiện ích mới đã có.
+supplier_term_semantics và recipe provenance. C4 bổ sung counters/source projection dưới đây, không đổi nghĩa Progress hiện hành.
 
 M01 GET extension query file_id?:UUID,sheet_id?:UUID,review_only?:boolean,
 status?:MappingStatus,origin?:SuggestionOrigin; filters AND, cùng enum hiện có.
@@ -2344,6 +2344,8 @@ phạm vi M02, không số rows/cells/files. review_only defaulttrue như M02; b
 unfiltered, filtered áp chính filters request, không page-length. M01 legacy
 progress không đổi nghĩa. M01 counters và M02 page pin cùng mapping_revision;
 M02 thêm snapshot_id? để bind, changed409 SNAPSHOT_NOT_AVAILABLE.
+snapshot_id của M02 là mapping_revision từ M01, không quoted HTTP ETag. Filters
+áp counters/issues; legacy M01 files/sheets là batch metadata, không totals từ page.
 
 Ví dụ counter extension M02 (một column issue từ RULE, filter cùng revision):
 
@@ -2355,8 +2357,21 @@ I04 GET extension preview query file_id?:UUID,sheet_id?:UUID,projection?:
 summary|source_effect (defaultsummary); chỉ hợp lệ khi include_preview=true cùng
 preview_id. Response rows PreviewRow current + source_cells:SourceEvidenceCell[]
 và planned_effect: typed union ReceiptEffect|CatalogEffect|CountEffect|RecipeEffect|
-SupplierEffect|SalesEffect|DeclarationEffect. summary không cells/effect extension;
-source_effect chỉ selected rows page, không toàn workbook.
+SupplierEffect|SalesEffect|DeclarationEffect|OpeningEffect|HistoryEffect. summary không cells/effect extension;
+source_effect chỉ selected rows page, không toàn workbook. SourceEffectRow giữ
+PreviewRow fields và thêm source_cells/planned_effect/source_evidence_availability
+(available|partial|unavailable), source_cells_truncated. Tối đa200 cells/action và
+2000 cells/page; bounds không thay canonical facts hoặc aggregate totals.
+PreviewPage thêm mapping_revision/read_set_digest/source_evidence_digest; full
+internal read_set vẫn private. New preview pin digest cached sources và read
+permissions trong immutable payload. Old preview thiếu source pin trả unavailable
+evidence/raw count=null; không parse lại bytes hoặc lấy mapping mới làm evidence.
+Quyền của pinned preview được kiểm cả trước projection và fresh-authority readback;
+đổi mapping không hạ sensitive guard của preview cũ.
+File/sheet filters chọn logical actions có location liên quan. Mỗi action vẫn giữ
+toàn bộ locations và bounded evidence của chính action, kể cả location ở file scope
+khác; raw aggregate count chỉ đếm intersection đang chọn. Không lấy số cells hoặc
+toàn bộ locations của returned action để suy scoped raw total.
 
 ```text
 SourceEvidenceCell={location:SourceLocation,column_label:string|null,
@@ -2367,7 +2382,8 @@ CatalogEffect={kind:"catalog",entity:product|ingredient|supplier,id:UUID,
 CountEffect={kind:"count",lot_id:UUID,before_quantity:QuantityText,
  after_quantity:QuantityText,delta:SignedQuantityText,unit:string,
  expected_version:Version}
-RecipeEffect={kind:"recipe",product_id:UUID,recipe_id:UUID,action:"create_version",
+RecipeEffect={kind:"recipe",product_id:UUID,recipe_id:UUID|null,
+ identity_availability:available|not_reserved,recipe_version:int,action:create_version|reuse,
  effective_from:date,effective_to:date|null,dependency_ids:UUID[]}
 SupplierEffect={kind:"supplier",entity:supplier_term|payable_fee,id:UUID,
  action:create_version|close_period|reuse,expected_version:Version|null}
@@ -2378,12 +2394,22 @@ DeclarationEffect={kind:"declaration",id:UUID,action:declare|reuse,
  dependency_ids:UUID[],expected_version:Version|null}
 ```
 
+CURRENT FACT / TECHNICAL DEBT: example thiết kế RecipeEffect ban đầu dùng UUID
+bắt buộc, nhưng writer hiện hành chỉ cấp recipe_id lúc commit. C4 trả null với
+identity_availability=not_reserved và Product/version/date/dependencies, không bịa
+reserved identity hoặc sửa writer chỉ để dựng GET. Reuse effect có action=reuse.
+OpeningEffect (kind=opening_stock) giữ lot_id/quantity_delta/unit/observed_at và
+action create|reuse; HistoryEffect giữ domain/id/action record|reuse/expected_version.
+Đây là typed projections của nghiệp vụ đã có, không receipt/count/history mới.
+`dependency_ids` là `row_id` của các planned actions phụ thuộc; canonical entity IDs
+vẫn thuộc `entity_refs`/`nested_references`, không suy ra từ action IDs.
+
 ReceiptEffect thêm kind="receipt" khi union; canonical before/after giữ typed
 current CanonicalValue+ActualReceiptValue, không dictionary tùy ý. Raw null là
 empty/unknown source, không unknown canonical0. Formula chỉ báo presence, raw_value
 là cached visible value, không formula expression/external links. Source không
 established/unsupported chỉ blocked row+Notice; planned_effect=null khi không thể
-xác định action, không fabricated type/value. Source cell tối đa200 chars display,
+xác định action, không fabricated type/value. C4 reuse SourceEvidenceCell và bounded display builder với C2 MQ03. Source cell tối đa200 chars display,
 nếu lớn trả raw_value=null kèm row warning SOURCE_CELL_DISPLAY_UNAVAILABLE, không
 truncate thành evidence đầy đủ; raw bytes vẫn retained private. Header label cùng
 guard. Sheet/file filters phải đúng import, foreign404, malformed422 INVALID_FILTER.
@@ -2402,17 +2428,17 @@ recanonicalize trên GET. Different filters cursor422; data changed409 PREVIEW_S
 hoặc snapshot unavailable; FE refresh preview, không ghép rows từ hai digests.
 No new mutations/audit business, no async job từ GET. MQ03 evidence dùng cùng
 SourceEvidenceCell và quyền full spec; không expose whole workbook qua queue.
-Acceptance tương lai: counts scope/filters/status/origin/empty; matching pages;
+Acceptance C4 và regression liên quan: counts scope/filters/status/origin/empty; matching pages;
 source→exact canonical→effect provenance; finance denial; bounds không truncate
 audit facts; stale snapshot và no compute. Xem [bàn giao chung](API_CONTRACT.md#dot2-handoff).
 
 <a id="preview-aggregates"></a>
-### 17.1. R05 — Preview aggregates theo file/sheet — ACCEPTED / DESIGN_READY
+### 17.1. R05 — Preview aggregates theo file/sheet — IMPLEMENTED C4
 
 ACCEPTED DECISION — Product 13/10/2026: bổ sung aggregates theo file/sheet trên
 projection I04 hiện có, cùng preview_id và pinned preview_digest. Không thêm endpoint
 chỉ trả aggregates. CURRENT FACT: PreviewSummary/PreviewGroup toàn preview đã có;
-scoped aggregates này chưa implemented trong routes/DTO/consumer hiện hành.
+scoped aggregates implemented trong I04/PreviewAggregates, không thêm metrics route.
 
 Hai đơn vị phải trả riêng và có nhãn rõ:
 
@@ -2439,7 +2465,23 @@ Quyền whole-response sensitive reads, preview/read-set pins, foreign scope/err
 cursor/stale handling giữ mục17 và workflow I04 hiện hành. Acceptance khi triển khai:
 raw rows khác actions; multi-location dedupe; overlapping file/sheet scopes và batch
 distinct total; totals/page pin/filters; empty scope; stale preview và financial denial.
-Đây là design acceptance, không test PASS hoặc runtime handoff.
+CURRENT FACT C4: I04.preview.aggregates={preview_id,preview_digest,batch,selected,
+files:ScopedPreviewAggregate[],sheets:ScopedPreviewAggregate[]}.
+Mỗi scope có {scope:{file_id,sheet_id,classification},raw_source_rows:{availability,
+count},logical_action_count,by_classification,groups,blockers,warnings}. Groups đếm
+actions theo canonical_domain/proposed_action và số actions có blocker/warning;
+code counts đếm action một lần/code, không số Notice trùng trong grouped action.
+Classification filter áp sau canonical grouping; raw count khi có filter chỉ đếm
+distinct source records đóng góp matched actions. Không filter thì raw count gồm
+mọi retained data record trong scope, kể cả source không tạo action. File/sheet
+filters AND trước chọn actions; hai IDs hợp lệ nhưng intersection rỗng trả known0.
+Files không có sheet/action vẫn có empty aggregate nếu thuộc frozen source_files.
+Totals độc lập rows_limit/cursor; files/sheets là các scopes có thể overlap.
+
+Ví dụ hai file A/B cùng proven receipt: batch raw2/logical1; mỗi file raw1/logical1,
+không cộng logical1+1 thành batch2. Nếu có master reservation, đó là action khác
+và được đếm riêng dù dùng cùng physical source row. Source rows không nhân đôi.
+Xem [verification/commands/limits](runbooks/FULL_TEST_FLOW.md#read-discovery-c4).
 
 ## Canonical clarification for consumers
 

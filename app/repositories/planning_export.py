@@ -17,6 +17,12 @@ class PlanningExportRepository:
         return self.session.scalar(select(PlanningExport).where(PlanningExport.id==export_id)
             .with_for_update().execution_options(populate_existing=True))
 
+    def for_run(self,store: UUID,run: UUID,status=None,option=None) -> tuple[PlanningExport,...]:
+        query=select(PlanningExport).where(PlanningExport.store_id==store,PlanningExport.run_id==run)
+        if status is not None: query=query.where(PlanningExport.status==status)
+        if option is not None: query=query.where(PlanningExport.record_json['receipt']['option_id'].astext==option)
+        return tuple(self.session.scalars(query.order_by(PlanningExport.created_at.desc(),PlanningExport.id.desc())))
+
     def by_key(self, actor_id: UUID, store_id: UUID, run_id: UUID, key_digest: str) -> PlanningExport | None:
         return self.session.scalar(select(PlanningExport).where(PlanningExport.actor_id==actor_id,
             PlanningExport.store_id==store_id,PlanningExport.run_id==run_id,PlanningExport.key_digest==key_digest))

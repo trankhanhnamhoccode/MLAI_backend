@@ -688,6 +688,41 @@ class InspectedProfile(DTO):
     spec: ProfileSpec
 
 
+class MappingCounterScope(DTO):
+    file_id: UUID | None = None
+    sheet_id: UUID | None = None
+    review_only: bool = True
+    status: Literal['auto_mapped','resolved','needs_confirmation','ambiguous','unmatched'] | None = None
+    origin: Literal['RULE','QWEN','REUSED','MANUAL','NONE'] | None = None
+
+
+class MappingStatusCounts(DTO):
+    auto_mapped: int = 0
+    resolved: int = 0
+    needs_confirmation: int = 0
+    ambiguous: int = 0
+    unmatched: int = 0
+
+
+class MappingOriginCounts(DTO):
+    RULE: int = 0
+    QWEN: int = 0
+    REUSED: int = 0
+    MANUAL: int = 0
+    NONE: int = 0
+
+
+class MappingIssueCounts(DTO):
+    total: int
+    by_status: MappingStatusCounts
+    by_origin: MappingOriginCounts
+
+
+class MappingCounters(DTO):
+    batch: MappingIssueCounts
+    filtered: MappingIssueCounts
+
+
 class MappingSummary(DTO):
     import_id: UUID
     analysis_id: UUID
@@ -703,11 +738,16 @@ class MappingSummary(DTO):
     approved_contexts: tuple[ApprovedContext, ...] = ()
     approved_profiles: tuple[InspectedProfile, ...] = ()
     warnings: tuple[Notice, ...] = ()
+    counter_scope: MappingCounterScope | None = None
+    counters: MappingCounters | None = None
 
 
 class MappingList(DTO):
     items: tuple[MappingIssue, ...]
     counts: Progress
+    mapping_revision: str = ''
+    counter_scope: MappingCounterScope | None = None
+    counters: MappingCounters | None = None
 
 
 class FieldOption(DTO):
@@ -1052,9 +1092,145 @@ class PreviewSummary(DTO):
     confirmed_resolutions_version: None = None
 
 
+class ReceiptPlannedEffect(ReceiptEffect):
+    kind: Literal['receipt'] = 'receipt'
+
+
+class CatalogEffect(DTO):
+    kind: Literal['catalog'] = 'catalog'
+    entity: Literal['product','ingredient','supplier']
+    id: UUID
+    action: Literal['create','reuse']
+    expected_version: str | None
+
+
+class CountEffect(DTO):
+    kind: Literal['count'] = 'count'
+    lot_id: UUID
+    before_quantity: Quantity
+    after_quantity: Quantity
+    delta: Annotated[str, Field(pattern=r"^-?(0|[1-9][0-9]*)(\.[0-9]+)?$", max_length=201)]
+    unit: str
+    expected_version: str
+
+
+class RecipeEffect(DTO):
+    kind: Literal['recipe'] = 'recipe'
+    product_id: UUID
+    recipe_id: UUID | None
+    identity_availability: Literal['available','not_reserved']
+    recipe_version: int
+    action: Literal['create_version','reuse'] = 'create_version'
+    effective_from: date
+    effective_to: date | None
+    dependency_ids: tuple[UUID,...]
+
+
+class SupplierEffect(DTO):
+    kind: Literal['supplier'] = 'supplier'
+    entity: Literal['supplier_term','payable_fee']
+    id: UUID
+    action: Literal['create_version','close_period','reuse']
+    expected_version: str | None
+
+
+class SalesEffect(DTO):
+    kind: Literal['sales'] = 'sales'
+    product_id: UUID
+    date: date
+    action: Literal['record','replace','merge','reuse']
+    before_quantity: Quantity | None
+    after_quantity: Quantity
+    unit: str
+    expected_version: str | None
+
+
+class DeclarationEffect(DTO):
+    kind: Literal['declaration'] = 'declaration'
+    id: UUID
+    action: Literal['declare','reuse']
+    dependency_ids: tuple[UUID,...]
+    expected_version: str | None
+
+
+class OpeningEffect(DTO):
+    kind: Literal['opening_stock'] = 'opening_stock'
+    lot_id: UUID
+    action: Literal['create','reuse']
+    quantity_delta: Quantity
+    unit: str
+    observed_at: datetime
+
+
+class HistoryEffect(DTO):
+    kind: Literal['history'] = 'history'
+    domain: Literal['calendar_events','promotion_observations','usage_history','purchase_history']
+    id: UUID
+    action: Literal['record','reuse']
+    expected_version: str | None
+
+
+PlannedEffect = Annotated[ReceiptPlannedEffect | CatalogEffect | CountEffect | RecipeEffect |
+    SupplierEffect | SalesEffect | DeclarationEffect | OpeningEffect | HistoryEffect, Field(discriminator='kind')]
+
+
+class SourceEffectRow(PreviewRow):
+    source_cells: tuple[SourceEvidenceCell,...]
+    planned_effect: PlannedEffect | None
+    source_evidence_availability: Literal['available','partial','unavailable']
+    source_cells_truncated: bool
+
+
+class PreviewScope(DTO):
+    file_id: UUID | None = None
+    sheet_id: UUID | None = None
+    classification: Literal['NEW','UNCHANGED','CHANGED','INVALID','CONFLICT'] | None = None
+
+
+class RawSourceRowCount(DTO):
+    availability: Literal['available','unavailable']
+    count: int | None
+
+
+class PreviewActionGroupCount(DTO):
+    canonical_domain: str | None
+    proposed_action: str
+    action_count: int
+    blocked_action_count: int
+    warning_action_count: int
+
+
+class NoticeActionCount(DTO):
+    code: str
+    action_count: int
+
+
+class ScopedPreviewAggregate(DTO):
+    scope: PreviewScope
+    raw_source_rows: RawSourceRowCount
+    logical_action_count: int
+    by_classification: ClassificationCounts
+    groups: tuple[PreviewActionGroupCount,...]
+    blockers: tuple[NoticeActionCount,...]
+    warnings: tuple[NoticeActionCount,...]
+
+
+class PreviewAggregates(DTO):
+    preview_id: UUID
+    preview_digest: str
+    batch: ScopedPreviewAggregate
+    selected: ScopedPreviewAggregate
+    files: tuple[ScopedPreviewAggregate,...]
+    sheets: tuple[ScopedPreviewAggregate,...]
+
+
 class PreviewPage(DTO):
+    aggregates: PreviewAggregates | None = None
+    mapping_revision: str
+    read_set_digest: str
+    source_evidence_digest: str | None
     summary: PreviewSummary
-    rows: tuple[PreviewRow, ...]
+    rows: tuple[SourceEffectRow | PreviewRow, ...]
     rows_page: Pagination
     stale: bool
 
