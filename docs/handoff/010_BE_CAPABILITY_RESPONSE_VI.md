@@ -4,7 +4,7 @@
 ## CURRENT FACT — Đợt2 C5 backend VERIFIED; browser E2E PENDING
 
 C4 checkpoint eabab333; source artifact hiện72 operations/66 paths, single head0026.
-Runtime upgrade PREPARED trên committed main; status/matrix/commands ở
+Runtime HTTPS8103/head0026 VERIFIED trên committed main; status/matrix/commands ở
 [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5), là runbook canonical.
 Không coi C5 tổng thể COMPLETE khi browser checklist Nam/Nguyên chưa chạy.
 API base `https://localhost:8103`, exact Origin `https://localhost:5173`;
@@ -17,19 +17,18 @@ Import/Planning/PDF/notification cùng owned BE; email/Qwen mặc định OFF.
 
 ## Tóm tắt cho chủ dự án
 
-CURRENT FACT C4 source local `backend-notifications-foundation`:72 operations/66
-paths, permissions-v3/43, head0026. C3 checkpoint b1c906a0ea65a3b20a46d161166668d26701f0a9;
-C4 WIP để review, không push/merge. D01/SU01/EX01 và M01/M02/I04/N9 extensions đã
-implement; [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#read-discovery-c4) sở hữu
-commands, verification và limits. Demo8103/main vẫn bản trước C1–C4; browser C4
-chưa chạy. Artifacts JSON G59/55 bên dưới là historical baseline, không generated
-contract C4; regenerate từ source/OpenAPI sau review, không cộng artifacts cũ.
+CURRENT FACT C1–C4/C5 đã tích hợp main:72 operations/66 paths, permissions-v3/43,
+head0026/71 tables. C4 checkpoint eabab333; D01/SU01/EX01 và M01/M02/I04/N9 đã
+implement. Demo HTTPS8103 chạy committed main và four workers, email/model OFF.
+Artifacts bên dưới đã regenerate offline từ source; [runbook C5](../runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5)
+sở hữu commands/results/recovery và checklist browser còn PENDING. R05/R09 đã
+implemented, recipe split-report R10 vẫn DEFERRED. Không full-suite/real-data quality claim.
 
 HISTORICAL INFORMATION G: đã ghép hai commit nghiệm thu trong worktree riêng `backend-integrate-import-auth`, branch `feat/integrate-import-auth`, giữ nguyên lịch sử nguồn và WIP của hai phiên. Source thống nhất có **59 operations/55 paths**, catalogue **permissions-v3/43 keys**, migration head **0024_integrate_import_auth**. FE dùng [openapi.json](openapi.json), không cộng hai artifacts WIP cũ thành một contract.
 
-Backend/fake-delivery và PostgreSQL là phạm vi verification; kết quả gate cuối nằm trong [runbook](../runbooks/FULL_TEST_FLOW.md#integrated-acceptance). Tại snapshot G ban đầu chưa có server; runtime demo8103 được chuẩn bị sau đó vẫn giữ source trước C1–C4, không verify C4 từ URL đó. Browser E2E và email workflow thật vẫn pending. Gmail smoke đã nhận inbox chỉ chứng minh email smoke đó. Forecast có consumers/mechanics, **real-data accuracy NOT EVALUATED**.
+Backend/fake-delivery và PostgreSQL là phạm vi verification; kết quả gate cuối nằm trong [runbook](../runbooks/FULL_TEST_FLOW.md#integrated-acceptance). Tại snapshot G ban đầu chưa có server; runtime demo8103 trước C5 từng giữ source trước C1–C4; trạng thái đó đã được thay bằng runtime C5 nêu trên. Browser E2E và email workflow thật vẫn pending. Gmail smoke đã nhận inbox chỉ chứng minh email smoke đó. Forecast có consumers/mechanics, **real-data accuracy NOT EVALUATED**.
 
-R05/R09 đã IMPLEMENTED trong local source C4, theo Product acceptance được giữ ở contracts. Recipe split-report đa file/sheet deferred; các guards và single-sheet hợp lệ vẫn hoạt động. Những capabilities Đợt2 còn thiếu bên dưới không trở thành runtime chỉ vì đã có prose contract.
+R05/R09 đã IMPLEMENTED trong local source C4, theo Product acceptance được giữ ở contracts. Recipe split-report đa file/sheet deferred; các guards và single-sheet hợp lệ vẫn hoạt động. Chỉ các capabilities ghi IMPLEMENTED được xác nhận bởi backend gates; browser acceptance vẫn cần FE.
 
 ## R00–R13
 
@@ -72,7 +71,7 @@ Các URL lịch sử/demo riêng: Gmail Auth demo `https://localhost:8102` với
 - A01/A02/A05/A06/A07/N7: exact Origin, public session/CSRF exemptions; verification/reset completion không cấp session. Authenticated invitation/grants mutations cần current session, Origin, X-CSRF-Token, Idempotency-Key và If-Match theo OpenAPI.
 - N19 body chỉ `accept:true`; false/string/number bị422, không decline. IN01 có token/reason riêng. Offer proof không cấp authority; acceptance tạo exact grants, replay không khôi phục quyền đã thu hồi.
 - Callback FE dùng AUTH_VERIFICATION_FRONTEND_URL, AUTH_PASSWORD_RESET_FRONTEND_URL, AUTH_INVITATION_FRONTEND_URL/AUTH_FRONTEND_URL theo [Auth feature](../features/AUTH_SESSION.md). URL base cần thuộc allowed Origin, không query/fragment/userinfo. Page lấy token từ fragment vào memory, xóa fragment ngay, no-referrer; không log/persist token. A05 consume verification, N7 consume SETUP/RESET, invitation proof không đổi purpose.
-- Import/Planning/PDF worker flags độc lập default OFF; chỉ bật worker tương ứng khi cần process jobs và đã cấu hình runtime. AUTH_EMAIL_DELIVERY_ENABLED default OFF; backend/fake-delivery tests inject adapters, không SMTP. Provider/LLM OFF. Public mail endpoints503 EMAIL_DELIVERY_UNAVAILABLE khi capability không available; completion vẫn dùng existing valid token theo contract.
+- Import/Planning/PDF/notification worker flags độc lập default OFF; demo explicit ON trong cùng process, chỉ bật worker tương ứng khi cần process jobs và đã cấu hình runtime. AUTH_EMAIL_DELIVERY_ENABLED default OFF; backend/fake-delivery tests inject adapters, không SMTP. Provider/LLM OFF. Public mail endpoints503 EMAIL_DELIVERY_UNAVAILABLE khi capability không available; completion vẫn dùng existing valid token theo contract.
 - Private errors phân biệt401 UNAUTHENTICATED,403 permission/CSRF,404 foreign resource,409 state/catalogue/idempotency,412 stale CAS,428 missing precondition. Không nới FE validator để che drift; refresh catalogue/version/context đúng error.
 
 Lệnh kiểm trong worktree tích hợp, không secrets:
@@ -97,7 +96,7 @@ DB test phải đúng shelfcash_integration_test / shelfcash_integration_tester;
 
 Baseline FE thực đọc: `Shelfcash_FE_v2/api-contract-v2/generated/openapi.json`, SHA256 `6336bc0cdbe5f260389838934ba946cd51887af1b551c763b5beb4437e5e7e1f`,54 operations/50 paths. Yêu cầu010 trước ghi hash `f160bf4a46453404f103a32431da5dc722382fb02494612e61e2000e57533961`; đó là bytes snapshot khác, không được thay thành “cùng bản”. Baseline ngày10/10 trong tests/fixtures là32 operations, được giữ nguyên và không giả làm FE54.
 
-Delta chính: +A02/A05/A06/A07/IN01, không removed operations; N19 schema const:true; terminal declined/can_decline; public mail envelopes; catalogue v3/max43; stockout policies/contributions; bốn support-history domains/typed corrections/projections; source-value/recipe/supplier basis/opening provenance và parser/mapping metadata. Xem diff structural đầy đủ và source DTO, không suy typed source input nào cũng là public HTTP request.
+Delta FE54→current72: +A02/A05/A06/A07/IN01, NF01–NF03, PR01–PR04, MQ01–MQ03, D01/SU01/EX01; không removed operations; N19 schema const:true; terminal declined/can_decline; public mail envelopes; catalogue v3/max43; stockout policies/contributions; bốn support-history domains/typed corrections/projections; source-value/recipe/supplier basis/opening provenance và parser/mapping metadata. Xem diff structural đầy đủ và source DTO, không suy typed source input nào cũng là public HTTP request.
 
 Source-only generation dùng process riêng, Settings không đọc .env, mọi workers/provider OFF, DB/network connect bị chặn; chỉ app.openapi(), không lifespan/server. Examples là synthetic và được model_validate; không deploy/API response captures. Artifact từng nhánh trong backend tổng `docs/handoff/010_openapi_{main,import-wip,auth-wip}.json` là lịch sử audit13/10 lúc18:07, không release I/B/G; provenance của chúng giữ nguyên ở backend tổng, không overwrite/copy làm artifact hiện hành.
 

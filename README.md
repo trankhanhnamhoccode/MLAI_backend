@@ -1,7 +1,7 @@
 # ShelfCash Competition Edition
 
 CURRENT FACT C4 checkpoint eabab333: Today/supplier/PDF discovery và Import/Planning read
-extensions đã có72 operations/66 paths, giữ head0026/catalogue43. C5 backend acceptance đã VERIFIED, runtime upgrade PREPARED; [commands và giới hạn C4](docs/runbooks/FULL_TEST_FLOW.md#read-discovery-c4).
+extensions đã có72 operations/66 paths, giữ head0026/catalogue43. C5 backend acceptance đã VERIFIED, runtime HTTPS8103/head0026 VERIFIED; [commands và giới hạn C5](docs/runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5).
 
 CURRENT FACT C3 local commit b1c906a: Excel hàng thực nhận đã nối shared N6 receipt writer;
 không endpoint/permission/migration mới. Xem luồng kiểm và giới hạn tại

@@ -3,9 +3,11 @@
 ## CURRENT FACT
 
 C5 backend linked acceptance VERIFIED (3+20 cases, migration/tooling gate25);
-C4 checkpoint eabab333. Runtime upgrade PREPARED, browser E2E PENDING, nên C5 tổng thể
+C4 checkpoint eabab333. Runtime HTTPS8103/head0026 VERIFIED, browser E2E PENDING, nên C5 tổng thể
 chưa COMPLETE. Source72/66/head0026; R05/R09 implemented, R10 deferred.
 Xem [canonical C5 matrix/commands](runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5).
+
+### HISTORICAL INFORMATION — acceptance trước C5
 
 C1 notification foundation committed locally at f85c7cdd on `feat/notifications-foundation`;
 C2 COMPLETE backend acceptance committed locally at b9fe048a6c64ffb79438068076ee3e9d99d75fda.

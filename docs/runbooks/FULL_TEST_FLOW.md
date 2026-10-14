@@ -1,13 +1,13 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
 <a id="linked-acceptance-c5"></a>
-## CURRENT FACT — C5 backend acceptance VERIFIED; runtime upgrade PREPARED
+## CURRENT FACT — C5 backend/runtime VERIFIED; browser E2E PENDING
 
 C4 checkpoint `eabab333ee8738a0fa758b91f95a106d662edac6`, gồm C1–C4 trên main
 base6f80735. Fetch origin không có main delta/conflict; một head0026, source72/66.
 C5 tổng thể chưa COMPLETE: browser E2E PENDING và cần đội FE/người dùng.
 Không SMTP/OpenRouter, không recipe split-report/AI/what-if hoặc policy mới.
-Runtime nâng cấp theo [luồng HTTPS8103](#integrated-demo-runtime); migration phải có
+Runtime đã nâng cấp theo [luồng HTTPS8103](#integrated-demo-runtime); migration phải có
 backup verified và source committed sạch. Không chạy trực tiếp worktree tests/WIP.
 
 | Nhóm | Backend coverage và evidence kế thừa/bổ sung |
@@ -49,6 +49,38 @@ validate DTO examples và đo đúng72/66. Staged secret scan ban đầu match c
 vì tên setting chứa PASSWORD_RESET → phân biệt public callback URL với private values;
 không bỏ kiểm password/token/key thật. Không có behavioral test failure trong C5.
 
+
+Runtime verification C5 trên DB demo thật: custom backup đã verify TOC/full payload/
+SHA256 trước0024→0026; tất cả counts bảng cũ giữ nguyên,71 tables sau upgrade.
+API probes pass TLS, OpenAPI72/66, exact Origin/CORS/cookie/CSRF/login/me/isolation,
+Today/inbox và four worker observations; SQL probe kiểm từng queue/DB trực tiếp,
+không dùng health để kết luận dependency ready. Source/root/SHA do status cung cấp.
+Giữ3 holders/2 Stores/menu.read grant và2 terminal import jobs đã tồn tại;
+products/ingredients/planning còn trống tại thời điểm probe, không seed completeness.
+Lần verify đầu dừng vì guard cũ yêu cầu zero historical jobs; sửa CLI probe kiểm
+queued/running và bảo toàn counts/current grants, verify thực tế sau sửa PASS.
+Không xóa jobs, reset DB hoặc đổi policy để làm xanh. Credentials/cert bytes
+copy sang main giữ nguyên; runtime private storage thuộc serving worktree bền vững.
+
+Runtime commands đã thực hiện từ committed main:
+
+```powershell
+$demoPython = '..\backend-integrate-import-auth\.venv\Scripts\python.exe'
+& $demoPython -m scripts.integrated_demo backup-upgrade
+& $demoPython -m scripts.integrated_demo stop
+& $demoPython -m scripts.integrated_demo migrate
+& $demoPython -m scripts.integrated_demo start
+& $demoPython -m scripts.integrated_demo_accounts verify
+& $demoPython -m scripts.integrated_demo status
+```
+
+Profile transfer là thao tác một lần, không chạy init/provision lại. Chỉ source/root
+đổi và notification flag opt-in; old DB credentials, TLS, callbacks giữ nguyên.
+Backup/private accounts không thuộc artifacts FE/Git. Browser checklist vẫn PENDING;
+real email workflow, model quality, production SLA và nonempty demo job execution
+chưa được kiểm trong lượt này. Tests chạy real workers trên synthetic test DB là
+backend evidence, không thay thế browser hoặc job receipts trên demo thật.
+
 ### Browser checklist — PENDING, không phải backend API acceptance
 
 Dùng persona **Nam = Owner**, **Nguyên = Staff** tương ứng holders private; tên persona
@@ -67,7 +99,7 @@ không tự đổi stored identity hoặc tạo account mới. Không copy crede
 Browser vẫn PENDING; không dùng intercepted responses hoặc TestClient để gọi là browser pass.
 
 <a id="read-discovery-c4"></a>
-## CURRENT FACT — C4 Today và read discovery, source local
+## HISTORICAL INFORMATION — C4 Today và read discovery checkpoint
 
 C4 COMPLETE backend acceptance theo các nhóm A–F dưới đây; giữ source WIP để review.
 C3 đã commit local `b1c906a0ea65a3b20a46d161166668d26701f0a9` với message
@@ -190,7 +222,7 @@ local links/JSON examples và outside-WIP fingerprints được kiểm; main6f80
 backend9/Import15/Auth0 WIP giữ nguyên, C4 index trống. Không commit C4 hoặc mở C5.
 
 <a id="excel-actual-receipt-c3"></a>
-## CURRENT FACT — C3 Excel hàng thực nhận, source local
+## HISTORICAL INFORMATION — C3 Excel hàng thực nhận checkpoint
 
 C2 đã commit local `b9fe048a6c64ffb79438068076ee3e9d99d75fda` sau C1 f85c7cdd.
 C3 COMPLETE backend acceptance, commit local b1c906a; không push/merge. Checkpoint source head0026,69 operations/64 paths,
@@ -312,7 +344,7 @@ main6f80735 giữ nguyên, C3 index trống; secret/whitespace checks,197 local 
 35 JSON examples pass. Không claim full-suite hoặc browser/runtime8103 pass.
 
 <a id="notifications-c1"></a>
-## CURRENT FACT — C1/C2 collaboration, worktree test riêng
+## HISTORICAL INFORMATION — C1/C2 collaboration acceptance
 
 Worktree `D:\hocc_bk\ai\proj\projectMLAI\backend-notifications-foundation`, branch
 `feat/notifications-foundation`, base main6f80735; C1 commit local f85c7cdd,
@@ -491,7 +523,7 @@ những nhóm liên quan đã pass, không gọi targeted pass là full regressi
 operations/paths. GET list/count, read/no-op/replay và
 delivery được kiểm qua fresh sessions; không email/model/browser live call.
 
-CURRENT FACT runtime8103 bên dưới thuộc worktree tích hợp, giữ0024 và daily
+HISTORICAL INFORMATION trước C5: runtime8103 thuộc worktree tích hợp, giữ0024 và daily
 commands cũ; không thay commands đó sang collaboration source để vượt migration guard.
 
 <a id="integrated-demo-runtime"></a>
@@ -684,10 +716,10 @@ invitation workflow E2E. Lượt hoàn thiện/merge không gửi email hoặc m
 
 Verify dùng certificate trust rõ ràng; kiểm HTTPS health/OpenAPI đo từ source, hiện72 operations/66
 paths, exact CORS preflight và wrong Origin/HTTP5173 rejection, login/me/cookie/CSRF,
-Owner/Staff isolation/read denial, fresh committed accounts/memberships/grants và
-absence operational facts. DB/queue probes là read-only và dùng live worker
-observations; không gọi run_one/recover cạnh workers đang chạy. Chỉ dùng khi chưa
-có jobs/runs/exports; sau user import, verify từ chối thay vì xử lý việc thật.
+Owner/Staff isolation/read denial, fresh committed holders/current Staff grants và
+preservation của business history hiện có. DB/queue probes là read-only và dùng live worker
+observations; không gọi run_one/recover cạnh workers đang chạy. Cho phép terminal history, từ chối khi có queued/running jobs/runs/exports;
+verify không consume việc thật và kiểm counts business tables giữ nguyên.
 Stop/start đã exercised trong C5 cần kiểm theo đúng source commit đã bàn giao. Nonempty job execution, SMTP gửi thật,
 browser FE flow và real-data quality chưa verified trên runtime này; acceptance
 lịch sử trên DB test không thay thế chúng.

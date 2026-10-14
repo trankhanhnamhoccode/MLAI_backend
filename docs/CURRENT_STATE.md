@@ -1,12 +1,21 @@
 # Current state
 
-## CURRENT FACT — C5 backend VERIFIED; demo upgrade PREPARED, browser PENDING
+## CURRENT FACT — C5 backend/runtime VERIFIED; browser PENDING
 
 C4 committed eabab333ee8738a0fa758b91f95a106d662edac6. Linked HTTP/PostgreSQL/
 fresh-session gate3+20 passed; migration/tooling/OpenAPI gate25 passed, no full suite.
 Origin main6f80735 đã nằm trong source, không conflict/engine delta; own test DB
 head0026/71 tables, limited role,0 application rows sau cleanup.
-C5 tổng thể chưa COMPLETE; runtime upgrade và merge/push còn chờ bước vận hành.
+Demo upgraded0024→0026 qua limited migrator sau verified custom backup (TOC/full
+payload/SHA256 + private config ngoài Git); row counts mọi bảng cũ giữ nguyên.
+Serving worktree committed `backend-main-integrated`, API HTTPS8103/Origin HTTPS5173,
+71 tables/72 operations/66 paths, Import/Planning/PDF/notification cùng một BE.
+Runtime role hạn chế, email/model OFF; TLS/Auth/current Store isolation/Today/inbox
+và direct DB/queue probes pass. Existing2 terminal import jobs được giữ nguyên;
+không thêm business facts, grant, account hoặc email. Cookie/login probes tạo session/
+security audit thông thường. C5 tổng thể chưa COMPLETE: browser E2E PENDING.
+Main đã tích hợp C1–C4/C5; source SHA/incarnation thực do launcher status báo,
+remote push result thuộc bàn giao conversation (không tự ghi hash commit chứa nó).
 [Commands, matrix, limits và browser checklist](runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5).
 
 ## HISTORICAL INFORMATION — C4 backend acceptance checkpoint
@@ -42,7 +51,7 @@ failure rồi affected case pass trong105; broad inventory gate51 passed/2 fixtu
 failures rồi affected cases pass. Không cộng trùng counts thành full-suite claim.
 Own DB/role/head0026/71 tables và flags OFF đã probe sau test cleanup.
 
-## CURRENT FACT — C1/C2 committed local; C3 actual receipts
+## HISTORICAL INFORMATION — C1/C2 local và C3 acceptance
 
 Worktree `backend-notifications-foundation`, branch `feat/notifications-foundation`
 from main `6f807357e107e504349a9b154c820bacdfffbe86`. C1 checkpoint commit local
@@ -80,7 +89,7 @@ Canonical scope/API/producers ở [notification contract](NOTIFICATION_API_CONTR
 commands và exact verification ở [runbook](runbooks/FULL_TEST_FLOW.md#notifications-c1).
 WIP backend9/Import15 giữ nguyên; C2 commit local; không push/merge hoặc đổi main/demo8103.
 
-## CURRENT FACT — bản tích hợp Import/Auth local
+## HISTORICAL INFORMATION — runtime tích hợp trước C5
 
 Branch `feat/integrate-import-auth` combines accepted Import126b0f2 and Auth0fbb979
 on common base b1ede89, retaining both source histories and leaving both source

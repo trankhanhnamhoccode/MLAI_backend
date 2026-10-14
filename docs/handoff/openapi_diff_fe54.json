@@ -354,7 +354,7 @@
     "/x-shelfcash-provenance"
   ],
   "previous_delivered_be": {
-    "sha256": "fae721a89957279697f11a13aa120ff33c0a85962c5585a06ce7bc43252254dd",
+    "sha256": "2cc31f79f96463e0f66a3070d2ae2f6d84a310c1beceb6e016fb420027190a05",
     "baseline": {
       "operations": 59,
       "paths": 55
@@ -592,6 +592,7 @@
       "/x-shelfcash-provenance/common_base",
       "/x-shelfcash-provenance/generated_at",
       "/x-shelfcash-provenance/import_commit",
+      "/x-shelfcash-provenance/manifest_algorithm",
       "/x-shelfcash-provenance/migration_head",
       "/x-shelfcash-provenance/operations",
       "/x-shelfcash-provenance/paths",

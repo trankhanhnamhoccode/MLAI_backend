@@ -38387,10 +38387,11 @@
     }
   },
   "x-shelfcash-provenance": {
-    "source_checkpoint": "eabab333ee8738a0fa758b91f95a106d662edac6",
-    "source_manifest_sha256": "254ab81eb1dd24ad4b7b14cb9793b630f3f49d80d4f308c93b798d90209a0c03",
+    "source_checkpoint": "31f90c74861cb54b00e14465ac2a18cd1c6ddf09",
+    "source_manifest_sha256": "802fb82166848b6e7e987b104f7911745ce432b3e22d80a80065b1f5746e411e",
+    "manifest_algorithm": "sorted path NUL SHA256(LF-normalized app/alembic Python bytes)",
     "migration_head": "0026_collaboration_requests",
-    "generated_at": "2026-10-14T08:29:57.486941+00:00",
+    "generated_at": "2026-10-14T08:38:09.246812+00:00",
     "source_only": true,
     "database_access": false,
     "workers": false,
@@ -38399,7 +38400,7 @@
     "previous_be_artifact": {
       "git_ref": "eabab333ee8738a0fa758b91f95a106d662edac6",
       "path": "docs/handoff/openapi.json",
-      "sha256": "fae721a89957279697f11a13aa120ff33c0a85962c5585a06ce7bc43252254dd",
+      "sha256": "2cc31f79f96463e0f66a3070d2ae2f6d84a310c1beceb6e016fb420027190a05",
       "operations": 59,
       "paths": 55
     }

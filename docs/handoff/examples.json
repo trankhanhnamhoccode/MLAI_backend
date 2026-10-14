@@ -353,7 +353,7 @@
   ],
   "c5_read_discovery": {
     "synthetic": true,
-    "source_checkpoint": "eabab333ee8738a0fa758b91f95a106d662edac6",
+    "source_checkpoint": "31f90c74861cb54b00e14465ac2a18cd1c6ddf09",
     "scope": "Data fragments validated with source DTOs; illustrative IDs, not runtime facts.",
     "today_forbidden": {
       "store_id": "00000000-0000-0000-0000-000000000001",
