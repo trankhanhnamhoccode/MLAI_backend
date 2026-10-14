@@ -1,5 +1,71 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="linked-acceptance-c5"></a>
+## CURRENT FACT — C5 backend acceptance VERIFIED; runtime upgrade PREPARED
+
+C4 checkpoint `eabab333ee8738a0fa758b91f95a106d662edac6`, gồm C1–C4 trên main
+base6f80735. Fetch origin không có main delta/conflict; một head0026, source72/66.
+C5 tổng thể chưa COMPLETE: browser E2E PENDING và cần đội FE/người dùng.
+Không SMTP/OpenRouter, không recipe split-report/AI/what-if hoặc policy mới.
+Runtime nâng cấp theo [luồng HTTPS8103](#integrated-demo-runtime); migration phải có
+backup verified và source committed sạch. Không chạy trực tiếp worktree tests/WIP.
+
+| Nhóm | Backend coverage và evidence kế thừa/bổ sung |
+| --- | --- |
+| A | PR subset union giữ menu.read; current grants, dispatcher → inbox/count/read, fresh receipts; replay sau revoke không regrant, inactive membership ẩn inbox/chặn target. |
+| B | Staff submit/current-sensitive reads → Owner queue/detail/N5 → notification/read → review/preview/commit riêng. C2 drift/retirement/revoke/fault/dispatch cases giữ nguyên; không coi notification là task decision. |
+| C | Excel/formN6 dedupe hai chiều, lost ACK, atomic writer, fresh stock/capture; bổ sung Today inventory/readiness giữ unknown và blocked actions khi thiếu facts. Purchase/planned history vẫn history-only, không stock. |
+| D | C4 pinned counters/raw/effects/aggregates, multi-source overlap/AND scopes, revision/digest và stale cursor; không cộng file totals thành batch total. |
+| E | Real Planning/PDF worker, retained evidence/labels và N9 local creator/date/captured budget → EX01 → N11 bytes/hash; live cap đổi không sửa history; revoke chặn discovery/download. GET không tạo job/render. |
+| F | Today section current guards/partial unavailable/snapshot; no GET solver/canonical writes, no fake zero/KPI. |
+
+### Commands và kết quả C5
+
+Chạy từ `backend-notifications-foundation` với DB `shelfcash_notifications_test` /
+`shelfcash_notifications_tester`, loopback5433. Không dùng profile demo cho pytest.
+Tests/reset DB chạy tuần tự; synthetic fixtures và fake delivery. Interpreter dùng
+venv hiện có, modules phải resolve theo worktree hiện hành (`python -m ...`).
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-notifications-foundation
+$c5Python = '..\backend-integrate-import-auth\.venv\Scripts\python.exe'
+& $c5Python -m pytest tests/integration/test_permission_requests.py::test_union_replay_after_revoke_and_atomic_notifications tests/integration/test_import_actual_receipts.py::test_excel_actual_receipt_shared_n6_identity_and_separate_commit tests/integration/test_planning_exports.py::test_real_pdf_winner_job_replay_download_and_font_proof -q --tb=short --show-capture=no
+& $c5Python -m pytest tests/integration/test_mapping_submissions.py tests/integration/test_import_actual_receipts.py::test_form_then_excel_reuses_receipt_without_new_inventory tests/integration/test_import_actual_receipts.py::test_receipt_uncertain_commit_reconciles_shared_ledger_without_repeat tests/integration/test_import_actual_receipts.py::test_receipt_updates_fresh_capture_and_keeps_retained_planning_run tests/integration/test_import_projections_c4.py tests/integration/test_discovery_c4.py tests/integration/test_planning_export_durability.py::test_staff_current_read_export_replay_worker_and_download_rights -q --tb=short --show-capture=no
+& $c5Python -m pytest tests/integration/test_integrated_migrations.py::test_demo_upgrade_0024_to_current_preserves_accounts_and_grants tests/integration/test_integrated_migrations.py::test_upgrade_from_each_branch_head_preserves_v3_grants_and_schema_parity tests/unit/test_integrated_demo.py tests/unit/test_integration_contract_snapshot.py tests/api/test_discovery_openapi.py -q --tb=short --show-capture=no
+```
+
+Kết quả lần lượt3 passed/28.82s,20 passed/105.49s,25 passed/9.30s;
+48 cases trong ba selections không overlap. Unit tooling19 cũng chạy riêng trước
+và sau refinement backup payload check (0.64s/0.73s); không cộng lại thành coverage mới.
+Đây là gate tổng hợp có chọn lọc cho linked/infrastructure milestone, không full suite.
+C4 focused24/affected191, C3/C2/C1 evidence phía dưới được tái dùng, không claim rerun.
+Fresh owned test probe sau cleanup: role hạn chế, head0026,71 tables,0 application rows,
+6 flags OFF. Không truy cập/reset các DB test nhánh khác.
+
+Fail→fix setup: PostgreSQL container cũ đang stopped → start lại đúng container;
+không đổi credentials/volume. Offline artifact helper lúc đầu resolve editable package
+của worktree cũ → pin current source root trước imports; generation cuối block DB/socket,
+validate DTO examples và đo đúng72/66. Staged secret scan ban đầu match callback URL
+vì tên setting chứa PASSWORD_RESET → phân biệt public callback URL với private values;
+không bỏ kiểm password/token/key thật. Không có behavioral test failure trong C5.
+
+### Browser checklist — PENDING, không phải backend API acceptance
+
+Dùng persona **Nam = Owner**, **Nguyên = Staff** tương ứng holders private; tên persona
+không tự đổi stored identity hoặc tạo account mới. Không copy credentials vào docs/FE.
+
+| Luồng browser cần FE/người dùng kiểm | Expected outcome / recovery |
+| --- | --- |
+| Login HTTPS, đổi Store, reload | Secure cookie/credentials include; Store khác404,401 login lại. Certificate phải trust; không tắt verification. |
+| Nguyên xin quyền, Nam approve subset | Refresh T02, unrelated grants còn; inbox/count/read cập nhật sau dispatcher.409/412 refetch/review, không replay bằng key mới để né CAS. |
+| Nguyên submit mapping, Nam request changes/approve | Mở current MQ03 từ notification; approval không báo import complete. Stale pins cần review/submit/preview mới, retired/revoked không tiếp tục bằng snapshot cũ. |
+| Excel actual → preview/commit → Kho/Today | Kiểm số lượng và receipt identity explicit; lost ACK retry cùng key; history/planned purchases không stock. Store thiếu config vẫn cần setup, không seed để xanh. |
+| Counters/raw cells/file-sheet filters | Dùng cùng revision/digest, hiểu unavailable/truncated và overlap; snapshot409 reload page1, không cộng totals giữa scope giao nhau. |
+| Planning → History → export/discovery/download | Creator/day theo Store zone, captured budget giữ nguyên; EX01 không tạo job. Missing/corrupt bytes cần explicit export mới nếu allowed;403 kiểm current grants. |
+| Today partial/blocked và logout | Forbidden/unavailable khác zero; không trigger solver từ GET; job queued kiểm worker status, không khởi động worker trùng. |
+
+Browser vẫn PENDING; không dùng intercepted responses hoặc TestClient để gọi là browser pass.
+
 <a id="read-discovery-c4"></a>
 ## CURRENT FACT — C4 Today và read discovery, source local
 
@@ -431,8 +497,8 @@ commands cũ; không thay commands đó sang collaboration source để vượt 
 <a id="integrated-demo-runtime"></a>
 ## CURRENT FACT — vận hành BE tích hợp HTTPS8103
 
-Chạy từ `D:\hocc_bk\ai\proj\projectMLAI\backend-integrate-import-auth`, branch
-`feat/integrate-import-auth`, source base `1f6135615e1bffd7251d9594d2cf2a0f1f40073f`.
+Chạy từ `D:\hocc_bk\ai\proj\projectMLAI\backend-main-integrated`, branch
+`main`, source committed gồm C1–C4 và C5 tooling. Status báo source_root/source_sha của process.
 Đây là launcher **chỉ BE**; không dùng `scripts/local-integration.ps1` của demo S4.11
 cho nhánh tích hợp. Launcher cũ dùng settings.json riêng và volume demo cũ, không .env
 mới. DB cũ shelfcash_integration_s411/head0017 cùng hai Store được giữ nguyên.
@@ -442,16 +508,17 @@ mới. DB cũ shelfcash_integration_s411/head0017 cùng hai Store được giữ
 Mở Docker Desktop, bảo đảm instance PostgreSQL hiện có đang chạy. Trong PowerShell:
 
 ```powershell
-Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-integrate-import-auth
-.\.venv\Scripts\python.exe -m scripts.integrated_demo status
-.\.venv\Scripts\python.exe -m scripts.integrated_demo start
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-main-integrated
+$demoPython = '..\backend-integrate-import-auth\.venv\Scripts\python.exe'
+& $demoPython -m scripts.integrated_demo status
+& $demoPython -m scripts.integrated_demo start
 # Khi cần dừng BE:
-.\.venv\Scripts\python.exe -m scripts.integrated_demo stop
+& $demoPython -m scripts.integrated_demo stop
 ```
 
 Expected status: DB `shelfcash_integration_demo`, role runtime, revisions
-`["0024_integrate_import_auth"]`,65 bảng. Trước start có thể stopped; sau start là
-running, import_alive/planning_alive/pdf_alive=true, email_enabled=false.
+`["0026_collaboration_requests"]`,71 bảng. Trước start có thể stopped; sau start là
+running, import_alive/planning_alive/pdf_alive/notification_alive=true, email_enabled=false.
 Start reuse đúng process do launcher sở hữu, không mở process trùng. Expected stop:
 `Owned BE and lifespan workers stopped; DB/data preserved` hoặc already stopped.
 Không reset/migrate/seed khi chạy hằng ngày. Launcher không khởi động/dừng FE.
@@ -487,10 +554,12 @@ Clone/máy mới cần operator cấu hình instance và test credentials đúng
 profile không tự tạo instance/test DB, không dùng runtime secrets của người khác.
 
 ```powershell
-Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-integrate-import-auth
-# Chỉ nếu chưa có venv/dependencies:
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-main-integrated
+$demoPython = '..\backend-integrate-import-auth\.venv\Scripts\python.exe'
+# Chỉ máy mới chưa có venv/dependencies:
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e '.[dev]'
+$demoPython = '.\.venv\Scripts\python.exe'
+& $demoPython -m pip install -e '.[dev]'
 # Chỉ nếu chưa có .env; sửa TEST_DATABASE_URL qua editor local trước init:
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
@@ -499,16 +568,17 @@ Template .env.example dùng shelfcash_test, cần đổi sang integration test D
 được cấp riêng; không in connection URL/password. Khi prerequisites đã đúng:
 
 ```powershell
-.\.venv\Scripts\python.exe -m scripts.integrated_demo init
-.\.venv\Scripts\python.exe -m scripts.integrated_demo migrate
-.\.venv\Scripts\python.exe -m scripts.integrated_demo start
-.\.venv\Scripts\python.exe -m scripts.integrated_demo_accounts provision
+& $demoPython -m scripts.integrated_demo init
+& $demoPython -m scripts.integrated_demo backup-upgrade
+& $demoPython -m scripts.integrated_demo migrate
+& $demoPython -m scripts.integrated_demo start
+& $demoPython -m scripts.integrated_demo_accounts provision
 ```
 
 Init giữ credentials/cert/DB đã sở hữu, từ chối DB/role đã tồn tại không có private
 ownership credentials. Migrate kiểm current_database/current_user/marker/owner/role
-trước Alembic và chỉ upgrade tới head0024; không drop/reset/seed. Sau migration,
-runtime có65 bảng (64 application + Alembic). Migration credentials không dùng
+trước Alembic và chỉ upgrade tới single head của source graph (hiện0026); không drop/reset/seed. Sau migration,
+runtime có71 bảng (70 application + Alembic). Migration credentials không dùng
 cho process BE. Chạy init lại chỉ khôi phục profile demo, giữ TEST_DATABASE_URL;
 không dùng để ghi đè tùy biến một môi trường khác.
 
@@ -517,6 +587,36 @@ PID/birth/run_id, worker observations và matched exit nằm private. Stop coope
 qua Uvicorn/lifespan, join workers; không forced kill. UNKNOWN/reused PID bị từ chối.
 DB/volume/audit/credentials giữ sau stop. Status kiểm DB identity/head/schema và
 incarnation/worker observation mới; health chỉ là liveness.
+
+### Upgrade demo hiện có — không reset
+
+C5 chuyển source serving sang `backend-main-integrated` committed sạch. Private config,
+accounts/cert và app storage được copy có chọn lọc từ worktree tích hợp; credentials,
+Origin/callback và business facts giữ nguyên. Không chạy init/provision để đổi existing
+accounts/grants. Không dùng `.env` tests của worktree notifications để phục vụ demo.
+Launcher start từ chối source WIP hoặc reuse process đang chạy snapshot SHA khác.
+
+Trước migrate: kiểm connected database/user/marker/limited role, pending/running jobs;
+backup-upgrade dùng custom pg_dump, verify TOC/full payload/SHA-256 và lưu counts cùng
+private config ngoài Git tại sibling `.shelfcash-private-backups`. Backup không ZIP.
+Stop đúng owned process và kiểm không còn work; migrate từ chối live/UNKNOWN process,
+backup thiếu/hỏng/row counts thay đổi, source SHA/root khác hoặc unknown migration.
+Alembic dùng migrator riêng, sau upgrade kiểm head/schema và giữ counts các bảng cũ;
+runtime tiếp tục limited role. Không stamp/downgrade tự động hoặc đụng DB khác.
+
+```powershell
+# Sau khi đã chọn worktree/interpreter như luồng hằng ngày:
+& $demoPython -m scripts.integrated_demo backup-upgrade
+& $demoPython -m scripts.integrated_demo stop
+& $demoPython -m scripts.integrated_demo migrate
+& $demoPython -m scripts.integrated_demo start
+& $demoPython -m scripts.integrated_demo_accounts verify
+```
+
+Nếu work phát sinh sau backup hoặc backup source không khớp, dừng ở guard và tạo backup
+mới sau quiescence; không bỏ guard. Khi upgrade fail, giữ archive/config/error evidence,
+đối chiếu transactional schema trước controlled recovery; không restore đè DB đang dùng.
+Daily start/status/stop không migrate hoặc tạo backup mới.
 
 ### Trust certificate một lần và yêu cầu FE
 
@@ -564,7 +664,7 @@ Provision không reset password hoặc khôi phục grants đã revoke cho accou
 Store trống, cần import/configuration/completeness có nguồn; không tạo business facts,
 default budget/readiness hay operational fixtures để làm xanh.
 
-Import/Planning/PDF bật trong một process BE; idle dependency calls kiểm đúng DB,
+Import/Planning/PDF/notification bật trong một process BE; idle dependency calls kiểm đúng DB,
 runtime writable và thread observation. Không chạy worker thứ hai trên DB này.
 OpenRouter/Qwen OFF, không live model call. SMTP fields có thể được init tái sử dụng
 từ ignored .env của backend-auth-self-service; Auth email delivery giữ OFF và không
@@ -578,17 +678,17 @@ invitation workflow E2E. Lượt hoàn thiện/merge không gửi email hoặc m
 ### Kiểm chứng BE — không browser E2E/full acceptance
 
 ```powershell
-.\.venv\Scripts\python.exe -m scripts.integrated_demo_accounts verify
-.\.venv\Scripts\python.exe -m pytest tests/unit/test_integrated_demo.py tests/unit/test_database_config.py tests/api/test_auth_openapi.py tests/api/test_staff_openapi.py -q --tb=short --show-capture=no
+& $demoPython -m scripts.integrated_demo_accounts verify
+& $demoPython -m pytest tests/unit/test_integrated_demo.py tests/unit/test_database_config.py tests/api/test_auth_openapi.py tests/api/test_staff_openapi.py -q --tb=short --show-capture=no
 ```
 
-Verify dùng certificate trust rõ ràng; kiểm HTTPS health/OpenAPI59 operations/55
+Verify dùng certificate trust rõ ràng; kiểm HTTPS health/OpenAPI đo từ source, hiện72 operations/66
 paths, exact CORS preflight và wrong Origin/HTTP5173 rejection, login/me/cookie/CSRF,
 Owner/Staff isolation/read denial, fresh committed accounts/memberships/grants và
 absence operational facts. DB/queue probes là read-only và dùng live worker
 observations; không gọi run_one/recover cạnh workers đang chạy. Chỉ dùng khi chưa
 có jobs/runs/exports; sau user import, verify từ chối thay vì xử lý việc thật.
-Stop/start đã exercised trước lượt merge. Nonempty job execution, SMTP gửi thật,
+Stop/start đã exercised trong C5 cần kiểm theo đúng source commit đã bàn giao. Nonempty job execution, SMTP gửi thật,
 browser FE flow và real-data quality chưa verified trên runtime này; acceptance
 lịch sử trên DB test không thay thế chúng.
 

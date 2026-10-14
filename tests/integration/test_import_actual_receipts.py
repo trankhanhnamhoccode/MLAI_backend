@@ -65,6 +65,13 @@ def test_excel_actual_receipt_shared_n6_identity_and_separate_commit(fresh_store
     inventory=context[0][5].get(path);assert inventory.status_code==200,inventory.text
     assert inventory.json()['data']['on_hand_quantity']=='1.25'
     assert inventory.json()['data']['stock_completeness']=='UNKNOWN'
+    today=context[0][5].get(f'/api/v1/stores/{context[1].store_id}/today',params={'section':'inventory,readiness'})
+    assert today.status_code==200,today.text
+    sections=today.json()['data']['sections']
+    assert sections['inventory']['completeness']=='unknown'
+    assert sections['inventory']['value']['items'][0]['usable_quantity']=='1.25'
+    assert sections['readiness']['availability']=='available'
+    assert any(not action['can_execute'] for action in sections['readiness']['value']['actions'])
     body={k:v for k,v in record.items() if k!='source_record_id'}
     body.update(origin='ACTUAL_RECEIPT',ingredient_id=ingredient,receipt_identity=dict(source_system_key='RECEIPTS',source_record_id='DELIVERY-1'),
         expected_inventory_version='retained-replay-precedes-CAS')

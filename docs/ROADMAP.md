@@ -2,6 +2,11 @@
 
 ## CURRENT FACT
 
+C5 backend linked acceptance VERIFIED (3+20 cases, migration/tooling gate25);
+C4 checkpoint eabab333. Runtime upgrade PREPARED, browser E2E PENDING, nên C5 tổng thể
+chưa COMPLETE. Source72/66/head0026; R05/R09 implemented, R10 deferred.
+Xem [canonical C5 matrix/commands](runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5).
+
 C1 notification foundation committed locally at f85c7cdd on `feat/notifications-foundation`;
 C2 COMPLETE backend acceptance committed locally at b9fe048a6c64ffb79438068076ee3e9d99d75fda.
 C3 COMPLETE backend acceptance, local commit b1c906a0ea65a3b20a46d161166668d26701f0a9; final targeted105 passed,
@@ -54,7 +59,7 @@ to [Auth feature](features/AUTH_SESSION.md#local-gmail-smokedemo-profile).
 | C1 | COMPLETE backend foundation, local commit f85c7cdd | NF01–NF03; durable intent/dispatcher/read receipt, N13 atomic producer, historical DB0025 and25 C1 cases plus affected regressions; no push/merge |
 | C2 | COMPLETE backend acceptance, local commit b9fe048 | PR01–PR04 union/grants/audit/receipt; MQ01–MQ03 full-spec pins, N5 queue decisions, current target rights and atomic producers; own DB0026; verification/limits in FULL_TEST_FLOW; no browser/runtime8103 upgrade |
 | C3 | COMPLETE backend acceptance, local commit b1c906a | Fifteenth schema inventory_receipts; shared N6 writer/identity, typed effects/completion and current guards; no new route/grant/migration, retained head0026; targeted HTTP/PG verification in [runbook](runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3); browser/demo8103 pending |
-| C4 | COMPLETE backend acceptance A–F, WIP for review | D01/SU01/EX01; I04/M01/M02/N9 extensions; source72/66, no catalogue/migration change; final focused24/related191 passed, commands/limits in FULL_TEST_FLOW; no full-suite/live runtime/browser claim |
+| C4 | COMPLETE backend acceptance A–F, checkpoint eabab333 | D01/SU01/EX01; I04/M01/M02/N9 extensions; source72/66, no catalogue/migration change; final focused24/related191 passed, commands/limits in FULL_TEST_FLOW; no full-suite/live runtime/browser claim |
 
 These are functional checkpoints, not a claim each is a Git commit or every route
 passed a fresh full suite. Current runtime/debt is in [CURRENT_STATE](CURRENT_STATE.md).

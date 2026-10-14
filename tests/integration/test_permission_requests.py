@@ -63,6 +63,17 @@ def test_union_replay_after_revoke_and_atomic_notifications(staff_env):
         assert fresh.scalar(select(func.count()).select_from(NotificationIntent))==2
     target_session(ctx)
     assert 'sales.read' in ctx[0][5].get(f'/api/v1/stores/{ctx[2].store_id}').json()['data']['membership']['effective_permissions']
+    from tests.integration.test_notifications import dispatcher, patch
+    from app.models.notifications import NotificationRecord
+    assert dispatcher(ctx[0]).dispatch()==2
+    wire=ctx[0][5].get('/api/v1/notifications').json()
+    item=wire['data']['items'][0]
+    assert item['event_type']=='permission_request.approved' and item['link']
+    assert ctx[0][5].get('/api/v1/notifications/unread-count',params={'snapshot_id':wire['meta']['snapshot_id']}).json()['data']['unread_count']==1
+    assert patch(ctx[0],item,True).status_code==200
+    assert ctx[0][5].get('/api/v1/notifications/unread-count').json()['data']['unread_count']==0
+    with Session(ctx[0][1]) as fresh:
+        assert fresh.get(NotificationRecord,UUID(item['notification_id'])).read_at is not None
     owner_session(ctx)
     current=ctx[1].memberships(ctx[4],ctx[2].store_id)[0].items[0]
     from app.application.contracts.staff import GrantsRequest
@@ -70,6 +81,16 @@ def test_union_replay_after_revoke_and_atomic_notifications(staff_env):
     assert approve(ctx,row,key=decision_key).json()['data']==result
     with Session(ctx[0][1]) as fresh:
         assert set(fresh.scalars(select(MembershipGrant.permission).where(MembershipGrant.membership_id==member.membership_id)))=={'menu.read'}
+    from app.models import StoreMembership
+    with Session(ctx[0][1]) as fresh:
+        fresh.get(StoreMembership,member.membership_id).active=False
+        fresh.commit()
+    target_session(ctx)
+    assert ctx[0][5].get('/api/v1/notifications').json()['data']['items']==[]
+    assert ctx[0][5].get('/api/v1/notifications/unread-count').json()['data']['unread_count']==0
+    assert ctx[0][5].get(f'/api/v1/stores/{ctx[2].store_id}/permission-requests/{row["request_id"]}').status_code==404
+    with Session(ctx[0][1]) as fresh:
+        assert fresh.get(NotificationRecord,UUID(item['notification_id'])).read_at is not None
 
 
 def test_intent_failure_rolls_back_decision_grant_audit_receipt(staff_env,monkeypatch):

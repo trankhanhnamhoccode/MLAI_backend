@@ -114,7 +114,7 @@ def verify() -> None:
         guard(engine,ROLE)
         # Dependencies are probed directly with empty queues. No hidden job/business creation.
         with engine.connect() as c:
-            for table in ('import_jobs', 'planning_runs', 'planning_exports'):
+            for table in ('import_jobs', 'planning_runs', 'planning_exports', 'notification_intents'):
                 if c.scalar(text('SELECT count(*) FROM '+table)):
                     raise ValueError('Idle dependency probe requires a demo with no jobs/runs/exports')
         # Never call run_one/recover beside live workers: a newly queued user job
@@ -126,8 +126,10 @@ def verify() -> None:
             assert wire.get('/health').status_code==200
             schema=wire.get('/openapi.json').json()
             methods={'get','post','put','patch','delete','options','head','trace'}
-            assert len(schema['paths'])==55
-            assert sum(len(methods & set(item)) for item in schema['paths'].values())==59
+            from app.main import create_app
+            expected=create_app(s).openapi()
+            assert schema==expected
+            inventory=(sum(len(methods & set(item)) for item in schema['paths'].values()),len(schema['paths']))
             for origin,allowed in ((ORIGIN,True),('https://untrusted.example',False),('http://localhost:5173',False)):
                 r=wire.options('/api/v1/auth/login',headers={'Origin':origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'content-type'})
                 assert (r.headers.get('access-control-allow-origin')==origin)==allowed
@@ -161,6 +163,14 @@ def verify() -> None:
                 if name=='staff':
                     assert read['membership']['effective_permissions']==['menu.read']
                     assert client.http.get(main+'/inventory').status_code==403
+                today=client.request('GET',main+'/today').json()['data']['sections']
+                if name=='staff':
+                    assert today['inventory']['availability']=='forbidden'
+                else:
+                    assert today['inventory']['completeness']=='unknown'
+                    assert any(not action['can_execute'] for action in today['readiness']['value']['actions'])
+                assert client.request('GET','/api/v1/notifications').json()['data']['items']==[]
+                assert client.request('GET','/api/v1/notifications/unread-count').json()['data']['unread_count']==0
             missing=client.http.post('/api/v1/auth/logout',headers={'Origin':ORIGIN})
             assert missing.status_code==403
         # Fresh connection verifies committed authority plus absence of operational facts.
@@ -172,9 +182,9 @@ def verify() -> None:
             for table in ('products','ingredients','inventory_movements','planning_runs','import_jobs'):
                 assert c.scalar(text('SELECT count(*) FROM '+table))==0
         workers=json.loads((PRIVATE/'workers.json').read_text())
-        assert all(workers[k] for k in ('import_alive','planning_alive','pdf_alive'))
+        assert all(workers[k] for k in ('import_alive','planning_alive','pdf_alive','notification_alive'))
         assert not workers['email_enabled']
-        print('Verified HTTPS/TLS, OpenAPI59/55, exact CORS/Origin, secure cookie, login/me/CSRF/isolation, read-only DB/queue probes, worker observations and fresh committed state. No browser E2E or real email.')
+        print(f'Verified HTTPS/TLS, OpenAPI{inventory[0]}/{inventory[1]}, exact CORS/Origin, secure cookie, login/me/CSRF/isolation, Today/inbox, read-only DB/queue probes, four worker observations and fresh committed state. No browser E2E or real email.')
     finally:
         for client in clients: client.close()
         engine.dispose()

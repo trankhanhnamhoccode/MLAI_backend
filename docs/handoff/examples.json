@@ -350,5 +350,44 @@
       },
       "scope": "Typed source/field fragment; not a complete HTTP response or standalone request"
     }
-  ]
+  ],
+  "c5_read_discovery": {
+    "synthetic": true,
+    "source_checkpoint": "eabab333ee8738a0fa758b91f95a106d662edac6",
+    "scope": "Data fragments validated with source DTOs; illustrative IDs, not runtime facts.",
+    "today_forbidden": {
+      "store_id": "00000000-0000-0000-0000-000000000001",
+      "sections": {
+        "inventory": {
+          "availability": "forbidden",
+          "value": null,
+          "updated_at": null,
+          "completeness": "unknown",
+          "reason_codes": [
+            "PERMISSION_DENIED"
+          ],
+          "source": null
+        },
+        "imports": null,
+        "mapping": null,
+        "permissions": null,
+        "readiness": null,
+        "planning": null
+      }
+    },
+    "supplier_no_match": {
+      "items": []
+    },
+    "captured_budget_known_zero": {
+      "availability": "available",
+      "limit": "0",
+      "currency": "VND"
+    },
+    "requests": {
+      "today": "GET /api/v1/stores/{store_id}/today?section=inventory,readiness&limit=5",
+      "supplier": "GET /api/v1/stores/{store_id}/suppliers?q=nha&active=true&limit=50",
+      "history": "GET /api/v1/stores/{store_id}/procurement-plans?created_by_user_id={user_id}&created_date_from=2026-10-14&created_date_to=2026-10-14",
+      "exports": "GET /api/v1/stores/{store_id}/procurement-plans/{plan_id}/exports?limit=50"
+    }
+  }
 }

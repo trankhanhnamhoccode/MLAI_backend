@@ -1,8 +1,17 @@
 # Current state
 
-## CURRENT FACT — C4 COMPLETE backend acceptance, local source WIP
+## CURRENT FACT — C5 backend VERIFIED; demo upgrade PREPARED, browser PENDING
 
-C3 checkpoint b1c906a0ea65a3b20a46d161166668d26701f0a9; C4 chưa commit.
+C4 committed eabab333ee8738a0fa758b91f95a106d662edac6. Linked HTTP/PostgreSQL/
+fresh-session gate3+20 passed; migration/tooling/OpenAPI gate25 passed, no full suite.
+Origin main6f80735 đã nằm trong source, không conflict/engine delta; own test DB
+head0026/71 tables, limited role,0 application rows sau cleanup.
+C5 tổng thể chưa COMPLETE; runtime upgrade và merge/push còn chờ bước vận hành.
+[Commands, matrix, limits và browser checklist](runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5).
+
+## HISTORICAL INFORMATION — C4 backend acceptance checkpoint
+
+C3 checkpoint b1c906a0ea65a3b20a46d161166668d26701f0a9; C4 checkpoint eabab333.
 Source72 operations/66 paths: giữ69 locators C3, thêm GET D01/SU01/EX01;
 extensions I04/M01/M02/N9. Catalogue permissions-v3/43, head0026/71 tables giữ nguyên.
 Today section authorization/partial snapshots, canonical supplier picker, scoped
@@ -12,7 +21,7 @@ data hoặc render PDF. Current/pinned sensitive reads vẫn áp whole response.
 Owned notifications test DB duy nhất, provider/email OFF; main/demo8103/WIP nguồn
 giữ nguyên. Commands, coverage, fail→fix/query evidence và limits ở
 [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#read-discovery-c4). Không full-suite,
-browser, runtime8103 upgrade hoặc production SLA claim. C5 chưa mở scope.
+browser, runtime8103 upgrade hoặc production SLA claim. C5 current acceptance/runtime status thuộc phần đầu.
 Final C4 focused24 passed; affected C1–C3/stock/history/PDF/readiness/DTO/query-boundary
 regression191 passed. Own DB/role/head0026/71 tables/flags OFF đã kiểm sau cleanup.
 Giữ technical limits Recipe ID not_reserved và absent-evidence budget projector;
