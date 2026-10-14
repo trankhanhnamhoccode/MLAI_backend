@@ -2,7 +2,7 @@
 
 ## Authority and current surface
 
-CURRENT FACT C2: source OpenAPI has69 operations/64 paths (68 core plus health),
+CURRENT FACT C3: source OpenAPI has69 operations/64 paths (68 core plus health),
 registered by `app/main.py`. `/openapi.json` and source Pydantic DTOs are the
 structural reference. `GET /health` returns status=ok/service=shelfcash-backend;
 it is liveness, not DB/business readiness. `/docs` and `/redoc` are disabled.
@@ -97,7 +97,7 @@ thay thế phần tương lai đúng scope, không sửa source/generated OpenAP
 | [Yêu cầu quyền](AUTHORIZATION_CONTRACT_VI.md#permission-requests) | IMPLEMENTED C2: PR01–PR04, Staff own requests/catalogue, Owner union subset. N12–N14 giữ grants/audit authority. |
 | [Inbox](NOTIFICATION_API_CONTRACT_VI.md#notification-v1) | IMPLEMENTED C1/C2: inbox/count/read, atomic N13/PR/MQ producers và current target authorization; không approve qua notification. |
 | [Mapping queue](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-queue) | IMPLEMENTED C2: MQ01–MQ03 explicit submit/withdraw, Store queue, pinned detail; N5 request_changes và submission fences. |
-| [Excel actual receipt](IMPORT_MAPPING_API_CONTRACT_VI.md#excel-actual-receipt) | DESIGN_READY schema/consumer trong pipeline hiện hữu; I01–I06/J01 và N6 IMPLEMENTED. |
+| [Excel actual receipt](IMPORT_MAPPING_API_CONTRACT_VI.md#excel-actual-receipt) | IMPLEMENTED C3 schema/typed effects/completion trong pipeline hiện hữu; I01–I06/J01 và N6 dùng cùng receipt writer/ledger, không route/grant mới. |
 | [Counters/preview](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-projections) | M01/M02/I04 IMPLEMENTED; counters có scope/origin mới và detailed projection DESIGN_READY. |
 | [Today/supplier picker](#today-operations) | DESIGN_READY: D01/SU01; V01–V04/R01/C03/H02 reads IMPLEMENTED, không giả Today đã tồn tại. |
 | [Run history/export discovery](PROCUREMENT_API_CONTRACT_VI.md#planning-discovery) | N9/N10/N11/J01 IMPLEMENTED; N9 creator/date filters và EX01 DESIGN_READY. |

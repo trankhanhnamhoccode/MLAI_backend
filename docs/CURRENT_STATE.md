@@ -1,10 +1,23 @@
 # Current state
 
-## CURRENT FACT — C1 committed local; C2 COMPLETE backend, local checkpoint
+CURRENT FACT C3 COMPLETE backend acceptance: Excel `inventory_receipts` là schema thứ15, dùng cùng N6
+`InventoryReceipts`/receipt ledger; không thêm endpoint, permission hoặc migration.
+Source giữ69 operations/64 paths, permissions-v3/43, head0026/71 tables.
+Typed receipt preview/effect/completion, exact identity replay/conflict, C2 MQ/N5
+review và current grants/fences nối atomic Import. Không tự khai completeness,
+supplier/cost/date hoặc thay retained PlanningRun. C3 chưa commit; phạm vi kiểm
+chứng và command tại [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3).
+Main/demo8103/DB cũ giữ nguyên; browser E2E chưa chạy.
+Final targeted gate105 passed; C1/C2/field/history regression196 passed/1 fixture
+failure rồi affected case pass trong105; broad inventory gate51 passed/2 fixture
+failures rồi affected cases pass. Không cộng trùng counts thành full-suite claim.
+Own DB/role/head0026/71 tables và flags OFF đã probe sau test cleanup.
+
+## CURRENT FACT — C1/C2 committed local; C3 actual receipts
 
 Worktree `backend-notifications-foundation`, branch `feat/notifications-foundation`
 from main `6f807357e107e504349a9b154c820bacdfffbe86`. C1 checkpoint commit local
-`f85c7cdd7d9529404f5fd28e06f9156e97bb803e`; C2 checkpoint local theo yêu cầu; chưa merge/push.
+`f85c7cdd7d9529404f5fd28e06f9156e97bb803e`; C2 commit `b9fe048a6c64ffb79438068076ee3e9d99d75fda`; C3 WIP để review; chưa merge/push.
 Source NF01–NF03 + PR01–PR04/MQ01–MQ03: OpenAPI69 operations/64 paths,
 permissions-v3/43 giữ nguyên. Additive single head `0026_collaboration_requests`,
 70 application tables/71 với Alembic. Owned test DB

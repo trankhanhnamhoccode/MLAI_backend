@@ -22,10 +22,10 @@ def semantic_configuration(value):
 def changes_declaration_dependency(rows, declaration):
     """Same-batch explicit canonical writes invalidate a previous declaration hash."""
     for row in rows:
-        if row.blockers or row.after is None or row.proposed_action == "NO_OP":continue
+        if row.blockers or row.after is None or row.proposed_action in {"NO_OP","REUSE_RECEIPT"}:continue
         value=row.after
         if declaration.kind=="INVENTORY":
-            if value.domain in {"inventory_count", "opening_stock"} and value.ingredient_id==declaration.ingredient_id:return True
+            if value.domain in {"inventory_count", "opening_stock", "inventory_receipts"} and value.ingredient_id==declaration.ingredient_id:return True
             if value.domain=="ingredients" and any(r.canonical_id==declaration.ingredient_id for r in row.entity_refs):return True
         elif declaration.kind=="SALES_COVERAGE":
             if value.domain=="sales" and value.product_id in declaration.product_ids and declaration.from_date<=value.sales_date<=declaration.to_date:return True
@@ -147,6 +147,8 @@ def finish_configurations(rows, specs, snapshot, normalized, now, store_timezone
             if isinstance(d,domains.InventoryDeclaration):
                 counts={str(r.after.lot_id):r.after for r in rows if r.after and r.after.domain=="inventory_count" and not r.blockers}
                 openings={str(r.after.lot_id):r.after for r in rows if r.after and r.after.domain=="opening_stock" and not r.blockers}
+                openings.update({str(r.receipt_effect.lot_id):r.after for r in rows if r.after and r.after.domain=='inventory_receipts'
+                    and r.receipt_effect and not r.blockers})
                 from decimal import Decimal
                 actual={r["id"] for r in snapshot["inventory_lots"] if r["ingredient_id"]==str(d.ingredient_id)} | {
                     key for key,value in openings.items() if value.ingredient_id==d.ingredient_id}

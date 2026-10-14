@@ -1,6 +1,6 @@
 # Inventory schemas Import hiện hành — khảo sát field-by-field
 
-CURRENT FACT: inventory xuất từ mười bốn typed SOURCE_MODELS, gồm opening_stock và bốn miền history-only A2, không registry legacy. Đây là bảng inventory của **mọi schema**, không riêng nghiệp vụ kho. Schema/row validation là authority; descriptors không tạo capability writer. ACCEPTED DECISION: sáu workbook demo là bộ kiểm thử, không định nghĩa schema hệ thống. Đối chiếu nghiệp vụ dựa trên [legacy handoff](../../IMPORT_SCHEMA_LEGACY_HANDOFF_VI.md); implementation/consumer của legacy là HISTORICAL INFORMATION, không authority cho bản mới.
+CURRENT FACT: inventory xuất từ mười lăm typed SOURCE_MODELS, gồm opening_stock và bốn miền history-only A2, không registry legacy. Đây là bảng inventory của **mọi schema**, không riêng nghiệp vụ kho. Schema/row validation là authority; descriptors không tạo capability writer. ACCEPTED DECISION: sáu workbook demo là bộ kiểm thử, không định nghĩa schema hệ thống. Đối chiếu nghiệp vụ dựa trên [legacy handoff](../../IMPORT_SCHEMA_LEGACY_HANDOFF_VI.md); implementation/consumer của legacy là HISTORICAL INFORMATION, không authority cho bản mới.
 
 ## Cách đọc và nguồn giá trị
 
@@ -8,7 +8,7 @@ CURRENT FACT: inventory xuất từ mười bốn typed SOURCE_MODELS, gồm ope
 - Cột Excel có thể chứa tên/mã nguồn thay UUID: approved IdentityRule/alias/reservation resolve sang canonical UUID; lot count phải existing và duy nhất, opening_stock giữ reserved lot ID đến commit. Không yêu cầu người dùng biết UUID.
 - CURRENT FACT: explicit scalar sources theo allowlist đã triển khai. `build_spec` nhận column/shared rule; missing IMPORT_VALUE vẫn blocked. Required row value không buộc cột vật lý. Generic arbitrary JSON/nested/context injection vẫn chưa có; không hạ validation/bịa defaults. Xem [feature](IMPORT_FIELD_VALUE_BINDINGS.md) và [allowlist/evidence](../runbooks/FULL_TEST_FLOW.md).
 - Store/actor/import/file/row IDs, package/profile versions, clock/currency comparison đến từ server/session/context/binding, không business columns bắt buộc của Excel. Bảng metadata context ở dưới tách chúng khỏi row schemas.
-- Mười bốn schemas có retained preview/canonical writer; opening_stock dùng InventoryUseCases và InventoryReceiptRecord của N6, inventory_count chỉ existing lots. Mixed batch atomic, dependencies toàn batch gồm master/reservation rows. Excel actual receipts chưa triển khai; purchase_history A2 chỉ record-only. Chi tiết [setup/opening contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#setup-identity-excel-opening-stock-và-lot-count--current-fact).
+- Mười lăm schemas có retained preview/canonical writer; opening_stock dùng InventoryUseCases và InventoryReceiptRecord của N6, inventory_count chỉ existing lots. Mixed batch atomic, dependencies toàn batch gồm master/reservation rows. C3 inventory_receipts dùng cùng InventoryReceipts/N6 ledger và có typed effects/completion; purchase_history A2 chỉ record-only. Chi tiết [setup/opening contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#setup-identity-excel-opening-stock-và-lot-count--current-fact).
 
 ## Bảng toàn bộ fields
 
@@ -143,6 +143,37 @@ Không suy completeness từ có lot; ScopeDeclarationRecord và operational/2 d
 | `currency` | required ISO currency exact Store | column / PROFILE_CONSTANT / IMPORT_VALUE | không FX |
 | `observed_at` | required aware timestamp≤now, current stock evidence | column / IMPORT_VALUE | opening as-of khác received date/upload date |
 | `reason` | required nonblank1..1000 | column / IMPORT_VALUE | justified opening movement |
+
+### `inventory_receipts` — Hàng thực nhận C3
+
+CURRENT FACT: `ActualReceiptSource` → `ActualReceiptValue` → shared
+`InventoryReceipts`/N6 writer, atomic cùng toàn import. SourceContext/ProfileSpec
+khai actual_receipt; source namespace và source_record_id là business identity.
+`domain`, origin ACTUAL_RECEIPT và receipt_identity được system ghép từ schema,
+reviewed namespace và source row; không nhận origin giả opening.
+Không có facts mặc định; keys nullable vẫn bắt buộc có null explicit.
+
+| Source field | Validation / meaning | Shared scope |
+| --- | --- | --- |
+| source_record_id | Nonblank1..128, stable external receipt line identity | None |
+| ingredient_id | Scoped Ingredient binding; base-unit/expiry policy live | None |
+| supplier_id | Scoped Supplier hoặc null | IMPORT_VALUE |
+| lot_code | Nonblank1..128 hoặc null; label không phải identity | None |
+| quantity | Exact decimal text >0; không suy từ count/history | None |
+| unit | Exact Ingredient base unit hoặc supported physical conversion có evidence | PROFILE_CONSTANT / IMPORT_VALUE |
+| received_date | Known date≤Store today hoặc null; không upload fallback | IMPORT_VALUE |
+| expiry_date | Date hoặc null; mandatory khi Ingredient tracked, ≥known received_date | IMPORT_VALUE |
+| unit_cost | Money text hoặc null; known0 hợp lệ; inverse quantity conversion | IMPORT_VALUE |
+| currency | Exact Store currency, không FX | PROFILE_CONSTANT / IMPORT_VALUE |
+| observed_at | Explicit aware ISO timestamp≤now; không numeric/serial/date-only | IMPORT_VALUE |
+| reason | Nonblank1..1000; source fact của receipt | IMPORT_VALUE |
+
+Typed preview `receipt_effect` giữ stable planned IDs; completion có
+`receipt_reference` và committed effect. Same identity/payload reuse, different
+payload conflict, batch duplicates coalesce giữ mọi location/provenance; absent
+file không delete. Positive replay quantity là historical movement, không ghi mới.
+Chi tiết permissions/late receipt/current fences do
+[Import §16](../IMPORT_MAPPING_API_CONTRACT_VI.md#excel-actual-receipt) sở hữu.
 
 ### `recipes` — Công thức
 
@@ -338,7 +369,7 @@ Bảng gồm fields, discriminator, nested structured values và context metadat
 | business_constraints | Một phần contract, không parity registry | chỉ scope_declarations tagged kinds đã hỗ trợ; không generic arbitrary constraint engine. Persistence S4.6; kinds khác OPEN. |
 | inventory snapshot của legacy | CURRENT FACT: count và opening tách semantics | inventory_count chỉ target existing lot; opening_stock dedicated intake dùng approved identity/units, không legacy auto-create theo spelling/batch label. |
 | Opening stock | CURRENT FACT: Excel intake nối writer/consumer | opening_stock → reviewed Ingredient/Supplier + physical lot facts → preview/frozen effects → InventoryUseCases + receipt identity/audit → lot/count movement → scoped completeness → readiness/operational2 planning. |
-| Actual goods receipts | N6 public lifecycle đã có; chưa dedicated Import schema | N6 ACTUAL_RECEIPT: lô thực nhận + RECEIPT. N6 có identity/actor/CAS/HTTP; internal receive giữ standalone ownership. S4.6; optional Excel intake cần thiết kế riêng đã freeze, không map inventory_count. |
+| Actual goods receipts | IMPLEMENTED C3 inventory_receipts trong pipeline hiện có | N6 và Excel cùng identity/ledger/InventoryReceipts; ACTUAL_RECEIPT tạo lot + RECEIPT, preview không ghi kho, không map inventory_count. |
 | purchase_history | CURRENT FACT A2: history-only | Typed exact price basis + quantity/unit + separate dates → preview/correction → immutable history revisions → I06 payload/version and H01/H02 category purchase. No inventory/term/inbound effects. |
 | usage_history | CURRENT FACT A2: history-only | Typed recorded quantity/unit/day/time → immutable history revisions → I06 and H01/H02 category usage. Not movement USAGE/BOM/waste reconciliation. |
 | calendar_features | CURRENT FACT A2: calendar_events and promotion_observations, history-only | Declared Store event period/known timestamp differs from observed Product/day promotion. Read I06 and history categories; no model features/weather/uplift/discount inference. |
@@ -349,11 +380,11 @@ Nguồn đối chiếu: [legacy handoff](../../IMPORT_SCHEMA_LEGACY_HANDOFF_VI.m
 
 ## Gaps có kế hoạch / OPEN
 
-- CURRENT FACT: `import_commit.py::SUPPORTED` và `write_rows` đã orchestrate cả mười bốn schemas, gồm opening_stock và A2. S4.5/S4.6 không còn là gaps persistence chung. Bounded scalar sources, immutable approved profiles, atomic commit và read-set/current-rights revalidation hiện có; API2xx/import completed vẫn không đủ chứng minh planning ready.
+- CURRENT FACT: `import_commit.py::SUPPORTED` và `write_rows` đã orchestrate cả mười lăm schemas, gồm opening_stock và A2. S4.5/S4.6 không còn là gaps persistence chung. Bounded scalar sources, immutable approved profiles, atomic commit và read-set/current-rights revalidation hiện có; API2xx/import completed vẫn không đủ chứng minh planning ready.
 - ACCEPTED DECISION: ưu tiên đóng chuỗi nghiệp vụ cốt lõi, giữ exact semantics, Owner approval/profile reuse và không port defaults/permissive conversions hoặc constraints chỉ lưu. Schema mới phải có validation, writer, consumer được enforce và readiness tương ứng trước khi gọi là hoàn thiện.
 - CURRENT FACT: Recipe serving/batch và Supplier price/MOQ source basis đã nối các canonical chains hiện có. Supplier physical MOQ dùng ceil điều kiện pack nguyên, giữ source MOQ; giá không làm tròn. Các limits/unsupported cases và FE projection thuộc [Import §13.2](../IMPORT_MAPPING_API_CONTRACT_VI.md#supplier-source-basis-và-fe-projection). Không tự đặt yield/loss/version/lead time hoặc suy phí miễn phí; không bắt đầu lát tiếp khi chưa được duyệt.
 - PROPOSAL — acceptance cho từng lát: inputs tổng hợp ngoài sáu workbook; ambiguous/missing/zero/null/invalid units và exact arithmetic; profile approve/reuse/drift; preview/commit cùng validators; fresh-session canonical state; consumer BOM/FEFO/procurement thực sự dùng giá trị; readiness block thiếu/stale evidence và phân biệt confirmed empty với UNKNOWN. Tests hiện có là điểm bắt đầu, không phải kết quả vừa chạy.
-- CURRENT FACT: Excel opening_stock đã nối lifecycle N6. Missing/partial inventory giữ UNKNOWN; explicit zero declaration và complete exact lots scope nối readiness/capture operational/2. Actual receipt Excel vẫn là lát riêng; count chỉ existing lots, received_date không derive từ as-of/upload.
+- CURRENT FACT: Excel opening_stock đã nối lifecycle N6. Missing/partial inventory giữ UNKNOWN; explicit zero declaration và complete exact lots scope nối readiness/capture operational/2. Actual receipt Excel C3 đã implemented, cùng N6 identity/writer; count chỉ existing lots, received_date không derive từ as-of/upload.
 - CURRENT FACT: fee/declaration writers đã có; `planning_capture.py::declarations_for` đưa fee coverage, supplier limits và capacities vào captured inputs. Kind constraint mới còn OPEN cho tới khi có enforcement/capability/readiness, không generic free-text constraint importer. Budget/config dùng contract Planning hiện có; thiếu và zero không được gộp.
 - ACCEPTED DECISION: A1 stockout đã được mở riêng. CURRENT FACT: schema/mapping/preview, migration/persistence, demand consumer và readiness đã có targeted acceptance trên DB Import riêng; [ADR-A1](../adr/ADR-A1-observed-stockout-demand-policy.md) sở hữu policy/compatibility; A2 recorded support domains được duyệt riêng.
 - CURRENT FACT A2: purchase/usage/calendar/promotion có record-only writer và retained read consumer. OPEN: waste/reconciliation, calendar/weather forecast features, actual revenue, combo/mixed-table workflows. Nested bindings/flatten JSON UI ngoài allowlist chưa có runtime.

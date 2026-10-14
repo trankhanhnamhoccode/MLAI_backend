@@ -5,7 +5,7 @@
 
 CURRENT FACT: I01-I06/M01-M04/N5/J01/H01/H02/R01 are wired with Store authorization,
 immutable staging/preview/provenance, manual/approved-profile deterministic flow,
-canonical fourteen-schema adapters and durable history/completion. Upload/review/save/
+canonical fifteen-schema adapters and durable history/completion. Upload/review/save/
 HTTP202 are not canonical persistence. Runtime: app/api/import_staging.py,
 app/application/use_cases/import_staging.py and import workers/repositories.
 
@@ -65,7 +65,7 @@ Store/actor/file IDs/profile versions và semantic/parsing context không phải
 business bắt buộc. Không tự điền date/unit/currency/zero từ context chưa hỗ trợ.
 Chi tiết đủ fields, validation, writer và gaps:
 [inventory](features/IMPORT_SCHEMA_INVENTORY.md). Opening_stock Excel đã nối writer N6;
-Actual receipt Excel chưa triển khai; A2 purchase history là record-only riêng.
+Actual receipt Excel đã triển khai C3 tại mục16; A2 purchase history là record-only riêng.
 Không map các nhóm này sang inventory_count.
 
 ## ACCEPTED DECISION / CURRENT FACT — A2 recorded support domains
@@ -905,7 +905,7 @@ set chính xác. Không sửa metadata/recipe/price history immutable để làm
 | inventory_count: canonical lot_id + Ingredient/unit; observation known | Target balance=current NO_OP, vẫn giữ observation evidence; khác balance signed COUNT_CORRECTION có reason và freshness. Unknown/ambiguous lot block; không tạo lot, nhận hàng hoặc đổi expiry/cost/date. | import_preview CountSource, write_plan→adjust_in_transaction, stock_observation; temporal guards/read-set phải recheck ở commit. |
 | opening_stock: source_system_key + source_record_id trong shared N6 receipt ledger | CURRENT FACT source tích hợp kế thừa A3: OpeningSource/OpeningValue, same identity+normalized payload NO_OP/retained lot; khác RECEIPT_IDENTITY_CONFLICT. Lot quantity là physical remainder; newlot + COUNT_CORRECTION baseline0, không historical RECEIPT. Duplicate identity/ambiguous physical lot block. | import_opening_stock.receipt_semantics/write_opening, import_preview opening branch; evidence nhánh thuộc Import126b0f2/A3, gate tích hợp ở FULL_TEST_FLOW, không browser/deployment claim. |
 | scope_declarations: source_system_key + source_declaration_key + kind/scoped dependencies | Same payload+same dependency evidence NO_OP; changed declaration/dependencies phải explicit SET_SCOPE_DECLARATION/review, không assume complete từ receipt/count. Kind/Ingredient identity khác DECLARATION_IDENTITY_CONFLICT. | import_configuration_preview, OperationalConfiguration.declaration, post-write declaration_dependency; A3 kiểm canonical dependency digest, evidence nhánh thuộc Import126b0f2, gate tích hợp ở FULL_TEST_FLOW. |
-| inventory_receipts actual receipt | DESIGN_READY mục16; shared receipt source identity/dedupe, không sửa receipt cũ từ new file. Không dùng inventory_count/opening để giả actual receipt. | N6 ACTUAL_RECEIPT hiện có; Excel variant chưa implemented. |
+| inventory_receipts actual receipt | IMPLEMENTED C3 mục16; shared N6 receipt identity/writer, không sửa receipt cũ từ new file. Không dùng inventory_count/opening để giả actual receipt. | Excel và form N6 cùng InventoryReceiptRecord; atomic import. |
 
 CURRENT FACT: supplier term duplicate source key/active-period overlap được block;
 configuration preview namespace=(domain,source_system_key,key) chặn duplicate trong
@@ -2210,21 +2210,22 @@ retirement, direct N5 queue resolution, rollback/retry/dispatcher và sensitive
 target denial được kiểm bằng fresh sessions. Browser continuation chưa chạy.
 
 <a id="excel-actual-receipt"></a>
-## 16. Excel hàng thực nhận — DESIGN_READY, reuse pipeline
+## 16. Excel hàng thực nhận — IMPLEMENTED C3
 
-ACCEPTED DECISION: Excel actual receipt bổ sung workflow **hàng đã thực nhận**;
-opening stock/count của phiên import hiện tại giữ nguyên. CURRENT FACT: registry
-Schema hiện có mười bốn variants gồm A2 history-only và opening_stock, `inventory_count` chỉnh canonical lot đã định danh;
-không `inventory_receipts`. N6 public receipt hỗ trợ OPENING_STOCK/ACTUAL_RECEIPT
-và source identity/durable receipt; implementation ở StockWrites.receive và
-InventoryUseCases.receive_in_transaction. Không mở receipt import endpoint riêng.
+ACCEPTED DECISION: actual receipt là hàng đã thực nhận; opening stock, count,
+purchase history và Planning purchases giữ nghiệp vụ riêng. CURRENT FACT: registry
+có mười lăm variants, gồm `inventory_receipts`, trong `import_schema/1`.
+Reusable receipt ProfileSpec yêu cầu inventory_semantics="actual_receipt".
+M03 advertises source fields; mapping/preview/commit/completion dùng pipeline hiện có.
+StockWrites.receive (N6), Excel actual và opening cùng `InventoryReceipts` →
+`InventoryUseCases.receive_in_transaction`, cùng ledger `InventoryReceiptRecord`;
+không HTTP loop, endpoint mới hoặc commit từng dòng. Caller giữ transaction,
+current authorization và inventory/read-set fences.
 
-DESIGN_READY extension: thêm schema `inventory_receipts` (import_schema/1 giữ version
-registry chung, reusable receipt profile khai inventory_semantics="actual_receipt").
-M03 descriptors advertise fields chỉ khi slice implement supported=true, không
-pretend target mới hiện available. Mapping/ProfileSpec giữ reviewed constants,
-batch-only IMPORT_VALUE, source provenance/exact conversion như pipeline hiện có.
-Không biến timestamp từ serial date-only, không derive expiry/observed_at từ upload.
+Mapping giữ reviewed unit/currency constants, batch-only IMPORT_VALUE và raw
+source/declaration/location/conversion provenance. Receipt facts không reusable
+defaults. observed_at cần timestamp ISO với timezone explicit; numeric/Excel serial,
+date-only và naive timestamp bị chặn, không suy timezone/date từ upload.
 
 ```text
 ActualReceiptValue={origin:"ACTUAL_RECEIPT",
@@ -2252,7 +2253,7 @@ source columns chỉ source-only/explicit IGNORE reviewed, không mandatory fake
 Không nhận opening stock bằng origin khác trong schema actual receipt.
 
 I01–I03 bytes/seal/analyze, M01–M04 và N5 mapping review **IMPLEMENTED routes**;
-schema receipt mới DESIGN_READY. I05 body giữ các phases hiện hành:
+schema receipt đã IMPLEMENTED C3. I05 body giữ các phases hiện hành:
 preview{phase,mapping_revision}, confirm_review{phase,preview_id,preview_digest,
 mapping_revision,confirm:true,reason}, commit{phase,preview_id,preview_digest,
 confirm:true,reason?,resolutions:SalesResolution[],supplier_changes?:SupplierConfirmation[]}.
@@ -2270,14 +2271,18 @@ different payload BLOCKED RECEIPT_IDENTITY_CONFLICT, không upsert quantity/cost
 File hash/filename/row_number/lot_code không business identity. Owner phải khai
 source namespace và per-receipt source_record_id ổn định, không tự tạo từ new file.
 Rows trong batch trùng identity cùng payload coalesce một action, giữ mọi physical
-source_locations; khác payload blocker toàn batch. Identity phải dùng chung N6
+source_locations và per-source transformation evidence trong nested_provenance
+`receipt_sources[index]`; khác payload blocker toàn batch. Identity phải dùng chung N6
 ledger: Excel rồi form/reverse retry cũng chỉ một receipt/lot/movement.
 
 Commit dùng cùng receipt identity/domain writer **trong transaction toàn import**,
 không HTTP loop hoặc một commit/dòng. Current auth fence và canonical locks/receipt
 CAS/read-set chung; stale409 PREVIEW_STALE, FE refresh preview và confirm lại.
+Receipt preview qua ngày mới theo Store timezone cũng stale ở confirm/commit để
+không dùng warning expiry/late của ngày cũ. Raw supplier/cost nonblank yêu cầu
+sensitive read trước capture/projection; cost "0" là nonnull, không bị bỏ guard.
 Recheck import.commit+inventory.receive+inventory.read+ingredient.read; supplier_id
-nonnull thêm supplier.read để đọc/bind locator; unit_cost nonnull thêm cost.read;
+nonnull thêm supplier.read để đọc/bind locator; unit_cost nonnull thêm procurement.cost.read;
 Import whole-response sensitive rights như mục10 vẫn áp toàn affected schema (cả
 preview/history/completion), không dùng N6 lot redaction để leak mixed workbook.
 Không bypass vì Owner đã approve profile; row validation/preview/write rights giữ.
@@ -2286,7 +2291,11 @@ Replay I05 cùng key trả retained job acceptance sau current rights; job publi
 identity+lot+movement+receipt+audit+completion atomically. Crash uncertain commit
 đối chiếu durable import và shared receipt ledger trước retry, không tạo new receipt
 do key khác. Completion extension row reference={source_identity,receipt_id,lot_id,
-movement_id,action:"CREATED"|"REUSED",audit_reference:UUID}; actual created effects
+movement_id,action:"CREATED"|"REUSED",audit_reference:UUID}, ở
+`CommitRowReference.receipt_reference`; receipt_effect giữ planned/retained IDs và
+recorded_at sau commit. REUSE_RECEIPT.quantity_delta là lượng movement đã ghi,
+không phải tăng kho lần nữa; inventory.updated=false cho receipt-only replay.
+Actual created effects
 khác raw row count. Không receipt khácunits quantity sum, không tổngunknowncost0.
 NO_OP batch duplicate vẫn có outcome riêng; không xác nhận stock completeness từ
 một receipt. PlanningRun purchases/hypothetical arrival không input actual receipts.
@@ -2305,9 +2314,11 @@ Errors: N6 domain codes INVALID_UNIT/REQUIRED_EXPIRY_MISSING422,
 RECEIPT_IDENTITY_CONFLICT409 hoặc preview blocker, PREVIEW_STALE409,
 PERMISSION_DENIED403, RESOURCE_NOT_FOUND404 scoped; common key/CSRF/job errors
 mục9–11. FE sửa declaration/source identity có evidence, không đổi key để lách
-duplicate. Acceptance tương lai: nullable supplier/cost/date; observed timestamp;
-tracked expiry/unit constraints; Excel↔N6 dedupe; mixed group atomic rollback;
-revoke/CAS race; fresh-session receipt/lot/movement/ledger evidence khi implement.
+duplicate. CURRENT FACT acceptance: public HTTP → worker → PostgreSQL → fresh-session
+inventory, nullable/known0/expiry/unit/late facts, Excel↔N6 replay, reversed duplicate
+order, current Staff grants/MQ/N5, retirement/spec drift, rollback/lost ACK/concurrency
+và retained PlanningRun được kiểm tại [runbook](runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3).
+Browser/runtime8103 chưa nâng cấp/kiểm C3; C4 projections không thuộc lát này.
 
 <a id="mapping-projections"></a>
 ## 17. Counters và source→canonical→effect — DESIGN_READY extensions

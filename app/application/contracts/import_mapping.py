@@ -30,6 +30,7 @@ Schema = Literal[
     "recipes",
     "inventory_count",
     "opening_stock",
+    "inventory_receipts",
     "products",
     "ingredients",
     "suppliers",
@@ -238,7 +239,7 @@ class SourceContext(DTO):
     missing_stockout: Literal['quantity_only', 'not_provided'] | None = None
     stockout_aliases: tuple[StockoutAlias, ...] = Field(default=(), max_length=32)
     sales_semantics: Literal["daily_total", "disjoint_contribution"] | None = None
-    inventory_semantics: Literal["lot_stock_count"] | None = None
+    inventory_semantics: Literal["lot_stock_count", "actual_receipt"] | None = None
     decimal_locale: Literal["dot", "comma"] | None = None
     date_format: Literal["ISO", "DMY_SLASH", "MDY_SLASH", "EXCEL_SERIAL"] | None = None
     pack_cost_basis: Literal["PER_PACK", "PER_SOURCE_UNIT"] | None = Field(
@@ -438,7 +439,7 @@ class ProfileSpec(DTO):
     normalizations: tuple[Normalization, ...] = ()
     conversions: tuple[Conversion, ...] = ()
     sales_semantics: Literal["daily_total", "disjoint_contribution"] | None = None
-    inventory_semantics: Literal["lot_stock_count"] | None = None
+    inventory_semantics: Literal["lot_stock_count", "actual_receipt"] | None = None
     planned_arrival_expiry_rule: PlannedArrivalExpiryRule | None = None
     term_period_amendments: tuple[TermPeriodAmendment, ...] = ()
     fee_period_amendments: tuple[FeePeriodAmendment, ...] = ()
@@ -465,6 +466,8 @@ class ProfileSpec(DTO):
 
     @model_validator(mode="after")
     def shared_sources(self):
+        if self.schema == 'inventory_receipts' and self.inventory_semantics != 'actual_receipt':
+            raise ValueError('ACTUAL_RECEIPT_SEMANTICS_REQUIRED')
         shared = [r.target_field for r in self.shared_field_bindings]
         columns = [
             b.target_field
@@ -888,6 +891,33 @@ class InventoryEffect(DTO):
     observed_at: datetime
 
 
+from app.application.contracts.stock_writes import ReceiptIdentity
+
+
+class ReceiptEffect(DTO):
+    action: Literal['CREATE_RECEIPT','REUSE_RECEIPT','BLOCKED']
+    source_identity: ReceiptIdentity
+    receipt_id: UUID | None
+    lot_id: UUID | None
+    movement_id: UUID | None
+    origin: Literal['ACTUAL_RECEIPT'] = 'ACTUAL_RECEIPT'
+    movement_kind: Literal['receipt'] = 'receipt'
+    quantity_delta: Quantity
+    unit: str
+    occurred_at: datetime
+    recorded_at: datetime | None
+    conflict_code: str | None
+
+
+class ReceiptCommitReference(DTO):
+    source_identity: ReceiptIdentity
+    receipt_id: UUID
+    lot_id: UUID
+    movement_id: UUID
+    action: Literal['CREATED','REUSED']
+    audit_reference: UUID
+
+
 class SalesContribution(DTO):
     source_system_key: Code
     report_type: Code
@@ -928,6 +958,7 @@ class PreviewRow(DTO):
     required_permissions: tuple[str, ...] = ()
     supplier_term_semantics: SupplierTermSemantics | None = None
     inventory_effect: InventoryEffect | None = None
+    receipt_effect: ReceiptEffect | None = None
 
     @field_validator("before", "after", mode="before")
     @classmethod
@@ -1245,6 +1276,8 @@ class CommitRowReference(DTO):
     inventory_effect: InventoryEffect | None = None
     sales_contributions: tuple[SalesContribution, ...] = ()
     history_record: HistoryValue | None = None
+    receipt_effect: ReceiptEffect | None = None
+    receipt_reference: ReceiptCommitReference | None = None
 
 
 class ImportCompletion(DTO):

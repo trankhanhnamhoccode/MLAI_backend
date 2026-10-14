@@ -1,5 +1,12 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
+CURRENT FACT C3: không DDL/migration mới; single head0026 và70 application
+tables/71 tổng giữ nguyên. Excel actual và form N6 dùng chung
+inventory_receipt_records (Store/source namespace/record unique), inventory_lots,
+inventory_movements và inventory_audit. Planned/committed receipt projection nằm
+trong immutable Import preview/completion JSON hiện có, cùng transaction batch.
+Không migrate/reset demo8103 hoặc DB khác.
+
 ## CURRENT FACT — C2 head0026, retained integrated demo0024
 
 `0026_collaboration_requests` nối additive sau0025, thêm permission_requests,

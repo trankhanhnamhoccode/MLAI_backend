@@ -218,6 +218,25 @@ def source_context_conflicts(sheet, rawsheet, scope):
     return tuple(conflicts)
 
 
+def receipt_sensitive_reads(sources, bindings, import_values=None):
+    """Conservative raw/declaration guards before source/evidence is exposed."""
+    required=set()
+    fields={'inventory_receipts.unit_cost':'procurement.cost.read',
+            'inventory_receipts.supplier_id':'supplier.read'}
+    for source in sources:
+        for binding in bindings.get(source['sheet_id'],()):
+            permission=fields.get(binding.target_field)
+            if permission is None: continue
+            column=binding.source_column_index if isinstance(binding,dto.FieldBinding) else binding.source_location.source_column_index
+            if any(cell.get('raw') is not None and str(cell['raw']).strip()!=''
+                for row in source['rows'] for cell in row['cells'] if cell['column_index']==column):
+                required.add(permission)
+        for declaration in (import_values or {}).get(source['sheet_id'],()):
+            if declaration.target_field in fields and declaration.value is not None:
+                required.add(fields[declaration.target_field])
+    return required
+
+
 def captured_domains(sources, bindings):
     """Classify only explicitly bound declaration kind for least-privilege reads.
 
@@ -341,6 +360,8 @@ def build_spec(
             and context.inventory_semantics is None
         ):
             missing.append("inventory_semantics")
+        if schema == 'inventory_receipts' and (context is None or context.inventory_semantics != 'actual_receipt'):
+            missing.append('inventory_semantics:actual_receipt')
     if missing:
         return None, tuple(missing)
     normalizations = list(prior_normalizations)

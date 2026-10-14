@@ -5,7 +5,7 @@ from app.application.contracts import import_mapping as dto
 
 
 def finalize_dependencies(rows: tuple[dto.PreviewRow, ...]) -> tuple[dto.PreviewRow, ...]:
-    masters = {"products": "product", "ingredients": "ingredient", "suppliers": "supplier", "opening_stock": "lot"}
+    masters = {"products": "product", "ingredients": "ingredient", "suppliers": "supplier", "opening_stock": "lot", "inventory_receipts": "lot"}
     candidates = defaultdict(list)
     skus = defaultdict(set)
     for row in rows:
@@ -58,7 +58,7 @@ def order_dependencies(rows: tuple[dto.PreviewRow, ...]) -> tuple[dto.PreviewRow
     from app.application.contracts.auth import AuthError
     from heapq import heappush, heappop
     rank = {"ingredients":0, "products":1, "suppliers":1, "supplier_terms":3,
-        "recipes":4, "sales":5, "opening_stock":6, "inventory_count":6,
+        "recipes":4, "sales":5, "opening_stock":6, "inventory_receipts":6, "inventory_count":6,
         "payable_fees":7, "scope_declarations":8, "calendar_events":9,
         "promotion_observations":9, "usage_history":9, "purchase_history":9}
     indexed = {r.row_id:r for r in rows}

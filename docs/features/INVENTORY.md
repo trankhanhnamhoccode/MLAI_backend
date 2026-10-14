@@ -1,5 +1,13 @@
 # Inventory lot state and movement history -- S1.3 / S1.7
 
+CURRENT FACT C3: form N6 and Excel actual/opening compose the same
+`InventoryReceipts` → `InventoryUseCases.receive_in_transaction` writer and
+receipt identity ledger. Import owns the whole batch transaction, preview/read-set
+and current authorization fences; no HTTP loop or independent receipt commits.
+See [actual receipt contract](../API_CONTRACT.md#inventory-receipt) and
+[Excel workflow/verification](../runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3).
+The S1 chronology below remains historical feature evidence.
+
 ## Operational receipt and correction -- CURRENT FACT (S1.7)
 
 InventoryUseCases.receive creates a positive received balance plus one RECEIPT in

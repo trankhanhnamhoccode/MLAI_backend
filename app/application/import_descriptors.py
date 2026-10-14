@@ -6,6 +6,7 @@ from app.application.contracts.import_domains import SOURCE_MODELS
 from app.application.contracts.import_field_values import allowed_scopes
 
 SCHEMAS = {
+    "inventory_receipts": ("Hàng thực nhận", "ACTUAL_RECEIPT: creates a received lot and RECEIPT movement; not opening/count/history or Planning purchases."),
     "calendar_events": ("Sự kiện lịch", "Declared Store event; history-only, no forecast features."),
     "promotion_observations": ("Khuyến mãi quan sát", "Observed Product/day evidence; no inferred discount or uplift."),
     "usage_history": ("Lịch sử sử dụng", "Recorded consumption; no inventory movement or BOM adjustment."),
@@ -134,6 +135,8 @@ ALIASES = {
     "products.selling_unit": ("ĐVT",),
 }
 FIELD_LABELS = {
+    'inventory_receipts.source_record_id': 'Mã dòng nhận hàng ở nguồn',
+    'inventory_receipts.observed_at': 'Thời điểm thực nhận có múi giờ',
     'usage_history.observed_at': 'Thời điểm thực sử dụng (có thể chưa biết)',
     'purchase_history.price': 'Giá mua lịch sử theo cơ sở giá',
 }
@@ -251,6 +254,12 @@ def options(schema=None):
             )
             if full == "inventory_count.observed_at":
                 description = "Thời điểm thực sự kiểm kê có timezone; không ngày nhận hàng, ngày mua hoặc ngày upload."
+            elif full == "inventory_receipts.observed_at":
+                description = "Actual receipt observation with timezone; never upload/filename/received-date inference."
+            elif full == "inventory_receipts.quantity":
+                description = "Positive quantity actually received now or recorded late; not a target balance or planned purchase."
+            elif full == "inventory_receipts.source_record_id":
+                description = "Stable receipt identity within the proven source namespace shared with N6; not filename/row number/lot label."
             elif full == "opening_stock.observed_at":
                 description = "Thời điểm quan sát tồn đầu kỳ có timezone, khác ngày nhận; không tự dùng ngày upload."
             elif full == "opening_stock.quantity":

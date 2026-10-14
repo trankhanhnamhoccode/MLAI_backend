@@ -8,6 +8,7 @@ import threading
 import logging
 import io
 import zipfile
+from datetime import datetime
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 from sqlalchemy import select
@@ -65,6 +66,7 @@ READS = {
     "recipes": ("menu.read", "ingredient.read", "recipe.read"),
     "inventory_count": ("ingredient.read", "inventory.read"),
     "opening_stock": ("ingredient.read", "inventory.read", "supplier.read", "procurement.cost.read"),
+    "inventory_receipts": ("ingredient.read", "inventory.read"),
     "products": ("menu.read",),
     "ingredients": ("ingredient.read",),
     "suppliers": ("supplier.read",),
@@ -93,6 +95,7 @@ WRITES = {
     "recipes": "recipe.create_version",
     "inventory_count": "inventory.count.correct",
     "opening_stock": "inventory.receive",
+    "inventory_receipts": "inventory.receive",
     "products": "product.create",
     "ingredients": "ingredient.create",
     "suppliers": "supplier.create",
@@ -146,7 +149,15 @@ class ImportStaging:
             i['issue_type'] == 'schema_blocker' or i['issue_type'] == 'column' and i.get('target_field') is None
             for i in batch.analysis_json['issues']
         )
-        return tuple(sorted({p for schema in schemas for p in READS[schema]})) if schemas and not unknown else ALL_READS
+        if not schemas or unknown: return ALL_READS
+        from app.application.import_analysis import receipt_sensitive_reads
+        required={p for schema in schemas for p in READS[schema]}
+        required.update(receipt_sensitive_reads(batch.analysis_json['sources'],
+            {str(sh['sheet_id']):[i for i in issues if str(i.sheet_id)==str(sh['sheet_id']) and i.issue_type=='column']
+                for sh in batch.analysis_json['sheets']},
+            {str(sh['sheet_id']):tuple(dto.ImportValue.model_validate(v) for v in sh.get('import_values',()))
+                for sh in batch.analysis_json['sheets']}))
+        return tuple(sorted(required))
 
     def _request(self, key, body, match=None, cas=False):
         try:
@@ -2177,6 +2188,7 @@ class ImportStaging:
                 raise AuthError("IMPORT_REVISION_CONFLICT", 412)
             if b.active_job_id:
                 raise AuthError("IMPORT_STATE_CONFLICT", 409)
+            self._receipt_preview_day(p)
             refs = [ref.model_dump(mode="json") for ref, _ in self._bindings(s, b)]
             if (
                 body.mapping_revision != b.mapping_revision
@@ -2239,12 +2251,20 @@ class ImportStaging:
             s.commit()
         return result
 
+    def _receipt_preview_day(self, p):
+        if 'inventory_receipts' in p.content_json['read_set']['_captured_schemas']:
+            zone = ZoneInfo(p.content_json['read_set']['stores'][0]['timezone'])
+            observed = datetime.fromisoformat(p.content_json['summary']['created_at'])
+            if observed.astimezone(zone).date() != self.clock().astimezone(zone).date():
+                raise AuthError('PREVIEW_STALE', 409)
+
     def _commit_preview(self, s, b, body, permissions, *, fence=False):
         p = s.get(ImportPreview, body.preview_id)
         if p is None or p.import_id != b.id or p.store_id != b.store_id:
             raise AuthError("RESOURCE_NOT_FOUND", 404)
         self._verify_preview(p)
         schemas = p.content_json["read_set"]["_captured_schemas"]
+        self._receipt_preview_day(p)
         needed = set(p.content_json["summary"]["required_actions"])
         needed.update(key for schema in schemas for key in READS[schema])
         needed.add("import.commit")
@@ -2713,6 +2733,9 @@ class ImportStaging:
                     if capture_unknown or not capture_schemas
                     else {p for schema in capture_schemas for p in READS[schema]}
                 )
+                from app.application.import_analysis import receipt_sensitive_reads
+                needed.update(receipt_sensitive_reads(sources,{str(sh.sheet_id):[i for i in issues
+                    if i.sheet_id==sh.sheet_id and i.issue_type=='column'] for sh in sheets}))
                 if not needed <= set(provider_permissions):
                     raise AuthError("PERMISSION_DENIED")
                 snapshot, _ = capture_read_set(
@@ -2859,6 +2882,8 @@ class ImportStaging:
                     sources, {key: spec.field_bindings for key, spec in specs.items()}
                 )
                 needed = {p for schema in capture_schemas for p in READS[schema]}
+                from app.application.import_analysis import receipt_sensitive_reads
+                needed.update(receipt_sensitive_reads(sources,{key:spec.field_bindings for key,spec in specs.items()},import_values))
                 if not needed <= set(permissions):
                     raise AuthError("PERMISSION_DENIED")
                 snapshot, read_digest = capture_read_set(
@@ -2928,6 +2953,10 @@ class ImportStaging:
                 )
                 if not needed <= set(permissions):
                     raise AuthError("PERMISSION_DENIED")
+                from app.application.import_analysis import receipt_sensitive_reads
+                extra_reads=receipt_sensitive_reads(sources,{str(sh.sheet_id):[i for i in issues
+                    if i.sheet_id==sh.sheet_id and i.issue_type=='column'] for sh in sheets})
+                if not extra_reads <= set(permissions): raise AuthError('PERMISSION_DENIED')
                 b.analysis_json = dict(
                     sheets=[sh.model_dump(mode="json") for sh in sheets],
                     issues=[i.model_dump(mode="json") for i in issues],

@@ -1,11 +1,133 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="excel-actual-receipt-c3"></a>
+## CURRENT FACT — C3 Excel hàng thực nhận, source local
+
+C2 đã commit local `b9fe048a6c64ffb79438068076ee3e9d99d75fda` sau C1 f85c7cdd.
+C3 COMPLETE backend acceptance, giữ WIP để review, không push/merge. Source head0026,69 operations/64 paths,
+permissions-v3/43,70 application tables/71 tổng; không DDL/endpoint/grant mới.
+Demo8103 vẫn snapshot tích hợp cũ head0024/59 operations; không restart/upgrade.
+Browser E2E chưa chạy, Gmail smoke cũ không chứng minh workflow email E2E.
+
+### Chuẩn bị và luồng kiểm tra
+
+Dùng đúng worktree/interpreter dưới đây; setup DB/role/private config được giữ
+ở [phần setup C1/C2](#notifications-c1). Chỉ `shelfcash_notifications_test` và
+role hạn chế `shelfcash_notifications_tester` trên5433. Không dùng DB demo/test nhánh
+khác và không chạy pytest/reset đồng thời. Không migrate/reset DB mỗi lần đọc.
+Trên máy này Docker Desktop đã được mở, chỉ start container PostgreSQL hiện hữu;
+không Compose thứ hai hoặc thay credentials/volume.
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-notifications-foundation
+$collaborationPython = (Resolve-Path ..\backend-integrate-import-auth\.venv\Scripts\python.exe).Path
+& $collaborationPython -m scripts.dev status --test-database
+# Chạy tuần tự; fixture chỉ sở hữu/reset notifications test DB:
+& $collaborationPython -m pytest tests/integration/test_import_actual_receipts.py tests/unit/test_import_actual_receipts.py tests/api/test_stock_writes_openapi.py -q --tb=short --show-capture=no
+```
+
+Expected DB/current_user đúng hai tên trên, head0026, at_head=true,71 tables.
+Accounts/Store/Ingredient trong tests là fixtures explicit qua provisioning/
+application boundaries; không public operator endpoint, bypass verification hoặc
+default Staff grants. Password/token chỉ local private/fixture, không docs/commit.
+Store chưa import/config có thể trống/UNKNOWN; không seed để che readiness.
+
+Luồng qua public API đã kiểm bằng HTTP test client, worker thật và PostgreSQL:
+
+1. Login đúng Store, I01 draft → I02 upload CSV/XLSX → I03 analyze; J01 poll.
+   Chọn `inventory_receipts`, khai source namespace/report_type và
+   inventory_semantics=actual_receipt; source_record_id ổn định từng receipt line.
+2. M01–M04 review fields/identity/physical conversion có evidence. Facts/date/
+   supplier/cost không lấy từ filename/upload/profile defaults. observed_at là
+   timestamp ISO có timezone; date-only/Excel serial không đủ observation fact.
+   Nullable supplier/cost/date phải explicit null; known cost0 được giữ nguyên.
+   Field inventory tại [schema inventory](../features/IMPORT_SCHEMA_INVENTORY.md#inventory_receipts--hàng-thực-nhận-c3).
+3. Nếu cần Owner duyệt, MQ01 submit → MQ02/MQ03 → N5 approve/request_changes.
+   Approved profile reuse cần source proof và không gọi model. Activation chưa ghi kho;
+   spec drift/retirement/current Staff rights vẫn kiểm lại.
+4. I05 phase=preview → J01 → I04 include=preview,configurations. Kiểm canonical
+   facts, warnings/blockers và typed receipt_effect: CREATE/REUSE/BLOCKED, stable
+   receipt/lot/movement IDs, occurred_at/recorded_at. Preview không ghi kho.
+5. I05 phase=confirm_review, rồi phase=commit với revision/digest/CAS/key hiện hành;
+   J01 → I06. Receipt-only resolutions=[]; không gọi N6 HTTP từng dòng. Commit cần
+   import.commit + inventory.receive; đọc/bind ingredient/inventory, nonnull supplier
+   và cost dùng quyền hiện hành (cost là procurement.cost.read, kể cả giá0).
+6. Completion.receipt_reference trong canonical_references giữ receipt/lot/movement,
+   action CREATED/REUSED và audit_reference. Refresh V01/V02/inventory/readiness từ
+   session mới. Receipt không tự khai complete; fresh capture thấy stock mới,
+   retained PlanningRun cũ không đổi. PREVIEW_STALE cần preview/confirm lại, gồm
+   inventory/read-set/declaration drift hoặc qua ngày Store mới.
+
+Shared writer: N6 StockWrites.receive và Import actual/opening cùng
+InventoryReceipts → InventoryUseCases.receive_in_transaction, cùng ledger
+InventoryReceiptRecord, một transaction toàn batch. Same identity/normalized facts
+replay, khác facts conflict; duplicate rows coalesce giữ mọi location và nested
+per-source transformation evidence. REUSE_RECEIPT.quantity_delta là movement cũ,
+không tăng stock lần nữa; new file không xóa receipts vắng mặt. Tên file/lot label
+không chứng minh independent business identity. Opening/count/purchase history/
+Planning purchases giữ nghiệp vụ riêng. [Contract §16](../IMPORT_MAPPING_API_CONTRACT_VI.md#excel-actual-receipt)
+sở hữu semantics; không mở projection C4.
+
+Provider/SMTP và tất cả background-worker flags mặc định OFF. Integration tests
+explicit gọi bounded Import run_one trên own DB; không gửi email/model, không
+bật process mới hoặc sửa runtime8103. Notification dispatcher opt-in ở phần C1/C2.
+
+### Verification C3 trên máy này
+
+Các commands đã chạy tuần tự với interpreter/worktree trên; targeted passing
+không phải full-suite pass. Nhóm N6/opening/count/stock/readiness + C3 ban đầu:
+
+```powershell
+# 51 passed /2 failed trước sửa hai giả định trong test:
+& $collaborationPython -m pytest tests/integration/test_stock_writes.py tests/integration/test_import_setup_stock.py tests/integration/test_import_inventory_supplier.py tests/integration/test_import_readiness_snapshot.py tests/integration/test_import_actual_receipts.py tests/api/test_stock_writes_openapi.py -q --tb=short --show-capture=no --junitxml=runtime/notifications/c3-inventory-regressions.xml
+
+# 14 passed /1 failed; hai failure trên đã pass, còn day-rollover confirm fence:
+& $collaborationPython -m pytest 'tests/integration/test_import_setup_stock.py::test_fresh_multifile_setup_readiness_custom_planning_and_retained_run[True]' tests/integration/test_import_actual_receipts.py::test_concurrent_receipt_jobs_share_identity_then_stale_batch_requires_refresh tests/integration/test_import_actual_receipts.py::test_receipt_foreign_identity_binding_is_scope_safe tests/integration/test_import_actual_receipts.py::test_new_receipt_file_does_not_delete_absent_receipt_or_reuse_lot_label tests/integration/test_import_actual_receipts.py::test_receipt_store_day_rollover_requires_new_preview tests/unit/test_import_actual_receipts.py -q --tb=short --show-capture=no --junitxml=runtime/notifications/c3-affected-fixes.xml
+
+# Sau sửa fence + explicit timestamp validation:12 passed.
+& $collaborationPython -m pytest tests/integration/test_import_actual_receipts.py::test_receipt_store_day_rollover_requires_new_preview tests/integration/test_import_actual_receipts.py::test_receipt_spec_change_uses_existing_queue_and_stale_decision_fence tests/unit/test_import_actual_receipts.py -q --tb=short --show-capture=no --junitxml=runtime/notifications/c3-receipt-final-fixes.xml
+```
+
+Fail→fix: A3 fixture chọn row theo domain sales thay vì vị trí đầu; concurrent
+fixture chuẩn bị cả hai analyses trước queue commits, không giả worker sẽ claim
+job vừa tạo. Fence day-rollover ban đầu chỉ ở commit; đã thêm tại confirm.
+Các lỗi fixture ban đầu về provenance wire shape, sensitive I04 selector,
+retired alias binding và capture import path đã sửa/rerun affected cases;
+không bỏ assertion nghiệp vụ hoặc nới guards để pass.
+
+OpenAPI giữ69/64; thêm ActualReceiptValue,ReceiptEffect,ReceiptCommitReference và
+extensions typed rows/schema selectors, không đổi operation definitions hoặc N6
+StockReceiptRequest/Result. Original baseline provenance giữ nguyên.
+Regression C1/C2/field/history ban đầu196 passed/1 failed (417.89s): Sales test
+assumed preview order. Đã đổi assertion sang exact Product→quantity mapping,
+giữ kiểm cả hai records và known zero; case được rerun trong final targeted gate.
+
+```powershell
+& $collaborationPython -m pytest tests/integration/test_notifications.py tests/integration/test_permission_requests.py tests/integration/test_mapping_submissions.py tests/integration/test_collaboration_boundaries.py tests/integration/test_import_rule_review.py tests/integration/test_import_field_value_bindings.py tests/integration/test_import_history_a2.py tests/unit/test_notifications.py tests/unit/test_collaboration.py tests/unit/test_import_supplier_basis.py tests/unit/test_import_stockout.py tests/unit/test_import_recipe_basis.py tests/unit/test_import_opening_stock.py tests/unit/test_import_history_a2.py tests/unit/test_import_field_values.py tests/api/test_notification_openapi.py tests/api/test_collaboration_openapi.py tests/api/test_stock_writes_openapi.py -q --tb=short --show-capture=no --junitxml=runtime/notifications/c3-collaboration-regressions.xml
+
+& $collaborationPython -m pytest tests/integration/test_import_field_value_bindings.py::test_first_sales_then_reuse_requires_new_import_report_key tests/integration/test_import_actual_receipts.py tests/unit/test_import_actual_receipts.py tests/unit/test_import_preview.py tests/unit/test_application_contracts.py tests/unit/test_integration_contract_snapshot.py tests/api/test_stock_writes_openapi.py -q --tb=short --show-capture=no --junitxml=runtime/notifications/c3-final-targeted.xml
+
+& $collaborationPython -m scripts.integration_contract_snapshot
+git diff --check
+```
+
+Không rerun full suite chỉ vì docs; kiểm architecture/query separation, original
+OpenAPI baseline, current N6/C3 DTOs và related Import boundaries trong nhóm trên.
+Final targeted gate: **105 passed** (200.87s), gồm toàn bộ20 C3 HTTP/PG cases,
+14 C3 unit cases, case Sales vừa sửa và related preview/architecture/OpenAPI.
+Final owned probe + `scripts.dev status --test-database`: reachable, đúng DB/role
+riêng5433, at_head=true/head0026,71 tables; fixture cleanup để0 application rows.
+Role vẫn không superuser/CREATEDB/CREATEROLE/replication/bypassrls; cả sáu worker/
+email/model flags OFF. Audit file checks: original WIP backend9/Import15/Auth0 và
+main6f80735 giữ nguyên, C3 index trống; secret/whitespace checks,197 local links và
+35 JSON examples pass. Không claim full-suite hoặc browser/runtime8103 pass.
+
 <a id="notifications-c1"></a>
 ## CURRENT FACT — C1/C2 collaboration, worktree test riêng
 
 Worktree `D:\hocc_bk\ai\proj\projectMLAI\backend-notifications-foundation`, branch
 `feat/notifications-foundation`, base main6f80735; C1 commit local f85c7cdd,
-C2 COMPLETE backend, local checkpoint head0026/69 operations/64 paths. Commands này **không nâng cấp/bật
+C2 COMPLETE backend, commit local b9fe048, head0026/69 operations/64 paths. Commands này **không nâng cấp/bật
 C1/C2 trên demo8103**. FE/browser E2E
 chưa chạy; OpenRouter/SMTP và Import/Planning/PDF/email workers OFF trong profile C1/C2.
 

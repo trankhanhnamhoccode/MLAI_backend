@@ -30,7 +30,7 @@ def fresh_store(env):
     return context
 
 
-def review_batch(context, ident, creations=None, bindings=None):
+def review_batch(context, ident, creations=None, bindings=None, *, source_context=None, approve_profiles=True):
     creations, bindings = creations or {}, bindings or {}
     attempted = set()
     for _ in range(500):
@@ -63,6 +63,7 @@ def review_batch(context, ident, creations=None, bindings=None):
         elif item["issue_type"] == "source_context":
             resolution = dict(kind="source_context", source_system_key="SETUP", report_type="setup-" + item["sheet_id"][:8],
                 evidence_reference="Synthetic Owner setup source", sales_semantics="daily_total", inventory_semantics="lot_stock_count")
+            resolution.update(source_context or {})
         elif item["issue_type"] == "identity":
             token = item["source_header"]
             if token in creations:
@@ -85,6 +86,8 @@ def review_batch(context, ident, creations=None, bindings=None):
     else:
         raise AssertionError(("Unresolved setup facts", item,
             [(p["profile_id"], p["missing_fields"]) for p in summary(context, ident)["profile_proposals"]]))
+    if not approve_profiles:
+        return
     for proposal in summary(context, ident)["profile_proposals"]:
         assert not proposal["missing_fields"], proposal
         response = post(context, f"/stores/{context[1].store_id}/mapping-profiles/{proposal['profile_id']}/decisions",
@@ -332,7 +335,7 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
     corrected_confirm = confirm(c, corrected, corrected_read)
     assert corrected_confirm.status_code == 200, corrected_confirm.text
     finished(c, corrected, commit(c, corrected, corrected_read,
-        corrected_confirm.json()["data"]["import_revision"], resolutions=[resolution(corrected_read["preview"]["rows"][0])]))
+        corrected_confirm.json()["data"]["import_revision"], resolutions=[resolution(next(row for row in corrected_read["preview"]["rows"] if (row['after'] or {}).get('domain')=='sales'))]))
     with Session(c[0][1]) as session:
         assert session.get(InventoryLot, lot).on_hand_quantity == 0
         assert session.scalar(select(SalesDaily)).quantity == 3
