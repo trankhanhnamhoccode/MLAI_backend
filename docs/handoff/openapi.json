@@ -38633,12 +38633,12 @@
     }
   },
   "x-shelfcash-provenance": {
-    "source_checkpoint": "8ed5a80a3655a1637218d44e9c91d2386bca6198",
+    "source_checkpoint": "86fcc6795957baea9b2d7f343a8079bed44c1559",
     "source_manifest_sha256": "ae3fe492de11d9bd940e5a6b167ed8f45d89713ba55bc7cb2d538298ea4740dc",
     "manifest_algorithm": "sorted path NUL SHA256(LF-normalized app/alembic Python bytes)",
     "migration_head": "0027_self_service_stores",
-    "generated_at": "2026-10-14T10:17:45.990905+00:00",
-    "source_working_tree": true,
+    "generated_at": "2026-10-14T10:38:53.111295+00:00",
+    "source_working_tree": false,
     "source_only": true,
     "database_access": false,
     "workers": false,

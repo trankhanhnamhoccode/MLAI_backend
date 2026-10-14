@@ -8,6 +8,9 @@ backend own venv/runtime/TLS, guarded local/test DBs; historical source WIP reta
 Email/worker setup and14 flows in [runbook](runbooks/FULL_TEST_FLOW.md#customer-self-service).
 FE signup/EMAIL_VERIFY callback/create Store/browser acceptance remains BLOCKED/PENDING;
 không mở subscription/OAuth/transfer/delete hoặc deferred recipe/AI/what-if.
+Backend focused83/schema210 và owned HTTPS runtime/limited DB/4 business workers đã
+VERIFIED, no business seed. Email/model OFF, old demo/data/WIP preserved; các gate
+overlap, không full-suite hoặc real email/browser acceptance claim.
 
 ### HISTORICAL INFORMATION — C5 checkpoint
 

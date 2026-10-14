@@ -15,6 +15,12 @@ parameterized invitation callback supports confirmed FE route. No real SMTP/mode
 calls in setup/tests. EMAIL_VERIFY callback và signup/verify/create Store UI chưa
 được FE nối/xác nhận: browser/self-service email E2E BLOCKED/PENDING, không claim PASS.
 Verification, commands và14 customer flows thuộc [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#customer-self-service).
+Source checkpoint86fcc6795957baea9b2d7f343a8079bed44c1559; focused83/schema210 pass,
+Auth149/1 assertion failure đã sửa và affected cases pass, không full-suite claim.
+Own HTTPS runtime verified: OpenAPI73/66 khớp artifact, exact Origin/guards, direct
+limited-role DB probes,0 accounts/Stores/business rows,4 workers alive/email OFF.
+Demo cũ được backup/stop đúng ownership, head0026/data counts giữ nguyên. Process
+source SHA cuối do local_runtime status cung cấp; browser/real email vẫn pending.
 
 ## HISTORICAL INFORMATION — C5 backend/runtime verification
 

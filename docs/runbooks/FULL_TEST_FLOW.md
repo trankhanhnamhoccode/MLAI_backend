@@ -217,7 +217,9 @@ body/header/Origin guards, local tooling và application query boundaries:
 .\.venv\Scripts\python.exe -m pytest tests/integration/test_store_creation.py tests/api/test_store_creation_openapi.py tests/api/test_self_service_auth.py tests/unit/test_local_runtime.py tests/unit/test_invitation_email.py tests/unit/test_application_contracts.py -q --tb=short --show-capture=no
 ```
 
-Schema/migration/tooling milestone210 passed/307.72s. Có migration/table mới và test
+Schema/migration/tooling milestone210 passed/307.72s trước khi thêm boundary test
+T03 cuối (đã pass trong focused83; chạy lại file selection hiện hành có thêm case).
+Có migration/table mới và test
 DB guard mới nên mở rộng các schema round-trip/metadata/head/caller checks; không
 chạy full feature suite. Exact selection (PowerShell, từ backend):
 
@@ -235,8 +237,8 @@ $boundaryTests = @(
 & .\.venv\Scripts\python.exe -m pytest @schemaTests @boundaryTests -q --tb=short --show-capture=no
 ```
 
-Auth/Invitation affected gate trước hai linked cases cuối:149 passed/1 test failure,
-336.91s. Same selector bên dưới hiện có thêm hai cases; không hứa count lịch sử khi
+Auth/Invitation affected gate trước các linked/boundary cases cuối:149 passed/1 test failure,
+336.91s. Same selector bên dưới hiện có thêm cases; không hứa count lịch sử khi
 chạy source mới. Failure kỳ vọng RuntimeError nhưng PostgreSQL raise DBAPIError khi
 retention chặn downgrade đúng; sửa exception assertion, không bỏ guard. Affected
 retention/import cases2 pass/12.61s, sau đó đã có trong final focused/schema gates.
@@ -254,6 +256,18 @@ custom backup/full payload/SHA256 và guarded no-op upgrade đã chạy trên DB
 test status xác nhận limited tester/0027/72 tables/0 application rows sau cleanup.
 Old demo quiescence/backup/stop đã kiểm riêng, không reset/migrate DB đó. No SMTP/model
 call hoặc browser E2E trong các checks này; runtime source/SHA do status khi start báo.
+
+Runtime customer VERIFIED trên committed source checkpoint
+`86fcc6795957baea9b2d7f343a8079bed44c1559`: own backend/.venv, TLS verified bằng own
+PEM, API73/66 khớp handoff artifact, exact Origin/CORS và unauthenticated T03 denial.
+Direct SQL kiểm đúng local DB/runtime role, migrator owner, no super/CREATEDB/CREATEROLE/
+role inheritance/schema CREATE;72 tables,0 application rows trước/sau HTTP probes,
+không accounts/Stores seed. Bốn business threads true, email false, no hidden jobs/
+intents; source/profile digest khớp, không traceback runtime. Own paths dưới checkout.
+Demo cũ stopped; schema/counts mọi bảng khớp backup sau stop, giữ head0026 và dữ liệu.
+Source SHA cuối của process do status báo sau khi đồng bộ commit docs; không hardcode
+SHA commit chứa chính dòng tài liệu này. Chỉ backend/runtime VERIFIED; EMAIL_VERIFY
+callback/consumer và Store-create UI phía FE còn thiếu, email thật/browser E2E PENDING.
 
 <a id="linked-acceptance-c5"></a>
 ## HISTORICAL INFORMATION — C5 backend/runtime VERIFIED; browser PENDING

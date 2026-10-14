@@ -353,7 +353,7 @@
   ],
   "c5_read_discovery": {
     "synthetic": true,
-    "source_checkpoint": "8ed5a80a3655a1637218d44e9c91d2386bca6198",
+    "source_checkpoint": "86fcc6795957baea9b2d7f343a8079bed44c1559",
     "scope": "Data fragments validated with source DTOs; illustrative IDs, not runtime facts.",
     "today_forbidden": {
       "store_id": "00000000-0000-0000-0000-000000000001",
@@ -392,7 +392,7 @@
   },
   "self_service_store": {
     "synthetic": true,
-    "source_checkpoint": "8ed5a80a3655a1637218d44e9c91d2386bca6198",
+    "source_checkpoint": "86fcc6795957baea9b2d7f343a8079bed44c1559",
     "request": {
       "name": "Explicit synthetic shop",
       "timezone": "Asia/Ho_Chi_Minh",
