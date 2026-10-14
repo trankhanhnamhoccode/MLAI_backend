@@ -1,5 +1,23 @@
 # Current state
 
+## CURRENT FACT — forecast challenger E1 (isolated branch)
+
+E1 compatibility/protocol COMPLETE trong worktree riêng
+`backend-forecast-engine-challenger`, branch `feat/forecast-engine-challenger`, từ
+main052cddee. Host và engine62b94fa đã static trace; legacycac7c5a chỉ qua review ZIP.
+Canonical [Forecast integration](features/FORECAST_ENGINE_INTEGRATION.md) sở hữu
+compatibility matrix, native reconstruction boundary, CQR/artifact gaps, frozen
+benchmark arms/splits/scoring/promotion, inventory và E1–E5 gates. Synthetic fixtures
+và offline protocol checks có trong source; không phải native execution/accuracy proof.
+
+ACCEPTED DECISION theo yêu cầu E1: BE làm host, forecast mới qua adapter riêng;
+giữ BOM/loss/Product serving/FEFO/procurement/requirements/winner/retained Planning.
+E1–E5 không LLM/OpenRouter. E2 chưa bắt đầu; production serving, API/schema/permissions,
+FE, engine source và runtime/DB người dùng không đổi. Không train, benchmark dài,
+DB/server/worker, seed/migrate/reset hoặc activation. Dữ liệu unseen/vintage,
+closure/weather capture, dependency/artifact eligibility và E3 training recipe
+vẫn là gaps; xem tài liệu canonical, không claim real-data quality/promotion.
+
 ## CURRENT FACT — self-service Store/customer local
 
 Canonical checkout `backend` trên main, own .venv/TLS/runtime/local profile. WIP9

@@ -1,5 +1,20 @@
 # Remaining work and acceptance gates
 
+## ACCEPTED DECISION / CURRENT FACT — forecast engine challenger
+
+Phạm vi E1 được người dùng duyệt: giữ BE host và toàn bộ Planning business authority;
+forecast engine mới qua adapter riêng, không LLM/OpenRouter trong E1–E5. E1 COMPLETE
+compatibility specification + frozen synthetic benchmark protocol/config/fixtures và
+offline validators trên branch/worktree riêng. Không tích hợp runtime hoặc đánh giá
+chất lượng thật; main/demo/customer DB và serving artifacts giữ nguyên.
+
+[FORECAST_ENGINE_INTEGRATION](features/FORECAST_ENGINE_INTEGRATION.md) là canonical
+owner của matrix, data/artifact inventory, replay/availability/reconstruction/CQR
+boundaries, benchmark/promotion và các gates E1–E5. E2 adapter NOT_STARTED; E3 accuracy,
+E4 host Planning impact và E5 acceptance/promotion NOT_STARTED. Thiếu unseen/vintage
+evidence và sourced operating calendar hiện chặn quality/promotion claims. Đã dừng
+sau E1; bước kế tiếp cần authorization, không tự mở E2 hoặc serving activation.
+
 ## CURRENT FACT
 
 Self-service Store/customer local IMPLEMENTED: T03 additive,73/66/head0027/72 tables;

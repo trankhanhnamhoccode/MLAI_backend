@@ -1,0 +1,565 @@
+{
+  "schema_version": 1,
+  "classification": "CURRENT_FACT_METADATA_ONLY",
+  "observed_date": "2026-10-14",
+  "no_customer_rows_exported": true,
+  "no_db_access": true,
+  "host": {
+    "head": "052cddee075e165af2c0cea42ebc2e616c396760",
+    "tracked_status": "",
+    "traced_files": [
+      {
+        "path": "app/main.py",
+        "bytes": 21077,
+        "sha256": "8993491a955271e91c69522b3c44a7dce79fe7946578c9cdb1b73afd339c2d5b"
+      },
+      {
+        "path": "app/application/forecast_preparation.py",
+        "bytes": 1912,
+        "sha256": "053a0b6e809e76dd5585d9bd08e5a48a8e9ce33831b775b8a444bf4c7716e45e"
+      },
+      {
+        "path": "app/application/contracts/forecast_execution.py",
+        "bytes": 6814,
+        "sha256": "bcc9195c44059bbeec7aa0802c9ec144915ed7de518353c0f0bc8c8b70d684f7"
+      },
+      {
+        "path": "app/application/forecast_demand.py",
+        "bytes": 1800,
+        "sha256": "ba44eb574c1a485d687bb7ef7f48c6f30da996e3a74535d52af407b3cda628e0"
+      },
+      {
+        "path": "app/domain/forecasting/stockout.py",
+        "bytes": 3420,
+        "sha256": "1dfe378d1aeb3ccc922678248309c28090fa9b044ffd24d3e9ee0b1b93ed4017"
+      },
+      {
+        "path": "app/domain/forecasting/baseline.py",
+        "bytes": 3493,
+        "sha256": "ab9064296e980d0ce1e9295aa05250b741f477f22d0d137e8f105765aad954c9"
+      },
+      {
+        "path": "app/domain/forecasting/features.py",
+        "bytes": 1375,
+        "sha256": "cd76125ffeb4c3c62877f79c46f9c8ba55d3a84888aadc452f6b438782335bcc"
+      },
+      {
+        "path": "app/domain/forecasting/evaluation.py",
+        "bytes": 1854,
+        "sha256": "09550bff38cab378114a8b28c165a5700886572ddc8987320943e21b7ed426aa"
+      },
+      {
+        "path": "app/application/use_cases/forecast_baseline.py",
+        "bytes": 2348,
+        "sha256": "93daa83ced8abaf8106690b123d325374d9a8861390ac8f432acb6db5d0d7cbd"
+      },
+      {
+        "path": "app/infrastructure/forecast_model.py",
+        "bytes": 7861,
+        "sha256": "91d20dd6b8d7ff959db4ba481f1fd0766ac84a54ad4df3beef427fd0260850b7"
+      },
+      {
+        "path": "app/application/use_cases/forecast_evaluation.py",
+        "bytes": 5949,
+        "sha256": "8bc15cae1033233d915b2ac24f1041ffcd409d9f94cefa5d8233aa9be839ac86"
+      },
+      {
+        "path": "app/infrastructure/storage/forecast_artifacts.py",
+        "bytes": 7663,
+        "sha256": "c23006afa917ce2235f81831ee0e8c7aeb021837e48d4e868e024c07b0b023be"
+      },
+      {
+        "path": "app/application/forecast_serialization.py",
+        "bytes": 2878,
+        "sha256": "ef42cbbc4d4b9d5ce351a5084b1195d26ca07afecc2b9cb45dc1f8252b2a2d83"
+      },
+      {
+        "path": "app/application/use_cases/forecast_trained_execution.py",
+        "bytes": 17142,
+        "sha256": "a58359fe8cf106f8581ee552d11d407d4b5fec5266a1b00ace8b52941dedcaab"
+      },
+      {
+        "path": "app/application/use_cases/forecast_serving.py",
+        "bytes": 10520,
+        "sha256": "ba5edb689785f936bce9f8f0b0a98169453e36733d68bfd0f4105f32a687c675"
+      },
+      {
+        "path": "app/application/use_cases/planning_worker.py",
+        "bytes": 8420,
+        "sha256": "69c0f55c1666cbaf591e393d6eba7357e3b6911abda34c3f50c34f0f7c7d5f2a"
+      },
+      {
+        "path": "app/infrastructure/database/planning_capture.py",
+        "bytes": 14676,
+        "sha256": "b498591c1ebd9c1bcfe24125d93003a2a98a1955a2cca08ec96284ed4dddc194"
+      },
+      {
+        "path": "app/application/use_cases/decision_pipeline_v2.py",
+        "bytes": 4616,
+        "sha256": "45a2dd30240e25e42767382953be0b02b0a73ac9d471027cbd20213580113207"
+      },
+      {
+        "path": "app/application/use_cases/bom.py",
+        "bytes": 5506,
+        "sha256": "2163d1982483f9c3033389e66b5618f4246bc4e17638330a49b3eabc9257efb3"
+      },
+      {
+        "path": "app/domain/decision/procurement_policy.py",
+        "bytes": 877,
+        "sha256": "4b5ff10623b37fbccd164d2891f63588d2097e694e513269149cd5767dc73acd"
+      },
+      {
+        "path": "app/application/use_cases/procurement_selection.py",
+        "bytes": 4331,
+        "sha256": "02dbd40ae1568c6c47e8e24d933f1f88f489eea57b09d7111289eb0881894b1f"
+      },
+      {
+        "path": "app/application/contracts/forecast_model.py",
+        "bytes": 5114,
+        "sha256": "cdb0dcdc52927991c1f28f0ba3b97ce62bba4c349be8d86b98d190c982bd4574"
+      },
+      {
+        "path": "pyproject.toml",
+        "bytes": 1021,
+        "sha256": "5f1022e1706091a5dc75968eb793dc2aa563576f7616eb22224e958f5de6da4c"
+      }
+    ]
+  },
+  "challenger": {
+    "head": "62b94fa4d67cb04141d32be4e57d6f9740c2a8fc",
+    "tracked_status": "",
+    "preserved_untracked_status": [
+      "?? DATA_REQUIREMENTS_VI.md",
+      "?? ENGINE_REVIEW_NEW_ENGINE_VI.md",
+      "?? engine_review_NEW_ENGINE_62b94fa.zip",
+      "?? engine_review_NEW_ENGINE_62b94fa.zip.sha256",
+      "?? reports/",
+      "?? shelfcash_legacy_review.zip"
+    ],
+    "traced_files": [
+      {
+        "path": "shelfcash_forecast/pipeline/inference_pipeline.py",
+        "bytes": 12184,
+        "sha256": "bc6dc52a040ba97a6ce2fa633197ae03a5c1b23aa8fcd3294a25aa3fbb67cd18"
+      },
+      {
+        "path": "shelfcash_forecast/pipeline/training_pipeline.py",
+        "bytes": 13524,
+        "sha256": "0f2b9a36dfb281003783ea23ce0bb22467ef0134908650d04e0559c55f01c665"
+      },
+      {
+        "path": "shelfcash_forecast/data/adapter.py",
+        "bytes": 9980,
+        "sha256": "8872aa0a4511cbe93acf29ed881cf074f5867d89826bf8b0c88777712b6f1510"
+      },
+      {
+        "path": "shelfcash_forecast/data/validator.py",
+        "bytes": 5500,
+        "sha256": "bfd9a032156ef6aa94452ba9d3992eb57507731c75de0b3f11ecc627255bc82e"
+      },
+      {
+        "path": "shelfcash_forecast/data/panel_builder.py",
+        "bytes": 4653,
+        "sha256": "74b5fcebb19a3334ed469733ab842615f3106d29958249743e6e35db0616ec5f"
+      },
+      {
+        "path": "shelfcash_forecast/data/demand_reconstruction.py",
+        "bytes": 8580,
+        "sha256": "fa5ecd0c225d4a66679c1cd51550dc2449ca1b57ee6fa90c70b19c39dd5e8259"
+      },
+      {
+        "path": "shelfcash_forecast/features/specification.py",
+        "bytes": 4310,
+        "sha256": "9684408d9c84a3592392273a822c75e3d9b7bef939ba502109792c65488e82a7"
+      },
+      {
+        "path": "shelfcash_forecast/features/historical.py",
+        "bytes": 2584,
+        "sha256": "28cea8a50f19a93e058b65f725e9f1e5b79372e71a80bf713c9ec52307014f25"
+      },
+      {
+        "path": "shelfcash_forecast/features/training_table.py",
+        "bytes": 4311,
+        "sha256": "5603de53af5acc64f352fea7ecc0a919ef44d7e9ca2c50a7495f0cd253718fa3"
+      },
+      {
+        "path": "shelfcash_forecast/features/future.py",
+        "bytes": 3965,
+        "sha256": "9d1ae710f0d8e19e991e8af206e3659da8fc7b5c8043d3ba222c3c7e8fc11ae6"
+      },
+      {
+        "path": "shelfcash_forecast/models/predictor.py",
+        "bytes": 2318,
+        "sha256": "d66efee3dae9cd224c18e79cbea0e6529b348da6160999705b39f2165bb56a1c"
+      },
+      {
+        "path": "shelfcash_forecast/models/trainer.py",
+        "bytes": 1302,
+        "sha256": "09bc2d2aa751baaa72271f9abd89ba54836793ebe3bf07b1f0e1b28050bfc166"
+      },
+      {
+        "path": "shelfcash_forecast/models/quantile_models.py",
+        "bytes": 3121,
+        "sha256": "209482e0c9f81fea97d7c167cb689a551935cba485f7672538a3238d155f27b1"
+      },
+      {
+        "path": "shelfcash_forecast/calibration/point.py",
+        "bytes": 13117,
+        "sha256": "51371fa6813d711f06f9f3cbb5b952c2c7a9d1d9df43c1f793c70b689328f508"
+      },
+      {
+        "path": "shelfcash_forecast/calibration/cqr.py",
+        "bytes": 8768,
+        "sha256": "c57a7af16e10daa3796db54ecc72ec79bfdb7e5c9c1ba72b5f01bba53f612aab"
+      },
+      {
+        "path": "shelfcash_forecast/calibration/crossing.py",
+        "bytes": 678,
+        "sha256": "f7ac4c08692cdde3e0655c0ba33f129354901248b125c36957e57ab70af37eed"
+      },
+      {
+        "path": "shelfcash_forecast/registry/loader.py",
+        "bytes": 7401,
+        "sha256": "ea86f822452b797fdbccb82bd337bc690e1d26760b8abd1e1a5c9dcd549e5be6"
+      },
+      {
+        "path": "shelfcash_forecast/registry/writer.py",
+        "bytes": 7633,
+        "sha256": "669dd48312514d5a59fc7aebf6cd01e4aaa4635adbab4a48a98cce010ecc8aeb"
+      },
+      {
+        "path": "shelfcash_forecast/registry/governance.py",
+        "bytes": 2759,
+        "sha256": "13cb9ca42b82dc310a81b7f6590b04fee541d3abd686fa1d0f1d7810ccd26c9e"
+      },
+      {
+        "path": "shelfcash_forecast/evaluation/splits.py",
+        "bytes": 6458,
+        "sha256": "f46391aca60c0ee47779194dc4fa639a149e05aff6822c6af868984491bd6265"
+      },
+      {
+        "path": "shelfcash_forecast/config.py",
+        "bytes": 5889,
+        "sha256": "840a94887fd275a1aa2bb3e5d9efd01d87b9e47467935c1466fd614e320438ed"
+      },
+      {
+        "path": "shelfcash_forecast/contracts.py",
+        "bytes": 1879,
+        "sha256": "3f8d53032fd0c490be642dcd75bf32979a7346733fbe24acbc473e7fbe7aa849"
+      },
+      {
+        "path": "shelfcash_forecast/application.py",
+        "bytes": 16808,
+        "sha256": "8c8972d15af0fa1e9387398f87db4f8ffdf427e53423418bedbb414392aec69f"
+      },
+      {
+        "path": "shelfcash_pipeline/run.py",
+        "bytes": 8396,
+        "sha256": "485a9ea5beb9c1631e6ba8fe2fdf00b3b9dcdc0ee5abf97c951549b443ceec7a"
+      },
+      {
+        "path": "shelfcash_pipeline/m1.py",
+        "bytes": 2176,
+        "sha256": "5414dc7b162edeb857ea6e530c6dca4a3e2e6df504a33a509f0f38058899e50c"
+      },
+      {
+        "path": "pyproject.toml",
+        "bytes": 1375,
+        "sha256": "a96ff1d285f02bcccf58ab9f54e8ecdbd96daf53899d3bf2a78eae62fcde4387"
+      },
+      {
+        "path": "requirements-demo.lock.txt",
+        "bytes": 887,
+        "sha256": "984d8f91504a94261781501c25be681a1cd2f0fc5780ee70d8ecdcafc2c164b6"
+      }
+    ]
+  },
+  "legacy": {
+    "review_sha": "cac7c5a6a46c5751063be6b27866e3672acd2e2a",
+    "snapshot_kind": "archive_only_not_live_checkout",
+    "traced_files": [
+      {
+        "path": "app/services/forecast_service.py",
+        "bytes": 43884,
+        "sha256": "68ad3f712b94e125069be822cca4ffc6264842169dcdbf0bbf5ef3eec25c5fe8"
+      },
+      {
+        "path": "app/forecasting/providers.py",
+        "bytes": 3866,
+        "sha256": "3b4ae777c1cde96b14e7d0be66582623f2d2ec5d071976f3c4d05e4a0ae29aac"
+      },
+      {
+        "path": "REVIEW_GUIDE.md",
+        "bytes": 14946,
+        "sha256": "868f96f1e63f18dce706ee07062490943e21f7d033fb3305cc06cbb74b8cce2e"
+      }
+    ]
+  },
+  "review_archives": [
+    {
+      "name": "shelfcash_CURRENT_BE_review_052cddee_20261014.zip",
+      "sha256": "e08a9841bdb1b0f8992b0d80320acaaa770b42bd2c9524496397a0be6810532a",
+      "entry_count": 703,
+      "scope": "existing review, static context only"
+    },
+    {
+      "name": "engine_review_NEW_ENGINE_62b94fa.zip",
+      "sha256": "ba2d6afb6bcc19ea44951ca360062ec297b7b30375968f77a78f4c3d20c1f91d",
+      "entry_count": 248,
+      "scope": "existing review, static context only"
+    },
+    {
+      "name": "shelfcash_legacy_review.zip",
+      "sha256": "8c58050723d2b9dc7837859679ee9a65c758482a17e5475496bf33f9ad272a9a",
+      "entry_count": 561,
+      "scope": "existing review, static context only"
+    }
+  ],
+  "data_inventory": [
+    {
+      "path": "demo/input/01_POS_Export_DEMO_to_2026-08-12.xlsx",
+      "bytes": 42759,
+      "sha256": "1f9da7242a748f30b7068e0558cc6466286cbc7546fa8355ead9f0efba8e9712",
+      "schema_status": "not_opened; worksheet schema/row count/availability unknown",
+      "eligibility": "not_established"
+    },
+    {
+      "path": "demo/input/02_TieuThu_NguyenLieu_DEMO_to_2026-08-12.xlsx",
+      "bytes": 23699,
+      "sha256": "7d5cb77e0157b1b2b68e818bda9c49f2899744702015e6a6c48b3877b2f5f2d7",
+      "schema_status": "not_opened; worksheet schema/row count/availability unknown",
+      "eligibility": "not_established"
+    },
+    {
+      "path": "demo/input/03_Kho_NhapHang_NCC_DEMO_snapshot_2026-08-12_WITH_RECEIVED_DATE_SHELF_LIFE.xlsx",
+      "bytes": 15283,
+      "sha256": "16646f2a1adbb1617c0c993416cf8b58d15cf117b600dfb196862fbc120e0d4e",
+      "schema_status": "not_opened; worksheet schema/row count/availability unknown",
+      "eligibility": "not_established"
+    },
+    {
+      "path": "demo/input/04_Recipes_BusinessRules_DEMO_2026-08-19_OPERATING_RULES.xlsx",
+      "bytes": 14104,
+      "sha256": "a4370e477ffc4cfe843cdf7d46c2bf53a1a86ad84f4f1695496a2f8e2332023e",
+      "schema_status": "not_opened; worksheet schema/row count/availability unknown",
+      "eligibility": "not_established"
+    },
+    {
+      "path": "demo/input/05_Context_Calendar_DEMO_2026-01-01_to_2026-08-26.xlsx",
+      "bytes": 14276,
+      "sha256": "474909150a0c656f3b24c8b2f40f185b21d04891695cc1c792ea25e03b069b7a",
+      "schema_status": "not_opened; worksheet schema/row count/availability unknown",
+      "eligibility": "not_established"
+    },
+    {
+      "path": "demo/input/06_Menu_DEMO.xlsx",
+      "bytes": 14885,
+      "sha256": "6864dc86b9cbcca1b89ba875648be3bd31a86a9497c79620b2adc3cff872ba98",
+      "schema_status": "not_opened; worksheet schema/row count/availability unknown",
+      "eligibility": "not_established"
+    }
+  ],
+  "host_artifacts": [
+    {
+      "identity_directory": "74f467112f3f9849e79b54e1eb05f0b84ca562352e1c1c32b4bc3b3d32241ae0",
+      "activation": "unknown_not_queried",
+      "files": [
+        {
+          "path": "runtime/model_artifacts/74f467112f3f9849e79b54e1eb05f0b84ca562352e1c1c32b4bc3b3d32241ae0/manifest.json",
+          "bytes": 92954,
+          "sha256": "674ae9e64eeb72fcf4ce83942bf4f0c86ff09c48d94c3d37003d34d89609844a"
+        },
+        {
+          "path": "runtime/model_artifacts/74f467112f3f9849e79b54e1eb05f0b84ca562352e1c1c32b4bc3b3d32241ae0/p25.txt",
+          "bytes": 33170,
+          "sha256": "d4d7eb36d6d950a63a53b050d810556e30efd55af33cd211303fca5d9519199d"
+        },
+        {
+          "path": "runtime/model_artifacts/74f467112f3f9849e79b54e1eb05f0b84ca562352e1c1c32b4bc3b3d32241ae0/p50.txt",
+          "bytes": 33187,
+          "sha256": "4e06575d73c4c9370c3b1ce85ca6a6b10ff7dc1762f899e981832405338040cd"
+        },
+        {
+          "path": "runtime/model_artifacts/74f467112f3f9849e79b54e1eb05f0b84ca562352e1c1c32b4bc3b3d32241ae0/p75.txt",
+          "bytes": 32882,
+          "sha256": "39bb7ed13922e98a71a264ba47464fe579516cded2116dad1770e2598b413bb9"
+        }
+      ],
+      "training_payload": "not_parsed"
+    },
+    {
+      "identity_directory": "d57e4ff89c6d669bff5fb949848a10d22bcfa31ce088e3fbc36d4b105d5ef6d7",
+      "activation": "unknown_not_queried",
+      "files": [
+        {
+          "path": "runtime/model_artifacts/d57e4ff89c6d669bff5fb949848a10d22bcfa31ce088e3fbc36d4b105d5ef6d7/manifest.json",
+          "bytes": 92954,
+          "sha256": "7a1f5d4b247c2772db185c0907fb389f9d6301bdc9a59a08adf4f1b8b13a13d3"
+        },
+        {
+          "path": "runtime/model_artifacts/d57e4ff89c6d669bff5fb949848a10d22bcfa31ce088e3fbc36d4b105d5ef6d7/p25.txt",
+          "bytes": 33170,
+          "sha256": "d4d7eb36d6d950a63a53b050d810556e30efd55af33cd211303fca5d9519199d"
+        },
+        {
+          "path": "runtime/model_artifacts/d57e4ff89c6d669bff5fb949848a10d22bcfa31ce088e3fbc36d4b105d5ef6d7/p50.txt",
+          "bytes": 33187,
+          "sha256": "4e06575d73c4c9370c3b1ce85ca6a6b10ff7dc1762f899e981832405338040cd"
+        },
+        {
+          "path": "runtime/model_artifacts/d57e4ff89c6d669bff5fb949848a10d22bcfa31ce088e3fbc36d4b105d5ef6d7/p75.txt",
+          "bytes": 32882,
+          "sha256": "39bb7ed13922e98a71a264ba47464fe579516cded2116dad1770e2598b413bb9"
+        }
+      ],
+      "training_payload": "not_parsed"
+    }
+  ],
+  "challenger_core_artifacts": [
+    {
+      "path": "demo/artifacts/model_q25.txt",
+      "bytes": 193059,
+      "sha256": "45867558571f92d0cc13e17c33ea84bfeb14193ee7776e7b5d3379441928dc20",
+      "matches_checksum_manifest": true
+    },
+    {
+      "path": "demo/artifacts/model_q50.txt",
+      "bytes": 128331,
+      "sha256": "1552b2b02bf1455d0937b81f217eb4d3e0d262006f9a19eb2608dd5037149402",
+      "matches_checksum_manifest": true
+    },
+    {
+      "path": "demo/artifacts/model_q75.txt",
+      "bytes": 114512,
+      "sha256": "73add9795e37b47d5890dcd314bbcbb5614c8fd7c6903c7b2f0760d631d88588",
+      "matches_checksum_manifest": true
+    },
+    {
+      "path": "demo/artifacts/feature_schema.json",
+      "bytes": 1352,
+      "sha256": "7304c9cb12e6372743353a18816f7f581c68c10ffd3bf8b673f02d3d3c4ead0d",
+      "matches_checksum_manifest": true
+    },
+    {
+      "path": "demo/artifacts/preprocessing_config.json",
+      "bytes": 1337,
+      "sha256": "2da8d42f7bbb2cf4ac575ed257d533e5bd56b17abd26d5e0bed7540ed07ddaa5",
+      "matches_checksum_manifest": true
+    },
+    {
+      "path": "demo/artifacts/category_mappings.json",
+      "bytes": 140,
+      "sha256": "c7987481abec8f51818156a047a706a0a83e267fd350029deb62c2a4a7842571",
+      "matches_checksum_manifest": true
+    },
+    {
+      "path": "demo/artifacts/model_metadata.json",
+      "bytes": 2177,
+      "sha256": "f9079493fd52b8678a4cecc566b128b0122d0c1e7581d27972d932f12e009e8d",
+      "matches_checksum_manifest": true
+    },
+    {
+      "path": "demo/artifacts/point_corrector.json",
+      "bytes": 2130,
+      "sha256": "75bf5d03eac703755083a1b812b5c9886fce60bf019b6cbf62a30c022f7ce35e",
+      "matches_checksum_manifest": true
+    },
+    {
+      "path": "demo/artifacts/calibrator.json",
+      "bytes": 1641,
+      "sha256": "8c7e10e03d3f4c8e964b001c9150055a9bcafd8b254533ef22be434743c03958",
+      "matches_checksum_manifest": true
+    },
+    {
+      "path": "demo/artifacts/training_manifest.json",
+      "bytes": 456,
+      "sha256": "9844d692585b3f4c6c3c4efe265beea75794a99e5642dd87eac59738b73ff4e6",
+      "matches_checksum_manifest": true
+    }
+  ],
+  "challenger_checksum_manifest": {
+    "path": "demo/artifacts/artifact_checksums.json",
+    "bytes": 2021,
+    "sha256": "f32c03f095fa3f6140437cec6670a7362256b729b283cb14dc3d1ddb7f424a7d"
+  },
+  "challenger_model_metadata": {
+    "model_version": "m1-m2-research-res_07-seed42",
+    "target": "seasonal_residual_signed",
+    "target_strategy": "seasonal_residual_signed",
+    "baseline_anchor_semantics": "seasonal_naive_available_at_origin_with_causal_repository_fallbacks",
+    "residual_sign_policy": "signed_until_added_to_anchor_then_quantity_clipped_nonnegative",
+    "residual_blend_lambda": 1.0,
+    "quantile_repair_policy": "sort_triple",
+    "point_corrector_method": "horizon_shrunk_median_residual",
+    "calibration_target_semantics": "observed_sales_non_stockout",
+    "training_label_cutoff": "2026-06-16",
+    "point_fit_label_cutoff": "2026-06-30",
+    "calibration_label_cutoff": "2026-07-15",
+    "test_label_cutoff": "2026-08-12",
+    "actual_availability_convention": {
+      "name": "inclusive_end_of_day_next_run",
+      "actual_known_at": "The observed sales label for date d is available after close of business on d and before the next forecast run; an EOD origin on d may use it only for a subsequently fitted artifact.",
+      "vintage_evidence": "simulated historical availability; no operational publication timestamp exists in the demo bundle",
+      "weather": "excluded unless forecast vintage issued_at and available_at are both <= origin",
+      "promotion": "not a model feature",
+      "holiday_and_store_closure": "known-ahead calendar fields"
+    },
+    "simulated_available_at": "2026-07-15",
+    "artifact_fitted_at": "2026-10-04T06:47:50.660242+00:00",
+    "created_at": "2026-10-04T06:47:50.660260+00:00",
+    "published_at": null,
+    "promotion_status": "trained_candidate",
+    "production_available_at": null,
+    "protocol_sha256": "1faf8c9d18af3e80b303d4896cb635b521944ad3dedbfee6c05e4612893a16a4",
+    "selection_manifest_sha256": "6a11d8260af3125f9cd9d32c6fa7833f02e688ebde15af6938dba6592b6a4863",
+    "runtime_versions": {
+      "python_version": "3.14.4",
+      "package_version": null,
+      "lightgbm_version": "4.7.0",
+      "pandas_version": "3.0.6",
+      "numpy_version": "2.5.3",
+      "scikit_learn_version": "1.9.1",
+      "statsmodels_version": "0.15.0"
+    },
+    "holdout_status": "EXPLORATORY_OLD_HOLDOUT_ALREADY_EXPOSED",
+    "unseen_evidence": "UNSEEN_DATA_UNAVAILABLE"
+  },
+  "parquet_metadata_only": [
+    {
+      "path": "demo/artifacts/calibration_predictions.parquet",
+      "bytes": 128722,
+      "row_count": "not_read",
+      "schema": "not_read"
+    },
+    {
+      "path": "demo/artifacts/point_fit_predictions.parquet",
+      "bytes": 90055,
+      "row_count": "not_read",
+      "schema": "not_read"
+    },
+    {
+      "path": "demo/artifacts/test_predictions.parquet",
+      "bytes": 288149,
+      "row_count": "not_read",
+      "schema": "not_read"
+    },
+    {
+      "path": "demo/artifacts/walk_forward_predictions.parquet",
+      "bytes": 205959,
+      "row_count": "not_read",
+      "schema": "not_read"
+    },
+    {
+      "path": "demo/artifacts/walk_forward_residuals.parquet",
+      "bytes": 48200,
+      "row_count": "not_read",
+      "schema": "not_read"
+    }
+  ],
+  "e1_environment": {
+    "python": "3.11.9",
+    "tzdata": "2026.5",
+    "provisioning": "own venv; tzdata package copied locally into own site-packages; no shared site-packages or network install",
+    "model_dependencies_installed": false
+  }
+}

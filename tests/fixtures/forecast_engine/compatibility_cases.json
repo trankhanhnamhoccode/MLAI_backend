@@ -1,0 +1,1109 @@
+{
+  "schema_version": 1,
+  "classification": "SYNTHETIC_CORRECTNESS_ONLY",
+  "base": {
+    "store_id": "00000000-0000-0000-0000-000000000001",
+    "products": [
+      {
+        "id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup"
+      }
+    ],
+    "timezone": "Asia/Ho_Chi_Minh",
+    "history_start": "2026-09-27",
+    "cutoff": "2026-10-01",
+    "origin_available_at": "2026-10-02T00:00:00+07:00",
+    "horizon": 7,
+    "quantity_basis": "canonical_observed_sales",
+    "mode": "synthetic_offline",
+    "observations": [
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-09-27",
+        "quantity": "0",
+        "stockout": false,
+        "known_at": "2026-09-27T17:00:00+07:00"
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-09-29",
+        "quantity": "10",
+        "stockout": false,
+        "known_at": "2026-09-29T17:00:00+07:00"
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-09-30",
+        "quantity": "12",
+        "stockout": false,
+        "known_at": "2026-09-30T17:00:00+07:00"
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-10-01",
+        "quantity": "2",
+        "stockout": true,
+        "known_at": "2026-10-01T17:00:00+07:00"
+      }
+    ],
+    "calendar": [
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-09-27",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-09-28",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-09-29",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-09-30",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-10-01",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-10-02",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-10-03",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-10-04",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-10-05",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-10-06",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-10-07",
+        "closed": false,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "date": "2026-10-08",
+        "closed": true,
+        "holiday": false,
+        "source": "synthetic-owner-declaration-v1",
+        "known_at": "2026-09-26T09:00:00+07:00",
+        "weather": null
+      }
+    ],
+    "predictions": [
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-10-02",
+        "horizon": 1,
+        "p25": "8",
+        "p50": "10",
+        "p75": "12",
+        "interval_lower": "6",
+        "interval_upper": "14"
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-10-03",
+        "horizon": 2,
+        "p25": "8",
+        "p50": "10",
+        "p75": "12",
+        "interval_lower": "6",
+        "interval_upper": "14"
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-10-04",
+        "horizon": 3,
+        "p25": "8",
+        "p50": "10",
+        "p75": "12",
+        "interval_lower": "6",
+        "interval_upper": "14"
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-10-05",
+        "horizon": 4,
+        "p25": "8",
+        "p50": "10",
+        "p75": "12",
+        "interval_lower": "6",
+        "interval_upper": "14"
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-10-06",
+        "horizon": 5,
+        "p25": "8",
+        "p50": "10",
+        "p75": "12",
+        "interval_lower": "6",
+        "interval_upper": "14"
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-10-07",
+        "horizon": 6,
+        "p25": "8",
+        "p50": "10",
+        "p75": "12",
+        "interval_lower": "6",
+        "interval_upper": "14"
+      },
+      {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "product_id": "00000000-0000-0000-0000-000000000011",
+        "unit": "cup",
+        "date": "2026-10-08",
+        "horizon": 7,
+        "p25": "0",
+        "p50": "0",
+        "p75": "0",
+        "interval_lower": "0",
+        "interval_upper": "0"
+      }
+    ],
+    "artifact": {
+      "files": {
+        "calibrator.json": "SYNTHETIC-NOT-A-MODEL:calibrator.json",
+        "category_mappings.json": "SYNTHETIC-NOT-A-MODEL:category_mappings.json",
+        "feature_schema.json": "SYNTHETIC-NOT-A-MODEL:feature_schema.json",
+        "model_metadata.json": "SYNTHETIC-NOT-A-MODEL:model_metadata.json",
+        "model_q25.txt": "SYNTHETIC-NOT-A-MODEL:model_q25.txt",
+        "model_q50.txt": "SYNTHETIC-NOT-A-MODEL:model_q50.txt",
+        "model_q75.txt": "SYNTHETIC-NOT-A-MODEL:model_q75.txt",
+        "point_corrector.json": "SYNTHETIC-NOT-A-MODEL:point_corrector.json",
+        "preprocessing_config.json": "SYNTHETIC-NOT-A-MODEL:preprocessing_config.json",
+        "training_manifest.json": "SYNTHETIC-NOT-A-MODEL:training_manifest.json"
+      },
+      "checksums": {
+        "calibrator.json": "37091df60f2f96caa1315cb3ac18cc90ed6488112ea19e685fee7694d6dfe553",
+        "category_mappings.json": "2f4375bab3046d0189fcacfe55056ffe995646d397fd747a6e032473c916f4a6",
+        "feature_schema.json": "c50b57d8466e260c400529cbea8ff1c3ab15bc13bca67eb3b9501a9121e6275d",
+        "model_metadata.json": "5e6f942faa71cb8f75b8e8c5f5b358a8716774546bf0053463e02fa1c4381dda",
+        "model_q25.txt": "6ece44d1f1c4d02da39a874a83bc403e8adb76de7eaa5fb5dd3f5dba97e6352a",
+        "model_q50.txt": "9c9a3a7cb1fe72cd31aa5565f481867a063eaf048bcd2c3b4f787ca1edf27de8",
+        "model_q75.txt": "28b00ec33cd4edcedf0be64f50788c4e0f6386b91d1d3043f24733290661ab9d",
+        "point_corrector.json": "01e4c199fcc17f546975841728af090c9d022c52a1508beee2db1fe24d52e10d",
+        "preprocessing_config.json": "e405e6a99d996019fc6f3cae3949a00bc1f07eab635bfc106cf95654d78ed533",
+        "training_manifest.json": "388a3357598d5fca820f5516913340374ade4e08e4643eec544020a26fdae0e6"
+      },
+      "schema": "3.0",
+      "cqr_semantics": "cqr-order-statistic-v2",
+      "point_semantics": "additive-median-residual-v1",
+      "scope": {
+        "store_id": "00000000-0000-0000-0000-000000000001",
+        "products": [
+          {
+            "id": "00000000-0000-0000-0000-000000000011",
+            "unit": "cup"
+          }
+        ],
+        "timezone": "Asia/Ho_Chi_Minh"
+      },
+      "training_label_cutoff": "2026-08-06",
+      "point_fit_label_cutoff": "2026-09-03",
+      "calibration_label_cutoff": "2026-10-01",
+      "available_at": "2026-10-01T23:59:00+07:00",
+      "promotion_status": "trained_candidate",
+      "production_available_at": null
+    }
+  },
+  "cases": [
+    {
+      "name": "sparse_missing_is_absent_and_zero_is_observed",
+      "expected": "VALID",
+      "changes": []
+    },
+    {
+      "name": "unknown_stockout_preserved",
+      "expected": "VALID",
+      "changes": [
+        {
+          "path": [
+            "observations",
+            3,
+            "stockout"
+          ],
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "cqr_bounds_are_separate_from_quantiles",
+      "expected": "VALID",
+      "changes": [
+        {
+          "path": [
+            "predictions",
+            0,
+            "interval_lower"
+          ],
+          "value": "5"
+        },
+        {
+          "path": [
+            "predictions",
+            0,
+            "interval_upper"
+          ],
+          "value": "20"
+        }
+      ]
+    },
+    {
+      "name": "double_reconstruction",
+      "expected": "UNSUPPORTED:DOUBLE_RECONSTRUCTION",
+      "changes": [
+        {
+          "path": [
+            "quantity_basis"
+          ],
+          "value": "be_reconstructed_demand"
+        }
+      ]
+    },
+    {
+      "name": "foreign_store",
+      "expected": "UNSUPPORTED:FOREIGN_SCOPE",
+      "changes": [
+        {
+          "path": [
+            "observations",
+            0,
+            "store_id"
+          ],
+          "value": "00000000-0000-0000-0000-000000000002"
+        }
+      ]
+    },
+    {
+      "name": "foreign_product",
+      "expected": "UNSUPPORTED:FOREIGN_SCOPE",
+      "changes": [
+        {
+          "path": [
+            "observations",
+            0,
+            "product_id"
+          ],
+          "value": "00000000-0000-0000-0000-000000000012"
+        }
+      ]
+    },
+    {
+      "name": "unit_mismatch",
+      "expected": "UNSUPPORTED:UNIT_MISMATCH",
+      "changes": [
+        {
+          "path": [
+            "observations",
+            0,
+            "unit"
+          ],
+          "value": "piece"
+        }
+      ]
+    },
+    {
+      "name": "future_business_date",
+      "expected": "UNSUPPORTED:OBSERVATION_OUTSIDE_WINDOW",
+      "changes": [
+        {
+          "path": [
+            "observations",
+            0,
+            "date"
+          ],
+          "value": "2026-10-02"
+        }
+      ]
+    },
+    {
+      "name": "late_revision_of_past_label",
+      "expected": "DATA_BLOCKED:FUTURE_LABEL",
+      "changes": [
+        {
+          "path": [
+            "observations",
+            0,
+            "known_at"
+          ],
+          "value": "2026-10-02T01:00:00+07:00"
+        }
+      ]
+    },
+    {
+      "name": "duplicate_observation",
+      "expected": "UNSUPPORTED:DUPLICATE_OBSERVATION",
+      "changes": [
+        {
+          "path": [
+            "observations"
+          ],
+          "value": [
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-09-27",
+              "quantity": "0",
+              "stockout": false,
+              "known_at": "2026-09-27T17:00:00+07:00"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-09-29",
+              "quantity": "10",
+              "stockout": false,
+              "known_at": "2026-09-29T17:00:00+07:00"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-09-30",
+              "quantity": "12",
+              "stockout": false,
+              "known_at": "2026-09-30T17:00:00+07:00"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-01",
+              "quantity": "2",
+              "stockout": true,
+              "known_at": "2026-10-01T17:00:00+07:00"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-09-27",
+              "quantity": "0",
+              "stockout": false,
+              "known_at": "2026-09-27T17:00:00+07:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stockout_not_boolean",
+      "expected": "UNSUPPORTED:STOCKOUT_TYPE",
+      "changes": [
+        {
+          "path": [
+            "observations",
+            0,
+            "stockout"
+          ],
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "unsupported_horizon",
+      "expected": "UNSUPPORTED:HORIZON_UNSUPPORTED",
+      "changes": [
+        {
+          "path": [
+            "horizon"
+          ],
+          "value": 8
+        }
+      ]
+    },
+    {
+      "name": "inclusive_cutoff_output_forbidden",
+      "expected": "UNSUPPORTED:OUTPUT_HORIZON",
+      "changes": [
+        {
+          "path": [
+            "predictions",
+            0,
+            "date"
+          ],
+          "value": "2026-10-01"
+        }
+      ]
+    },
+    {
+      "name": "missing_product_date",
+      "expected": "TECHNICAL_ERROR:OUTPUT_COVERAGE",
+      "changes": [
+        {
+          "path": [
+            "predictions"
+          ],
+          "value": [
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-02",
+              "horizon": 1,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-03",
+              "horizon": 2,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-04",
+              "horizon": 3,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-05",
+              "horizon": 4,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-06",
+              "horizon": 5,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-07",
+              "horizon": 6,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "duplicate_output",
+      "expected": "TECHNICAL_ERROR:DUPLICATE_OUTPUT",
+      "changes": [
+        {
+          "path": [
+            "predictions"
+          ],
+          "value": [
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-02",
+              "horizon": 1,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-03",
+              "horizon": 2,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-04",
+              "horizon": 3,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-05",
+              "horizon": 4,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-06",
+              "horizon": 5,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-07",
+              "horizon": 6,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-08",
+              "horizon": 7,
+              "p25": "0",
+              "p50": "0",
+              "p75": "0",
+              "interval_lower": "0",
+              "interval_upper": "0"
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "product_id": "00000000-0000-0000-0000-000000000011",
+              "unit": "cup",
+              "date": "2026-10-02",
+              "horizon": 1,
+              "p25": "8",
+              "p50": "10",
+              "p75": "12",
+              "interval_lower": "6",
+              "interval_upper": "14"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "crossed_final_quantiles",
+      "expected": "TECHNICAL_ERROR:FINAL_QUANTILE_CROSSING",
+      "changes": [
+        {
+          "path": [
+            "predictions",
+            0,
+            "p25"
+          ],
+          "value": "11"
+        }
+      ]
+    },
+    {
+      "name": "nonfinite_final_quantile",
+      "expected": "TECHNICAL_ERROR:NONFINITE_OR_NEGATIVE",
+      "changes": [
+        {
+          "path": [
+            "predictions",
+            0,
+            "p50"
+          ],
+          "value": "NaN"
+        }
+      ]
+    },
+    {
+      "name": "infinite_interval",
+      "expected": "TECHNICAL_ERROR:NONFINITE_OR_NEGATIVE",
+      "changes": [
+        {
+          "path": [
+            "predictions",
+            0,
+            "interval_upper"
+          ],
+          "value": "Infinity"
+        }
+      ]
+    },
+    {
+      "name": "missing_artifact",
+      "expected": "TECHNICAL_ERROR:ARTIFACT_MISSING",
+      "changes": [
+        {
+          "path": [
+            "artifact",
+            "files"
+          ],
+          "value": {
+            "calibrator.json": "SYNTHETIC-NOT-A-MODEL:calibrator.json",
+            "category_mappings.json": "SYNTHETIC-NOT-A-MODEL:category_mappings.json",
+            "feature_schema.json": "SYNTHETIC-NOT-A-MODEL:feature_schema.json",
+            "model_metadata.json": "SYNTHETIC-NOT-A-MODEL:model_metadata.json",
+            "model_q50.txt": "SYNTHETIC-NOT-A-MODEL:model_q50.txt",
+            "model_q75.txt": "SYNTHETIC-NOT-A-MODEL:model_q75.txt",
+            "point_corrector.json": "SYNTHETIC-NOT-A-MODEL:point_corrector.json",
+            "preprocessing_config.json": "SYNTHETIC-NOT-A-MODEL:preprocessing_config.json",
+            "training_manifest.json": "SYNTHETIC-NOT-A-MODEL:training_manifest.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "corrupt_artifact",
+      "expected": "TECHNICAL_ERROR:ARTIFACT_CORRUPT",
+      "changes": [
+        {
+          "path": [
+            "artifact",
+            "files",
+            "model_q25.txt"
+          ],
+          "value": "corrupt"
+        }
+      ]
+    },
+    {
+      "name": "checksum_manifest_incomplete",
+      "expected": "TECHNICAL_ERROR:CHECKSUM_COVERAGE",
+      "changes": [
+        {
+          "path": [
+            "artifact",
+            "checksums"
+          ],
+          "value": {}
+        }
+      ]
+    },
+    {
+      "name": "future_point_fit",
+      "expected": "DATA_BLOCKED:ARTIFACT_FUTURE_LABEL",
+      "changes": [
+        {
+          "path": [
+            "artifact",
+            "point_fit_label_cutoff"
+          ],
+          "value": "2026-10-02"
+        }
+      ]
+    },
+    {
+      "name": "future_artifact_publication",
+      "expected": "DATA_BLOCKED:ARTIFACT_NOT_AVAILABLE",
+      "changes": [
+        {
+          "path": [
+            "artifact",
+            "available_at"
+          ],
+          "value": "2026-10-02T01:00:00+07:00"
+        }
+      ]
+    },
+    {
+      "name": "research_artifact_not_production",
+      "expected": "DATA_BLOCKED:ARTIFACT_NOT_PROMOTED",
+      "changes": [
+        {
+          "path": [
+            "mode"
+          ],
+          "value": "production"
+        }
+      ]
+    },
+    {
+      "name": "missing_calendar_not_default_open",
+      "expected": "DATA_BLOCKED:CALENDAR_COVERAGE_MISSING",
+      "changes": [
+        {
+          "path": [
+            "calendar"
+          ],
+          "value": [
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-09-27",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-09-28",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-09-29",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-09-30",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-10-01",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-10-02",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-10-03",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-10-04",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-10-05",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-10-06",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            },
+            {
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "date": "2026-10-07",
+              "closed": false,
+              "holiday": false,
+              "source": "synthetic-owner-declaration-v1",
+              "known_at": "2026-09-26T09:00:00+07:00",
+              "weather": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown_closure_not_false",
+      "expected": "DATA_BLOCKED:CALENDAR_FACTS_REQUIRED",
+      "changes": [
+        {
+          "path": [
+            "calendar",
+            0,
+            "closed"
+          ],
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "late_closure_declaration",
+      "expected": "DATA_BLOCKED:FUTURE_CALENDAR",
+      "changes": [
+        {
+          "path": [
+            "calendar",
+            0,
+            "known_at"
+          ],
+          "value": "2026-10-03T00:00:00+07:00"
+        }
+      ]
+    },
+    {
+      "name": "future_weather",
+      "expected": "DATA_BLOCKED:UNSAFE_WEATHER",
+      "changes": [
+        {
+          "path": [
+            "calendar",
+            5,
+            "weather"
+          ],
+          "value": {
+            "kind": "forecast",
+            "issued_at": "2026-10-02T01:00:00+07:00",
+            "available_at": "2026-10-02T01:00:00+07:00"
+          }
+        }
+      ]
+    },
+    {
+      "name": "realized_target_weather",
+      "expected": "DATA_BLOCKED:UNSAFE_WEATHER",
+      "changes": [
+        {
+          "path": [
+            "calendar",
+            5,
+            "weather"
+          ],
+          "value": {
+            "kind": "actual",
+            "issued_at": "2026-10-01T01:00:00+07:00",
+            "available_at": "2026-10-01T01:00:00+07:00"
+          }
+        }
+      ]
+    },
+    {
+      "name": "safe_forecast_weather",
+      "expected": "VALID",
+      "changes": [
+        {
+          "path": [
+            "calendar",
+            5,
+            "weather"
+          ],
+          "value": {
+            "kind": "forecast",
+            "issued_at": "2026-10-01T01:00:00+07:00",
+            "available_at": "2026-10-01T01:00:00+07:00"
+          }
+        }
+      ]
+    },
+    {
+      "name": "closed_day_nonzero",
+      "expected": "TECHNICAL_ERROR:CLOSED_DAY_NOT_ZERO",
+      "changes": [
+        {
+          "path": [
+            "predictions",
+            6,
+            "p75"
+          ],
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "closed_positive_observation_conflict",
+      "expected": "DATA_BLOCKED:CLOSED_DAY_OBSERVATION_CONFLICT",
+      "changes": [
+        {
+          "path": [
+            "calendar",
+            2,
+            "closed"
+          ],
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "artifact_foreign_timezone",
+      "expected": "UNSUPPORTED:ARTIFACT_SCOPE",
+      "changes": [
+        {
+          "path": [
+            "artifact",
+            "scope",
+            "timezone"
+          ],
+          "value": "UTC"
+        }
+      ]
+    },
+    {
+      "name": "legacy_cqr_incompatible",
+      "expected": "UNSUPPORTED:ARTIFACT_INCOMPATIBLE",
+      "changes": [
+        {
+          "path": [
+            "artifact",
+            "cqr_semantics"
+          ],
+          "value": "cqr-v1"
+        }
+      ]
+    },
+    {
+      "name": "cqr_interval_must_contain_corrected_median",
+      "expected": "TECHNICAL_ERROR:INVALID_CQR_INTERVAL",
+      "changes": [
+        {
+          "path": [
+            "predictions",
+            0,
+            "interval_lower"
+          ],
+          "value": "11"
+        }
+      ]
+    }
+  ]
+}
