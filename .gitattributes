@@ -1,0 +1,3 @@
+# Preserve original pinned snapshot bytes across checkout/build; provenance hashes
+# include upstream line endings. All other repository policies remain unchanged.
+vendor/forecast_challenger/shelfcash_forecast/** -text

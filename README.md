@@ -60,3 +60,4 @@ forecast accuracy claim từ targeted synthetic tests.
 - [Import](docs/IMPORT_MAPPING_API_CONTRACT_VI.md), [Planning](docs/PROCUREMENT_API_CONTRACT_VI.md), [Notifications](docs/NOTIFICATION_API_CONTRACT_VI.md).
 - [Kiến trúc](docs/ARCHITECTURE.md), [domain](docs/DOMAIN_MODEL.md), [schema](docs/DATABASE_SCHEMA.md), [ADRs](docs/DECISIONS.md).
 - [FE handoff/OpenAPI](docs/handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
+- [Forecast challenger offline — isolated opt-in setup, inference và replay](docs/features/FORECAST_ENGINE_INTEGRATION.md#e2-runtime).

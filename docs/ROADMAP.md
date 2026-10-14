@@ -4,16 +4,18 @@
 
 Phạm vi E1 được người dùng duyệt: giữ BE host và toàn bộ Planning business authority;
 forecast engine mới qua adapter riêng, không LLM/OpenRouter trong E1–E5. E1 COMPLETE
-compatibility specification + frozen synthetic benchmark protocol/config/fixtures và
-offline validators trên branch/worktree riêng. Không tích hợp runtime hoặc đánh giá
-chất lượng thật; main/demo/customer DB và serving artifacts giữ nguyên.
+compatibility/protocol; E2 COMPLETE internal typed opt-in adapter với pinned installed
+forecast-only source/dependencies, native fixed inference và private retained replay.
+Tiny synthetic correctness VERIFIED; không production integration/accuracy/promotion.
+Main/demo/customer DB và serving artifacts giữ nguyên; E1 commit local, E2 WIP.
 
 [FORECAST_ENGINE_INTEGRATION](features/FORECAST_ENGINE_INTEGRATION.md) là canonical
 owner của matrix, data/artifact inventory, replay/availability/reconstruction/CQR
-boundaries, benchmark/promotion và các gates E1–E5. E2 adapter NOT_STARTED; E3 accuracy,
+boundaries, benchmark/promotion và các gates E1–E5. E2 native correctness VERIFIED;
+E3 accuracy,
 E4 host Planning impact và E5 acceptance/promotion NOT_STARTED. Thiếu unseen/vintage
 evidence và sourced operating calendar hiện chặn quality/promotion claims. Đã dừng
-sau E1; bước kế tiếp cần authorization, không tự mở E2 hoặc serving activation.
+sau E2; bước kế tiếp cần authorization, không tự mở E3 hoặc serving activation.
 
 ## CURRENT FACT
 

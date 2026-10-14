@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools==82.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shelfcash-forecast-challenger-snapshot"
+version = "0.1.0+62b94fa.e2"
+description = "Pinned ShelfCash forecast-only inference snapshot; no aggregate APIs"
+requires-python = ">=3.11"
+dependencies = ["numpy==2.2.6", "scipy==1.17.1", "lightgbm==4.6.0", "pandas==2.2.3", "pydantic==2.13.5", "tzdata==2026.5"]
+
+[tool.setuptools.packages.find]
+include = ["shelfcash_forecast*"]
+
+[tool.setuptools.package-data]
+shelfcash_forecast = ["snapshot_provenance.json"]

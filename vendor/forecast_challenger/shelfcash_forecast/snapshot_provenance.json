@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "upstream_commit": "62b94fa4d67cb04141d32be4e57d6f9740c2a8fc",
+  "distribution": "shelfcash-forecast-challenger-snapshot",
+  "version": "0.1.0+62b94fa.e2",
+  "purpose": "fixed inference only; overrides/training/pipeline orchestration not exported",
+  "license_status": "No LICENSE/COPYING file found in upstream tracked snapshot; original source notices retained. No third-party engine source added.",
+  "excluded_lazy_import": "pipeline.forecast_overrides; adapter always passes override_policy=None",
+  "files": [
+    {
+      "path": "shelfcash_forecast/__init__.py",
+      "sha256": "8774cbf84a3b306b659b0f5b89c690a6465242f6fb9326fa026a08b553577c38",
+      "upstream_sha256": "3ca9cb7be54c5e7f26a827c7bb1b85e752b9204814a65a0adaaa0340a02eaf26",
+      "transformation": "replace aggregate initializer with inert initializer"
+    },
+    {
+      "path": "shelfcash_forecast/baselines/__init__.py",
+      "sha256": "8774cbf84a3b306b659b0f5b89c690a6465242f6fb9326fa026a08b553577c38",
+      "upstream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transformation": "replace aggregate initializer with inert initializer"
+    },
+    {
+      "path": "shelfcash_forecast/baselines/seasonal_naive.py",
+      "sha256": "3abc0fda6662bd1c10ddb73f9ea6e796bd6824b55b4fb9014bedcf48d53cf0f2",
+      "upstream_sha256": "3abc0fda6662bd1c10ddb73f9ea6e796bd6824b55b4fb9014bedcf48d53cf0f2",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/calibration/__init__.py",
+      "sha256": "8774cbf84a3b306b659b0f5b89c690a6465242f6fb9326fa026a08b553577c38",
+      "upstream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transformation": "replace aggregate initializer with inert initializer"
+    },
+    {
+      "path": "shelfcash_forecast/calibration/cqr.py",
+      "sha256": "c57a7af16e10daa3796db54ecc72ec79bfdb7e5c9c1ba72b5f01bba53f612aab",
+      "upstream_sha256": "c57a7af16e10daa3796db54ecc72ec79bfdb7e5c9c1ba72b5f01bba53f612aab",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/calibration/crossing.py",
+      "sha256": "f7ac4c08692cdde3e0655c0ba33f129354901248b125c36957e57ab70af37eed",
+      "upstream_sha256": "f7ac4c08692cdde3e0655c0ba33f129354901248b125c36957e57ab70af37eed",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/calibration/point.py",
+      "sha256": "51371fa6813d711f06f9f3cbb5b952c2c7a9d1d9df43c1f793c70b689328f508",
+      "upstream_sha256": "51371fa6813d711f06f9f3cbb5b952c2c7a9d1d9df43c1f793c70b689328f508",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/config.py",
+      "sha256": "840a94887fd275a1aa2bb3e5d9efd01d87b9e47467935c1466fd614e320438ed",
+      "upstream_sha256": "840a94887fd275a1aa2bb3e5d9efd01d87b9e47467935c1466fd614e320438ed",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/contracts.py",
+      "sha256": "3f8d53032fd0c490be642dcd75bf32979a7346733fbe24acbc473e7fbe7aa849",
+      "upstream_sha256": "3f8d53032fd0c490be642dcd75bf32979a7346733fbe24acbc473e7fbe7aa849",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/data/__init__.py",
+      "sha256": "8774cbf84a3b306b659b0f5b89c690a6465242f6fb9326fa026a08b553577c38",
+      "upstream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transformation": "replace aggregate initializer with inert initializer"
+    },
+    {
+      "path": "shelfcash_forecast/data/adapter.py",
+      "sha256": "8872aa0a4511cbe93acf29ed881cf074f5867d89826bf8b0c88777712b6f1510",
+      "upstream_sha256": "8872aa0a4511cbe93acf29ed881cf074f5867d89826bf8b0c88777712b6f1510",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/data/contracts.py",
+      "sha256": "f2cb7310485fdb54f0e9e32d4da0ff16a6e27b7c149aca13be354495dfa77947",
+      "upstream_sha256": "f2cb7310485fdb54f0e9e32d4da0ff16a6e27b7c149aca13be354495dfa77947",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/data/demand_reconstruction.py",
+      "sha256": "fa5ecd0c225d4a66679c1cd51550dc2449ca1b57ee6fa90c70b19c39dd5e8259",
+      "upstream_sha256": "fa5ecd0c225d4a66679c1cd51550dc2449ca1b57ee6fa90c70b19c39dd5e8259",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/data/panel_builder.py",
+      "sha256": "74b5fcebb19a3334ed469733ab842615f3106d29958249743e6e35db0616ec5f",
+      "upstream_sha256": "74b5fcebb19a3334ed469733ab842615f3106d29958249743e6e35db0616ec5f",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/data/validator.py",
+      "sha256": "bfd9a032156ef6aa94452ba9d3992eb57507731c75de0b3f11ecc627255bc82e",
+      "upstream_sha256": "bfd9a032156ef6aa94452ba9d3992eb57507731c75de0b3f11ecc627255bc82e",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/exceptions.py",
+      "sha256": "c01d19a77e23a1fd16bd38e239bcfe54251c8d72861dffc02dd316850100cd70",
+      "upstream_sha256": "c01d19a77e23a1fd16bd38e239bcfe54251c8d72861dffc02dd316850100cd70",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/features/__init__.py",
+      "sha256": "8774cbf84a3b306b659b0f5b89c690a6465242f6fb9326fa026a08b553577c38",
+      "upstream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transformation": "replace aggregate initializer with inert initializer"
+    },
+    {
+      "path": "shelfcash_forecast/features/future.py",
+      "sha256": "9d1ae710f0d8e19e991e8af206e3659da8fc7b5c8043d3ba222c3c7e8fc11ae6",
+      "upstream_sha256": "9d1ae710f0d8e19e991e8af206e3659da8fc7b5c8043d3ba222c3c7e8fc11ae6",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/features/historical.py",
+      "sha256": "28cea8a50f19a93e058b65f725e9f1e5b79372e71a80bf713c9ec52307014f25",
+      "upstream_sha256": "28cea8a50f19a93e058b65f725e9f1e5b79372e71a80bf713c9ec52307014f25",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/features/specification.py",
+      "sha256": "9684408d9c84a3592392273a822c75e3d9b7bef939ba502109792c65488e82a7",
+      "upstream_sha256": "9684408d9c84a3592392273a822c75e3d9b7bef939ba502109792c65488e82a7",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/features/training_table.py",
+      "sha256": "5603de53af5acc64f352fea7ecc0a919ef44d7e9ca2c50a7495f0cd253718fa3",
+      "upstream_sha256": "5603de53af5acc64f352fea7ecc0a919ef44d7e9ca2c50a7495f0cd253718fa3",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/models/__init__.py",
+      "sha256": "8774cbf84a3b306b659b0f5b89c690a6465242f6fb9326fa026a08b553577c38",
+      "upstream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transformation": "replace aggregate initializer with inert initializer"
+    },
+    {
+      "path": "shelfcash_forecast/models/predictor.py",
+      "sha256": "d66efee3dae9cd224c18e79cbea0e6529b348da6160999705b39f2165bb56a1c",
+      "upstream_sha256": "d66efee3dae9cd224c18e79cbea0e6529b348da6160999705b39f2165bb56a1c",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/models/quantile_models.py",
+      "sha256": "209482e0c9f81fea97d7c167cb689a551935cba485f7672538a3238d155f27b1",
+      "upstream_sha256": "209482e0c9f81fea97d7c167cb689a551935cba485f7672538a3238d155f27b1",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/pipeline/__init__.py",
+      "sha256": "8774cbf84a3b306b659b0f5b89c690a6465242f6fb9326fa026a08b553577c38",
+      "upstream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transformation": "replace aggregate initializer with inert initializer"
+    },
+    {
+      "path": "shelfcash_forecast/pipeline/inference_pipeline.py",
+      "sha256": "bc6dc52a040ba97a6ce2fa633197ae03a5c1b23aa8fcd3294a25aa3fbb67cd18",
+      "upstream_sha256": "bc6dc52a040ba97a6ce2fa633197ae03a5c1b23aa8fcd3294a25aa3fbb67cd18",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/registry/__init__.py",
+      "sha256": "8774cbf84a3b306b659b0f5b89c690a6465242f6fb9326fa026a08b553577c38",
+      "upstream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transformation": "replace aggregate initializer with inert initializer"
+    },
+    {
+      "path": "shelfcash_forecast/registry/governance.py",
+      "sha256": "13cb9ca42b82dc310a81b7f6590b04fee541d3abd686fa1d0f1d7810ccd26c9e",
+      "upstream_sha256": "13cb9ca42b82dc310a81b7f6590b04fee541d3abd686fa1d0f1d7810ccd26c9e",
+      "transformation": "none"
+    },
+    {
+      "path": "shelfcash_forecast/registry/loader.py",
+      "sha256": "ea86f822452b797fdbccb82bd337bc690e1d26760b8abd1e1a5c9dcd549e5be6",
+      "upstream_sha256": "ea86f822452b797fdbccb82bd337bc690e1d26760b8abd1e1a5c9dcd549e5be6",
+      "transformation": "none"
+    }
+  ],
+  "source_digest": "99ef7c2631f3bb349c303b311718fb0bd81471469715928fb99c9e28de28aca4"
+}

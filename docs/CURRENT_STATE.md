@@ -1,22 +1,25 @@
 # Current state
 
-## CURRENT FACT — forecast challenger E1 (isolated branch)
+## CURRENT FACT — forecast challenger E1/E2 (isolated branch)
 
-E1 compatibility/protocol COMPLETE trong worktree riêng
+E1 compatibility/protocol và E2 internal adapter COMPLETE trong worktree riêng
 `backend-forecast-engine-challenger`, branch `feat/forecast-engine-challenger`, từ
 main052cddee. Host và engine62b94fa đã static trace; legacycac7c5a chỉ qua review ZIP.
 Canonical [Forecast integration](features/FORECAST_ENGINE_INTEGRATION.md) sở hữu
-compatibility matrix, native reconstruction boundary, CQR/artifact gaps, frozen
-benchmark arms/splits/scoring/promotion, inventory và E1–E5 gates. Synthetic fixtures
-và offline protocol checks có trong source; không phải native execution/accuracy proof.
+matrix, native reconstruction/CQR/artifact/runtime identity, benchmark và E1–E5
+gates. E2 có typed raw capture, pinned forecast-only wheel/dependencies, strict
+artifact/calendar guards, private immutable evidence/cache và exact replay. Native
+inference/public-stage equivalence/cache/fresh-process replay đã verify trên tiny
+synthetic correctness artifact; không accuracy/calibration/promotion proof.
 
 ACCEPTED DECISION theo yêu cầu E1: BE làm host, forecast mới qua adapter riêng;
 giữ BOM/loss/Product serving/FEFO/procurement/requirements/winner/retained Planning.
-E1–E5 không LLM/OpenRouter. E2 chưa bắt đầu; production serving, API/schema/permissions,
-FE, engine source và runtime/DB người dùng không đổi. Không train, benchmark dài,
-DB/server/worker, seed/migrate/reset hoặc activation. Dữ liệu unseen/vintage,
-closure/weather capture, dependency/artifact eligibility và E3 training recipe
-vẫn là gaps; xem tài liệu canonical, không claim real-data quality/promotion.
+E1–E5 không LLM/OpenRouter. Production serving/API/schema/permissions, FE, engine
+source và runtime/DB người dùng không đổi. E2 production mode bị khóa, CLI OFF mặc
+định, không operational DB caller. Chỉ tiny bounded synthetic test setup được train;
+không research training/accuracy benchmark/DB/server/worker/seed/reset/activation.
+E1 commit local; E2 giữ WIP để review, dừng sau E2. Unseen/vintage, operational
+sourced calendar, real compatible artifacts và causal E3 fit recipe vẫn là gaps.
 
 ## CURRENT FACT — self-service Store/customer local
 

@@ -9,10 +9,12 @@ winner and retained Planning. E1–E5 make no LLM/OpenRouter calls. Stochastic
 scenarios, new procurement, explanation/chatbot and what-if are outside this work.
 
 CURRENT FACT: E1 supplies static boundary traces, a frozen synthetic protocol,
-portable admission fixtures and small offline validators. Challenger serving,
-training, accuracy, persistence and promotion have **not** run. E2 implementation
-below is PROPOSAL within the approved direction, not current runtime. No public
-API, schema, permission, accepted ADR or production configuration changes in E1.
+portable admission fixtures and small offline validators. E2 implements the
+separate opt-in detached adapter and private filesystem retention; fixed native
+inference/cache/fresh-process replay are verified on tiny synthetic artifacts.
+Operational DB/public serving wiring, accuracy, research training and promotion
+have **not** run. No public API, schema, permission, accepted ADR or production
+configuration changes. E3–E5 remain PROPOSAL/NOT_STARTED.
 
 Authority: [ADR-012](../adr/ADR-012-observed-sales-forecast-execution-contract.md),
 [ADR-014](../adr/ADR-014-retained-baseline-execution.md),
@@ -81,29 +83,29 @@ its schemas are reference only, not something to port into the greenfield host.
 
 ## Adapter compatibility matrix and E2 boundary
 
-PROPOSAL — detached input: host-owned validated prepared observations plus a new
-explicit supplemental capture containing scoped calendar/closure, optional forecast
-weather vintage, real inference availability instant, pinned challenger artifact
-and versioned adapter configuration. The current PreparedForecastInput contains
+ACCEPTED DECISION / CURRENT FACT E2 — detached input: host-owned validated raw
+observations plus explicit scoped calendar/closure, real inference availability
+instant, pinned challenger artifact and versioned adapter configuration. Weather
+is excluded in this arm. The current PreparedForecastInput contains
 host-derived demand_records; pass **only observations** to challenger sales_history.
 Keep original host capture/digest intact and give challenger projection its own
 policy identity/digest. Never relabel host demand_records as challenger estimates.
 
 | Topic | Frozen compatibility requirement | Support/gap |
 | --- | --- | --- |
-| Identity/scope | One captured Store, explicit sorted UUID Products, exact selling units; per-row Store/Product checks before engine coercion. Product_name may be opaque UUID display text; names never keys. Preserve all requested Products. | Host supports; engine adapter needs strict preflight and mapping. |
-| Time | Store-local DATE D inclusive; history_start…D; D+1…D+7. Known-at uses aware actual execution instant after EOD D, separately retained; no fabricated23:59:59 cutoff. At backtests state explicit next-run availability assumption. | Host dates supported; engine timestamp normalization and availability need guard. |
+| Identity/scope | One captured Store, explicit sorted UUID Products, exact selling units; per-row Store/Product checks before engine coercion. Product_name may be opaque UUID display text; names never keys. Preserve all requested Products. | E2 strict preflight/mapping implemented; no operational host wiring. |
+| Time | Store-local DATE D inclusive; history_start…D; D+1…D+7. Known-at uses aware actual execution instant after EOD D, separately retained; no fabricated23:59:59 cutoff. At backtests state explicit next-run availability assumption. | E2 aware instant/Store-date gates implemented; weather disabled. |
 | Sparse/zero | Absence is missing; explicit Decimal0 remains observed. Dense model panels never write canonical rows. No fill of canonical quantities or missing forecast outputs. Native last_observed_demand uses forward fill as a separate feature; never treat it as an observation. | Supported observations; host/engine different derived panels preserved by policy. |
-| Units | Output quantity is Product selling_unit, no integer rounding/unit conversion/Ingredient inference. Reject absent/wrong unit, overflow or float conversion failure. | Engine unit nullable; adapter must tighten. |
+| Units | Output quantity is Product selling_unit, no integer rounding/unit conversion/Ingredient inference. Reject absent/wrong unit, overflow or float conversion failure. | E2 rejects absent/wrong native units and float overflow. |
 | Coverage | Exact Product×7 dates, no duplicates/unexpected keys; target horizon consistent. All requested Product readiness before execution; no partial success. | Existing host validator reusable for final result. |
 | Stockout | true/false/null preserved; sales≠estimated demand. C arm reconstructs original observations exactly once using native policy. Never pass usable_histories or host demand_quantity as quantity_sold. | E2 uses native boundary; model+estimator changes expressly declared. |
 | Quantiles | P25/P50/P75 are demand quantiles mapped directly to host LOW/BASE/HIGH. Preserve engine raw crossings/clipping diagnostics and frozen postprocess identity; reject final crossing/nonfinite/negative. Decimal(str(float)), no extra silent repair. | Supported after strict output validation; raw diagnostics need state capture. |
-| CQR | Separate interval_lower/upper, coverage target, calibrator and point IDs/fit provenance. Never replace P25/P75; no joint path/probability guarantee. | Separate E2 diagnostic envelope required; existing host result/persistence has no CQR fields. |
+| CQR | Separate interval_lower/upper, coverage target, calibrator and point IDs/fit provenance. Never replace P25/P75; no joint path/probability guarantee. | E2 separate typed CQR/evidence envelope implemented; host persistence unchanged. |
 | Closure | Zero only from same-Store, sourced, known-at closure facts covering dense historical panel and forecast dates. Known open/holiday false also need evidence; missing is data-blocked. Positive observed sales on declared closed date require resolution. | CalendarEvent history is not complete daily operating calendar. Host closure/weather capture currently absent. |
-| Artifact | Explicit immutable content identity covering all3 boosters, config, features, category mappings, point, CQR, metadata and training manifest. Verify hashes/paths/versions/scope/units/timezone before native load. No optional checksums, schema2 implicit corrector, latest, download, train or promotion. | New pinned schema3 envelope required; native registry is weaker. |
-| Temporal | Training, point-fit and calibration labels and their known-at boundaries must precede artifact fit; artifact publication/availability must precede inference; production additionally needs explicit promoted identity and production_available_at. Original exposed holdout remains inadmissible promotion evidence. | Native production gate is insufficient for these full checks. |
-| Reuse/replay | Separate challenger model_type/version, host input digest, projection/policy/config/source/features/postprocess/dependency/artifact identities and supplemental capture digest. Stable ordering and canonical decimals. Cache only exact identity, partition by Store; replay exact captured input and bytes, no current lookup/retrain/fallback. | Existing serving contracts and artifact manifest use host-specific literals. Extend opt-in contracts later; cannot stuff CQR/provenance into metrics_json or reinterpret schema1. |
-| Failure | UNSUPPORTED: incompatible schema/unit/scope/horizon/basis. DATA_BLOCKED: missing history/calendar, unsafe vintage/temporally ineligible/unpromoted artifact. TECHNICAL_ERROR: absent/corrupt pinned bytes, invalid native output, dependency/load/inference error. Sanitized code/detail, never broad success fallback. | E1 tooling enum illustrates outcomes; E2 needs real typed adapter errors, not string matching. |
+| Artifact | Explicit immutable content identity covering all3 boosters, config, features, category mappings, point, CQR, metadata and training manifest. Verify hashes/paths/versions/scope/units/timezone before native load. No optional checksums, schema2 implicit corrector, latest, download, train or promotion. | E2 strict schema3/content-addressed envelope implemented before native load. |
+| Temporal | Training, point-fit and calibration labels and their known-at boundaries must precede artifact fit; artifact publication/availability must precede inference; production additionally needs explicit promoted identity and production_available_at. Original exposed holdout remains inadmissible promotion evidence. | E2 checks actual windows/publication; production mode remains disabled. |
+| Reuse/replay | Separate challenger model_type/version, host input digest, projection/policy/config/source/features/postprocess/dependency/artifact identities and supplemental capture digest. Stable ordering and canonical decimals. Cache only exact identity, partition by Store; replay exact captured input and bytes, no current lookup/retrain/fallback. | E2 separate typed contracts/private filesystem cache/replay implemented; host-only literals and schema1 untouched. |
+| Failure | UNSUPPORTED: incompatible schema/unit/scope/horizon/basis. DATA_BLOCKED: missing history/calendar, unsafe vintage/temporally ineligible/unpromoted artifact. TECHNICAL_ERROR: absent/corrupt pinned bytes, invalid native output, dependency/load/inference error. Sanitized code/detail, never broad success fallback. | E2 typed errors implemented: UNSUPPORTED, DATA_BLOCKED, ARTIFACT_CORRUPTION, DEPENDENCY_MISMATCH, TECHNICAL_FAILURE. |
 
 ACCEPTED DECISION: adapter cannot query/write operational DB or authorize users.
 Host owns permission checks, capture, persistence and transactions. No BOM calls,
@@ -115,6 +117,122 @@ Determinism means same captured input/config/versions/artifact produces the same
 canonical predictions on the verified runtime. It does not promise bitwise
 retraining across platforms. E2 must test repeated/fresh-process replay and document
 any native numerical tolerance separately from exact retained byte/digest integrity.
+
+<a id="e2-runtime"></a>
+## CURRENT FACT — E2 implementation and reproducible execution
+
+Internal entrypoint `app/application/use_cases/forecast_challenger.py:ForecastChallenger`
+defaults enabled=false. `scripts/forecast_challenger.py` requires `--enable`, offers
+infer/replay only and uses this checkout's `runtime/challenger`. `app/main.py`,
+ForecastServing, worker flags, public endpoints and operational storage are unchanged.
+OFF is tested in a fresh process without importing pandas/LightGBM/ORM/FastAPI/app.main.
+This internal caller is trusted; it confers no actor/Store authorization.
+
+`contracts/forecast_challenger.py` supplies frozen typed raw observations with
+available_at/source, sourced closed/holiday facts, artifact/provenance/windows,
+separate ForecastEngineResult/CQR/raw-stage/reconstruction evidence and typed errors.
+Unknown stockout is preserved; missing days stay absent in the canonical input.
+Dense reconstruction evidence is diagnostic float-projected state, not canonical
+Decimal observations. Native unsupported censored proxy can still contain observed
+lower bound; feature_demand=null/train_eligible=false explains its exclusion.
+`forecast_challenger_validation.py` validates scope/unit/date/coverage/availability,
+actual fit windows, reconstruction lineage, outputs and research/production status.
+
+`infrastructure/forecast_challenger_native.py` composes unchanged pinned native
+functions: adapt/validate → dense panel → reconstruction **once** → historical/
+seasonal/future features → category/schema/readiness → fixed3 boosters → native
+crossing repair → point correction once → CQR and factual closure → native public
+package. This narrower composition is necessary to retain reconstruction and raw
+stage diagnostics; an independent test compares quantiles and CQR against native
+predict_demand on the same admitted fixture. No override path or new BOM/procurement/
+scenario/provider function is called. Weather fields cannot enter the typed input;
+target weather features remain NaN. Decimal conversion is Decimal(str(float)),
+float_policy=decimal_str_float/1; raw signed residuals are allowed, final quantities
+must be finite/nonnegative/ordered. Quantiles and CQR never replace each other.
+
+The non-editable distribution `shelfcash-forecast-challenger-snapshot`
+version0.1.0+62b94fa.e2 contains21 inference modules/29 Python files under
+`vendor/forecast_challenger`. Algorithm files are byte-identical to engine62b94fa;
+aggregate initializers alone are replaced with inert initializers. Optional lazy
+forecast_overrides import is not packaged and cannot be reached through this adapter.
+No full engine/application/train writer/BOM/procurement/stochastic/LLM package is copied.
+[Snapshot provenance](../../vendor/forecast_challenger/shelfcash_forecast/snapshot_provenance.json)
+records original/emitted hashes, transformations and source_digest
+`99ef7c2631f3bb349c303b311718fb0bd81471469715928fb99c9e28de28aca4`.
+No upstream LICENSE/COPYING file was found; original source notices are preserved.
+`.gitattributes` preserves snapshot byte line endings so checkout/build retains hashes.
+
+Runtime admission checks installed distribution version, every declared source byte,
+file set/import location, exact dependency pins, Python/platform/machine and adapter/
+shared-boundary code hashes. It rejects editable/shadow source or changed identities.
+The [runtime/build lock](../../scripts/requirements-forecast-challenger.lock.txt)
+keeps LightGBM4.6.0/NumPy2.2.6/SciPy1.17.1, adds pandas2.2.3 and pins transitives;
+[test lock](../../scripts/requirements-forecast-challenger-test.lock.txt) supplies
+focused offline test imports. No separate inference process/service or host dependency
+upgrade is necessary for this selected compatible environment. E2 runs Python3.11.9
+on Windows AMD64. Exact replay compatibility is conservative; dependency upgrades
+require new artifact/runtime identity, never weakening old replay.
+
+Artifacts live at artifacts/<identity> under private runtime. Strict content identity
+covers schema3, boosters, category/config/features, point/CQR, training/native metadata,
+checksum manifest, scoped units/timezone, dependency/code identity and fit/publication
+windows. Missing pinned bytes are a technical failure; bad hashes/manifest bindings
+are corruption; incompatible schema/scope/config is unsupported; missing facts or
+future labels/publication are data-blocked. No latest/download/train/fallback path.
+`ChallengerStorage.publish_artifact` is an explicit trusted setup/import operation,
+never called by inference; it does not create production eligibility.
+Native original metadata must match envelope windows/model/dependencies, point/CQR
+binding and scoped training provenance. Existing exposed demo is not silently
+rewrapped as compatible or promoted. Production requests first check eligibility,
+then still reject PRODUCTION_SERVING_NOT_ENABLED_E2. No artifact is promoted in E2.
+
+`forecast_challenger_serialization.py` has separate role-prefixed version1 canonical
+UTF-8 JSON/digests: UTC instants, sorted captured keys/arrays and exact numeric-equivalent
+Decimal strings. Cache identity covers arm/raw observations/calendar/availability,
+artifact/config/postprocess and runtime/code; no cross-Store/arm reuse. Immutable
+runs/<identity>/evidence.json retains full input/output plus hash. Atomic staging
+publication never overwrites existing evidence; failures retain pending directories
+for inspection. Every reuse rechecks pinned bytes/runtime and semantic bindings.
+Replay reads retained input, computes again with exact pinned artifact, compares full
+canonical output equality, and never writes repaired/recomputed evidence. No live DB
+or current facts. Identity hashing is not authenticity/tamper-proof security; privileged
+filesystem writes can bypass application immutability. Runtime versions/source checks
+are not a universal cross-platform numeric proof or full native-binary supply-chain audit.
+
+From this isolated worktree, create/install only its own venv (do not run main's
+local_runtime commands):
+
+```powershell
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install -r scripts/requirements-forecast-challenger-test.lock.txt
+.venv/Scripts/python.exe -m pip wheel --no-deps --no-build-isolation --wheel-dir runtime/challenger/wheels ./vendor/forecast_challenger
+.venv/Scripts/python.exe -m pip install --no-deps runtime/challenger/wheels/shelfcash_forecast_challenger_snapshot-0.1.0+62b94fa.e2-py3-none-any.whl
+.venv/Scripts/python.exe -m scripts.verify_forecast_challenger
+```
+
+The last command explicitly creates a tiny bounded correctness setup:3 constant
+quantile boosters,14 rows each,2 rounds,1 thread; fixed synthetic point/CQR offsets,
+two selling units, sparse/zero/stockout states and sourced closure. Model text stays
+ignored runtime, never Git. Inputs/code/windows/config/artifact/output identities
+are retained. The setup is **not** the frozen E3 C training recipe, empirical
+calibration, forecast accuracy or promotion evidence. The ordinary infer/replay CLI
+never trains. Verifier prints an input path/cache identity for manual continuation:
+
+```powershell
+.venv/Scripts/python.exe -m scripts.forecast_challenger --enable infer --input runtime/challenger/input-<identity>.json
+.venv/Scripts/python.exe -m scripts.forecast_challenger --enable replay --identity <identity>
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_challenger.py -q
+```
+
+Coverage distinguishes real native fixed inference/public-stage equivalence/replay,
+metadata/filesystem guards and deliberately mocked runtime/nonfinite/foreign-output/
+exception failures. Host regressions cover forecast execution semantics, schema1/2
+serialization, stockout/causal prefixes and baseline. No DB/server/provider/worker or
+OpenAPI execution is needed; API source is unchanged. Checks/results/fail→fix belong
+to the conversation, not a cumulative PASS log. E3 still needs an authorized unseen
+population/vintages, sourced daily operating calendar and frozen causal training/
+point/CQR harness with per-origin resources. Public/persistent host integration and
+permission acceptance belong to later authorized work.
 
 ## Frozen accuracy benchmark protocol — E3 proposal, no run in E1
 
@@ -269,7 +387,7 @@ or zero days; E1 adds explicit sparse/error cases. Neither establishes real qual
 
 | Needed by | Required input/provenance | Current gap |
 | --- | --- | --- |
-| E2 | Resolvable isolated dependency pins, schema3 complete fixed artifact, scoped Products/units/timezone; closure/holiday coverage and known-at provenance; point/CQR fit binding and publication instants. | Engine assets present but research/temporal/dependency admissibility not established; host supplemental capture absent. |
+| E2 | Resolvable isolated dependency pins, schema3 complete fixed artifact, scoped Products/units/timezone; closure/holiday coverage and known-at provenance; point/CQR fit binding and publication instants. | E2 isolated dependencies and tiny synthetic native artifact verified; real/research artifact admission and operational supplemental capture absent. |
 | E3 | Authorized unseen daily sales, stable scope/units, tri-state stockout, observations and revision/availability times; enough prefix history for native minima plus point/calibration windows; sourced calendar and optional forecast-weather vintages. | No authorized real unseen dataset/version manifest; no vintage fidelity evidence. Demo exposed. |
 | E4 | Historical operational snapshots and actual demand/receipts/expiry/outlay evidence, or explicit counterfactual fixtures; host policies/search resources captured exactly. | No historical operational population established; empty user Store is not benchmark data. |
 | E5 | Same-runtime accuracy/impact evidence, exact replay, opt-in serving/persistence/error/revocation acceptance and explicit promotion/rollback selection. | Deferred; no production candidate accepted. |
@@ -296,7 +414,7 @@ projection on supported/unsupported/unknown/future-support fixtures. This is not
 adapter, native booster parser, benchmark runner or production registry validator.
 Synthetic artifact strings deliberately cannot load as models.
 
-Run from the E1 worktree (Python3.11.9, private venv; Windows needs tzdata):
+E1 checks run from the isolated worktree (Python3.11.9, private venv; Windows needs tzdata):
 
 ```powershell
 .venv/Scripts/python.exe -m unittest tests.unit.test_forecast_engine_protocol -v
@@ -304,9 +422,8 @@ Run from the E1 worktree (Python3.11.9, private venv; Windows needs tzdata):
 git diff --check
 ```
 
-No application startup/import, DB URL, migrations/reset/seed, SMTP/OpenRouter,
-workers, training, full pipeline/business suite, native inference, accuracy/impact
-execution or OpenAPI changes. Fresh-session assertions are required when E2/E5
+These E1 checks do not start the application, DB, providers/workers, training,
+native inference or benchmarks. E2 native correctness checks are separate below. Fresh-session assertions are required when E2/E5
 actually changes persistence; no such persistence claim exists in E1. Each failure
 fixture is inspectable JSON with explicit path replacements, expected typed outcome
 and code; base input remains immutable. Detailed commands/results belong to the
@@ -315,13 +432,14 @@ conversation, not an accumulating report in this document.
 | Slice | Status/scope and acceptance |
 | --- | --- |
 | E1 | COMPLETE compatibility/protocol scope: canonical specification + frozen synthetic config/fixtures/offline checks. Real-data/runtime integration remains unverified. |
-| E2 | NOT_STARTED: separate opt-in detached forecast adapter, strict captured scope/calendar/vintage/bytes admission, native fixed inference, truthful quantile/CQR/provenance envelope, replay/failure tests. Resolve compatible dependency pins locally. Preserve external source and existing serving; no automatic production activation. If durable serving contracts need extension, explicitly version/pin separate challenger metadata instead of fitting host-only artifact literals. |
+| E2 | COMPLETE internal opt-in adapter: strict typed capture/artifact admission, pinned installed native stages, separate quantile/CQR/provenance, private immutable evidence/cache and exact fresh-process replay. Tiny native correctness verified; production wiring/activation disabled, E2 left WIP for review. |
 | E3 | NOT_STARTED: authorized data inventory→freeze real execution manifest→causal per-origin training/point/CQR harness→paired accuracy/replay/coverage; report insufficient evidence honestly. |
 | E4 | NOT_STARTED: common captured host operational context→forecast-only swap→Planning impact and search evidence, with historical vs counterfactual meaning explicit. |
 | E5 | NOT_STARTED: integration acceptance/current authorization and fresh-session persistence/restart/replay→review evidence→explicit user promotion/config selection and rollback; no automatic promotion. |
 
-Stop after E1. Rollback E1 consists only of its docs/tooling/fixtures in the isolated
-worktree; preserve ignored private environment and all unrelated operational data.
+Stop after E2; no E3 execution. E1 is committed locally; E2 remains uncommitted WIP.
+Rollback E2 consists of its new adapter/snapshot/tooling and current documentation
+changes; retain private artifacts/evidence and unrelated operational data.
 Later runtime rollback must select a retained compatible host serving identity,
 keep challenger captures/artifacts/audit and never rewrite completed Planning.
 
