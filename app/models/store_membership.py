@@ -12,7 +12,7 @@ from app.models.user import User
 
 
 class StoreMembership(Base):
-    """Stored user/store relationship only; role grants no runtime permission yet."""
+    """Stored relationship; application checks current account, Store, membership and grants."""
 
     __tablename__ = "store_memberships"
     __table_args__ = (

@@ -9,7 +9,7 @@ from app.infrastructure.database.base import Base
 
 
 class Store(Base):
-    """Mutable store context, without public CRUD or tenancy enforcement."""
+    """Store metadata; customer creation and authorization live in application use cases."""
 
     __tablename__ = "stores"
     __table_args__ = (

@@ -2,6 +2,15 @@
 
 ## CURRENT FACT
 
+Self-service Store/customer local IMPLEMENTED: T03 additive,73/66/head0027/72 tables;
+verified holder tạo Store/Owner atomic, no seed/provisioning requirement. Canonical
+backend own venv/runtime/TLS, guarded local/test DBs; historical source WIP retained.
+Email/worker setup and14 flows in [runbook](runbooks/FULL_TEST_FLOW.md#customer-self-service).
+FE signup/EMAIL_VERIFY callback/create Store/browser acceptance remains BLOCKED/PENDING;
+không mở subscription/OAuth/transfer/delete hoặc deferred recipe/AI/what-if.
+
+### HISTORICAL INFORMATION — C5 checkpoint
+
 C5 backend linked acceptance VERIFIED (3+20 cases, migration/tooling gate25);
 C4 checkpoint eabab333. Runtime HTTPS8103/head0026 VERIFIED, browser E2E PENDING, nên C5 tổng thể
 chưa COMPLETE. Source72/66/head0026; R05/R09 implemented, R10 deferred.

@@ -260,5 +260,5 @@ def test_mapping_pin_terminal_and_migration_retention(imp):
         command.downgrade(migration_config(),'0025_notifications_foundation')
     with Session(imp[0][1]) as fresh:
         from sqlalchemy import text
-        assert fresh.scalar(text('SELECT version_num FROM alembic_version'))=='0026_collaboration_requests'
+        assert fresh.scalar(text('SELECT version_num FROM alembic_version'))=='0027_self_service_stores'
         assert fresh.get(MappingSubmissionRecord,UUID(row['submission_id'])).state=='withdrawn'

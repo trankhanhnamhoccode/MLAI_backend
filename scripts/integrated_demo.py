@@ -185,13 +185,14 @@ def admin_sql(statement: str, database: str = 'postgres') -> str:
     return result.stdout.strip()
 
 
-def certificate() -> None:
+def certificate(directory: Path | None = None) -> None:
+    target = directory if directory is not None else PRIVATE
     from cryptography import x509
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import rsa
     from cryptography.x509.oid import NameOID
-    if (PRIVATE / 'localhost.pem').exists() or (PRIVATE / 'localhost.key').exists():
-        if not all((PRIVATE / f).exists() for f in ('localhost.pem', 'localhost.key')):
+    if (target / 'localhost.pem').exists() or (target / 'localhost.key').exists():
+        if not all((target / f).exists() for f in ('localhost.pem', 'localhost.key')):
             raise ValueError('Incomplete TLS key/certificate; no overwrite')
         return
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -203,11 +204,11 @@ def certificate() -> None:
             .add_extension(x509.SubjectAlternativeName([x509.DNSName('localhost'),
                 x509.IPAddress(ipaddress.ip_address('127.0.0.1'))]), critical=False)
             .sign(key, hashes.SHA256()))
-    (PRIVATE/'localhost.key').write_bytes(key.private_bytes(serialization.Encoding.PEM,
+    (target/'localhost.key').write_bytes(key.private_bytes(serialization.Encoding.PEM,
         serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
-    (PRIVATE/'localhost.key').chmod(0o600)
-    (PRIVATE/'localhost.pem').write_bytes(cert.public_bytes(serialization.Encoding.PEM))
-    (PRIVATE/'localhost.cer').write_bytes(cert.public_bytes(serialization.Encoding.DER))
+    (target/'localhost.key').chmod(0o600)
+    (target/'localhost.pem').write_bytes(cert.public_bytes(serialization.Encoding.PEM))
+    (target/'localhost.cer').write_bytes(cert.public_bytes(serialization.Encoding.DER))
 
 
 def init() -> None:

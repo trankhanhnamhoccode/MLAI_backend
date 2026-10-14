@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import select, func, text
 from sqlalchemy.exc import OperationalError, IntegrityError, DBAPIError
 from sqlalchemy.orm import Session
+from sqlalchemy.engine import make_url
 from tests.integration.test_auth_public import env, setup, provision, login, ORIGIN
 from tests.integration.test_staff_public import staff_env, create, accept_http, owner_session, target_session
 from app.application.contracts.notifications import ReadRequest
@@ -404,9 +405,9 @@ def test_additive_upgrade_metadata_and_retention_guard(database_settings):
     engine = create_database_engine(database_settings)
     try:
         with engine.connect() as c:
-            assert c.scalar(text("SELECT current_database()")) == "shelfcash_notifications_test"
-            assert c.scalar(text("SELECT current_user")) == "shelfcash_notifications_tester"
-            assert c.scalar(text("SELECT version_num FROM alembic_version")) == "0026_collaboration_requests"
+            assert c.scalar(text("SELECT current_database()")) == make_url(database_settings.database_url).database
+            assert c.scalar(text("SELECT current_user")) == make_url(database_settings.database_url).username
+            assert c.scalar(text("SELECT version_num FROM alembic_version")) == "0027_self_service_stores"
             assert compare_metadata(MigrationContext.configure(c), Base.metadata) == []
         command.downgrade(migration_config(), "0024_integrate_import_auth")
         with Session(engine) as s, s.begin():
@@ -424,7 +425,7 @@ def test_additive_upgrade_metadata_and_retention_guard(database_settings):
         with pytest.raises(RuntimeError, match="retention"):
             command.downgrade(migration_config(), "0024_integrate_import_auth")
         with Session(engine) as fresh:
-            assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0026_collaboration_requests"
+            assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0027_self_service_stores"
             assert fresh.scalar(select(func.count()).select_from(NotificationIntent)) == 1
     finally:
         engine.dispose()

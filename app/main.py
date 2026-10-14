@@ -51,7 +51,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         pdf_worker=PlanningExportWorker(application.state.planning_exports) if configuration.pdf_export_worker_enabled else None
         from app.infrastructure.email_verification_worker import EmailVerificationWorker
         email_worker = EmailVerificationWorker(application.state.email_verification_dispatcher,
-            reset_dispatcher=application.state.password_reset_dispatcher) if configuration.auth_email_delivery_enabled else None
+            reset_dispatcher=application.state.password_reset_dispatcher,
+            invitation_dispatch=application.state.dispatch_invitation_email) if configuration.auth_email_delivery_enabled else None
         application.state.planning_worker=planning_worker
         from app.infrastructure.notification_worker import NotificationWorker
         notification_worker = NotificationWorker(application.state.notification_dispatcher) if configuration.notification_worker_enabled else None
@@ -91,6 +92,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     reset_transport = VerificationEmailTransport(configuration, purpose="RESET")
     application.state.password_reset = PasswordReset(application.state.auth, configuration, reset_transport)
     application.state.password_reset_dispatcher = PasswordResetDispatcher(application.state.auth, configuration, reset_transport)
+    from app.application.use_cases.invitation_delivery import InvitationDispatcher
+    from app.infrastructure.invitation_email import InvitationEmailTransport
+    invitation_dispatcher=InvitationDispatcher(engine,configuration,application.state.auth.clock)
+    invitation_transport=InvitationEmailTransport(configuration)
+    application.state.dispatch_invitation_email=lambda:invitation_dispatcher.dispatch_background(invitation_transport,limit=1)
     application.state.staff = StaffUseCases(application.state.auth, configuration)
     application.state.public_reads = PublicReads(application.state.auth)
     application.state.stock_writes = StockWrites(application.state.auth, application.state.public_reads)
@@ -193,7 +199,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if request.url.path.startswith("/api/v1/notifications"):
             code = "INVALID_REQUEST" if any(i["type"] == "json_invalid" for i in issues) else "INVALID_RESOURCE_ID" if any(i["loc"][:1] == ("path",) for i in issues) else "INVALID_FILTER" if any(i["loc"][:1] == ("query",) for i in issues) else "VALIDATION_ERROR"
             return failure(request, AuthError(code, 400 if code == "INVALID_REQUEST" else 422))
-        if request.url.path in {"/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"} and any(i["type"] == "json_invalid" for i in issues):
+        if request.url.path in {"/api/v1/stores", "/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"} and any(i["type"] == "json_invalid" for i in issues):
             return failure(request, AuthError("INVALID_REQUEST", 400))
         if '/planning-requirements' in request.url.path or request.url.path.endswith('/planning-budget') or '/procurement-plans' in request.url.path:
             from app.application.contracts.planning_configuration import FieldError
@@ -244,7 +250,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def private_headers(request: Request, call_next):
         request.state.request_id = str(uuid4())
         loopback = {"localhost", "127.0.0.1", "::1"}
-        if request.method == "POST" and request.url.path in {"/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"} and request.headers.get("origin") not in configuration.auth_allowed_origins:
+        if request.method == "POST" and request.url.path in {"/api/v1/stores", "/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"} and request.headers.get("origin") not in configuration.auth_allowed_origins:
             response = failure(request, AuthError("CSRF_CHECK_FAILED"))
         elif request.url.path.startswith("/api/v1/") and configuration.auth_dev_cookie and (request.url.hostname not in loopback or not request.client or request.client.host not in loopback):
             response = failure(request, AuthError("CSRF_CHECK_FAILED"))

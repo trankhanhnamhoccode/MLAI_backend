@@ -11,10 +11,10 @@ def test_c4_additive_routes_and_typed_extensions():
     operations={value['operationId']:(path,method,value) for path,methods in spec['paths'].items()
         for method,value in methods.items() if method in ('get','post','put','patch','delete')}
     assert len(old['routes'])==69
-    assert set(operations)-set(old['routes'])=={'D01','SU01','EX01'}
+    assert set(operations)-set(old['routes'])=={'D01','SU01','EX01','T03'}
     for name,route in old['routes'].items():
         assert operations[name][:2]==(route['path'],route['method'])
-    assert len(operations)==72 and len(spec['paths'])==66
+    assert len(operations)==73 and len(spec['paths'])==66
     for operation in ('D01','SU01','EX01'):
         assert operations[operation][1]=='get' and 'requestBody' not in operations[operation][2]
         assert operations[operation][2]['security']==[{'APIKeyCookie':[]}]

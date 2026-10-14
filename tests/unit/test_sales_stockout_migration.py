@@ -29,7 +29,7 @@ def test_independent_revision_parent():
     graph = ScriptDirectory(str(ROOT / 'alembic'))
     assert graph.get_revision(migration.revision).down_revision == migration.down_revision
     assert migration.revision in {r.revision for r in graph.walk_revisions(base='base', head='heads')}
-    assert graph.get_heads() == ['0026_collaboration_requests']
+    assert graph.get_heads() == ['0027_self_service_stores']
 
 
 def test_upgrade_only_adds_nullable_observation_without_default_or_backfill():

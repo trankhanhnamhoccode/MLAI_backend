@@ -1060,6 +1060,199 @@
             "description": "Service Unavailable"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Auth and Store"
+        ],
+        "summary": "Create Store",
+        "operationId": "T03",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_StoreSummary_"
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Precondition Required"
+          }
+        }
       }
     },
     "/api/v1/stores/{store_id}": {
@@ -19008,6 +19201,28 @@
         ],
         "title": "Envelope[StoreList]"
       },
+      "Envelope_StoreSummary_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/StoreSummary"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "error": {
+            "type": "null",
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data",
+          "meta",
+          "error"
+        ],
+        "title": "Envelope[StoreSummary]"
+      },
       "Envelope_ThresholdResult_": {
         "properties": {
           "data": {
@@ -35551,6 +35766,37 @@
         ],
         "title": "StoreContext"
       },
+      "StoreCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Timezone"
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "timezone",
+          "currency"
+        ],
+        "title": "StoreCreateRequest"
+      },
       "StoreList": {
         "properties": {
           "items": {
@@ -38387,22 +38633,23 @@
     }
   },
   "x-shelfcash-provenance": {
-    "source_checkpoint": "31f90c74861cb54b00e14465ac2a18cd1c6ddf09",
-    "source_manifest_sha256": "802fb82166848b6e7e987b104f7911745ce432b3e22d80a80065b1f5746e411e",
+    "source_checkpoint": "8ed5a80a3655a1637218d44e9c91d2386bca6198",
+    "source_manifest_sha256": "ae3fe492de11d9bd940e5a6b167ed8f45d89713ba55bc7cb2d538298ea4740dc",
     "manifest_algorithm": "sorted path NUL SHA256(LF-normalized app/alembic Python bytes)",
-    "migration_head": "0026_collaboration_requests",
-    "generated_at": "2026-10-14T08:38:09.246812+00:00",
+    "migration_head": "0027_self_service_stores",
+    "generated_at": "2026-10-14T10:17:45.990905+00:00",
+    "source_working_tree": true,
     "source_only": true,
     "database_access": false,
     "workers": false,
-    "operations": 72,
+    "operations": 73,
     "paths": 66,
     "previous_be_artifact": {
-      "git_ref": "eabab333ee8738a0fa758b91f95a106d662edac6",
+      "git_ref": "8ed5a80a3655a1637218d44e9c91d2386bca6198",
       "path": "docs/handoff/openapi.json",
-      "sha256": "2cc31f79f96463e0f66a3070d2ae2f6d84a310c1beceb6e016fb420027190a05",
-      "operations": 59,
-      "paths": 55
+      "sha256": "57d032f2bae09d15846279a5232f302f36735c342742f86d86eadcd95db346eb",
+      "operations": 72,
+      "paths": 66
     }
   }
 }

@@ -47,7 +47,7 @@ def test_additive_catalogue_preserves_grants_revisions_and_pending_tokens(staff_
     assert snapshot(engine) == before
     with engine.connect() as connection:
         actual_tables = set(connection.dialect.get_table_names(connection))
-        assert actual_tables == (set(Base.metadata.tables) - {'import_history_records', 'notification_intents', 'notifications', 'notification_read_receipts', 'permission_requests', 'permission_request_audit', 'mapping_submissions'}) | {'alembic_version'}
+        assert actual_tables == (set(Base.metadata.tables) - {'import_history_records', 'notification_intents', 'notifications', 'notification_read_receipts', 'permission_requests', 'permission_request_audit', 'mapping_submissions', 'store_creation_receipts'}) | {'alembic_version'}
         assert connection.scalar(text('SELECT version_num FROM alembic_version')) == '0023_auth_permissions_v3'
     # Explicitly granted new keys make downgrade unsafe; retain them and the head.
     with Session(engine) as session:
@@ -65,7 +65,7 @@ def test_additive_catalogue_preserves_grants_revisions_and_pending_tokens(staff_
     command.upgrade(migration_config(), 'head')
     with engine.connect() as connection:
         assert compare_metadata(MigrationContext.configure(connection), Base.metadata) == []
-        assert connection.scalar(text('SELECT version_num FROM alembic_version')) == '0026_collaboration_requests'
+        assert connection.scalar(text('SELECT version_num FROM alembic_version')) == '0027_self_service_stores'
 
 
 def test_persisted_v2_offer_needs_owner_reissue_not_automatic_grants(staff_env):

@@ -1,0 +1,19 @@
+name: shelfcash-local
+services:
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER:?Set the initial admin role locally}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run local_runtime secrets or set an initial password}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - local-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  local-postgres-data:

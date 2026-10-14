@@ -1,0 +1,2 @@
+products.source_business_key,products.name,products.selling_unit,products.sku,products.price,products.active
+DEMO_COFFEE,Explicit synthetic coffee,cup,DEMO_COFFEE,,true

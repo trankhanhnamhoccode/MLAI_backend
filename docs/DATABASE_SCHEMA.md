@@ -1,5 +1,12 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
+CURRENT FACT self-service: head0027_self_service_stores,71 application tables/72 tổng.
+Additive store_creation_receipts: composite PK(actor_id,key_digest), request_digest,
+Store RESTRICT FK/unique, immutable typed result JSONB và created_at. T03 Store,
+OWNER membership, AuthAudit STORE_CREATED và receipt cùng transaction. UPDATE/DELETE
+trigger giữ receipt; downgrade từ chối retained rows. Không backfill/seed hoặc sửa
+old Store facts. Local customer DB mới riêng; demo0026 được giữ, không reset/migrate.
+
 CURRENT FACT C4: không migration/table/column mới, head0026/71 tables giữ nguyên.
 New immutable ImportPreview JSON pin source_evidence_digest/source_read_permissions;
 rows/canonical/read-set semantics giữ nguyên. History budget đọc retained acceptance;
@@ -13,7 +20,7 @@ inventory_movements và inventory_audit. Planned/committed receipt projection n�
 trong immutable Import preview/completion JSON hiện có, cùng transaction batch.
 Không migrate/reset demo8103 hoặc DB khác.
 
-## CURRENT FACT — C2 head0026, retained integrated demo0024
+## HISTORICAL INFORMATION — C2 schema head0026
 
 `0026_collaboration_requests` nối additive sau0025, thêm permission_requests,
 permission_request_audit và mapping_submissions:70 application tables/71 tổng.

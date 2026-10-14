@@ -22,6 +22,12 @@ class InvitationDispatcher:
         AssistedProvisioning(self.engine, self.settings)._operator(operator_id, key)
         return dispatch(self, self.settings.auth_delivery_encryption_key, deliver, limit=limit)
 
+    def dispatch_background(self, deliver, *, limit=1):
+        """Composition-owned worker handles only existing Owner-issued intents."""
+        if not self.settings.auth_email_delivery_enabled or not deliver.available:
+            return dict(delivered=0,failed=0,cancelled=0)
+        return dispatch(self,self.settings.auth_delivery_encryption_key,deliver,limit=limit)
+
     def expire(self, limit):
         # Bound retention even for a process that crashed after its claim commit.
         with auth_session(self.engine) as s:

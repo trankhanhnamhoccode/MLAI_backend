@@ -1,6 +1,22 @@
 # Current state
 
-## CURRENT FACT — C5 backend/runtime VERIFIED; browser PENDING
+## CURRENT FACT — self-service Store/customer local
+
+Canonical checkout `backend` trên main, own .venv/TLS/runtime/local profile. WIP9
+nhánh import_mapping_rules được backup và giữ nguyên tại backend-import-mapping-preserved;
+không merge WIP documents/artifacts cũ vào main. Import15/Auth0 giữ nguyên.
+T03 POST /api/v1/stores: active verified credential-ready holder tự tạo Store/Owner,
+atomic audit/immutable receipt, account-scoped replay/lost ACK/current authority.
+Không account/Store/business seed cho customer. Source73/66, one head0027/72 tables.
+New empty shelfcash_local + dedicated shelfcash_local_test/limited roles tách DB demo
+cũ. Own certificate/key/storage/config, không external worktree dependency.
+Single opted-in email thread handles existing verification/reset/invitation queues;
+parameterized invitation callback supports confirmed FE route. No real SMTP/model
+calls in setup/tests. EMAIL_VERIFY callback và signup/verify/create Store UI chưa
+được FE nối/xác nhận: browser/self-service email E2E BLOCKED/PENDING, không claim PASS.
+Verification, commands và14 customer flows thuộc [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#customer-self-service).
+
+## HISTORICAL INFORMATION — C5 backend/runtime verification
 
 C4 committed eabab333ee8738a0fa758b91f95a106d662edac6. Linked HTTP/PostgreSQL/
 fresh-session gate3+20 passed; migration/tooling/OpenAPI gate25 passed, no full suite.

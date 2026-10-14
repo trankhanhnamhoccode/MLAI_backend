@@ -1,5 +1,14 @@
 # Auth/session, assisted setup and B1/B2 self-service
 
+CURRENT FACT customer onboarding: signup/A05/password/login không tự tạo Store;
+T03 POST /api/v1/stores tạo Store/Owner/audit/receipt atomic cho holder verified.
+Không accounts.json hoặc assisted setup cho khách. Metadata explicit, no business
+seed; replay/current authority/isolation theo [contract](../AUTHORIZATION_CONTRACT_VI.md#self-service-stores).
+Local setup/SMTP/callback/status và14 flows ở [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#customer-self-service).
+Single opt-in email thread handles verification/reset/invitation. Parameterized
+invitation FE callback đã hỗ trợ; EMAIL_VERIFY page/consumer và Store-create UI
+còn cần FE nối. Không browser/real email workflow claim từ fake-delivery tests.
+
 CURRENT FACT C2: PR01–PR04 add own Staff requests/catalogue and Owner union subset
 decisions through the existing grants boundary. N13 keeps replace semantics; N14
 adds nullable request/decision references. Approval notifications are distinct from

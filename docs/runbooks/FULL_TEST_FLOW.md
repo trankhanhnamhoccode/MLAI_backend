@@ -1,7 +1,262 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="customer-self-service"></a>
+## CURRENT FACT — setup khách hàng từ số0
+
+Checkout chính: `D:\hocc_bk\ai\proj\projectMLAI\backend`, main, `.venv` riêng.
+T03 `POST /api/v1/stores` tạo Store/Owner cho active verified credential-ready
+account; source73 operations/66 paths, head0027/72 tables. Không seed account/Store
+hoặc bắt khách dùng assisted provisioning/accounts.json.
+**FE/browser self-service BLOCKED/PENDING:** source FE hiện chưa có signup,
+EMAIL_VERIFY consumer/callback và create Store flow được xác nhận. Backend API/fake
+delivery chạy được không chứng minh browser/email workflow thật đã chạy.
+
+### A. Checkout sạch và setup lần đầu
+
+Cần Git, Python3.11+, Docker Desktop Linux engine và PowerShell. `tzdata` được khai
+báo để IANA timezone chạy trên Windows sạch. Chỉ clone nếu thư mục chưa tồn tại:
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI
+git clone --branch main https://github.com/trankhanhnamhoccode/MLAI_backend.git backend
+Set-Location .\backend
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e '.[dev]'
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+.\.venv\Scripts\python.exe -m scripts.local_runtime secrets
+notepad .env
+```
+
+Không clone/switch đè WIP. Trong lượt chuẩn hóa này, WIP9 gồm4 tracked và8 untracked
+files đã giữ byte-for-byte trên nhánh cũ ở `backend-import-mapping-preserved`, có
+verified backup ngoài Git; Import15/Auth0 giữ nguyên. Không merge tài liệu cũ đè main.
+Legacy `.env` cũng được backup trước khi chuẩn bị profile mới; runtime/model artifacts
+cũ không bị purge. `backend-main-integrated` giữ snapshot cũ để recovery, không dùng
+venv/runtime/certificate của nó cho customer profile.
+
+`secrets` chỉ thay placeholders DB/initial Docker password và tạo random32bytes
+base64 encryption key trong ignored `.env`, không stdout. Idempotent, giữ password/key
+thật đã có; trước thay file có backup ngoài Git. Không rotate key khi còn queued
+intents. Không gửi `.env`, App Password, token hoặc cookie vào chat/Git/FE.
+
+| Nhóm `.env` | Ý nghĩa / cách điền |
+| --- | --- |
+| DATABASE_URL | Limited `shelfcash_local_runtime` → `shelfcash_local`, loopback5433. Password tự nhập cần URL encoding; secrets tự sinh URL hợp lệ. |
+| MIGRATION_DATABASE_URL | `shelfcash_local_migrator` → cùng DB; owner schema nhưng không superuser/CREATEDB/CREATEROLE. Chỉ migrate/upgrade CLI dùng. |
+| TEST_DATABASE_URL | Dedicated `shelfcash_local_tester` → `shelfcash_local_test`; test/reset chỉ DB này, không customer/demo. |
+| POSTGRES_USER/PASSWORD/PORT, LOCAL_POSTGRES_CONTAINER | Initial admin cho volume mới hoặc tên admin/container hiện hữu. Đổi initial password trong file không đổi role cũ. Máy này dùng container `shelfcash-integration-s411-postgres-1`, admin `shelfcash_integration`,5433; không Compose thứ hai tranh port. |
+| RUNTIME/UPLOAD/MODEL_ARTIFACT_DIRECTORY | Dưới `runtime/local/app` trong checkout này, không trỏ worktree khác. Stop/upgrade giữ uploads/model artifacts. |
+| AUTH_ALLOWED_ORIGINS/AUTH_DEV_COOKIE, LOCAL_PORT | Exact JSON `["https://localhost:5173"]`, false,8103. FE5173 khác BE8103, credentials include; không wildcard. |
+| AUTH_SMTP_HOST/PORT/USERNAME/PASSWORD/DELIVERY_SENDER | Provider SMTP được phép; adapter dùng implicit TLS SMTP_SSL, thường465, không STARTTLS587. Sender phải được provider cho phép; username/App Password nhập local. |
+| AUTH_DELIVERY_ENCRYPTION_KEY | Private random32bytes/base64 do secrets tạo; khác SMTP App Password, giữ trong suốt đời queued intents. |
+| AUTH_FRONTEND_URL | SETUP operator giữ `/credentials/complete` ở HTTPS5173; khách không cần assisted SETUP. |
+| AUTH_PASSWORD_RESET_FRONTEND_URL | `https://localhost:5173/credentials/complete`, route FE gọi N7, token trong fragment. |
+| AUTH_INVITATION_FRONTEND_URL | `https://localhost:5173/invitations/{invitation_id}`. BE thay UUID vào path, token trong fragment; FE `/invitations/:invitationId` đã xác nhận từ source. Fixed landing formatter cũ vẫn giữ. |
+| AUTH_VERIFICATION_FRONTEND_URL | **Chưa xác nhận route/consumer A05 phía FE, để trống.** Cần HTTPS page cùng Origin. Không trỏ EMAIL_VERIFY vào N7/SETUP page để báo email đã chạy. |
+| AUTH_EMAIL_DELIVERY_ENABLED | Defaultfalse. Explicittrue sau khi SMTP/key/callback đúng; một email thread cho verification/reset/invitation. Status báo từng capability độc lập; enabled không chứng minh callback available. Không chạy thêm CLI dispatcher. |
+| IMPORT/PLANNING/PDF_EXPORT/NOTIFICATION_WORKER_ENABLED | Template customer explicittrue, một process. Application defaults vẫn OFF. Chỉ mở phần cần; kiểm từng thread, không chạy worker trùng. |
+| AUTH_OPERATOR_ID/KEY | Operator-only assisted paths, optional/để trống cho khách. Không dùng để tạo Store/invite khách hàng. |
+| IMPORT_LLM_SUGGESTIONS_ENABLED, OPENROUTER_* | Defaultfalse/key trống. Adapter hiện hỗ trợ mapping model `qwen/qwen3.5-9b`; timeout30s/deadline60s/sample8/max tokens1800/provider allowlist JSON[]. Key không tự bật provider. OPENROUTER_MODEL tổng quát không chọn model Import, đã bỏ khỏi mẫu mới. Không live call trong setup/tests. |
+| LOCAL_SMOKE_RECIPIENT | Optional test recipient user cấu hình rõ; chỉ explicit smtp-smoke gửi một mail, init/start/tests không gửi. |
+
+Gmail là một lựa chọn, không hardcode provider: bật 2-Step Verification, tạo App
+Password trong Google Account rồi nhập riêng AUTH_SMTP_PASSWORD; không dùng password
+đăng nhập thường. Username/sender có thể cùng Gmail demo nếu được phép. Tài khoản tổ
+chức/security policy có thể không cho App Password; xem [Google App Passwords](https://support.google.com/accounts/answer/185833).
+Gmail SMTP: smtp.gmail.com/implicit SSL465. Không tắt certificate verification.
+Lượt setup này không gửi mail. Khi user tự cấu hình recipient test, có thể explicit:
+
+```powershell
+# Optional, chỉ một mail tới LOCAL_SMOKE_RECIPIENT, không tạo account/token:
+.\.venv\Scripts\python.exe -m scripts.local_runtime smtp-smoke
+```
+
+Sau khi `.env` đúng, từ `backend`:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.local_runtime docker
+.\.venv\Scripts\python.exe -m scripts.local_runtime init-db
+.\.venv\Scripts\python.exe -m scripts.local_runtime migrate
+.\.venv\Scripts\python.exe -m scripts.local_runtime tls
+Import-Certificate -FilePath .\runtime\local\private\localhost.cer -CertStoreLocation Cert:\CurrentUser\Root
+.\.venv\Scripts\python.exe -m scripts.local_runtime start
+.\.venv\Scripts\python.exe -m scripts.local_runtime status
+```
+
+Docker reuse/start đúng configured container; port occupied/container khác thì từ
+chối Compose mới. Máy mới dùng compose.local.yaml/named volume riêng. Init chỉ tạo
+DB local/test với roles hạn chế, marker/HBA đúng DB; không đổi credentials DB cũ.
+DB đã tồn tại thiếu marker bị từ chối. Migrate là first-time-only khi chưa có Alembic,
+kiểm current_database/current_user và một head; không reset/stamp/seed. Test schema
+do guarded fixture quản lý riêng. Expected DB mới: head0027,72 tables, users/stores0;
+server running, bốn business threads true. Email/provider OFF tới explicit opt-in.
+
+TLS/key mới thuộc checkout này; chỉ import public cert một lần trên máy browser.
+Probe trust đúng PEM, không skip verification. Start đòi committed source sạch và
+PID/birth/run_id đúng, không kill process lạ. Thay effective `.env` hoặc source cần
+stop/start. Status báo source SHA/root/configuration_matches, worker observations và
+email capabilities; health chỉ liveness. BE launcher không sửa/chạy/dừng FE.
+
+### B. Chạy hằng ngày
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend
+.\.venv\Scripts\python.exe -m scripts.local_runtime start
+.\.venv\Scripts\python.exe -m scripts.local_runtime status
+# Khi không dùng:
+.\.venv\Scripts\python.exe -m scripts.local_runtime stop
+```
+
+API base `https://localhost:8103`, Origin `https://localhost:5173`. Không init/migrate/
+seed/reset mỗi ngày. DB demo cũ `shelfcash_integration_demo`/head0026 được giữ riêng,
+không reset để giả “từ số0”; không chạy launcher cũ cùng8103.
+Upgrade source có migration mới: chờ jobs queued/running hoàn tất, stop rồi backup:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.local_runtime stop
+.\.venv\Scripts\python.exe -m scripts.local_runtime backup
+.\.venv\Scripts\python.exe -m scripts.local_runtime upgrade
+.\.venv\Scripts\python.exe -m scripts.local_runtime start
+```
+
+Backup custom/full payload/SHA256, private config và counts nằm ngoài Git. Upgrade
+đòi đúng marker/identity, process DEAD, không pending/running work, backup khớp state;
+sau upgrade kiểm counts bảng cũ. Failure giữ archive/evidence, không automatic
+downgrade/stamp/reset hoặc restore đè DB đang dùng.
+
+### C.14 luồng khách hàng theo Nam/Nguyên
+
+Persona tự chọn email thuộc quyền mình. JSON đầy đủ do [OpenAPI](../handoff/openapi.json)
+và DTO sở hữu. Paths dưới đây đầy đủ; UUID/versions từ responses hiện hành. Browser
+dùng credentials include; protected mutations có Origin, current X-CSRF-Token,
+Idempotency-Key và If-Match nếu contract yêu cầu. Timeout giữ key/body; intent mới
+dùng key mới. Không log/persist token/cookie/password trong console/localStorage.
+
+| Bước / người / điều kiện | API theo thứ tự | Expected, negative và recovery |
+| --- | --- | --- |
+| 1 Nam mới; SMTP/key/verification callback available | POST `/api/v1/auth/register`; POST `/api/v1/auth/email-verifications/complete`; POST `/api/v1/auth/login`; GET `/api/v1/auth/me`; GET `/api/v1/stores` | Signup202 không session/Store/grants. EMAIL_VERIFY token + password hoàn tất A05, rồi login, stores[]. Expired: POST `/api/v1/auth/email-verifications/request`, mail mới; không N7.503 kiểm capability,429 chờ. **Signup/verify UI/callback FE còn thiếu.** |
+| 2 Nam active/verified/credential-ready/login | POST `/api/v1/stores`; GET `/api/v1/stores/{store_id}`; POST `/api/v1/auth/logout`; login lại và GET `/api/v1/stores` |201 StoreSummary/Location, Owner còn sau login. Unverified không login/create, foreign UUID404; owner_user_id/role/grants422. Same key/body201 cùngID, khác body409, revoke chặn replay. Multi-Store explicit được phép. **FE cần màn hình/API T03.** |
+| 3 Nguyên tự signup/verify như bước1; Nam Owner chọn grants | POST `/api/v1/stores/{store_id}/staff-invitations`; GET `/api/v1/stores/{store_id}/staff-invitations`; GET `/api/v1/staff-invitations/{invitation_id}` với X-Invitation-Token; POST `/api/v1/staff-invitations/{invitation_id}/accept`; GET Store context; GET `/api/v1/stores/{store_id}/memberships`; PUT `/api/v1/stores/{store_id}/memberships/{membership_id}/permissions` | Mail qua owned durable worker; signup không accept invitation. Accept201 exact offered grants, allow/403 denial, revoke hiệu lực ngay. Expired/revoked: Owner POST `/api/v1/stores/{store_id}/staff-invitations/{invitation_id}/actions` để reissue;409/412 refetch. Không SQL cấp quyền. |
+| 4 Nguyên verified, invitation khác pending | GET `/api/v1/staff-invitations/{invitation_id}`; POST `/api/v1/staff-invitations/{invitation_id}/decline` | Terminal, không membership mới; accept:false không thay decline. Expired → Owner reissue/new identity. Giữ memberships Store khác; decline UI cần FE xác nhận. |
+| 5 Nam/Nguyên verified, có sessions | POST `/api/v1/auth/password-reset/request`; POST `/api/v1/auth/credentials/complete`; POST `/api/v1/auth/login` | Request202 không logout; completion RESET thu hồi mọi session, giữ memberships/grants. Expired request token mới; không reset SQL/operator. Credentials page N7 đã có, forgot UI cần FE consumer. |
+| 6 Nam Owner, Store trống; explicit files/import/domain rights | POST `/api/v1/stores/{store_id}/imports`; POST `/api/v1/imports/{import_id}/files`; POST `/api/v1/imports/{import_id}/analyze`; GET `/api/v1/jobs/{job_id}`; GET `/api/v1/imports/{import_id}/mapping-summary`; GET `/api/v1/imports/{import_id}/mappings`; PATCH `/api/v1/imports/{import_id}/mappings/{mapping_id}`; POST `/api/v1/stores/{store_id}/mapping-profiles/{profile_id}/decisions`; POST `/api/v1/imports/{import_id}/process`; GET `/api/v1/imports/{import_id}`; GET `/api/v1/imports/{import_id}/completion`; GET `/api/v1/stores/{store_id}/products` | Upload/analyze không canonical writes. Resolve source/bindings/create identities explicit, Owner approve exact spec; preview → confirm_review → commit theo DTO là các intent riêng. Fresh readback/I06, không chỉ202. Timeout poll/replay cùng key, stale409/412 refetch/preview mới. Browser continuation pending. |
+| 7 Nam/Staff đủ import/mapping/domain grants; active approved profile | POST `/api/v1/stores/{store_id}/imports`; POST `/api/v1/imports/{import_id}/analyze`; GET `/api/v1/imports/{import_id}/mapping-summary`; GET `/api/v1/imports/{import_id}/mappings`; PATCH `/api/v1/imports/{import_id}/mappings/{mapping_id}`; POST `/api/v1/imports/{import_id}/process`; GET `/api/v1/imports/{import_id}/sheets/{sheet_id}/field-options` | Source/header/spec khớp reuse; entity mới explicit create/bind; drift/ambiguity cần review/Owner version mới. Retired không fresh reuse. Không suy source từ filename;409/412 reload pins. |
+| 8 Người có sales.record/read và import grants; Product/day/report explicit | POST `/api/v1/stores/{store_id}/imports`; POST `/api/v1/imports/{import_id}/process`; GET `/api/v1/imports/{import_id}/completion`; GET `/api/v1/stores/{store_id}/readiness` | Replace/merge contributions theo declared scope; stockout true/false/unknown khác nhau. Absent row không delete, retry không cộng lại. Source/version đổi → new preview. Synthetic forecast correctness không là accuracy thật. |
+| 9 Nam review recipe/supplier/opening/count có nguồn | POST `/api/v1/stores/{store_id}/imports`; POST `/api/v1/imports/{import_id}/process`; GET `/api/v1/stores/{store_id}/suppliers`; GET `/api/v1/stores/{store_id}/inventory`; GET `/api/v1/stores/{store_id}/inventory/{ingredient_id}`; PUT `/api/v1/stores/{store_id}/inventory/{ingredient_id}/threshold`; GET `/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule` | Recipe basis/unit/yield/loss, pack/price/MOQ/lead/effective facts explicit. Opening khác count lot existing. Missing không0/default, upload date không received date. Conflict/stale refresh evidence; split-report deferred. |
+| 10 Có inventory.receive/read và sensitive rights khi có cost/supplier | Excel inventory_receipts qua workflow bước6; POST `/api/v1/stores/{store_id}/inventory/receipts`; GET `/api/v1/stores/{store_id}/inventory/{ingredient_id}/movements` | Shared identity Excel↔N6 hai chiều, effects/atomic commit/fresh stock. Same identity/payload reuse, khác conflict; lost ACK cùng key. Purchase history/planned purchases không stock; không tự completeness. |
+| 11 Nguyên active Staff; Nam Owner | POST/GET `/api/v1/stores/{store_id}/permission-requests`; GET `/api/v1/stores/{store_id}/permission-requests/{request_id}`; POST `/api/v1/stores/{store_id}/permission-requests/{request_id}/actions`; GET `/api/v1/notifications`; GET `/api/v1/notifications/unread-count`; PATCH `/api/v1/notifications/{notification_id}` | Approve subset union giữ unrelated grants; request không grant. Dispatcher → inbox/count/read; read không quyết định task. Revoke/mất membership chặn target, replay không regrant.409/412 refetch grants/catalogue. FE cần PR/inbox consumer. |
+| 12 Nguyên có mapping.propose/batch reads; Nam Owner | POST `/api/v1/imports/{import_id}/mapping-submissions`; GET `/api/v1/stores/{store_id}/mapping-submissions`; GET `/api/v1/stores/{store_id}/mapping-submissions/{submission_id}`; POST `/api/v1/stores/{store_id}/mapping-profiles/{profile_id}/decisions`; notifications bước11 | Submit pins → request_changes/reject/approve → notification; profile approved chưa nhập data. Preview/confirm/commit riêng. Drift/retired/revoke chặn; stale explicit resubmit ID mới, không sửa pinned history. |
+| 13 Nam/Staff đủ planning/result/finance; facts/completeness explicit | GET `/api/v1/stores/{store_id}/readiness`; GET `/api/v1/stores/{store_id}/planning-context`; POST `/api/v1/stores/{store_id}/planning-requirements`; PUT `/api/v1/stores/{store_id}/planning-budget`; POST `/api/v1/stores/{store_id}/procurement-plans`; GET `/api/v1/procurement-plans/{plan_id}`; GET `/api/v1/stores/{store_id}/procurement-plans` | Khách tự khai requirements/budget; blocked R01 giải thích missing, không seed.202 accepted, poll terminal; no winner khác failed. Creator/day theo Store, captured budget giữ nguyên. Timeout same key; intent mới Run/key mới, không sửa retained result. |
+| 14 Có retained Run/result và export/finance rights | GET `/api/v1/procurement-plans/{plan_id}/ingredients`; GET `/api/v1/procurement-plans/{plan_id}/ingredients/{ingredient_id}`; GET `/api/v1/procurement-plans/{plan_id}/explanation`; POST/GET `/api/v1/procurement-plans/{plan_id}/exports`; GET `/api/v1/jobs/{job_id}`; GET `/api/v1/procurement-plans/{plan_id}/exports/{export_id}`; GET `/api/v1/stores/{store_id}/today`; GET `/api/v1/imports/{import_id}`; GET `/api/v1/imports/{import_id}/mapping-summary`; GET `/api/v1/imports/{import_id}/mappings` | PDF job → EX01/N11 current rights/hash; GET không render/jobs. Missing/corrupt explicit export mới nếu allowed. Today forbidden/unavailable khác0; counters/provenance cùngpins, không cộng overlap. Snapshot409 page1,403 grants, queued kiểm workers. Today FE hiện placeholder; browser pending. |
+
+T03 body minh họa (metadata user chọn, không business defaults):
+
+```json
+{"name":"Quán test của Nam","timezone":"Asia/Ho_Chi_Minh","currency":"VND"}
+```
+
+Ví dụ HTTP PowerShell sau khi account đã verify và trust public cert, password không
+để thành literal trong shell history; các bước khác dùng Postman/cookie jar tương tự:
+
+```powershell
+$api = 'https://localhost:8103'
+$origin = 'https://localhost:5173'
+$email = Read-Host 'Email account đã verify'
+$privatePassword = Read-Host 'Password' -AsSecureString
+$body = @{email=$email;password=[Net.NetworkCredential]::new('', $privatePassword).Password;remember_me=$false} | ConvertTo-Json
+$login = Invoke-RestMethod -Method Post -Uri "$api/api/v1/auth/login" -Headers @{Origin=$origin} -ContentType application/json -Body $body -SessionVariable customer
+$body = $null
+$storeKey = [guid]::NewGuid().ToString()
+$headers = @{Origin=$origin;'X-CSRF-Token'=$login.data.session.csrf_token;'Idempotency-Key'=$storeKey}
+$storeBody = @{name='Quán test của Nam';timezone='Asia/Ho_Chi_Minh';currency='VND'} | ConvertTo-Json
+$created = Invoke-RestMethod -Method Post -Uri "$api/api/v1/stores" -Headers $headers -WebSession $customer -ContentType application/json -Body $storeBody
+Invoke-RestMethod -Uri "$api/api/v1/stores/$($created.data.store_id)" -WebSession $customer
+```
+
+T03 timeout: retry cùng storeKey/storeBody, không sinh quán thứ hai.
+Workflow meaning và permissions: [Authorization](../AUTHORIZATION_CONTRACT_VI.md#self-service-stores),
+[Import](../IMPORT_MAPPING_API_CONTRACT_VI.md), [Planning](../PROCUREMENT_API_CONTRACT_VI.md).
+Inputs tối thiểu, chỉ import khi user chọn synthetic test:
+[products.csv](../../tests/fixtures/local_self_service/products.csv),
+[ingredients.csv](../../tests/fixtures/local_self_service/ingredients.csv).
+Chỉ master metadata, chưa recipe/sales/stock/supplier/budget/completeness, không READY.
+Owner review source keys rồi create/bind, không tự ghép UUID. Inputs richer/oracles
+nằm trong tests/integration/test_import_actual_receipts.py, test_import_planning_a3.py,
+test_import_recipe_basis.py và test_import_supplier_basis.py; không upload ngầm hoặc
+coi synthetic là facts kinh doanh thật.
+
+### D. Troubleshooting/recovery và tests
+
+| Dấu hiệu | Recovery |
+| --- | --- |
+| Port5433 occupied | Chọn đúng existing container/admin; không Compose thứ hai, không đổi role/password cũ. |
+| DB authentication failed | Kiểm runtime/migrator/test URLs khác initial Docker credentials qua editor local; không reset volume hoặc overwrite mật khẩu thật bằng secrets. |
+| Init từ chối marker/role | Giữ evidence, kiểm ownership/partial setup; không đổi marker/stamp/credentials để vượt guard. |
+| Source/config mismatch | Commit source hợp lệ; stop/start để nạp profile mới, không kill process lạ8103. |
+| TLS error | Trust đúng cert riêng, kiểm SAN/expiry. Renew cần backup/stop/thay/trust có kiểm soát, không skip verify. |
+| Register/resend/forgot503 | Kiểm flag và từng email_capabilities. Verification callback pending FE; SMTP smoke pass không thay consumer/callback. |
+| Mail chưa nhận/token expired | Kiểm sender/App Password/private logs/spam; resend/reissue đúng workflow. Unknown invitation SMTP outcome không auto resend proof cũ; không hai dispatchers. |
+|401/403/404 | Login/current CSRF/Origin, current membership/grants đúng Store. UUID không cấp quyền, không SQL tạo Owner/Staff. |
+|409/412/428 | Refetch resource/version/catalogue và review lại;428 thêm preconditions. Lost ACK cùng key/body, không key mới để né conflict. |
+| Queued/readiness blocked | Kiểm từng worker/DB dependency; poll job, nhập facts/config/completeness có nguồn, không seed/fakezero. |
+
+Tests dùng dedicated TEST_DATABASE_URL; fixture chỉ reset/migrate shelfcash_local_test.
+Không dùng DB local/demo/development để chạy reset. Chạy test/reset tuần tự, provider/
+SMTP fake cho automated tests. Probe `python -m scripts.dev status --test-database`
+không seed. API/fake-delivery acceptance khác browser/real email E2E; exact verification
+commands/results được cập nhật trong phần hiện hành trước bàn giao.
+
+#### Verification self-service trên máy này
+
+Final focused83 passed/32.84s, gồm public signup/fake delivery/T03/current Owner,
+multi-Store/isolation, rollback/concurrency/lost ACK/revoke, explicit CSV import,
+Owner-created Store → self-registered Staff invitation/background delivery/accept,
+body/header/Origin guards, local tooling và application query boundaries:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_store_creation.py tests/api/test_store_creation_openapi.py tests/api/test_self_service_auth.py tests/unit/test_local_runtime.py tests/unit/test_invitation_email.py tests/unit/test_application_contracts.py -q --tb=short --show-capture=no
+```
+
+Schema/migration/tooling milestone210 passed/307.72s. Có migration/table mới và test
+DB guard mới nên mở rộng các schema round-trip/metadata/head/caller checks; không
+chạy full feature suite. Exact selection (PowerShell, từ backend):
+
+```powershell
+$schemaTests = Get-ChildItem tests/integration/test_*_schema.py -File | ForEach-Object { $_.FullName }
+$boundaryTests = @(
+ 'tests/integration/test_database_bootstrap.py', 'tests/integration/test_integrated_migrations.py',
+ 'tests/integration/test_verification_commands.py', 'tests/integration/test_forecast_decision_persistence.py',
+ 'tests/integration/test_store_creation.py', 'tests/integration/test_notifications.py::test_additive_upgrade_metadata_and_retention_guard',
+ 'tests/api/test_auth_openapi.py', 'tests/api/test_store_creation_openapi.py', 'tests/api/test_discovery_openapi.py',
+ 'tests/api/test_collaboration_openapi.py', 'tests/api/test_notification_openapi.py', 'tests/api/test_import_openapi.py', 'tests/api/test_stock_writes_openapi.py',
+ 'tests/unit/test_sales_stockout_migration.py', 'tests/unit/test_integration_contract_snapshot.py',
+ 'tests/unit/test_integrated_demo.py', 'tests/unit/test_local_runtime.py'
+)
+& .\.venv\Scripts\python.exe -m pytest @schemaTests @boundaryTests -q --tb=short --show-capture=no
+```
+
+Auth/Invitation affected gate trước hai linked cases cuối:149 passed/1 test failure,
+336.91s. Same selector bên dưới hiện có thêm hai cases; không hứa count lịch sử khi
+chạy source mới. Failure kỳ vọng RuntimeError nhưng PostgreSQL raise DBAPIError khi
+retention chặn downgrade đúng; sửa exception assertion, không bỏ guard. Affected
+retention/import cases2 pass/12.61s, sau đó đã có trong final focused/schema gates.
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_store_creation.py tests/integration/test_email_verification.py tests/integration/test_password_reset.py tests/integration/test_staff_public.py tests/integration/test_invitation_decline.py tests/api/test_store_creation_openapi.py tests/unit/test_email_verification_transport.py tests/unit/test_invitation_email.py -q --tb=short --show-capture=no
+```
+
+Các gate overlap, không cộng thành unique/full-suite count. RED ban đầu T03 trả405
+trước implementation. Tooling fixture ENVIRONMENT và stale Auth OpenAPI inventory
+Today/Supplier được sửa; affected14 pass rồi final83/210 pass. Private config digest
+không in ra status; sau display refinement, local tooling12 pass/0.76s.
+Own venv dependency installation và pip check PASS. CLI secrets/init-db/migrate/tls,
+custom backup/full payload/SHA256 và guarded no-op upgrade đã chạy trên DB local mới;
+test status xác nhận limited tester/0027/72 tables/0 application rows sau cleanup.
+Old demo quiescence/backup/stop đã kiểm riêng, không reset/migrate DB đó. No SMTP/model
+call hoặc browser E2E trong các checks này; runtime source/SHA do status khi start báo.
+
 <a id="linked-acceptance-c5"></a>
-## CURRENT FACT — C5 backend/runtime VERIFIED; browser E2E PENDING
+## HISTORICAL INFORMATION — C5 backend/runtime VERIFIED; browser PENDING
 
 C4 checkpoint `eabab333ee8738a0fa758b91f95a106d662edac6`, gồm C1–C4 trên main
 base6f80735. Fetch origin không có main delta/conflict; một head0026, source72/66.
@@ -527,7 +782,7 @@ HISTORICAL INFORMATION trước C5: runtime8103 thuộc worktree tích hợp, gi
 commands cũ; không thay commands đó sang collaboration source để vượt migration guard.
 
 <a id="integrated-demo-runtime"></a>
-## CURRENT FACT — vận hành BE tích hợp HTTPS8103
+## HISTORICAL INFORMATION — runtime tích hợp trước customer self-service
 
 Chạy từ `D:\hocc_bk\ai\proj\projectMLAI\backend-main-integrated`, branch
 `main`, source committed gồm C1–C4 và C5 tooling. Status báo source_root/source_sha của process.

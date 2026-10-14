@@ -353,7 +353,7 @@
   ],
   "c5_read_discovery": {
     "synthetic": true,
-    "source_checkpoint": "31f90c74861cb54b00e14465ac2a18cd1c6ddf09",
+    "source_checkpoint": "8ed5a80a3655a1637218d44e9c91d2386bca6198",
     "scope": "Data fragments validated with source DTOs; illustrative IDs, not runtime facts.",
     "today_forbidden": {
       "store_id": "00000000-0000-0000-0000-000000000001",
@@ -389,5 +389,24 @@
       "history": "GET /api/v1/stores/{store_id}/procurement-plans?created_by_user_id={user_id}&created_date_from=2026-10-14&created_date_to=2026-10-14",
       "exports": "GET /api/v1/stores/{store_id}/procurement-plans/{plan_id}/exports?limit=50"
     }
+  },
+  "self_service_store": {
+    "synthetic": true,
+    "source_checkpoint": "8ed5a80a3655a1637218d44e9c91d2386bca6198",
+    "request": {
+      "name": "Explicit synthetic shop",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "currency": "VND"
+    },
+    "response_data": {
+      "store_id": "00000000-0000-0000-0000-000000000001",
+      "name": "Explicit synthetic shop",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "currency": "VND",
+      "role": "OWNER",
+      "membership_id": "00000000-0000-0000-0000-000000000002",
+      "authorization_version": "opaque-synthetic-version"
+    },
+    "scope": "Illustrative metadata only, not a runtime capture or seeded Store. Refresh T02 for current authorization."
   }
 }

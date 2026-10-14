@@ -1,5 +1,12 @@
 # Domain model and business meaning
 
+CURRENT FACT self-service Store: authenticated active verified credential-ready
+holder tự tạo Store với name/timezone/currency explicit và trở thành Owner đúng
+Store mới. Signup/verify không tự tạo Store; Store không đồng nghĩa business READY.
+Không menu/stock/completeness/budget/requirements default. Account có nhiều Stores;
+membership/current grants vẫn authorization boundary, biết UUID không cấp quyền.
+Workflow/accepted rules ở [Authorization](AUTHORIZATION_CONTRACT_VI.md#self-service-stores).
+
 ## CURRENT FACT — C3 actual receipts
 
 Actual receipt là hàng thật đã nhận: một nguồn/record ổn định tạo một lot và

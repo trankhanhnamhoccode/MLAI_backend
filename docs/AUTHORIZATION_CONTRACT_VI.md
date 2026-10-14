@@ -1,5 +1,54 @@
 # Authorization — Store, session, Staff and approval
 
+<a id="self-service-stores"></a>
+## ACCEPTED DECISION / CURRENT FACT — khách hàng tự tạo Store
+
+User-authorized14/10/2026: verified active account có credentials hoàn tất và current
+session được tạo nhiều Store. Không cần operator/assisted provisioning, subscription
+hoặc quyền từ Store khác. Signup/A05 chỉ tạo/verify account, không Store/membership/
+grants/session; login trước T03 thấy T01 items[] nếu chưa tham gia Store nào.
+
+CURRENT FACT T03 `POST /api/v1/stores`: strict body `{name,timezone,currency}`.
+Name trim/nonblank1..200, không control characters; timezone IANA1..64, currency
+3 uppercase letters theo existing Store invariant (không thêm currency conversion).
+Cả ba required, không business defaults. Không owner_user_id/account_id/role/grants
+từ caller. Origin exact, current session + CSRF, visible ASCII Idempotency-Key1..128;
+duplicate authority headers400, unknown query/body fields422, JSON limit64KiB/413.
+
+Transaction dùng current User/session fence như Auth, tạo Store + active OWNER
+membership của authenticated holder + STORE_CREATED audit + durable account-scoped
+creation receipt. Không membership/grants cho account khác, không default Staff
+grants, menu/inventory/supplier/sales/completeness/budget/requirements. Owner có
+effective permissions theo catalogue hiện hành; không cần grant rows giả.
+
+201 Envelope[StoreSummary], Location `/api/v1/stores/{store_id}`. FE refresh A03/T01
+rồi T02 để lấy current Owner context/default Store; một Store accessible thì default,
+nhiều Store thì user chọn như existing contract. Cùng account/key/canonical body
+replay201 cùng result/Store ID, kể cả session login mới/lost ACK; khác body409
+IDEMPOTENCY_CONFLICT. New key là explicit Store mới, không dedupe bằng tên.
+Missing key428 PRECONDITION_REQUIRED, malformed key422 INVALID_IDEMPOTENCY_KEY;
+401 account/session unusable,403 Origin/CSRF/current Owner denied,404 inaccessible
+Store kể cả replay,503 persistence failure. Replay kiểm current account/session và
+Store/Owner authority trước retained result, không khôi phục ownership đã revoke.
+
+CURRENT FACT migration0027 thêm immutable store_creation_receipts, không backfill
+account/Store hoặc upgrade DB cũ ngầm. Concurrent same-key serialize dưới User fence;
+audit/receipt failure rollback toàn bộ Store/Owner. Receipt UPDATE/DELETE và migration
+downgrade có retained receipts bị chặn. No public transfer/delete/billing/OAuth.
+Assisted provisioning vẫn giữ cho operator, không là prerequisite customer.
+
+Email/invitation: cùng bounded worker opt-in xử lý verification/reset và existing
+Owner-issued invitation intents, giữ durable claim/settle/fencing/unknown-send policy.
+Background delivery không tạo hoặc accept invitation, không cấp membership. Manual
+operator dispatcher vẫn giữ khi automatic email OFF; CLI từ chối dispatcher thứ hai
+khi flag ON. SMTP invitation callback hỗ trợ `{invitation_id}` trong confirmed FE
+path; token ở fragment. Verification callback chưa được FE xác nhận: để unset và
+báo capability unavailable, không trỏ EMAIL_VERIFY sang SETUP/RESET page.
+
+FE cần signup/A05 page và Store-create UI/T03; browser E2E chưa verified. API workflow,
+metadata DTO/OpenAPI và [runbook customer](runbooks/FULL_TEST_FLOW.md#customer-self-service)
+sở hữu cấu trúc/commands/current limits; không dùng accounts.json cho khách mới.
+
 CURRENT FACT C4: D01 section authorization, SU01 supplier picker, M01/M02/I04
 projections, N9 filters/budget và EX01 discovery reuse current Store/domain/finance
 grants; catalogue vẫn permissions-v3/43, không grant tự động hoặc quyền từ snapshot.

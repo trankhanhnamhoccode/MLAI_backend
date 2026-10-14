@@ -17,7 +17,7 @@ TABLES={"supplier_source_records","term_source_records","payable_fee_records","s
 def test_additive_migration_roundtrip_preserves_prior_tables_and_matches_model_columns(database_settings):
     engine=create_database_engine(database_settings)
     try:
-        schedule={'email_verification_tokens', 'email_verification_deliveries', 'password_reset_deliveries', 'import_history_records','notification_intents','notifications','notification_read_receipts', 'permission_requests', 'permission_request_audit', 'mapping_submissions', 'planning_exports', 'recipe_schedule_changes', 'saved_requirements', 'model_serving_configurations', 'recipe_schedule_request_receipts', 'planning_configuration_events', 'forecast_serving_identities', 'planning_configuration_receipts', 'planning_configuration_revisions', 'planning_budgets', 'planning_defaults'}
+        schedule={'email_verification_tokens', 'email_verification_deliveries', 'password_reset_deliveries', 'import_history_records','notification_intents','notifications','notification_read_receipts', 'permission_requests', 'permission_request_audit', 'mapping_submissions', 'store_creation_receipts', 'planning_exports', 'recipe_schedule_changes', 'saved_requirements', 'model_serving_configurations', 'recipe_schedule_request_receipts', 'planning_configuration_events', 'forecast_serving_identities', 'planning_configuration_receipts', 'planning_configuration_revisions', 'planning_budgets', 'planning_defaults'}
         before=set(inspect(engine).get_table_names())-TABLES-schedule
         command.downgrade(migration_config(),"0013_import_staging")
         assert set(inspect(engine).get_table_names())==before

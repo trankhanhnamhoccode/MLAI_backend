@@ -1,5 +1,12 @@
 # ShelfCash runtime architecture
 
+CURRENT FACT self-service: T03 dùng Auth User/session fence hiện hành, concrete
+StoreCreationRepository và same transaction cho Store/Owner/audit/receipt. Không
+service mới, broker hoặc operator endpoint. Một email worker hiện có xử lý thêm
+invitation queue qua existing durable dispatcher; không second delivery process.
+Customer local launcher owns `.venv`/TLS/storage/config của checkout chính; test DB
+và runtime/migration roles tách riêng, không phụ thuộc sibling worktrees.
+
 ## ACCEPTED DECISION ? authority and boundaries
 
 [Accepted ADRs](DECISIONS.md) own architectural intent. This document describes

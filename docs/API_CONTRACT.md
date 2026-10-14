@@ -2,7 +2,12 @@
 
 ## Authority and current surface
 
-CURRENT FACT C4: source OpenAPI has72 operations/66 paths (71 core plus health),
+CURRENT FACT self-service:73 operations/66 paths, additive T03 POST `/api/v1/stores`
+trên collection GET T01 hiện có. Body/response DTO ở OpenAPI; accepted workflow,
+account-scoped idempotency/Owner authority ở [Authorization](AUTHORIZATION_CONTRACT_VI.md#self-service-stores).
+Head0027 adds only creation receipt; không default business seed hoặc quyền Store cũ.
+
+HISTORICAL INFORMATION C4: source OpenAPI had72 operations/66 paths (71 core plus health),
 registered by `app/main.py`. `/openapi.json` and source Pydantic DTOs are the
 structural reference. `GET /health` returns status=ok/service=shelfcash-backend;
 it is liveness, not DB/business readiness. `/docs` and `/redoc` are disabled.

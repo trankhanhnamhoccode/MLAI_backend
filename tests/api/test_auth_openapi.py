@@ -32,14 +32,14 @@ def test_s41_openapi_exact_methods_envelopes_headers_and_cookie():
         '/api/v1/procurement-plans/{plan_id}/exports',
         '/api/v1/procurement-plans/{plan_id}/exports/{export_id}',
         '/api/v1/stores/{store_id}/imports/calendar'}
-    assert set(schema["paths"]) == {"/health", *notification_paths, '/api/v1/stores/{store_id}/planning-requirements', '/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}', '/api/v1/stores/{store_id}/planning-budget', '/api/v1/stores/{store_id}/readiness', '/api/v1/stores/{store_id}/planning-context', *expected, *staff_paths, *import_paths,
+    assert set(schema["paths"]) == {"/health", "/api/v1/stores/{store_id}/today", "/api/v1/stores/{store_id}/suppliers", *notification_paths, '/api/v1/stores/{store_id}/planning-requirements', '/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}', '/api/v1/stores/{store_id}/planning-budget', '/api/v1/stores/{store_id}/readiness', '/api/v1/stores/{store_id}/planning-context', *expected, *staff_paths, *import_paths,
         '/api/v1/imports/{import_id}/completion', '/api/v1/stores/{store_id}/inventory/receipts', '/api/v1/stores/{store_id}/inventory/{ingredient_id}/threshold',
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule',
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes',
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes/{change_id}',
         *b1_paths, *['/api/v1/stores/{store_id}/products', '/api/v1/stores/{store_id}/products/{product_id}', '/api/v1/stores/{store_id}/inventory', '/api/v1/stores/{store_id}/inventory/{ingredient_id}', '/api/v1/stores/{store_id}/inventory/{ingredient_id}/lots', '/api/v1/stores/{store_id}/inventory/{ingredient_id}/movements']}
     for path, (method, identity, status) in expected.items():
-        assert set(schema["paths"][path]) == {method}
+        assert set(schema["paths"][path]) == ({method,"post"} if path=="/api/v1/stores" else {method})
         operation = schema["paths"][path][method]
         assert operation["operationId"] == identity and status in operation["responses"]
         assert operation["responses"]["422"]["content"]["application/json"]["schema"] == {"$ref": "#/components/schemas/ErrorEnvelope"}

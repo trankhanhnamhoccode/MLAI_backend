@@ -23,7 +23,7 @@ def test_additive_pending_preservation_metadata_and_decline_retention(staff_env)
     assert 'declined_at' not in {col['name'] for col in inspect(engine).get_columns('staff_invitations')}
     command.upgrade(migration_config(),'head')
     with engine.connect() as c:
-        assert c.scalar(text('SELECT version_num FROM alembic_version')) == '0026_collaboration_requests'
+        assert c.scalar(text('SELECT version_num FROM alembic_version')) == '0027_self_service_stores'
         assert tuple(c.execute(text('SELECT id,token_digest,version,status,offered_grants FROM staff_invitations')).one()) == before
         assert compare_metadata(MigrationContext.configure(c, opts={'compare_server_default': True}),Base.metadata) == []
     response = decline_http(ctx,data,raw)
@@ -31,5 +31,5 @@ def test_additive_pending_preservation_metadata_and_decline_retention(staff_env)
     with pytest.raises(Exception, match='B3 decline evidence requires retention'):
         command.downgrade(migration_config(),'0020_password_reset_delivery')
     with engine.connect() as c:
-        assert c.scalar(text('SELECT version_num FROM alembic_version')) == '0026_collaboration_requests'
+        assert c.scalar(text('SELECT version_num FROM alembic_version')) == '0027_self_service_stores'
         assert c.scalar(text('SELECT count(*) FROM staff_invitations WHERE status=\'declined\'')) == 1

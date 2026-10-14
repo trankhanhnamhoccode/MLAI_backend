@@ -1,0 +1,2 @@
+ingredients.source_business_key,ingredients.name,ingredients.base_unit,ingredients.sku,ingredients.expiry_tracking,ingredients.active
+DEMO_MILK,Explicit synthetic milk,l,DEMO_MILK,false,true

@@ -5,9 +5,11 @@ from fastapi.security import APIKeyCookie
 
 from app.application.contracts.auth import (
     AuthContext, AuthError, CompletedCredential, CredentialCompletion, Envelope,
-    ErrorEnvelope, LoginRequest, Meta, StoreContext, StoreList,
+    ErrorEnvelope, LoginRequest, Meta, StoreContext, StoreList, StoreSummary,
     PublicEmailRequest, RegistrationRequest, PublicEmailAcceptance, PublicEmailErrorEnvelope,
 )
+from app.application.contracts.store_creation import StoreCreateRequest
+from app.api.collaboration import strict_transport
 
 router = APIRouter(prefix="/api/v1", tags=["Auth and Store"])
 cookie = APIKeyCookie(name="__Host-shelfcash_session", auto_error=False)
@@ -137,3 +139,16 @@ async def stores(request: Request, limit: int = Query(default=50, ge=1, le=100),
 @router.get("/stores/{store_id}", operation_id="T02", response_model=Envelope[StoreContext], responses=ERRORS, dependencies=[Depends(no_body_query)])
 def store_context(store_id: UUID, request: Request, auth=Depends(service), token=Depends(session_token)):
     return dict(data=auth.store_context(token, store_id), meta=dict(request_id=request.state.request_id), error=None)
+
+
+@router.post('/stores',operation_id='T03',status_code=201,response_model=Envelope[StoreSummary],
+    responses={**ERRORS,201:{'headers':{'Location':{'schema':{'type':'string'}}}},409:{'model':ErrorEnvelope},
+               413:{'model':ErrorEnvelope},428:{'model':ErrorEnvelope}},dependencies=[Depends(strict_transport),Depends(mutations)])
+def create_store(body:StoreCreateRequest,request:Request,response:Response,auth=Depends(service),
+    token=Depends(session_token),csrf:str|None=Header(None,alias='X-CSRF-Token',max_length=512),
+    key:str|None=Header(None,alias='Idempotency-Key',max_length=128)):
+    from app.application.use_cases.store_creation import StoreCreation
+    strict_query(request)
+    result=StoreCreation(auth).create(token,csrf,key,body,request.state.request_id)
+    response.headers['Location']='/api/v1/stores/'+str(result.store_id)
+    return dict(data=result,meta=Meta(request_id=request.state.request_id),error=None)
