@@ -116,6 +116,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(staff_router)
     from app.api.notifications import router as notification_router
     application.include_router(notification_router)
+    from app.api.permission_requests import router as permission_request_router
+    application.include_router(permission_request_router)
+    from app.api.mapping_submissions import router as mapping_submission_router
+    application.include_router(mapping_submission_router)
     application.include_router(public_read_router)
     application.include_router(stock_write_router)
     application.include_router(recipe_schedule_router)
@@ -153,6 +157,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     def failure(request, error):
         body = ErrorEnvelope(data=None, meta=Meta(request_id=getattr(request.state, "request_id", str(uuid4()))), error=ErrorInfo(code=error.code, message=error.code, details=ErrorDetails()))
+        if '/permission-requests' in request.url.path or '/mapping-submissions' in request.url.path:
+            from app.application.contracts.collaboration import WorkflowErrorEnvelope, WorkflowErrorInfo, WorkflowErrorDetails
+            body = WorkflowErrorEnvelope(data=None, meta=body.meta, error=WorkflowErrorInfo(
+                code=error.code, message=error.code, details=getattr(error, 'details', WorkflowErrorDetails())))
         if error.code == "EMAIL_DELIVERY_UNAVAILABLE":
             body = PublicEmailErrorEnvelope(data=None, meta=body.meta, error=PublicEmailErrorInfo(code=error.code,
                 message="Tạm thời chưa thể gửi email; thử lại sau hoặc liên hệ hỗ trợ.", details=EmailDeliveryErrorDetails()))
@@ -177,6 +185,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @application.exception_handler(RequestValidationError)
     async def validation_error(request, error):
         issues = error.errors()
+        if '/permission-requests' in request.url.path or '/mapping-submissions' in request.url.path:
+            code = 'INVALID_REQUEST' if any(i['type']=='json_invalid' for i in issues) else 'INVALID_RESOURCE_ID' if any(i['loc'][:1]==('path',) for i in issues) else 'INVALID_FILTER' if any(i['loc'][:1]==('query',) for i in issues) else 'VALIDATION_ERROR'
+            return failure(request, AuthError(code, 400 if code == 'INVALID_REQUEST' else 422))
         if request.url.path.startswith("/api/v1/notifications"):
             code = "INVALID_REQUEST" if any(i["type"] == "json_invalid" for i in issues) else "INVALID_RESOURCE_ID" if any(i["loc"][:1] == ("path",) for i in issues) else "INVALID_FILTER" if any(i["loc"][:1] == ("query",) for i in issues) else "VALIDATION_ERROR"
             return failure(request, AuthError(code, 400 if code == "INVALID_REQUEST" else 422))
@@ -253,7 +264,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 else:response=config_failure(ConfigurationError('RESOURCE_LIMIT_EXCEEDED' if '/procurement-plans/' in request.url.path and request.url.path.endswith('/exports') else 'REQUEST_TOO_LARGE',413))
             if getattr(request.state,'import_resource_limit',False):
                 response=failure(request,AuthError('RESOURCE_LIMIT_EXCEEDED',413))
-            response.headers["Cache-Control"] = "private, no-store" if public_read(request) or (request.method == "GET" and request.url.path.startswith("/api/v1/notifications")) or response.headers.get('Content-Type')=='application/pdf' else "no-store"
+            response.headers["Cache-Control"] = "private, no-store" if public_read(request) or (request.method == "GET" and (request.url.path.startswith("/api/v1/notifications") or "/permission-requests" in request.url.path or "/mapping-submissions" in request.url.path)) or response.headers.get('Content-Type')=='application/pdf' else "no-store"
             response.headers["Referrer-Policy"] = "no-referrer"
             response.headers["X-Request-ID"] = request.state.request_id
         return response

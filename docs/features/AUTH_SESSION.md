@@ -1,5 +1,12 @@
 # Auth/session, assisted setup and B1/B2 self-service
 
+CURRENT FACT C2: PR01–PR04 add own Staff requests/catalogue and Owner union subset
+decisions through the existing grants boundary. N13 keeps replace semantics; N14
+adds nullable request/decision references. Approval notifications are distinct from
+direct grants changes; retained replay never restores revoked grants. Workflow/DTO
+authority is [the permission request contract](../AUTHORIZATION_CONTRACT_VI.md#permission-requests),
+operating/test commands are in [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#collaboration-c2).
+
 CURRENT FACT B4: linked HTTP/PostgreSQL acceptance combines these auth flows with
 Staff invitations, live permissions-v3 grants, two-Store isolation and decline.
 Both pre-registered and subsequently verified invitees are exercised with fake

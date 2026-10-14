@@ -5,7 +5,11 @@
 `NotificationEvent` là immutable plain Python v1, event/decision/object/recipient
 references và occurred_at; fixed server templates không nhận business facts từ
 client/LLM. Inbox là projection lịch sử và read state riêng, không task/decision
-authority. N13 PermissionEvent là producer thật; PR/MQ workflows chờ C2.
+authority. N13 PermissionEvent, PR submission/outcomes và MQ submission/N5 outcomes
+là producers thật. PermissionRequest giữ requested facts, approval additions và
+decision; current grants luôn live, approve union không replace quyền khác.
+MappingSubmission là retained full-spec task, có own revision riêng batch/profile;
+content/source/lifecycle drift làm review stale, không tự resubmit hay commit.
 Recipient/object visibility luôn theo current authorization, không theo event
 snapshot. [Notification contract](NOTIFICATION_API_CONTRACT_VI.md) sở hữu vocabulary,
 DTO/visibility/retention; [database schema](DATABASE_SCHEMA.md) sở hữu persistence.

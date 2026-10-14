@@ -16,6 +16,10 @@ def test_s41_openapi_exact_methods_envelopes_headers_and_cookie():
     }
     b1_paths = {"/api/v1/auth/register", "/api/v1/auth/email-verifications/request", "/api/v1/auth/email-verifications/complete", "/api/v1/auth/password-reset/request"}
     notification_paths = {"/api/v1/notifications", "/api/v1/notifications/unread-count", "/api/v1/notifications/{notification_id}"}
+    notification_paths |= {
+        '/api/v1/stores/{store_id}/permission-requests', '/api/v1/stores/{store_id}/permission-requests/{request_id}',
+        '/api/v1/stores/{store_id}/permission-requests/{request_id}/actions', '/api/v1/imports/{import_id}/mapping-submissions',
+        '/api/v1/stores/{store_id}/mapping-submissions', '/api/v1/stores/{store_id}/mapping-submissions/{submission_id}'}
     staff_paths = {"/api/v1/stores/{store_id}/memberships", "/api/v1/stores/{store_id}/memberships/{membership_id}/permissions",
         "/api/v1/stores/{store_id}/permission-events", "/api/v1/stores/{store_id}/staff-invitations",
         "/api/v1/stores/{store_id}/staff-invitations/{invitation_id}/actions", "/api/v1/staff-invitations/{invitation_id}",

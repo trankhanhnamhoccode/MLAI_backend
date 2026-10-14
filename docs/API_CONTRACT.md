@@ -2,7 +2,7 @@
 
 ## Authority and current surface
 
-CURRENT FACT C1: source OpenAPI has62 operations/58 paths (61 core plus health),
+CURRENT FACT C2: source OpenAPI has69 operations/64 paths (68 core plus health),
 registered by `app/main.py`. `/openapi.json` and source Pydantic DTOs are the
 structural reference. `GET /health` returns status=ok/service=shelfcash-backend;
 it is liveness, not DB/business readiness. `/docs` and `/redoc` are disabled.
@@ -94,9 +94,9 @@ thay thế phần tương lai đúng scope, không sửa source/generated OpenAP
 | Chủ đề canonical | Trạng thái và consumer FE |
 | --- | --- |
 | [Auth self-service/decline](AUTHORIZATION_CONTRACT_VI.md#auth-self-service) | B1 A02/A05/A06 và B2 A07/N7 forgot/reset IMPLEMENTED; IN01 decline IMPLEMENTED B3. N7/N15–N19 routes IMPLEMENTED. |
-| [Yêu cầu quyền](AUTHORIZATION_CONTRACT_VI.md#permission-requests) | DESIGN_READY: Staff submit/cancel; Owner review/approve/reject; refresh grants. N12–N14 IMPLEMENTED và tiếp tục là grants/audit authority. |
-| [Inbox](NOTIFICATION_API_CONTRACT_VI.md#notification-v1) | DESIGN_READY: inbox/count/read; không approve qua notification. |
-| [Mapping queue](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-queue) | DESIGN_READY: explicit submit, Store queue, pinned detail, request changes. N5/M01–M04 IMPLEMENTED; extensions chưa implement. |
+| [Yêu cầu quyền](AUTHORIZATION_CONTRACT_VI.md#permission-requests) | IMPLEMENTED C2: PR01–PR04, Staff own requests/catalogue, Owner union subset. N12–N14 giữ grants/audit authority. |
+| [Inbox](NOTIFICATION_API_CONTRACT_VI.md#notification-v1) | IMPLEMENTED C1/C2: inbox/count/read, atomic N13/PR/MQ producers và current target authorization; không approve qua notification. |
+| [Mapping queue](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-queue) | IMPLEMENTED C2: MQ01–MQ03 explicit submit/withdraw, Store queue, pinned detail; N5 request_changes và submission fences. |
 | [Excel actual receipt](IMPORT_MAPPING_API_CONTRACT_VI.md#excel-actual-receipt) | DESIGN_READY schema/consumer trong pipeline hiện hữu; I01–I06/J01 và N6 IMPLEMENTED. |
 | [Counters/preview](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-projections) | M01/M02/I04 IMPLEMENTED; counters có scope/origin mới và detailed projection DESIGN_READY. |
 | [Today/supplier picker](#today-operations) | DESIGN_READY: D01/SU01; V01–V04/R01/C03/H02 reads IMPLEMENTED, không giả Today đã tồn tại. |
@@ -128,8 +128,11 @@ B2 chỉ thêm A07 `POST /auth/password-reset/request`, tái sử dụng N7 và 
 không đăng ký alias hoặc complete endpoint mới. B3 chỉ thêm IN01 và invitation schema extensions đã duyệt; operation cũ giữ nguyên. Còn13 operations thiết kế
 chưa implement để tới surface72/66 nêu trên; không gọi chúng từ FE như runtime.
 CURRENT FACT C1 local: NF01–NF03 thêm đúng3 operations/3 paths, source62/58;
-59 operations cũ giữ nguyên OpenAPI. Còn10 operations thiết kế chờ triển khai.
-Demo8103 retained vẫn59/55/head0024; C1 chưa được bật trên runtime đó.
+59 operations cũ giữ nguyên OpenAPI tại checkpoint C1 f85c7cdd.
+CURRENT FACT C2: thêm7 PR/MQ operations trên6 paths →69/64; N5 body/DecisionResult
+và N14 PermissionEvent mở rộng đúng contract. Diff C1 giữ mọi operation khác và
+chỉ mở rộng DTO Approve/Reject/DecisionResult/PermissionEvent. Còn3 operations
+thiết kế chưa implement. Demo8103 retained vẫn59/55/head0024; C1/C2 chưa bật tại đó.
 [Notification contract](NOTIFICATION_API_CONTRACT_VI.md) ghi producer/status/limits.
 
 Routes reused trong scope: A01/A03/A04/T01/T02/N7/N12–N19; M01–M04/N5;

@@ -2,13 +2,15 @@
 
 ## CURRENT FACT
 
-C1 notification foundation implemented locally on `feat/notifications-foundation`
-from main6f80735: NF01–NF03, source62 operations/58 paths, additive0025, own guarded
+C1 notification foundation committed locally at f85c7cdd on `feat/notifications-foundation`;
+C2 COMPLETE backend acceptance is a local checkpoint after C1.
+NF01–NF03 + PR01–PR04/MQ01–MQ03, source69 operations/64 paths, additive0026, own guarded
 notifications test DB. Inbox/read/current-authority and durable local delivery
 acceptance covered; existing N13 grants producer is connected atomically.
-PR/MQ producers and target authorization remain C2, not implemented by this slice.
+PR union decisions and MQ pinned queue/N5 extensions connect atomic producers and
+current target authorization. Profile approval leaves preview/confirm/commit explicit.
 Notification worker default OFF; retained demo8103 remains0024/OpenAPI59.
-No browser/live email/provider/full-suite claim, no commit/merge/push yet.
+Browser/live email/provider remain unverified; C2 local checkpoint, no merge/push.
 See [contract status](NOTIFICATION_API_CONTRACT_VI.md) and
 [verification/run commands](runbooks/FULL_TEST_FLOW.md#notifications-c1).
 
@@ -47,7 +49,8 @@ to [Auth feature](features/AUTH_SESSION.md#local-gmail-smokedemo-profile).
 | B2 | COMPLETE backend/fake-delivery acceptance | A07 public RESET request via encrypted durable intent, existing N7 completion/session revocation; token/retry/concurrency/recovery/transport and schema coverage, B1/auth/session/invitation regressions; no Store/grants changes; isolated Auth DB; real workflow email/browser unverified |
 | B3 | COMPLETE backend/fake-delivery acceptance | IN01 explicit holder decline; terminal fields/capabilities/events/filter, immutable receipt/current-authority replay; fences/rollback/uncertain commit/races/new-identity acceptance and related auth/schema regressions; no membership/grants/access/email; Auth-only test DB; browser UI unverified |
 | B4 | COMPLETE backend/fake-delivery VERIFIED | Linked HTTP/PostgreSQL signup/invitation/grants/multi-Store/decline/reset flows and fresh reads; Product-approved v3/43 catalogue sync, additive Auth0023 CHECK and restart recovery; affected auth/Staff/API/schema regressions; no full-suite claim; browser/real workflow email pending; CHECK overlap reconciled in integration-only0021/0023 plus merge0024 |
-| C1 | COMPLETE backend foundation, local review | NF01–NF03; durable intent/dispatcher/read receipt, N13 atomic producer, own DB0025 and25 C1 cases plus affected regressions; PR/MQ and browser integration pending C2/FE; no commit/push |
+| C1 | COMPLETE backend foundation, local commit f85c7cdd | NF01–NF03; durable intent/dispatcher/read receipt, N13 atomic producer, historical DB0025 and25 C1 cases plus affected regressions; no push/merge |
+| C2 | COMPLETE backend acceptance, local checkpoint | PR01–PR04 union/grants/audit/receipt; MQ01–MQ03 full-spec pins, N5 queue decisions, current target rights and atomic producers; own DB0026; verification/limits in FULL_TEST_FLOW; no browser/runtime8103 upgrade |
 
 These are functional checkpoints, not a claim each is a Git commit or every route
 passed a fresh full suite. Current runtime/debt is in [CURRENT_STATE](CURRENT_STATE.md).

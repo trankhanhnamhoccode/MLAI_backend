@@ -60,6 +60,14 @@ def test_only_intended_routes_exist() -> None:
         '/api/v1/stores/{store_id}/imports/calendar':'GET'})
     public['/api/v1/stores/{store_id}/imports']='GET,POST'
     public['/api/v1/stores/{store_id}/procurement-plans']='GET,POST'
+    public.update({
+        '/api/v1/notifications':'GET', '/api/v1/notifications/unread-count':'GET', '/api/v1/notifications/{notification_id}':'PATCH',
+        '/api/v1/stores/{store_id}/permission-requests':'GET,POST',
+        '/api/v1/stores/{store_id}/permission-requests/{request_id}':'GET',
+        '/api/v1/stores/{store_id}/permission-requests/{request_id}/actions':'POST',
+        '/api/v1/imports/{import_id}/mapping-submissions':'POST',
+        '/api/v1/stores/{store_id}/mapping-submissions':'GET',
+        '/api/v1/stores/{store_id}/mapping-submissions/{submission_id}':'GET'})
     assert set(application.openapi()["paths"]) == {"/health", *public}
     assert {(route.path, frozenset(route.methods)) for route in application.routes} == {
         ("/health", frozenset({"GET"})),

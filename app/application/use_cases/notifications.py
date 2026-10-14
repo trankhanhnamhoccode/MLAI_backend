@@ -5,7 +5,7 @@ import hashlib
 import hmac
 import json
 from uuid import UUID, uuid4
-from sqlalchemy import or_, select
+from app.repositories.notifications import NotificationRepository
 from app.application.contracts.auth import AuthError
 from app.application.contracts import notifications as dto
 from app.infrastructure.auth_crypto import digest
@@ -29,28 +29,46 @@ class Notifications:
             raise AuthError("RESOURCE_NOT_FOUND", 404)
         return accessible
 
-    def _item(self, row, accessible):
+    def _item(self, s, row, accessible):
         store = accessible[row.store_id][0] if row.store_id else None
         link = None
-        # C2 target authorization is not implemented. Never invent PR/MQ authority.
-        # Membership locator opens T02's currently authorized Store context only.
         if store and row.record["object"]["type"] == "membership":
             member = accessible[row.store_id][1]
             if str(member.id) == row.record["object"]["id"]:
                 link = dto.NotificationLink(path=f"/stores/{store.id}", availability="available")
+        elif store:
+            member = accessible[store.id][1]
+            identity = UUID(row.record['object']['id'])
+            target_type = row.record['object']['type']
+            if target_type == 'permission_request':
+                from app.models.collaboration import PermissionRequestRecord
+                target = s.get(PermissionRequestRecord, identity)
+                allowed = target is not None and target.store_id == store.id and (member.role == 'OWNER' or target.requester_user_id == row.recipient_user_id)
+                path = f'/stores/{store.id}/permission-requests/{identity}'
+            elif target_type == 'mapping_submission':
+                from app.models.collaboration import MappingSubmissionRecord
+                from app.models.import_staging import ImportBatch
+                from app.application.use_cases.import_staging import ImportStaging, READS
+                target = s.get(MappingSubmissionRecord, identity)
+                allowed = target is not None and target.store_id == store.id and (member.role == 'OWNER' or target.submitted_by_user_id == row.recipient_user_id)
+                if allowed:
+                    batch = s.get(ImportBatch, target.import_id)
+                    permissions = set(self.auth._summary(s, store, member)[1])
+                    required = {'import.read','mapping.read',*READS[target.spec['schema']],*ImportStaging._sensitive_reads(batch)}
+                    allowed = batch.store_id == store.id and (member.role == 'OWNER' or batch.actor_id == row.recipient_user_id) and required <= permissions
+                path = f'/stores/{store.id}/mapping-submissions/{identity}'
+            else:
+                allowed = False
+            if allowed:
+                link = dto.NotificationLink(path=path,availability='available')
         return dto.Notification(notification_id=row.id, recipient_user_id=row.recipient_user_id,
             store=dto.NotificationStore(store_id=store.id, name=store.name) if store else None,
             **row.record, created_at=row.created_at, read_at=row.read_at, link=link, version=row_version(row))
 
     def _projection(self, s, user, store_id):
         accessible = self._scope(s, user, store_id)
-        query = select(NotificationRecord).where(NotificationRecord.recipient_user_id == user.id)
-        if store_id is not None:
-            query = query.where(NotificationRecord.store_id == store_id)
-        else:
-            query = query.where(or_(NotificationRecord.store_id.is_(None), NotificationRecord.store_id.in_(accessible)))
-        rows = list(s.scalars(query.order_by(NotificationRecord.created_at.desc(), NotificationRecord.id).with_for_update()))
-        items = tuple(self._item(row, accessible) for row in rows)
+        rows = NotificationRepository(s).visible(user.id, store_id, tuple(accessible))
+        items = tuple(self._item(s, row, accessible) for row in rows)
         # Current grants, Store names, membership set and every visible read/content revision.
         authority = [self.auth._summary(s, store, member)[0].model_dump(mode="json")
                      for store, member in accessible.values()]
@@ -131,13 +149,11 @@ class Notifications:
         with auth_session(self.engine) as s:
             user, _ = self.auth._resolve(s, token, csrf or "")
             accessible = self._scope(s, user, None)
-            row = s.scalar(select(NotificationRecord).where(NotificationRecord.id == identity,
-                NotificationRecord.recipient_user_id == user.id).with_for_update())
+            row = NotificationRepository(s).own_notification(identity, user.id)
             if row is None or (row.store_id and row.store_id not in accessible):
                 raise AuthError("RESOURCE_NOT_FOUND", 404)
             checksum = digest(json.dumps([body.read, match], separators=(",", ":")))
-            receipt = s.scalar(select(NotificationReadReceipt).where(NotificationReadReceipt.actor_id == user.id,
-                NotificationReadReceipt.notification_id == identity, NotificationReadReceipt.key_digest == digest(key)))
+            receipt = NotificationRepository(s).read_receipt(user.id, identity, digest(key))
             if receipt:
                 if receipt.request_digest != checksum:
                     raise AuthError("IDEMPOTENCY_KEY_REUSED", 409)

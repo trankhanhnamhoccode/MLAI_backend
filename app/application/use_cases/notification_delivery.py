@@ -1,13 +1,13 @@
 """Local row-lock ownership; bounded batches, durable retry and restart recovery."""
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
-from sqlalchemy import or_, select, text
+from app.repositories.auth import AuthRepository
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.domain.notifications import TEMPLATES, retry_delay
 from app.models import User, Store, StoreMembership
 from app.models.notifications import NotificationIntent, NotificationRecord
-from app.repositories.notifications import decode_event, payload_hash
+from app.repositories.notifications import decode_event, payload_hash, NotificationRepository
 
 
 class NotificationDispatcher:
@@ -18,9 +18,7 @@ class NotificationDispatcher:
         if type(limit) is not int or not 1 <= limit <= 100:
             raise ValueError("INVALID_DISPATCH_LIMIT")
         with Session(self.engine) as s:
-            ids = list(s.scalars(select(NotificationIntent.id).where(NotificationIntent.status == "pending",
-                or_(NotificationIntent.next_attempt_at.is_(None), NotificationIntent.next_attempt_at <= self.clock()))
-                .order_by(NotificationIntent.created_at, NotificationIntent.id).limit(limit)))
+            ids = NotificationRepository(s).pending_ids(self.clock(), limit)
         completed = 0
         for identity in ids:
             try:
@@ -32,20 +30,17 @@ class NotificationDispatcher:
 
     def deliver(self, identity):
         with Session(self.engine) as s, s.begin():
-            s.execute(text("SET LOCAL lock_timeout = '2s'"))
-            s.execute(text("SET LOCAL statement_timeout = '5s'"))
+            NotificationRepository(s).dispatch_timeouts()
             candidate = s.get(NotificationIntent, identity)
             if candidate is None:
                 return 0
             # Same authority lock order as HTTP: user -> Store/membership -> intent.
-            user = s.scalar(select(User).where(User.id == candidate.recipient_user_id).with_for_update())
+            user = AuthRepository(s).lock_user(candidate.recipient_user_id)
             store = member = None
             if candidate.store_id:
-                store = s.scalar(select(Store).where(Store.id == candidate.store_id).with_for_update())
-                member = s.scalar(select(StoreMembership).where(StoreMembership.store_id == candidate.store_id,
-                    StoreMembership.user_id == candidate.recipient_user_id).with_for_update())
-            row = s.scalar(select(NotificationIntent).where(NotificationIntent.id == identity)
-                .with_for_update(skip_locked=True).execution_options(populate_existing=True))
+                store = AuthRepository(s).lock_store(candidate.store_id)
+                member = AuthRepository(s).lock_membership(candidate.store_id, candidate.recipient_user_id)
+            row = NotificationRepository(s).lock_intent(identity, skip_locked=True)
             if row is None or row.status != "pending" or (row.next_attempt_at and row.next_attempt_at > self.clock()):
                 return 0
             row.attempt += 1
@@ -68,7 +63,7 @@ class NotificationDispatcher:
             record = dict(event_id=str(event.event_id), decision_id=str(event.decision_id) if event.decision_id else None,
                 event_type=event.event_type.value, occurred_at=event.occurred_at.isoformat(), title=title, body=body,
                 object=dict(type=event.object_type, id=str(event.object_id), revision=event.object_revision))
-            existing = s.scalar(select(NotificationRecord).where(NotificationRecord.intent_id == row.id))
+            existing = NotificationRepository(s).delivered_notification(row.id)
             if existing:
                 if existing.record != record or existing.recipient_user_id != row.recipient_user_id or existing.store_id != row.store_id:
                     row.status, row.error_code = "failed", "NOTIFICATION_IDENTITY_CONFLICT"
@@ -83,9 +78,8 @@ class NotificationDispatcher:
 
     def _defer(self, identity):
         with Session(self.engine) as s, s.begin():
-            s.execute(text("SET LOCAL lock_timeout = '2s'"))
-            s.execute(text("SET LOCAL statement_timeout = '5s'"))
-            row = s.scalar(select(NotificationIntent).where(NotificationIntent.id == identity).with_for_update())
+            NotificationRepository(s).dispatch_timeouts()
+            row = NotificationRepository(s).lock_intent(identity)
             if row and row.status == "pending":
                 row.attempt += 1
                 row.error_code = "PERSISTENCE_UNAVAILABLE"
@@ -94,7 +88,7 @@ class NotificationDispatcher:
     def retry_failed(self, identity):
         """Explicit operator retry after dispatcher repair, retaining event identity/evidence."""
         with Session(self.engine) as s, s.begin():
-            row = s.scalar(select(NotificationIntent).where(NotificationIntent.id == identity).with_for_update())
+            row = NotificationRepository(s).lock_intent(identity)
             if not row or row.status != "failed":
                 raise ValueError("FAILED_INTENT_REQUIRED")
             decode_event(row.payload)

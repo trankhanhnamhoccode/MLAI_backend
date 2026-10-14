@@ -406,7 +406,7 @@ def test_additive_upgrade_metadata_and_retention_guard(database_settings):
         with engine.connect() as c:
             assert c.scalar(text("SELECT current_database()")) == "shelfcash_notifications_test"
             assert c.scalar(text("SELECT current_user")) == "shelfcash_notifications_tester"
-            assert c.scalar(text("SELECT version_num FROM alembic_version")) == "0025_notifications_foundation"
+            assert c.scalar(text("SELECT version_num FROM alembic_version")) == "0026_collaboration_requests"
             assert compare_metadata(MigrationContext.configure(c), Base.metadata) == []
         command.downgrade(migration_config(), "0024_integrate_import_auth")
         with Session(engine) as s, s.begin():
@@ -424,7 +424,7 @@ def test_additive_upgrade_metadata_and_retention_guard(database_settings):
         with pytest.raises(RuntimeError, match="retention"):
             command.downgrade(migration_config(), "0024_integrate_import_auth")
         with Session(engine) as fresh:
-            assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0025_notifications_foundation"
+            assert fresh.scalar(text("SELECT version_num FROM alembic_version")) == "0026_collaboration_requests"
             assert fresh.scalar(select(func.count()).select_from(NotificationIntent)) == 1
     finally:
         engine.dispose()

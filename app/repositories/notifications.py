@@ -3,10 +3,46 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from uuid import UUID, uuid4
-from sqlalchemy import select
+from sqlalchemy import select,or_,text
 from sqlalchemy.dialects.postgresql import insert
 from app.domain.notifications import NotificationEvent, EventType
-from app.models.notifications import NotificationIntent
+from app.models.notifications import NotificationIntent,NotificationRecord,NotificationReadReceipt
+
+
+class NotificationRepository:
+    """Inbox and dispatcher queries in the caller-owned Session."""
+    def __init__(self, session):
+        self.session=session
+
+    def visible(self, user_id, store_id, accessible_stores):
+        query=select(NotificationRecord).where(NotificationRecord.recipient_user_id==user_id)
+        query=query.where(NotificationRecord.store_id==store_id) if store_id is not None else query.where(
+            or_(NotificationRecord.store_id.is_(None),NotificationRecord.store_id.in_(accessible_stores)))
+        return self.session.scalars(query.order_by(NotificationRecord.created_at.desc(),NotificationRecord.id).with_for_update()).all()
+
+    def own_notification(self, identity, user_id):
+        return self.session.scalar(select(NotificationRecord).where(NotificationRecord.id==identity,
+            NotificationRecord.recipient_user_id==user_id).with_for_update())
+
+    def read_receipt(self, user_id, identity, key_digest):
+        return self.session.scalar(select(NotificationReadReceipt).where(NotificationReadReceipt.actor_id==user_id,
+            NotificationReadReceipt.notification_id==identity,NotificationReadReceipt.key_digest==key_digest))
+
+    def pending_ids(self, now, limit):
+        return self.session.scalars(select(NotificationIntent.id).where(NotificationIntent.status=='pending',
+            or_(NotificationIntent.next_attempt_at.is_(None),NotificationIntent.next_attempt_at<=now))
+            .order_by(NotificationIntent.created_at,NotificationIntent.id).limit(limit)).all()
+
+    def dispatch_timeouts(self):
+        self.session.execute(text("SET LOCAL lock_timeout = '2s'"))
+        self.session.execute(text("SET LOCAL statement_timeout = '5s'"))
+
+    def lock_intent(self, identity, *, skip_locked=False):
+        return self.session.scalar(select(NotificationIntent).where(NotificationIntent.id==identity)
+            .with_for_update(skip_locked=skip_locked).execution_options(populate_existing=True))
+
+    def delivered_notification(self, intent_id):
+        return self.session.scalar(select(NotificationRecord).where(NotificationRecord.intent_id==intent_id))
 
 
 def payload_hash(payload):

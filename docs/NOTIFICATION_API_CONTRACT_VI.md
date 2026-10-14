@@ -5,8 +5,9 @@
 
 ACCEPTED DECISION — Đợt 2: inbox trong ứng dụng cho account đang đăng nhập;
 không browser push/SMS. CURRENT FACT C1: operations NF01–NF03 là **IMPLEMENTED**
-trên branch `feat/notifications-foundation`, chưa commit/merge. Typed DTO/storage,
-durable enqueue và local dispatcher đã có; PR/MQ producers vẫn **DESIGN_READY C2**.
+trên branch `feat/notifications-foundation`; C1 local commit f85c7cdd, chưa merge/push.
+C2 local checkpoint đã nối PR/MQ producers và current target authority; typed storage,
+durable enqueue/dispatcher giữ cùng foundation.
 Quy ước wire, retry và bảng lỗi dùng
 [bàn giao chung](API_CONTRACT.md#dot2-common). Không đổi authority của
 [permissions](AUTHORIZATION_CONTRACT_VI.md#permission-requests) hoặc
@@ -89,7 +90,7 @@ Ví dụ NF02 data và NF03 request → response data:
 {"notification_id":"00000000-0000-0000-0000-000000000031","read_at":"2026-10-13T02:01:00Z","version":"notification-2"}
 ```
 
-## 4. Events, delivery và recovery — C1 foundation / C2 producer design
+## 4. Events, delivery và recovery — IMPLEMENTED C1/C2
 
 | Event type v1 | Recipient và object |
 | --- | --- |
@@ -105,7 +106,7 @@ Store/submission rồi lấy current state/review_eligibility/current_profile; p
 proposal_revision/mapping_revision/spec_digest giữ immutable. Nếu proposal đổi sau
 submit thì detail stale và Staff explicit resubmit ID mới; notification cũ không
 duyệt nhầm revision mới. N5 vẫn command authority approve_activate/reject/retire
-(request_changes là extension DESIGN_READY), queue không resolve sales/recipe/
+(request_changes là extension IMPLEMENTED C2), queue không resolve sales/recipe/
 supplier/inventory business conflict thay preview/resolutions.
 
 Template mapping_submission.approved bắt buộc body:
@@ -180,12 +181,15 @@ resolve recipients rồi gọi `repositories.notifications.enqueue(session, even
 trong Session đang sở hữu business decision/audit. Helper không commit. Identity
 conflict với payload khác làm transaction fail; không ghi đè evidence.
 
-Producer thật duy nhất đã nối: N13 `membership.grants_changed`, source OWNER_CHANGE,
+Producers thật đã nối: N13 `membership.grants_changed`, source OWNER_CHANGE,
 event_id chính là PermissionEvent ID, recipient Staff bị đổi grants. No-op và
-invitation acceptance không sinh event này. DTO N13 hiện hữu giữ nguyên; trường
-notification_delivery của các decision workflows phía trên chờ C2 cùng PR/MQ,
-không giả workflow hoặc mở send endpoint. Các event types khác dùng synthetic
-internal boundary trong tests; interface/template không chứng minh producer đã có.
+invitation acceptance không sinh event này. PR01/MQ01 submit resolve active Owner(s),
+PR04 approve/reject trả requester; N5 approve/reject/request_changes trả submitter.
+PR approval dùng event outcome riêng, không thêm grants_changed. Event ID là audit
+ID cùng transaction, decision_id giữ cùng decision; dedupe receipt không enqueue lại.
+Cancel/withdraw/satisfied/invalidated không notification bắt buộc. Intent persist
+failure rollback business transaction; dispatch sau commit không undo decision.
+Không public send endpoint, SMTP/push/SMS hoặc broadcast cả Store.
 
 Dispatcher dùng transaction riêng; lock User → Store/membership → intent, recheck
 pending/due và current recipient; row lock là ownership/fencing tới commit/rollback.
@@ -199,12 +203,16 @@ chỉ delivery state và read_at/revision được cập nhật. Không purge po
 Snapshot opaque≤256 bytes ký theo session/scope, cursor bind filter/limit/position.
 Fingerprint gồm current accessible membership/grants/name và toàn bộ visible
 notification/read revisions; không giữ historical copies. Restart process làm
-token ký cũ không dùng lại được; FE refetch inbox/count. PR/MQ link=null trong C1
-vì target authority chờ C2. Membership chỉ sinh allowlisted `/stores/{store_id}`
+token ký cũ không dùng lại được; FE refetch inbox/count. PR/MQ links C2 resolve own
+request/submission hoặc current Owner đúng Store. MQ kiểm import.read/mapping.read
+và sensitive reads của current batch lẫn pinned spec; thiếu quyền target link=null.
+Paths allowlisted `/stores/{store_id}/permission-requests/{request_id}` và
+`/stores/{store_id}/mapping-submissions/{submission_id}`; không latest-profile alias.
+Membership chỉ sinh allowlisted `/stores/{store_id}`
 khi object chính là current active membership của recipient; mở T02 luôn reauthorize.
 Đây là relative locator, chưa chứng minh route browser FE được nối.
 
 Worker `shelfcash-notifications` mặc định OFF; chỉ bật
-`NOTIFICATION_WORKER_ENABLED=true` trong profile đã migrate0025, hoặc chạy một batch
+`NOTIFICATION_WORKER_ENABLED=true` trong profile đã migrate0026, hoặc chạy một batch
 bằng command ở [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#notifications-c1).
-Không bật/migrate runtime demo8103 trong C1.
+Không bật/migrate runtime demo8103 trong C1/C2.

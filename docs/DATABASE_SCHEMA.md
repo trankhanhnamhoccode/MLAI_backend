@@ -1,6 +1,19 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
-## CURRENT FACT — C1 head0025, retained integrated demo0024
+## CURRENT FACT — C2 head0026, retained integrated demo0024
+
+`0026_collaboration_requests` nối additive sau0025, thêm permission_requests,
+permission_request_audit và mapping_submissions:70 application tables/71 tổng.
+Partial UNIQUE giới hạn một pending Store/member và một submitted/profile.
+Mapping evidence giữ source digest/header/row offsets, tham chiếu captured sources
+và original bytes đã bất biến; MQ03 chỉ dựng bounded page, không copy mọi raw cells.
+Facts/spec/evidence/created identity bất biến; terminal records không reopen,
+audit không sửa/xóa; downgrade từ chối retained rows. Reconciliation/decision đổi
+state/version cùng transaction caller; không sửa migration lịch sử hoặc DB demo.
+Grants vẫn membership_grants; PermissionEvent JSON có nullable request/decision
+IDs và source PERMISSION_REQUEST_APPROVAL, không thêm permission catalogue.
+
+### HISTORICAL INFORMATION — C1 checkpoint0025
 
 C1 source head `0025_notifications_foundation` adds `notification_intents`,
 `notifications` and `notification_read_receipts` to0024:67 application tables,

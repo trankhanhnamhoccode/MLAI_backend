@@ -355,7 +355,7 @@ def decide(
     store_id: UUID,
     profile_id: UUID,
     body: Annotated[
-        dto.Approve | dto.Reject | dto.Retire, Body(discriminator="decision")
+        dto.Approve | dto.Reject | dto.RequestChanges | dto.Retire, Body(discriminator="decision")
     ],
     request: Request,
     response: Response,

@@ -1,11 +1,13 @@
 # Current state
 
-## CURRENT FACT — C1 notification foundation, local chưa commit
+## CURRENT FACT — C1 committed local; C2 COMPLETE backend, local checkpoint
 
 Worktree `backend-notifications-foundation`, branch `feat/notifications-foundation`
-from main `6f807357e107e504349a9b154c820bacdfffbe86`. Source thêm NF01–NF03:
-OpenAPI62 operations/58 paths, permissions-v3/43 giữ nguyên. Additive single head
-`0025_notifications_foundation`,67 application tables/68 với Alembic. Owned test DB
+from main `6f807357e107e504349a9b154c820bacdfffbe86`. C1 checkpoint commit local
+`f85c7cdd7d9529404f5fd28e06f9156e97bb803e`; C2 checkpoint local theo yêu cầu; chưa merge/push.
+Source NF01–NF03 + PR01–PR04/MQ01–MQ03: OpenAPI69 operations/64 paths,
+permissions-v3/43 giữ nguyên. Additive single head `0026_collaboration_requests`,
+70 application tables/71 với Alembic. Owned test DB
 `shelfcash_notifications_test` / limited `shelfcash_notifications_tester` trên
 instance Docker hiện có5433; dedicated URL/current-user guards và HBA boundary.
 Demo8103 và các DB cũ vẫn head/data cũ, không migrate/reset.
@@ -15,16 +17,26 @@ scope, signed snapshots, CAS/idempotent read receipts và safe server templates 
 implement. Durable business enqueue + separate bounded row-lock dispatcher có
 dedupe/backoff/restart/suppression và evidence retention. Producer thật: N13 đổi
 grants; PermissionEvent/intent cùng Session, không thay N13 DTO/grants policy.
-PR/MQ producers/target authority chờ C2, link=null; không triển khai workflow C2.
+PR submit/approve/reject và MQ submit/N5 approve/reject/request_changes đã nối
+intent cùng business transaction. PR approval union qua grants boundary hiện có,
+không duplicate membership.grants_changed; retained replay không regrant. MQ pin
+full spec/source/revisions, stale reconciliation cùng Import mutations; N5 resolve
+live submission cả direct command. Approval không commit canonical data. Inbox
+links PR/MQ kiểm lại current own/Owner và batch-sensitive domain rights; mất quyền
+target thì link=null, notification không cấp quyền.
 Notification worker explicit opt-in, default OFF; không thêm email/provider call.
 
-Final targeted C1 gate pass25 cases; Auth/Staff/database guards/schema regressions
-đã chạy trên DB riêng;
-không claim full suite, browser E2E hoặc live delivery. Runtime8103 vẫn chạy snapshot
+HISTORICAL INFORMATION: final C1 targeted gate pass25 cases, cùng affected
+Auth/Staff/database guards/schema regressions. C2 commands/results và giới hạn
+được ghi tại runbook; acceptance dùng HTTP/PostgreSQL/fresh-session reads,
+Full gate trước đợt sửa cuối:2308 passed/10 failed; đã sửa9 stale inventory
+expectations và query boundary violation, rồi affected gates pass56 unit/API,
+21 C2 HTTP/PG,69 regressions và2 retention cases. Không rerun/claim final full-suite
+PASS, browser E2E hoặc live delivery. Runtime8103 vẫn chạy snapshot
 tích hợp trước C1, OpenAPI59/head0024; các NF operations chưa có trên process đó.
 Canonical scope/API/producers ở [notification contract](NOTIFICATION_API_CONTRACT_VI.md),
 commands và exact verification ở [runbook](runbooks/FULL_TEST_FLOW.md#notifications-c1).
-WIP backend9/Import15 giữ nguyên; không commit/push/merge trong C1.
+WIP backend9/Import15 giữ nguyên; C2 commit local; không push/merge hoặc đổi main/demo8103.
 
 ## CURRENT FACT — bản tích hợp Import/Auth local
 

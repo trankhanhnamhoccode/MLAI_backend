@@ -1,5 +1,14 @@
 # S4.4 — Import staging/mapping/preview
 
+CURRENT FACT C2: MQ01–MQ03 provide explicit pinned full-spec submissions and Store
+queue/detail; N5 resolves the live submission and supports request_changes.
+Content/lifecycle drift fences review, while approved history retains its pins.
+Approval activates a profile; preview/confirm/commit remain separate. MQ03 exposes
+bounded source evidence under current sensitive reads, without adding the broader
+I04/M02 projection extensions. Canonical workflow is in
+[mapping queue contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-queue);
+[FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#collaboration-c2) owns commands/limits.
+
 CURRENT FACT — consumer update S4.6: all nine existing schemas have atomic writers; N6/N8 stock workflows are separate. See [S4.6 feature](IMPORT_INVENTORY_SUPPLIER.md) and [evidence](../runbooks/FULL_TEST_FLOW.md). Four-schema/unsupported statements below describe the S4.5/S4.4 historical slice boundary.
 
 ## CURRENT FACT — consumer S4.5

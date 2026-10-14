@@ -7,11 +7,12 @@ xuất; khách hàng quyết định. Hệ thống không tự đặt hàng.
 CURRENT FACT: backend đã có đăng nhập và quyền theo Store (quán), Staff (nhân viên),
 đọc Menu/Kho, import có duyệt và ghi toàn batch trong một transaction, readiness
 (kiểm tra đủ dữ liệu), Planning (lập phương án), lịch sử và xuất PDF tiếng Việt.
-CURRENT FACT source C1 local: OpenAPI62 operations/58 paths, thêm NF01–NF03 cho
-inbox/count/read state; catalogue permissions-v3/43 quyền giữ nguyên. Alembic head
-`0025_notifications_foundation` (67 bảng ứng dụng, cộng bảng Alembic).
-Producer N13 đã nối; PR/MQ chờ C2. Xem [C1 commands/limits](docs/runbooks/FULL_TEST_FLOW.md#notifications-c1).
-Runtime demo8103 bên dưới vẫn chạy bản tích hợp0024/59 operations, chưa nâng cấp C1.
+CURRENT FACT source C1/C2 local: OpenAPI69 operations/64 paths; NF01–NF03 inbox,
+PR01–PR04 yêu cầu quyền và MQ01–MQ03 queue mapping/N5 extension. Catalogue
+permissions-v3/43 giữ nguyên, head `0026_collaboration_requests` (70 bảng ứng dụng).
+C1 commit f85c7cdd, C2 COMPLETE backend/local checkpoint; N13/PR/MQ producers và current target rights
+đã nối. Xem [commands/limits](docs/runbooks/FULL_TEST_FLOW.md#notifications-c1).
+Runtime demo8103 bên dưới vẫn0024/59 operations, chưa nâng cấp C1/C2.
 
 CURRENT FACT: forecast hỗ trợ baseline (mô hình cơ sở) và trained artifacts (tệp
 mô hình đã huấn luyện). Demo chọn BASELINE; chất lượng dữ liệu thật chưa đánh giá.

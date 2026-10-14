@@ -7,6 +7,7 @@ from decimal import Decimal
 import re
 from pydantic import (
     Field,
+    ConfigDict,
     StrictBool,
     StrictInt,
     StrictStr,
@@ -342,14 +343,18 @@ class TargetRequest(DTO):
     target_field: Annotated[StrictStr, Field(min_length=1, max_length=128)]
 
 
-class Approve(DTO):
+from app.application.contracts.mapping_submissions import QueueReference, MappingSubmission
+from app.application.contracts.collaboration import NotificationDelivery
+
+
+class Approve(QueueReference, DTO):
     decision: Literal["approve_activate"]
     proposal_revision: Version
     expected_active_version: Version | None
     reason: Text
 
 
-class Reject(DTO):
+class Reject(QueueReference, DTO):
     decision: Literal["reject"]
     proposal_revision: Version
     reason: Text
@@ -358,6 +363,12 @@ class Reject(DTO):
 class Retire(DTO):
     decision: Literal["retire"]
     active_version: Version
+    reason: Text
+
+
+class RequestChanges(QueueReference, DTO):
+    decision: Literal['request_changes']
+    proposal_revision: Version
     reason: Text
 
 
@@ -746,6 +757,7 @@ class MappingUpdated(DTO):
 
 
 class DecisionResult(DTO):
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     profile_id: UUID
     approved_version: str | None
     active_version: str | None
@@ -753,6 +765,42 @@ class DecisionResult(DTO):
     decision_id: UUID
     decided_at: datetime
     audit_id: UUID
+    submission: MappingSubmission | None = None
+    notification_delivery: NotificationDelivery = Field(default_factory=lambda: NotificationDelivery(status='not_required',event_id=None))
+
+
+class SourceEvidenceCell(DTO):
+    location: SourceLocation
+    column_label: str | None
+    raw_value: str | None
+    cell_kind: Literal['text','numeric','boolean','date','empty','error']
+    formula_present: bool
+
+
+class MappingReviewSource(DTO):
+    file_id: UUID
+    filename: str
+    sheet_id: UUID
+    sheet_name: str
+    source_system_key: str
+    report_type: str
+    schema_signature: Version
+    evidence_references: tuple[str,...]
+
+
+class ReviewEvidence(DTO):
+    cells: tuple[SourceEvidenceCell,...]
+    next_cursor: str | None
+    total_count: int
+
+
+class MappingReviewDetail(DTO):
+    submission: MappingSubmission
+    source: MappingReviewSource
+    spec: ProfileSpec
+    warnings: tuple[Notice,...]
+    missing_fields: tuple[str,...]
+    evidence: ReviewEvidence
 
 
 from app.application.contracts.import_domains import CanonicalValue, SupplierTermSemantics

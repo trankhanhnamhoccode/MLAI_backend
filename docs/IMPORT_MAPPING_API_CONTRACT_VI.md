@@ -2053,13 +2053,15 @@ CURRENT FACT thực tế xem CURRENT_STATE/feature hiện hành, không dùng l�
 rằng commit vẫn unsupported. Handoff ZIP cũ chưa phát hành lại.
 
 <a id="mapping-queue"></a>
-## 15. Submit và queue duyệt mapping toàn Store — DESIGN_READY
+## 15. Submit và queue duyệt mapping toàn Store — IMPLEMENTED C2
 
 ACCEPTED DECISION: Staff chuẩn bị → explicit “Gửi chủ quán duyệt” → Owner đọc pinned
 proposal → N5 quyết định → Staff xem kết quả/sửa/resubmit. Draft không tự thành
-queue task. CURRENT FACT: N5/M01–M04 đã có source ở `app/api/import_staging.py`,
-`ImportStagingUseCases.decision/summary/mappings`; N5 nhận approve_activate/reject/
-retire, không request_changes; source chưa có submission aggregate/Store queue.
+queue task. CURRENT FACT: MQ01–MQ03 tại `app/api/mapping_submissions.py` và
+`MappingSubmissions`; retained aggregate từ migration0026. N5 tại
+`ImportStaging.decision` nhận approve_activate/reject/request_changes/retire;
+live submitted được resolve/pin cả khi direct N5 không gửi submission fields.
+Commands/verification ở [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#collaboration-c2).
 N5 approve_activate là approve và activate cùng command, không thêm approve endpoint.
 
 TECHNICAL CHOICE: một submission là **một profile proposal đầy đủ**, có toàn bộ
@@ -2101,10 +2103,10 @@ Invalid data rows vẫn do preview xử lý, không giả mapping review đã va
 
 | ID/status | Method/path | Request → response |
 | --- | --- | --- |
-| MQ01 DESIGN_READY | POST /imports/{import_id}/mapping-submissions | Staff own batch (Owner cũng được), import.read+mapping.read+mapping.propose và batch sensitive reads như M04; Origin/CSRF/Idempotency-Key/If-Match import_revision. {action:"submit",profile_id:UUID,proposal_revision:Version,mapping_revision:Version,reason:string} hoặc {action:"withdraw",submission_id:UUID,expected_submission_version:Version,reason:string} → 201 submit/200 withdraw MappingSubmission. |
-| MQ02 DESIGN_READY | GET /stores/{store_id}/mapping-submissions | Owner toàn Store, Staff own submissions; import.read+mapping.read+domain read rights theo nguồn; query state?:enum,file_id?:UUID,import_id?:UUID,limit/cursor; sort -submitted_at/UUID. → 200 {items:MappingSubmission[]}. |
-| MQ03 DESIGN_READY | GET /stores/{store_id}/mapping-submissions/{submission_id} | Same scope; query evidence_limit1..100 default20,evidence_cursor? → 200 MappingReviewDetail, ETag submission.version. |
-| N5 IMPLEMENTED; queue extension DESIGN_READY | POST /stores/{store_id}/mapping-profiles/{profile_id}/decisions | Owner-only hiện hành; giữ If-Match lifecycle_revision + Idempotency-Key. Queue decision thêm submission_id:UUID,expected_submission_version:Version; union approve_activate/reject hiện có + request_changes với proposal_revision/reason. → 200 DecisionResult hiện có + submission:MappingSubmission|null,notification_delivery. |
+| MQ01 IMPLEMENTED | POST /imports/{import_id}/mapping-submissions | Staff own batch (Owner cũng được), import.read+mapping.read+mapping.propose và batch sensitive reads như M04; Origin/CSRF/Idempotency-Key/If-Match import_revision. {action:"submit",profile_id:UUID,proposal_revision:Version,mapping_revision:Version,reason:string} hoặc {action:"withdraw",submission_id:UUID,expected_submission_version:Version,reason:string} → 201 submit/200 withdraw MappingSubmission. |
+| MQ02 IMPLEMENTED | GET /stores/{store_id}/mapping-submissions | Owner toàn Store, Staff own submissions; import.read+mapping.read+domain read rights theo nguồn; query state?:enum,file_id?:UUID,import_id?:UUID,limit/cursor; sort -submitted_at/UUID. → 200 {items:MappingSubmission[]}. |
+| MQ03 IMPLEMENTED | GET /stores/{store_id}/mapping-submissions/{submission_id} | Same scope; query evidence_limit1..100 default20,evidence_cursor? → 200 MappingReviewDetail, ETag submission.version. |
+| N5 và queue extension IMPLEMENTED | POST /stores/{store_id}/mapping-profiles/{profile_id}/decisions | Owner-only hiện hành; giữ If-Match lifecycle_revision + Idempotency-Key. Queue decision thêm submission_id:UUID,expected_submission_version:Version; union approve_activate/reject hiện có + request_changes với proposal_revision/reason. → 200 DecisionResult hiện có + submission:MappingSubmission|null,notification_delivery. |
 
 MQ02 omitstate: Owner chỉ submitted **eligible hiện hành**, Staff tất cả own;
 explicit state cho lịch sử. Mọi rows check batch-sensitive permissions trước trả
@@ -2112,7 +2114,10 @@ source/evidence; danh sách có scope forbidden không silent page filter/count 
 deny whole response403 như Import hiện hành. Owner toàn catalogue vẫn đủ đọc.
 MQ03 trả pinned spec/evidence của submission, current_profile để báo drift; không
 thay spec bằng live proposal. Queue snapshot pin submissions/profile/batch/revisions;
-GET không mutation. MQ03 evidence pagination pin spec_digest/versions/actor.
+GET không mutation. MQ03 evidence pagination pin spec_digest/versions/actor;
+đọc captured source bất biến, chỉ dựng requested page, không reparse/provider.
+Source digest/header/offset index retained cùng pins; display vượt200 ký tự trả
+null + SOURCE_CELL_DISPLAY_UNAVAILABLE warning, original bytes vẫn retained.
 
 Submit lưu immutable spec/content digest và mọi pins + audit + notification intent
 atomic; một live submitted/profile, duplicate newkey409 MAPPING_ALREADY_SUBMITTED,
@@ -2197,9 +2202,12 @@ notification_delivery cùng decision_id):
 Allowed actions computed: submitted eligible Owner approve_activate/reject/
 request_changes (+withdraw), submitter withdraw; terminal chỉ view (resubmit là
 new submission sau sửa draft). Audit submit/withdraw/stale giữ actor/source/pins;
-decisions vẫn ImportAudit, không permission grant/audit. Acceptance tương lai:
-draft absent queue; pin edit/active pointer drift; own Staff isolation; grouped
-full-spec approval; N5 race/retry/revoke; returned reason/resubmit; no batch commit.
+decisions vẫn ImportAudit, không permission grant/audit. HTTP/PostgreSQL acceptance
+ở `tests/integration/test_mapping_submissions.py` và
+`tests/integration/test_collaboration_boundaries.py`; typed API ở
+`tests/api/test_collaboration_openapi.py`. Retained pinned evidence, stale edits,
+retirement, direct N5 queue resolution, rollback/retry/dispatcher và sensitive
+target denial được kiểm bằng fresh sessions. Browser continuation chưa chạy.
 
 <a id="excel-actual-receipt"></a>
 ## 16. Excel hàng thực nhận — DESIGN_READY, reuse pipeline

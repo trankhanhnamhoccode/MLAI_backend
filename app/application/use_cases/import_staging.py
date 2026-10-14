@@ -127,38 +127,26 @@ class ImportStaging:
         return row
 
     def _authority(self, s, token, batch, action, csrf=None, sensitive=False):
-        required = (action,)
-        if sensitive:
-            issues = self._issues(batch) if batch.analysis_json else []
-            schemas = (
-                captured_domains(
-                    batch.analysis_json["sources"],
-                    {
-                        str(sh.sheet_id): [
-                            i
-                            for i in issues
-                            if i.sheet_id == sh.sheet_id and i.issue_type == "column"
-                        ]
-                        for sh in self._sheets(batch)
-                    },
-                )
-                if batch.analysis_json
-                else set()
-            )
-            unknown = not batch.analysis_json or any(
-                i["issue_type"] == "schema_blocker"
-                or i["issue_type"] == "column"
-                and i.get("target_field") is None
-                for i in batch.analysis_json["issues"]
-            )
-            required += (
-                tuple(sorted({p for schema in schemas for p in READS[schema]}))
-                if schemas and not unknown
-                else ALL_READS
-            )
+        required = (action,) + (self._sensitive_reads(batch) if sensitive else ())
         return self.auth.authorize_in_session(
             s, token, batch.store_id, required, csrf=csrf
         )
+
+    @staticmethod
+    def _sensitive_reads(batch):
+        issues = [dto.MappingIssue.model_validate(i) for i in batch.analysis_json['issues']] if batch.analysis_json else []
+        schemas = (
+            captured_domains(
+                batch.analysis_json['sources'],
+                {str(sh.sheet_id): [i for i in issues if i.sheet_id == sh.sheet_id and i.issue_type == 'column']
+                 for sh in (dto.SheetInfo.model_validate(i) for i in batch.analysis_json['sheets'])},
+            ) if batch.analysis_json else set()
+        )
+        unknown = not batch.analysis_json or any(
+            i['issue_type'] == 'schema_blocker' or i['issue_type'] == 'column' and i.get('target_field') is None
+            for i in batch.analysis_json['issues']
+        )
+        return tuple(sorted({p for schema in schemas for p in READS[schema]})) if schemas and not unknown else ALL_READS
 
     def _request(self, key, body, match=None, cas=False):
         try:
@@ -187,6 +175,8 @@ class ImportStaging:
         return r.record_json if r else None
 
     def _save(self, s, actor, store, op, kd, fp, result):
+        from app.application.use_cases.mapping_submissions import invalidate_submissions
+        invalidate_submissions(self, s, actor, store)
         s.add(
             ImportReceipt(
                 actor_id=actor.user_id,
@@ -1969,15 +1959,24 @@ class ImportStaging:
 
     def decision(self, token, store, profile_id, body, key, match, csrf):
         body = type(body).model_validate(body.model_dump())
-        kd, fp, m = self._request(key, body.model_dump(mode="json"), match, True)
+        payload = body.model_dump(mode="json")
+        if payload.get("submission_id") is None:
+            # Optional C2 references must preserve the pre-C2 receipt fingerprint.
+            payload.pop("submission_id", None)
+            payload.pop("expected_submission_version", None)
+        kd, fp, m = self._request(key, payload, match, True)
         with auth_session(self.engine) as s:
-            actor, _, _ = self.auth.authorize_in_session(
+            actor, summary, _ = self.auth.authorize_in_session(
                 s, token, store, owner_only=True, csrf=csrf or ""
             )
             op = "POST:profiles/" + str(profile_id) + "/decisions"
             old = self._old(s, actor, store, op, kd, fp)
             if old:
                 return dto.DecisionResult.model_validate(old)
+            initial = s.scalar(select(ImportProfile).where(ImportProfile.id == profile_id, ImportProfile.store_id == store))
+            if initial is None:
+                raise AuthError("RESOURCE_NOT_FOUND", 404)
+            b = self._batch(s, initial.import_id)
             p = s.scalar(
                 select(ImportProfile)
                 .where(ImportProfile.id == profile_id, ImportProfile.store_id == store)
@@ -1987,6 +1986,9 @@ class ImportStaging:
                 raise AuthError("RESOURCE_NOT_FOUND", 404)
             if p.lifecycle_revision != m:
                 raise AuthError("PROFILE_REVISION_CONFLICT", 412)
+            from app.application.use_cases.mapping_submissions import MappingSubmissions
+            queue = MappingSubmissions(self)
+            submission = queue.decision_target(s, p, b, body, actor, summary)
             now = self.clock()
             approved = None
             if isinstance(body, dto.Retire):
@@ -2000,6 +2002,8 @@ class ImportStaging:
                     raise AuthError("PROFILE_REVISION_CONFLICT", 412)
                 if isinstance(body, dto.Reject):
                     p.rejected = True
+                elif isinstance(body, dto.RequestChanges):
+                    pass
                 else:
                     if p.active_version != body.expected_active_version:
                         raise AuthError("PROFILE_REVISION_CONFLICT", 412)
@@ -2007,7 +2011,7 @@ class ImportStaging:
                         "spec"
                     ):
                         raise AuthError("UNRESOLVED_REQUIRED_FIELDS", 409)
-                    spec = dto.ProfileSpec.model_validate(p.proposal_json["spec"])
+                    spec = dto.ProfileSpec.model_validate(submission.spec if submission else p.proposal_json["spec"])
                     spec = spec.model_copy(
                         update={
                             "source_provenance": spec.source_provenance.model_copy(
@@ -2051,7 +2055,6 @@ class ImportStaging:
                         )
                     p.active_version = approved
                     p.rejected = False
-                    b = self._batch(s, p.import_id)
                     if b.active_job_id:
                         raise AuthError("IMPORT_STATE_CONFLICT", 409)
                     if not (b.analysis_json or {}).get("completion"):
@@ -2105,6 +2108,8 @@ class ImportStaging:
                     approved_version=approved,
                 ),
             )
+            projection = queue.finish_decision(s, submission, p, b, body, actor, summary, ident, aid, now, approved) if submission else None
+            from app.application.contracts.collaboration import NotificationDelivery
             result = dto.DecisionResult(
                 profile_id=p.id,
                 approved_version=approved,
@@ -2113,6 +2118,8 @@ class ImportStaging:
                 decision_id=ident,
                 decided_at=now,
                 audit_id=aid,
+                submission=projection,
+                notification_delivery=NotificationDelivery(status='pending' if submission else 'not_required', event_id=aid if submission else None),
             )
             self._save(s, actor, store, op, kd, fp, result)
             s.commit()
@@ -3112,6 +3119,8 @@ class ImportStaging:
                 "IMPORT_JOB_COMPLETED",
                 dict(job_id=str(j.id), operation=j.operation, result=j.result_json),
             )
+            from app.application.use_cases.mapping_submissions import invalidate_submissions
+            invalidate_submissions(self, s, actor, b.store_id)
             s.commit()
         return job_id
 
