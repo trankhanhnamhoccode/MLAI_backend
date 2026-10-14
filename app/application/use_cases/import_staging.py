@@ -8,6 +8,7 @@ import threading
 import logging
 import io
 import zipfile
+from datetime import datetime
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 from sqlalchemy import select
@@ -65,6 +66,7 @@ READS = {
     "recipes": ("menu.read", "ingredient.read", "recipe.read"),
     "inventory_count": ("ingredient.read", "inventory.read"),
     "opening_stock": ("ingredient.read", "inventory.read", "supplier.read", "procurement.cost.read"),
+    "inventory_receipts": ("ingredient.read", "inventory.read"),
     "products": ("menu.read",),
     "ingredients": ("ingredient.read",),
     "suppliers": ("supplier.read",),
@@ -93,6 +95,7 @@ WRITES = {
     "recipes": "recipe.create_version",
     "inventory_count": "inventory.count.correct",
     "opening_stock": "inventory.receive",
+    "inventory_receipts": "inventory.receive",
     "products": "product.create",
     "ingredients": "ingredient.create",
     "suppliers": "supplier.create",
@@ -127,38 +130,34 @@ class ImportStaging:
         return row
 
     def _authority(self, s, token, batch, action, csrf=None, sensitive=False):
-        required = (action,)
-        if sensitive:
-            issues = self._issues(batch) if batch.analysis_json else []
-            schemas = (
-                captured_domains(
-                    batch.analysis_json["sources"],
-                    {
-                        str(sh.sheet_id): [
-                            i
-                            for i in issues
-                            if i.sheet_id == sh.sheet_id and i.issue_type == "column"
-                        ]
-                        for sh in self._sheets(batch)
-                    },
-                )
-                if batch.analysis_json
-                else set()
-            )
-            unknown = not batch.analysis_json or any(
-                i["issue_type"] == "schema_blocker"
-                or i["issue_type"] == "column"
-                and i.get("target_field") is None
-                for i in batch.analysis_json["issues"]
-            )
-            required += (
-                tuple(sorted({p for schema in schemas for p in READS[schema]}))
-                if schemas and not unknown
-                else ALL_READS
-            )
+        required = (action,) + (self._sensitive_reads(batch) if sensitive else ())
         return self.auth.authorize_in_session(
             s, token, batch.store_id, required, csrf=csrf
         )
+
+    @staticmethod
+    def _sensitive_reads(batch):
+        issues = [dto.MappingIssue.model_validate(i) for i in batch.analysis_json['issues']] if batch.analysis_json else []
+        schemas = (
+            captured_domains(
+                batch.analysis_json['sources'],
+                {str(sh.sheet_id): [i for i in issues if i.sheet_id == sh.sheet_id and i.issue_type == 'column']
+                 for sh in (dto.SheetInfo.model_validate(i) for i in batch.analysis_json['sheets'])},
+            ) if batch.analysis_json else set()
+        )
+        unknown = not batch.analysis_json or any(
+            i['issue_type'] == 'schema_blocker' or i['issue_type'] == 'column' and i.get('target_field') is None
+            for i in batch.analysis_json['issues']
+        )
+        if not schemas or unknown: return ALL_READS
+        from app.application.import_analysis import receipt_sensitive_reads
+        required={p for schema in schemas for p in READS[schema]}
+        required.update(receipt_sensitive_reads(batch.analysis_json['sources'],
+            {str(sh['sheet_id']):[i for i in issues if str(i.sheet_id)==str(sh['sheet_id']) and i.issue_type=='column']
+                for sh in batch.analysis_json['sheets']},
+            {str(sh['sheet_id']):tuple(dto.ImportValue.model_validate(v) for v in sh.get('import_values',()))
+                for sh in batch.analysis_json['sheets']}))
+        return tuple(sorted(required))
 
     def _request(self, key, body, match=None, cas=False):
         try:
@@ -187,6 +186,8 @@ class ImportStaging:
         return r.record_json if r else None
 
     def _save(self, s, actor, store, op, kd, fp, result):
+        from app.application.use_cases.mapping_submissions import invalidate_submissions
+        invalidate_submissions(self, s, actor, store)
         s.add(
             ImportReceipt(
                 actor_id=actor.user_id,
@@ -612,13 +613,17 @@ class ImportStaging:
             ),
         )
 
-    def summary(self, token, ident, details=False, clean=False):
+    def summary(self, token, ident, details=False, clean=False, file_id=None, sheet_id=None, review=True, status=None, origin=None):
         with auth_session(self.engine) as s:
             b = self._batch(s, ident, False)
             _, _, permissions = self._authority(
                 s, token, b, "mapping.read", sensitive=True
             )
             result = self._summary(s, b, details)
+            from app.application.import_read_projection import mapping_selection
+            scope=dto.MappingCounterScope(file_id=file_id,sheet_id=sheet_id,review_only=review,status=status,origin=origin)
+            _,counters=mapping_selection(self._issues(b),self._sheets(b),scope,file_ids=[f.file_id for f in result.files])
+            result=result.model_copy(update={'counter_scope':scope,'counters':counters})
             result = result.model_copy(
                 update={
                     "allowed_actions": self._allowed(
@@ -652,7 +657,7 @@ class ImportStaging:
             s.commit()
             return result
 
-    def _page(self, items, token, actor, summary, binding, limit, cursor):
+    def _page(self, items, token, actor, summary, binding, limit, cursor, *, mapping_snapshot=False):
         if type(limit) is not int or not 1 <= limit <= 100:
             raise AuthError("INVALID_FILTER", 422)
         bound = [
@@ -673,13 +678,19 @@ class ImportStaging:
                     raise ValueError()
                 value = json.loads(base64.urlsafe_b64decode(payload))
                 if value["binding"] != bound:
+                    if mapping_snapshot:
+                        old=value['binding']
+                        # Filters are syntax; revisions/current authority are snapshot identity.
+                        if (old[:2]==bound[:2] and old[4:]==bound[4:]
+                            and old[3][:1]+old[3][2:]==bound[3][:1]+bound[3][2:]):
+                            raise AuthError('SNAPSHOT_NOT_AVAILABLE',409)
                     raise ValueError()
                 if value["fingerprint"] != fingerprint:
-                    raise AuthError("LIST_VERSION_CHANGED", 409)
+                    raise AuthError("SNAPSHOT_NOT_AVAILABLE" if mapping_snapshot else "LIST_VERSION_CHANGED", 409)
                 offset = value["offset"]
                 if type(offset) is not int or not 0 < offset < len(items):
                     raise ValueError()
-            except (ValueError, TypeError, KeyError):
+            except (ValueError, TypeError, KeyError, IndexError):
                 raise AuthError("INVALID_CURSOR", 422) from None
         next_cursor = None
         if offset + limit < len(items):
@@ -706,6 +717,9 @@ class ImportStaging:
         details=False,
         limit=50,
         cursor=None,
+        file_id=None,
+        origin=None,
+        snapshot_id=None,
     ):
         with auth_session(self.engine) as s:
             b = self._batch(s, ident, False)
@@ -715,27 +729,23 @@ class ImportStaging:
             if b.analysis_json is None:
                 raise AuthError("ANALYSIS_NOT_READY", 409)
             issues = self._issues(b)
-            if sheet_id and sheet_id not in {i.sheet_id for i in self._sheets(b)}:
-                raise AuthError("RESOURCE_NOT_FOUND", 404)
-            items = [
-                i
-                for i in issues
-                if (not sheet_id or i.sheet_id == sheet_id)
-                and (not review or i.status != "auto_mapped")
-                and (status is None or i.status == status)
-            ]
+            from app.application.import_read_projection import mapping_selection
+            if snapshot_id is not None and snapshot_id!=b.mapping_revision:raise AuthError('SNAPSHOT_NOT_AVAILABLE',409)
+            scope=dto.MappingCounterScope(file_id=file_id,sheet_id=sheet_id,review_only=review,status=status,origin=origin)
+            items,counters=mapping_selection(issues,self._sheets(b),scope,file_ids=[f.id for f in self._files(s,b)])
             page, pagination = self._page(
                 items,
                 token,
                 actor,
                 summary,
-                [str(b.id), b.mapping_revision, str(sheet_id), review, status, details],
+                [str(b.id), b.mapping_revision, str(sheet_id), review, status, details,str(file_id),origin],
                 limit,
                 cursor,
+                mapping_snapshot=True,
             )
             s.commit()
             return (
-                dto.MappingList(items=page, counts=self._progress(issues)),
+                dto.MappingList(items=page, counts=self._progress(issues),mapping_revision=b.mapping_revision,counter_scope=scope,counters=counters),
                 pagination,
             )
 
@@ -1969,15 +1979,24 @@ class ImportStaging:
 
     def decision(self, token, store, profile_id, body, key, match, csrf):
         body = type(body).model_validate(body.model_dump())
-        kd, fp, m = self._request(key, body.model_dump(mode="json"), match, True)
+        payload = body.model_dump(mode="json")
+        if payload.get("submission_id") is None:
+            # Optional C2 references must preserve the pre-C2 receipt fingerprint.
+            payload.pop("submission_id", None)
+            payload.pop("expected_submission_version", None)
+        kd, fp, m = self._request(key, payload, match, True)
         with auth_session(self.engine) as s:
-            actor, _, _ = self.auth.authorize_in_session(
+            actor, summary, _ = self.auth.authorize_in_session(
                 s, token, store, owner_only=True, csrf=csrf or ""
             )
             op = "POST:profiles/" + str(profile_id) + "/decisions"
             old = self._old(s, actor, store, op, kd, fp)
             if old:
                 return dto.DecisionResult.model_validate(old)
+            initial = s.scalar(select(ImportProfile).where(ImportProfile.id == profile_id, ImportProfile.store_id == store))
+            if initial is None:
+                raise AuthError("RESOURCE_NOT_FOUND", 404)
+            b = self._batch(s, initial.import_id)
             p = s.scalar(
                 select(ImportProfile)
                 .where(ImportProfile.id == profile_id, ImportProfile.store_id == store)
@@ -1987,6 +2006,9 @@ class ImportStaging:
                 raise AuthError("RESOURCE_NOT_FOUND", 404)
             if p.lifecycle_revision != m:
                 raise AuthError("PROFILE_REVISION_CONFLICT", 412)
+            from app.application.use_cases.mapping_submissions import MappingSubmissions
+            queue = MappingSubmissions(self)
+            submission = queue.decision_target(s, p, b, body, actor, summary)
             now = self.clock()
             approved = None
             if isinstance(body, dto.Retire):
@@ -2000,6 +2022,8 @@ class ImportStaging:
                     raise AuthError("PROFILE_REVISION_CONFLICT", 412)
                 if isinstance(body, dto.Reject):
                     p.rejected = True
+                elif isinstance(body, dto.RequestChanges):
+                    pass
                 else:
                     if p.active_version != body.expected_active_version:
                         raise AuthError("PROFILE_REVISION_CONFLICT", 412)
@@ -2007,7 +2031,7 @@ class ImportStaging:
                         "spec"
                     ):
                         raise AuthError("UNRESOLVED_REQUIRED_FIELDS", 409)
-                    spec = dto.ProfileSpec.model_validate(p.proposal_json["spec"])
+                    spec = dto.ProfileSpec.model_validate(submission.spec if submission else p.proposal_json["spec"])
                     spec = spec.model_copy(
                         update={
                             "source_provenance": spec.source_provenance.model_copy(
@@ -2051,7 +2075,6 @@ class ImportStaging:
                         )
                     p.active_version = approved
                     p.rejected = False
-                    b = self._batch(s, p.import_id)
                     if b.active_job_id:
                         raise AuthError("IMPORT_STATE_CONFLICT", 409)
                     if not (b.analysis_json or {}).get("completion"):
@@ -2105,6 +2128,8 @@ class ImportStaging:
                     approved_version=approved,
                 ),
             )
+            projection = queue.finish_decision(s, submission, p, b, body, actor, summary, ident, aid, now, approved) if submission else None
+            from app.application.contracts.collaboration import NotificationDelivery
             result = dto.DecisionResult(
                 profile_id=p.id,
                 approved_version=approved,
@@ -2113,6 +2138,8 @@ class ImportStaging:
                 decision_id=ident,
                 decided_at=now,
                 audit_id=aid,
+                submission=projection,
+                notification_delivery=NotificationDelivery(status='pending' if submission else 'not_required', event_id=aid if submission else None),
             )
             self._save(s, actor, store, op, kd, fp, result)
             s.commit()
@@ -2126,6 +2153,13 @@ class ImportStaging:
         }
         if content_digest(payload) != p.digest:
             raise AuthError("SOURCE_INTEGRITY_ERROR", 409)
+
+    @staticmethod
+    def _preview_read_authority(p,permissions):
+        needed=set(p.content_json.get('source_read_permissions',()))
+        needed.update(permission for schema in p.content_json['read_set']['_captured_schemas'] for permission in READS[schema])
+        needed.update(permission for row in p.content_json['rows'] for permission in row.get('required_permissions',()))
+        if not needed<=set(permissions):raise AuthError('PERMISSION_DENIED',403)
 
     def confirm_review(self, token, ident, body, key, match, csrf):
         body = dto.ConfirmReviewRequest.model_validate(body.model_dump())
@@ -2170,6 +2204,7 @@ class ImportStaging:
                 raise AuthError("IMPORT_REVISION_CONFLICT", 412)
             if b.active_job_id:
                 raise AuthError("IMPORT_STATE_CONFLICT", 409)
+            self._receipt_preview_day(p)
             refs = [ref.model_dump(mode="json") for ref, _ in self._bindings(s, b)]
             if (
                 body.mapping_revision != b.mapping_revision
@@ -2232,12 +2267,20 @@ class ImportStaging:
             s.commit()
         return result
 
+    def _receipt_preview_day(self, p):
+        if 'inventory_receipts' in p.content_json['read_set']['_captured_schemas']:
+            zone = ZoneInfo(p.content_json['read_set']['stores'][0]['timezone'])
+            observed = datetime.fromisoformat(p.content_json['summary']['created_at'])
+            if observed.astimezone(zone).date() != self.clock().astimezone(zone).date():
+                raise AuthError('PREVIEW_STALE', 409)
+
     def _commit_preview(self, s, b, body, permissions, *, fence=False):
         p = s.get(ImportPreview, body.preview_id)
         if p is None or p.import_id != b.id or p.store_id != b.store_id:
             raise AuthError("RESOURCE_NOT_FOUND", 404)
         self._verify_preview(p)
         schemas = p.content_json["read_set"]["_captured_schemas"]
+        self._receipt_preview_day(p)
         needed = set(p.content_json["summary"]["required_actions"])
         needed.update(key for schema in schemas for key in READS[schema])
         needed.add("import.commit")
@@ -2706,6 +2749,9 @@ class ImportStaging:
                     if capture_unknown or not capture_schemas
                     else {p for schema in capture_schemas for p in READS[schema]}
                 )
+                from app.application.import_analysis import receipt_sensitive_reads
+                needed.update(receipt_sensitive_reads(sources,{str(sh.sheet_id):[i for i in issues
+                    if i.sheet_id==sh.sheet_id and i.issue_type=='column'] for sh in sheets}))
                 if not needed <= set(provider_permissions):
                     raise AuthError("PERMISSION_DENIED")
                 snapshot, _ = capture_read_set(
@@ -2852,6 +2898,8 @@ class ImportStaging:
                     sources, {key: spec.field_bindings for key, spec in specs.items()}
                 )
                 needed = {p for schema in capture_schemas for p in READS[schema]}
+                from app.application.import_analysis import receipt_sensitive_reads
+                needed.update(receipt_sensitive_reads(sources,{key:spec.field_bindings for key,spec in specs.items()},import_values))
                 if not needed <= set(permissions):
                     raise AuthError("PERMISSION_DENIED")
                 snapshot, read_digest = capture_read_set(
@@ -2921,6 +2969,10 @@ class ImportStaging:
                 )
                 if not needed <= set(permissions):
                     raise AuthError("PERMISSION_DENIED")
+                from app.application.import_analysis import receipt_sensitive_reads
+                extra_reads=receipt_sensitive_reads(sources,{str(sh.sheet_id):[i for i in issues
+                    if i.sheet_id==sh.sheet_id and i.issue_type=='column'] for sh in sheets})
+                if not extra_reads <= set(permissions): raise AuthError('PERMISSION_DENIED')
                 b.analysis_json = dict(
                     sheets=[sh.model_dump(mode="json") for sh in sheets],
                     issues=[i.model_dump(mode="json") for i in issues],
@@ -3011,6 +3063,8 @@ class ImportStaging:
                     rows=[r.model_dump(mode="json") for r in rows],
                     read_set=result[2],
                     read_set_digest=read_digest,
+                    source_evidence_digest=content_digest(b.analysis_json['sources']),
+                    source_read_permissions=self._sensitive_reads(b),
                     analysis_id=str(b.analysis_id),
                     file_set_version=b.file_set_version,
                     mapping_revision=b.mapping_revision,
@@ -3112,6 +3166,8 @@ class ImportStaging:
                 "IMPORT_JOB_COMPLETED",
                 dict(job_id=str(j.id), operation=j.operation, result=j.result_json),
             )
+            from app.application.use_cases.mapping_submissions import invalidate_submissions
+            invalidate_submissions(self, s, actor, b.store_id)
             s.commit()
         return job_id
 
@@ -3211,7 +3267,14 @@ class ImportStaging:
         rows_cursor=None,
         classification=None,
         configurations=False,
+        file_id=None,
+        sheet_id=None,
+        projection="summary",
     ):
+        if projection not in ('summary','source_effect') or ((file_id or sheet_id or projection!='summary') and not include_preview):
+            raise AuthError('INVALID_FILTER',422)
+        if (file_id or sheet_id or projection!='summary') and preview_id is None:
+            raise AuthError('INVALID_FILTER',422)
         with auth_session(self.engine) as s:
             b = self._batch(s, ident, False)
             # Keep the established User/session/Store-before-batch lock order.
@@ -3390,26 +3453,39 @@ class ImportStaging:
                 }
                 if content_digest(payload) != p.digest:
                     raise AuthError("SOURCE_INTEGRITY_ERROR", 409)
+                self._preview_read_authority(p,permissions)
                 items = [
                     dto.PreviewRow.model_validate(r, context={"retained_evidence": True}) for r in p.content_json["rows"]
                 ]
-                if classification:
-                    items = [r for r in items if r.classification == classification]
+                from app.application.import_read_projection import scoped_rows,pinned_sources,preview_aggregates,source_effect_rows
+                scope=dto.PreviewScope(file_id=file_id,sheet_id=sheet_id,classification=classification)
+                known=p.content_json.get('reviewed_sheets',())
+                if file_id and str(file_id) not in {f['file_id'] for f in p.content_json.get('source_files',())}:raise AuthError('RESOURCE_NOT_FOUND',404)
+                if sheet_id and str(sheet_id) not in {sh['sheet_id'] for sh in known}:raise AuthError('RESOURCE_NOT_FOUND',404)
+                sources=pinned_sources(p.content_json,b.analysis_json)
+                aggregates=preview_aggregates(p.content_json,items,sources,scope)
+                items=scoped_rows(items,scope)
                 rowpage, rp = self._page(
                     items,
                     token,
                     actor,
                     summary,
-                    [str(b.id), str(p.id), p.digest, classification, "rows"],
+                    [str(b.id), str(p.id), p.digest, classification, "rows",str(file_id),str(sheet_id),projection],
                     rows_limit,
                     rows_cursor,
                 )
+                if projection=='source_effect':
+                    rowpage=source_effect_rows(rowpage,p.content_json,sources)
                 stale = p.mapping_revision != b.mapping_revision
                 try:
                     self._bindings(s, b)
                 except AuthError:
                     stale = True
                 preview = dto.PreviewPage(
+                    aggregates=aggregates,
+                    mapping_revision=p.mapping_revision,
+                    read_set_digest=p.read_set_digest,
+                    source_evidence_digest=p.content_json.get('source_evidence_digest'),
                     summary=dto.PreviewSummary.model_validate(stored_summary),
                     rows=rowpage,
                     rows_page=rp,
@@ -3637,6 +3713,7 @@ class ImportStaging:
                     }
                 )
                 p = s.get(ImportPreview, preview.summary.preview_id)
+                self._preview_read_authority(p,permissions)
                 retired = False
                 try:
                     self._bindings(s, b)

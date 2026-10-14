@@ -32,8 +32,12 @@ commit/rollback; application paths own transactions. No generic base service,
 service locator, implicit global mutable business state or default async domain.
 
 `app/main.py` wires Auth/Staff, public reads/stock/calendar, Import, configuration/
-readiness, forecast serving, durable public Planning, history and private PDF.
-Each Import/Planning/PDF/account-email flag independently opts into one bounded local
+readiness, forecast serving, durable public Planning, history, private PDF and
+Notifications/permission requests/mapping submissions. Concrete collaboration and
+notification repositories own queries; application owns the same authority fences,
+atomic business/audit/receipt/intent transitions and explicit commit. Permission union
+and request-state computation remain plain Python domain functions.
+Each Import/Planning/PDF/account-email/notification flag independently opts into one bounded local
 lifespan thread in the same backend process. Default flags are OFF.
 
 ## CURRENT FACT ? computation and transaction boundaries

@@ -7,9 +7,21 @@ from app.api.planning_public import PlanningKey,request_boundary
 from app.application.contracts.planning_setup import ResourceId
 from app.application.contracts import planning_export as dto
 from app.application.contracts.planning_configuration import ConfigurationError,ConfigurationErrorEnvelope
+from typing import Annotated,Literal
+from fastapi import Query
 
 router=APIRouter(prefix='/api/v1',tags=['Planning PDF export'],responses={
     code:{'model':ConfigurationErrorEnvelope} for code in (400,401,403,404,409,413,422,503)})
+
+
+@router.get('/procurement-plans/{plan_id}/exports',operation_id='EX01',response_model=dto.ExportCollectionEnvelope)
+async def discovery(plan_id:ResourceId,request:Request,option_id: str|None=None,
+    status:Literal['queued','running','completed','failed']|None=None,
+    limit:Annotated[int,Query(ge=1,le=100)]=50,cursor:Annotated[str|None,Query(min_length=1,max_length=4096)]=None,
+    snapshot_id:Annotated[str|None,Query(min_length=1,max_length=128)]=None,token=Depends(session_token)):
+    await read_query(request,{'option_id','status','limit','cursor','snapshot_id'})
+    return await run_in_threadpool(request.app.state.planning_exports.discovery,
+        token,plan_id,request.state.request_id,option_id,status,limit,cursor,snapshot_id)
 
 
 @router.post('/procurement-plans/{plan_id}/exports',operation_id='N10',status_code=202,

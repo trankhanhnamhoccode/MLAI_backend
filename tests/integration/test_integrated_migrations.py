@@ -14,9 +14,28 @@ from scripts.dev import migration_config
 
 IMPORT = '0021_import_support_history'
 AUTH = '0023_auth_permissions_v3'
-HEAD = '0024_integrate_import_auth'
+HEAD = '0026_collaboration_requests'
 KEYS = ('calendar.read', 'calendar.write', 'usage.history.read',
         'usage.history.write', 'purchase.history.read', 'purchase.history.write')
+
+
+def test_demo_upgrade_0024_to_current_preserves_accounts_and_grants(database_settings):
+    """Synthetic upgrade rehearsal, on the guarded test DB rather than the demo."""
+    engine=create_database_engine(database_settings)
+    try:
+        command.downgrade(migration_config(),'0024_integrate_import_auth')
+        mid=member(engine)
+        with engine.begin() as connection:
+            connection.execute(text("INSERT INTO membership_grants(membership_id,permission) VALUES(:mid,'menu.read')"),{'mid':mid})
+            before={table:list(connection.execute(text('SELECT * FROM '+table)))
+                    for table in ('users','stores','store_memberships','membership_grants')}
+        command.upgrade(migration_config(),'head')
+        assert versions(engine)=={HEAD}
+        with engine.connect() as connection:
+            assert all(list(connection.execute(text('SELECT * FROM '+table)))==rows for table,rows in before.items())
+            assert compare_metadata(MigrationContext.configure(connection,opts={'compare_server_default':True}),Base.metadata)==[]
+        assert len(inspect(engine).get_table_names())==71
+    finally:engine.dispose()
 
 
 def versions(engine):
@@ -56,7 +75,7 @@ def test_upgrade_from_each_branch_head_preserves_v3_grants_and_schema_parity(dat
         with engine.connect() as connection:
             assert set(connection.scalars(text('SELECT permission FROM membership_grants WHERE membership_id=:mid'), {'mid': mid})) == set(KEYS)
             assert compare_metadata(MigrationContext.configure(connection, opts={'compare_server_default': True}), Base.metadata) == []
-        assert len(inspect(engine).get_table_names()) == 65
+        assert len(inspect(engine).get_table_names()) == 71
     finally:
         engine.dispose()
 

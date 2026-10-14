@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     import_worker_enabled: bool = False
     planning_worker_enabled: bool = False
     pdf_export_worker_enabled: bool = False
+    notification_worker_enabled: bool = False
     auth_allowed_origins: list[str] = []
     auth_dev_cookie: bool = False
     auth_operator_id: str | None = None

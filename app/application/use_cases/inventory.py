@@ -26,7 +26,7 @@ class InventoryUseCases:
             self.session.rollback()
             raise
 
-    def receive_in_transaction(self, data: ReceiveInventoryInput, *, opening: bool = False, reserved_id: UUID | None = None) -> InventoryMutationResult:
+    def receive_in_transaction(self, data: ReceiveInventoryInput, *, opening: bool = False, reserved_id: UUID | None = None, reserved_movement_id: UUID | None = None) -> InventoryMutationResult:
         """Caller owns atomic transaction; opening is current stock, not receipt history."""
         data = ReceiveInventoryInput.model_validate(data)
         ingredient = load_ingredient(self.session, data.store_id, data.ingredient_id)
@@ -47,6 +47,8 @@ class InventoryUseCases:
             ingredient_id=data.ingredient_id, movement_type='COUNT_CORRECTION' if opening else 'RECEIPT', quantity_delta=data.quantity,
             occurred_at=data.occurred_at, reference_type=data.reference_type,
             reference_id=data.reference_id, note=data.note)
+        if reserved_movement_id is not None:
+            movement.id = reserved_movement_id
         self.inventory.append_movement(data.store_id, movement)
         self.session.flush()
         result = InventoryMutationResult(lot=InventoryLotResult.model_validate(lot),

@@ -46,6 +46,54 @@ def document(record,view,option):
 
 
 class PlanningExports:
+    def discovery(self,token,run_id,request_id,option_id=None,status=None,limit=50,cursor=None,snapshot_id=None):
+        from app.application.contracts import planning_export as dto
+        from app.application.contracts.discovery import DiscoveryMeta
+        from app.application.use_cases.collaboration_paging import page
+        if status is not None and status not in ('queued','running','completed','failed'):
+            raise AuthError('INVALID_FILTER',422)
+        with self.engine.connect().execution_options(isolation_level='REPEATABLE READ') as connection:
+            with auth_session(connection) as s:
+                repo=PlanningRepository(s);store=repo.owning_store(run_id)
+                if store is None:
+                    self.auth._resolve(s,token);raise AuthError('RESOURCE_NOT_FOUND',404)
+                actor,authority,_=self.auth.authorize_in_session(s,token,store,EXPORT_PERMISSIONS)
+                try:run,view=self.public.retained.read(repo.get(store,run_id))
+                except PlanningPersistenceError as error:raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503) from error
+                if run.public_acceptance is None:raise AuthError('RESOURCE_NOT_FOUND',404)
+                if option_id is not None and (view.result is None or option_id not in
+                    {o.option_id for o in view.result.options}|{o.option_id for o in view.result.strategies}):
+                    raise AuthError('INVALID_OPTION',422)
+                rows=PlanningExportRepository(s).for_run(store,run_id,status,option_id)
+                if (rows or run.status=='completed') and view.result is None:
+                    raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
+                items=[]
+                for row in rows:
+                    record=decode_export(row)
+                    if record.receipt.result_digest!=run.result_digest:
+                        raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
+                    availability='pending' if record.status in ('queued','running') else 'failed'
+                    if record.status=='completed':
+                        availability=self.artifacts.availability(record.export_id,record.result.sha256,record.result.byte_count)
+                    verified=availability=='available'
+                    retry_evidence=run.capture is not None and run.public_capture is not None and run.public_capture.ingredient_labels is not None
+                    actions=('poll',) if availability=='pending' else ('download',) if verified else ('request_new_export',) if retry_evidence else ()
+                    items.append(dto.ExportSummary(export_id=record.export_id,run_id=run_id,job_id=record.job_id,
+                        option_id=record.receipt.option_id,created_by_user_id=record.actor_id,created_at=record.created_at,
+                        status=record.status,result_digest=record.receipt.result_digest,render_version=record.receipt.render_version,
+                        version=row.record_digest,artifact_availability=availability,completed_at=record.completed_at,
+                        error_code=record.error_code or ('EXPORT_ARTIFACT_UNAVAILABLE' if availability in ('missing','unverifiable') else None),
+                        download_url=record.result.download_url if verified else None,sha256=record.result.sha256 if verified else None,
+                        byte_count=record.result.byte_count if verified else None,allowed_actions=actions))
+                binding=[str(actor.user_id),str(store),authority.authorization_version,view.response_version]
+                filters=dict(run_id=str(run_id),option_id=option_id,status=status)
+                selected,meta=page(self.auth,token,'export-discovery',tuple(items),binding,filters,limit,cursor,
+                    fingerprint_facts=[binding,filters])
+                if snapshot_id is not None and snapshot_id!=meta['snapshot_id']:raise AuthError('SNAPSHOT_NOT_AVAILABLE',409)
+                s.commit()
+                return dto.ExportCollectionEnvelope(data=dto.ExportCollection(items=selected),
+                    meta=DiscoveryMeta(request_id=request_id,**meta),error=None)
+
     def __init__(self,public,artifacts,renderer):
         self.public,self.auth,self.engine=public,public.auth,public.engine
         self.artifacts,self.renderer=artifacts,renderer

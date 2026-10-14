@@ -174,7 +174,8 @@ class PublicPlanning:
         record,view=self.read_record(token,run_id)
         return explanation(record,view,option_id)
 
-    def history(self,token,store,request_id,limit=50,cursor=None,status=None,start_from=None,start_to=None):
+    def history(self,token,store,request_id,limit=50,cursor=None,status=None,start_from=None,start_to=None,
+                creator=None,created_date_from=None,created_date_to=None,snapshot_id=None):
         import base64,hmac,json
         from app.application.contracts import history as history
         from app.application.contracts.auth import Pagination
@@ -185,9 +186,15 @@ class PublicPlanning:
             with auth_session(connection) as s:
                 actor,authorization,_=self.auth.authorize_in_session(s,token,store,READ_PERMISSIONS)
                 repo=PlanningRepository(s)
-                total,revision=repo.history_revision(store,statuses,start_from,start_to)
+                from app.application.planning_discovery import local_created_range,captured_budget
+                zone=repo.timezone(store)
+                lower,upper=local_created_range(created_date_from,created_date_to,zone)
+                extra=dict(creator=creator,created_from=lower,created_to=upper)
+                total,revision=repo.history_revision(store,statuses,start_from,start_to,**extra)
                 identity=[str(actor.user_id),str(store),authorization.authorization_version,list(statuses),str(start_from) if start_from else None,str(start_to) if start_to else None,limit]
-                snapshot='run-list-'+revision
+                identity += [str(creator) if creator else None,str(created_date_from) if created_date_from else None,str(created_date_to) if created_date_to else None,zone]
+                snapshot='run-list-'+content_digest([revision,identity])
+                if snapshot_id is not None and snapshot_id!=snapshot:raise ConfigurationError('SNAPSHOT_NOT_AVAILABLE',409)
                 offset=0
                 if cursor:
                     try:
@@ -199,7 +206,7 @@ class PublicPlanning:
                         offset=saved['offset']
                         if type(offset) is not int or not 0<offset<total:raise ValueError()
                     except (ValueError,KeyError,TypeError):raise ConfigurationError('INVALID_CURSOR',422) from None
-                rows=repo.history_page(store,statuses,start_from,start_to,offset,limit)
+                rows=repo.history_page(store,statuses,start_from,start_to,offset,limit,**extra)
                 items=[]
                 for row in rows:
                     try:record,view=self.retained.read(row)
@@ -209,12 +216,13 @@ class PublicPlanning:
                         forecast_end_date=record.resolution.forecast_end_date,requirements_mode=record.request.requirements_mode,
                         created_by=history.RunCreator(user_id=record.actor_id,display_name=None),
                         winner_option_id=view.result.winner_option_id if view.result else None,outcome=record.outcome,error_code=record.error_code,
-                        result_schema_version=record.result.semantics_version if record.result else None,result_digest=record.result_digest,record_version=view.response_version))
+                        result_schema_version=record.result.semantics_version if record.result else None,result_digest=record.result_digest,record_version=view.response_version,captured_budget=captured_budget(row.record_json)))
                 next_cursor=None
                 if offset+limit<total:
                     payload=base64.urlsafe_b64encode(json.dumps(dict(identity=identity,snapshot=snapshot,offset=offset+limit),separators=(',',':')).encode()).decode().rstrip('=')
                     next_cursor=payload+'.'+self.auth.cursor_signer.sign(token,'run-history',payload)
                 result=history.RunHistoryEnvelope(data=history.RunHistory(items=tuple(items)),meta=history.RunHistoryMeta(request_id=request_id,snapshot_id=snapshot,
-                    pagination=Pagination(limit=limit,next_cursor=next_cursor,total_count=total)),error=None)
+                    pagination=Pagination(limit=limit,next_cursor=next_cursor,total_count=total),timezone=zone,
+                    applied_filters=history.RunHistoryFilters(created_by_user_id=creator,created_date_from=created_date_from,created_date_to=created_date_to)),error=None)
                 s.commit()
                 return result

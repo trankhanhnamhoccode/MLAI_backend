@@ -65,6 +65,20 @@ def test_real_pdf_winner_job_replay_download_and_font_proof(exports):
         assert s.get(PlanningRun,run.run_id).record_digest
         s.get(Ingredient,ingredient).name='Changed after export';s.commit()
     assert c[0][5].get(download).content==pdf.content
+    history_path=f'/api/v1/stores/{c[1].store_id}/procurement-plans'
+    filters=dict(created_by_user_id=str(c[1].user_id),created_date_from='2026-10-10',created_date_to='2026-10-10')
+    before=c[0][5].get(history_path,params=filters).json()['data']
+    from app.models.planning_configuration import PlanningBudget
+    with Session(c[0][1]) as s:
+        cap=s.get(PlanningBudget,c[1].store_id);cap.amount=1;cap.version='c5-explicit-live-cap-change';s.commit()
+    assert c[0][5].get(history_path,params=filters).json()['data']==before
+    assert before['items'][0]['captured_budget']==dict(availability='available',limit='100',currency='VND')
+    from tests.integration.test_discovery_c4 import count_read_queries
+    _,discovery=count_read_queries(c[0][1],lambda:c[0][5].get(location+'/exports'))
+    found=discovery.json()['data']['items'][0]
+    assert found['export_id']==receipt['export_id'] and found['artifact_availability']=='available'
+    assert c[0][5].get(found['download_url']).content==pdf.content
+    assert found['sha256']==hashlib.sha256(pdf.content).hexdigest()
     # A fresh intent after live name changes renders identical historical facts.
     again=export(c,location);assert again.status_code==202,again.text
     assert svc.run_one().status=='completed'

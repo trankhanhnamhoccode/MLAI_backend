@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from sqlalchemy.dialects.postgresql import insert
 from app.models.planning_run import PlanningRun
+from app.models import Store
 from app.application.planning_serialization import digest, exact_json, canonical_bytes
 from app.application.contracts.planning_run import PlanningRunRecord, PlanningPersistenceError
 
@@ -41,26 +42,33 @@ class PlanningRepository:
         return tuple(self.session.scalars(query.order_by(PlanningRun.accepted_at,PlanningRun.id).limit(100)))
 
     @staticmethod
-    def _history_conditions(store_id: UUID, statuses: tuple[str, ...], start_from: date | None, start_to: date | None):
+    def _history_conditions(store_id: UUID, statuses: tuple[str, ...], start_from: date | None, start_to: date | None,
+                            creator=None, created_from=None, created_to=None):
         conditions=[PlanningRun.store_id==store_id,PlanningRun.record_json.has_key('public_acceptance')]
         if statuses:conditions.append(PlanningRun.status.in_(statuses))
         forecast_start=cast(PlanningRun.record_json['request']['forecast_start_date'].astext,String)
         if start_from:conditions.append(forecast_start>=str(start_from))
         if start_to:conditions.append(forecast_start<=str(start_to))
+        if creator is not None:conditions.append(PlanningRun.actor_id==creator)
+        if created_from is not None:conditions.append(PlanningRun.accepted_at>=created_from)
+        if created_to is not None:conditions.append(PlanningRun.accepted_at<created_to)
         return conditions
 
-    def history_revision(self, store_id: UUID, statuses: tuple[str, ...], start_from: date | None, start_to: date | None) -> tuple[int, str]:
+    def timezone(self,store_id: UUID) -> str:
+        return self.session.scalar(select(Store.timezone).where(Store.id==store_id))
+
+    def history_revision(self, store_id: UUID, statuses: tuple[str, ...], start_from: date | None, start_to: date | None, **filters) -> tuple[int, str]:
         stamp=cast(PlanningRun.id,String)+':'+cast(PlanningRun.revision,String)+':'+PlanningRun.record_digest
         metadata=func.coalesce(func.string_agg(stamp,aggregate_order_by(literal(','),PlanningRun.id)),'')
         total,revision=self.session.execute(select(func.count(),
             func.encode(func.sha256(func.convert_to(metadata,'UTF8')),'hex'))
-            .where(*self._history_conditions(store_id,statuses,start_from,start_to))).one()
+            .where(*self._history_conditions(store_id,statuses,start_from,start_to,**filters))).one()
         return total,revision
 
     def history_page(self, store_id: UUID, statuses: tuple[str, ...], start_from: date | None, start_to: date | None,
-                     offset: int, limit: int) -> Iterator[PlanningRun]:
+                     offset: int, limit: int, **filters) -> Iterator[PlanningRun]:
         return iter(self.session.scalars(select(PlanningRun)
-            .where(*self._history_conditions(store_id,statuses,start_from,start_to))
+            .where(*self._history_conditions(store_id,statuses,start_from,start_to,**filters))
             .order_by(PlanningRun.accepted_at.desc(),PlanningRun.id.desc()).offset(offset).limit(limit)
             .execution_options(yield_per=1)))
 

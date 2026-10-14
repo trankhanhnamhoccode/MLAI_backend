@@ -2,9 +2,9 @@
 from datetime import date
 from typing import Generic,Literal,TypeVar
 from uuid import UUID
-from pydantic import AwareDatetime
+from pydantic import AwareDatetime, model_validator
 from app.application.contracts.auth import DTO,Pagination
-from app.application.contracts.planning_setup import Version
+from app.application.contracts.planning_setup import Version,MoneyText
 from app.application.contracts.planning_public import OptionId
 from app.application.contracts.import_mapping import Notice
 
@@ -12,6 +12,26 @@ from app.application.contracts.import_mapping import Notice
 class RunCreator(DTO):
     user_id: UUID
     display_name: str | None
+
+
+class CapturedBudget(DTO):
+    availability: Literal['available','unavailable']
+    limit: MoneyText | None
+    currency: str | None
+
+    @model_validator(mode='after')
+    def known_evidence(self):
+        if (self.availability=='available') != (self.limit is not None and self.currency is not None):
+            raise ValueError('Captured budget availability must match retained evidence')
+        if self.availability=='unavailable' and (self.limit is not None or self.currency is not None):
+            raise ValueError('Unavailable captured budget cannot invent partial values')
+        return self
+
+
+class RunHistoryFilters(DTO):
+    created_by_user_id: UUID | None
+    created_date_from: date | None
+    created_date_to: date | None
 
 
 class RunSummary(DTO):
@@ -31,6 +51,7 @@ class RunSummary(DTO):
     result_schema_version: str | None
     result_digest: Version | None
     record_version: Version
+    captured_budget: CapturedBudget
 
 
 class RunHistory(DTO):
@@ -41,6 +62,8 @@ class RunHistoryMeta(DTO):
     request_id: str
     snapshot_id: Version
     pagination: Pagination
+    timezone: str
+    applied_filters: RunHistoryFilters
 
 
 class RunHistoryEnvelope(DTO):

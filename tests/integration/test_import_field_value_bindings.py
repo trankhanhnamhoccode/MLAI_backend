@@ -145,7 +145,10 @@ def test_first_sales_then_reuse_requires_new_import_report_key(imp, monkeypatch)
     decision = activate(imp, ident)
     read = previewed(imp, ident)
     rows = read["preview"]["rows"]
-    assert [r["after"]["quantity"] for r in rows] == ["12", "0"]
+    assert len(rows) == 2
+    assert {r["after"]["product_id"]: r["after"]["quantity"] for r in rows} == {
+        str(ids["Trà đào L"]): "12", str(ids["Latte đá"]): "0",
+    }
     assert all(
         r["after"]["unit"] == "ly" and r["after"]["sales_date"] == "2026-10-10"
         for r in rows

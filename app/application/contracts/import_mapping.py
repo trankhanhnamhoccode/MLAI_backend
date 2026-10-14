@@ -7,6 +7,7 @@ from decimal import Decimal
 import re
 from pydantic import (
     Field,
+    ConfigDict,
     StrictBool,
     StrictInt,
     StrictStr,
@@ -29,6 +30,7 @@ Schema = Literal[
     "recipes",
     "inventory_count",
     "opening_stock",
+    "inventory_receipts",
     "products",
     "ingredients",
     "suppliers",
@@ -237,7 +239,7 @@ class SourceContext(DTO):
     missing_stockout: Literal['quantity_only', 'not_provided'] | None = None
     stockout_aliases: tuple[StockoutAlias, ...] = Field(default=(), max_length=32)
     sales_semantics: Literal["daily_total", "disjoint_contribution"] | None = None
-    inventory_semantics: Literal["lot_stock_count"] | None = None
+    inventory_semantics: Literal["lot_stock_count", "actual_receipt"] | None = None
     decimal_locale: Literal["dot", "comma"] | None = None
     date_format: Literal["ISO", "DMY_SLASH", "MDY_SLASH", "EXCEL_SERIAL"] | None = None
     pack_cost_basis: Literal["PER_PACK", "PER_SOURCE_UNIT"] | None = Field(
@@ -342,14 +344,18 @@ class TargetRequest(DTO):
     target_field: Annotated[StrictStr, Field(min_length=1, max_length=128)]
 
 
-class Approve(DTO):
+from app.application.contracts.mapping_submissions import QueueReference, MappingSubmission
+from app.application.contracts.collaboration import NotificationDelivery
+
+
+class Approve(QueueReference, DTO):
     decision: Literal["approve_activate"]
     proposal_revision: Version
     expected_active_version: Version | None
     reason: Text
 
 
-class Reject(DTO):
+class Reject(QueueReference, DTO):
     decision: Literal["reject"]
     proposal_revision: Version
     reason: Text
@@ -358,6 +364,12 @@ class Reject(DTO):
 class Retire(DTO):
     decision: Literal["retire"]
     active_version: Version
+    reason: Text
+
+
+class RequestChanges(QueueReference, DTO):
+    decision: Literal['request_changes']
+    proposal_revision: Version
     reason: Text
 
 
@@ -427,7 +439,7 @@ class ProfileSpec(DTO):
     normalizations: tuple[Normalization, ...] = ()
     conversions: tuple[Conversion, ...] = ()
     sales_semantics: Literal["daily_total", "disjoint_contribution"] | None = None
-    inventory_semantics: Literal["lot_stock_count"] | None = None
+    inventory_semantics: Literal["lot_stock_count", "actual_receipt"] | None = None
     planned_arrival_expiry_rule: PlannedArrivalExpiryRule | None = None
     term_period_amendments: tuple[TermPeriodAmendment, ...] = ()
     fee_period_amendments: tuple[FeePeriodAmendment, ...] = ()
@@ -454,6 +466,8 @@ class ProfileSpec(DTO):
 
     @model_validator(mode="after")
     def shared_sources(self):
+        if self.schema == 'inventory_receipts' and self.inventory_semantics != 'actual_receipt':
+            raise ValueError('ACTUAL_RECEIPT_SEMANTICS_REQUIRED')
         shared = [r.target_field for r in self.shared_field_bindings]
         columns = [
             b.target_field
@@ -674,6 +688,41 @@ class InspectedProfile(DTO):
     spec: ProfileSpec
 
 
+class MappingCounterScope(DTO):
+    file_id: UUID | None = None
+    sheet_id: UUID | None = None
+    review_only: bool = True
+    status: Literal['auto_mapped','resolved','needs_confirmation','ambiguous','unmatched'] | None = None
+    origin: Literal['RULE','QWEN','REUSED','MANUAL','NONE'] | None = None
+
+
+class MappingStatusCounts(DTO):
+    auto_mapped: int = 0
+    resolved: int = 0
+    needs_confirmation: int = 0
+    ambiguous: int = 0
+    unmatched: int = 0
+
+
+class MappingOriginCounts(DTO):
+    RULE: int = 0
+    QWEN: int = 0
+    REUSED: int = 0
+    MANUAL: int = 0
+    NONE: int = 0
+
+
+class MappingIssueCounts(DTO):
+    total: int
+    by_status: MappingStatusCounts
+    by_origin: MappingOriginCounts
+
+
+class MappingCounters(DTO):
+    batch: MappingIssueCounts
+    filtered: MappingIssueCounts
+
+
 class MappingSummary(DTO):
     import_id: UUID
     analysis_id: UUID
@@ -689,11 +738,16 @@ class MappingSummary(DTO):
     approved_contexts: tuple[ApprovedContext, ...] = ()
     approved_profiles: tuple[InspectedProfile, ...] = ()
     warnings: tuple[Notice, ...] = ()
+    counter_scope: MappingCounterScope | None = None
+    counters: MappingCounters | None = None
 
 
 class MappingList(DTO):
     items: tuple[MappingIssue, ...]
     counts: Progress
+    mapping_revision: str = ''
+    counter_scope: MappingCounterScope | None = None
+    counters: MappingCounters | None = None
 
 
 class FieldOption(DTO):
@@ -746,6 +800,7 @@ class MappingUpdated(DTO):
 
 
 class DecisionResult(DTO):
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     profile_id: UUID
     approved_version: str | None
     active_version: str | None
@@ -753,6 +808,42 @@ class DecisionResult(DTO):
     decision_id: UUID
     decided_at: datetime
     audit_id: UUID
+    submission: MappingSubmission | None = None
+    notification_delivery: NotificationDelivery = Field(default_factory=lambda: NotificationDelivery(status='not_required',event_id=None))
+
+
+class SourceEvidenceCell(DTO):
+    location: SourceLocation
+    column_label: str | None
+    raw_value: str | None
+    cell_kind: Literal['text','numeric','boolean','date','empty','error']
+    formula_present: bool
+
+
+class MappingReviewSource(DTO):
+    file_id: UUID
+    filename: str
+    sheet_id: UUID
+    sheet_name: str
+    source_system_key: str
+    report_type: str
+    schema_signature: Version
+    evidence_references: tuple[str,...]
+
+
+class ReviewEvidence(DTO):
+    cells: tuple[SourceEvidenceCell,...]
+    next_cursor: str | None
+    total_count: int
+
+
+class MappingReviewDetail(DTO):
+    submission: MappingSubmission
+    source: MappingReviewSource
+    spec: ProfileSpec
+    warnings: tuple[Notice,...]
+    missing_fields: tuple[str,...]
+    evidence: ReviewEvidence
 
 
 from app.application.contracts.import_domains import CanonicalValue, SupplierTermSemantics
@@ -840,6 +931,33 @@ class InventoryEffect(DTO):
     observed_at: datetime
 
 
+from app.application.contracts.stock_writes import ReceiptIdentity
+
+
+class ReceiptEffect(DTO):
+    action: Literal['CREATE_RECEIPT','REUSE_RECEIPT','BLOCKED']
+    source_identity: ReceiptIdentity
+    receipt_id: UUID | None
+    lot_id: UUID | None
+    movement_id: UUID | None
+    origin: Literal['ACTUAL_RECEIPT'] = 'ACTUAL_RECEIPT'
+    movement_kind: Literal['receipt'] = 'receipt'
+    quantity_delta: Quantity
+    unit: str
+    occurred_at: datetime
+    recorded_at: datetime | None
+    conflict_code: str | None
+
+
+class ReceiptCommitReference(DTO):
+    source_identity: ReceiptIdentity
+    receipt_id: UUID
+    lot_id: UUID
+    movement_id: UUID
+    action: Literal['CREATED','REUSED']
+    audit_reference: UUID
+
+
 class SalesContribution(DTO):
     source_system_key: Code
     report_type: Code
@@ -880,6 +998,7 @@ class PreviewRow(DTO):
     required_permissions: tuple[str, ...] = ()
     supplier_term_semantics: SupplierTermSemantics | None = None
     inventory_effect: InventoryEffect | None = None
+    receipt_effect: ReceiptEffect | None = None
 
     @field_validator("before", "after", mode="before")
     @classmethod
@@ -973,9 +1092,145 @@ class PreviewSummary(DTO):
     confirmed_resolutions_version: None = None
 
 
+class ReceiptPlannedEffect(ReceiptEffect):
+    kind: Literal['receipt'] = 'receipt'
+
+
+class CatalogEffect(DTO):
+    kind: Literal['catalog'] = 'catalog'
+    entity: Literal['product','ingredient','supplier']
+    id: UUID
+    action: Literal['create','reuse']
+    expected_version: str | None
+
+
+class CountEffect(DTO):
+    kind: Literal['count'] = 'count'
+    lot_id: UUID
+    before_quantity: Quantity
+    after_quantity: Quantity
+    delta: Annotated[str, Field(pattern=r"^-?(0|[1-9][0-9]*)(\.[0-9]+)?$", max_length=201)]
+    unit: str
+    expected_version: str
+
+
+class RecipeEffect(DTO):
+    kind: Literal['recipe'] = 'recipe'
+    product_id: UUID
+    recipe_id: UUID | None
+    identity_availability: Literal['available','not_reserved']
+    recipe_version: int
+    action: Literal['create_version','reuse'] = 'create_version'
+    effective_from: date
+    effective_to: date | None
+    dependency_ids: tuple[UUID,...]
+
+
+class SupplierEffect(DTO):
+    kind: Literal['supplier'] = 'supplier'
+    entity: Literal['supplier_term','payable_fee']
+    id: UUID
+    action: Literal['create_version','close_period','reuse']
+    expected_version: str | None
+
+
+class SalesEffect(DTO):
+    kind: Literal['sales'] = 'sales'
+    product_id: UUID
+    date: date
+    action: Literal['record','replace','merge','reuse']
+    before_quantity: Quantity | None
+    after_quantity: Quantity
+    unit: str
+    expected_version: str | None
+
+
+class DeclarationEffect(DTO):
+    kind: Literal['declaration'] = 'declaration'
+    id: UUID
+    action: Literal['declare','reuse']
+    dependency_ids: tuple[UUID,...]
+    expected_version: str | None
+
+
+class OpeningEffect(DTO):
+    kind: Literal['opening_stock'] = 'opening_stock'
+    lot_id: UUID
+    action: Literal['create','reuse']
+    quantity_delta: Quantity
+    unit: str
+    observed_at: datetime
+
+
+class HistoryEffect(DTO):
+    kind: Literal['history'] = 'history'
+    domain: Literal['calendar_events','promotion_observations','usage_history','purchase_history']
+    id: UUID
+    action: Literal['record','reuse']
+    expected_version: str | None
+
+
+PlannedEffect = Annotated[ReceiptPlannedEffect | CatalogEffect | CountEffect | RecipeEffect |
+    SupplierEffect | SalesEffect | DeclarationEffect | OpeningEffect | HistoryEffect, Field(discriminator='kind')]
+
+
+class SourceEffectRow(PreviewRow):
+    source_cells: tuple[SourceEvidenceCell,...]
+    planned_effect: PlannedEffect | None
+    source_evidence_availability: Literal['available','partial','unavailable']
+    source_cells_truncated: bool
+
+
+class PreviewScope(DTO):
+    file_id: UUID | None = None
+    sheet_id: UUID | None = None
+    classification: Literal['NEW','UNCHANGED','CHANGED','INVALID','CONFLICT'] | None = None
+
+
+class RawSourceRowCount(DTO):
+    availability: Literal['available','unavailable']
+    count: int | None
+
+
+class PreviewActionGroupCount(DTO):
+    canonical_domain: str | None
+    proposed_action: str
+    action_count: int
+    blocked_action_count: int
+    warning_action_count: int
+
+
+class NoticeActionCount(DTO):
+    code: str
+    action_count: int
+
+
+class ScopedPreviewAggregate(DTO):
+    scope: PreviewScope
+    raw_source_rows: RawSourceRowCount
+    logical_action_count: int
+    by_classification: ClassificationCounts
+    groups: tuple[PreviewActionGroupCount,...]
+    blockers: tuple[NoticeActionCount,...]
+    warnings: tuple[NoticeActionCount,...]
+
+
+class PreviewAggregates(DTO):
+    preview_id: UUID
+    preview_digest: str
+    batch: ScopedPreviewAggregate
+    selected: ScopedPreviewAggregate
+    files: tuple[ScopedPreviewAggregate,...]
+    sheets: tuple[ScopedPreviewAggregate,...]
+
+
 class PreviewPage(DTO):
+    aggregates: PreviewAggregates | None = None
+    mapping_revision: str
+    read_set_digest: str
+    source_evidence_digest: str | None
     summary: PreviewSummary
-    rows: tuple[PreviewRow, ...]
+    rows: tuple[SourceEffectRow | PreviewRow, ...]
     rows_page: Pagination
     stale: bool
 
@@ -1197,6 +1452,8 @@ class CommitRowReference(DTO):
     inventory_effect: InventoryEffect | None = None
     sales_contributions: tuple[SalesContribution, ...] = ()
     history_record: HistoryValue | None = None
+    receipt_effect: ReceiptEffect | None = None
+    receipt_reference: ReceiptCommitReference | None = None
 
 
 class ImportCompletion(DTO):

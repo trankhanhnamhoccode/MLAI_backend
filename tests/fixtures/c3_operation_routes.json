@@ -1,0 +1,281 @@
+{
+  "source_commit": "b1c906a0ea65a3b20a46d161166668d26701f0a9",
+  "routes": {
+    "health_health_get": {
+      "path": "/health",
+      "method": "get"
+    },
+    "A02": {
+      "path": "/api/v1/auth/register",
+      "method": "post"
+    },
+    "A06": {
+      "path": "/api/v1/auth/email-verifications/request",
+      "method": "post"
+    },
+    "A05": {
+      "path": "/api/v1/auth/email-verifications/complete",
+      "method": "post"
+    },
+    "A07": {
+      "path": "/api/v1/auth/password-reset/request",
+      "method": "post"
+    },
+    "A01": {
+      "path": "/api/v1/auth/login",
+      "method": "post"
+    },
+    "A03": {
+      "path": "/api/v1/auth/me",
+      "method": "get"
+    },
+    "A04": {
+      "path": "/api/v1/auth/logout",
+      "method": "post"
+    },
+    "N7": {
+      "path": "/api/v1/auth/credentials/complete",
+      "method": "post"
+    },
+    "T01": {
+      "path": "/api/v1/stores",
+      "method": "get"
+    },
+    "T02": {
+      "path": "/api/v1/stores/{store_id}",
+      "method": "get"
+    },
+    "N12": {
+      "path": "/api/v1/stores/{store_id}/memberships",
+      "method": "get"
+    },
+    "N13": {
+      "path": "/api/v1/stores/{store_id}/memberships/{membership_id}/permissions",
+      "method": "put"
+    },
+    "N14": {
+      "path": "/api/v1/stores/{store_id}/permission-events",
+      "method": "get"
+    },
+    "N15": {
+      "path": "/api/v1/stores/{store_id}/staff-invitations",
+      "method": "post"
+    },
+    "N16": {
+      "path": "/api/v1/stores/{store_id}/staff-invitations",
+      "method": "get"
+    },
+    "N17": {
+      "path": "/api/v1/stores/{store_id}/staff-invitations/{invitation_id}/actions",
+      "method": "post"
+    },
+    "N18": {
+      "path": "/api/v1/staff-invitations/{invitation_id}",
+      "method": "get"
+    },
+    "N19": {
+      "path": "/api/v1/staff-invitations/{invitation_id}/accept",
+      "method": "post"
+    },
+    "IN01": {
+      "path": "/api/v1/staff-invitations/{invitation_id}/decline",
+      "method": "post"
+    },
+    "NF01": {
+      "path": "/api/v1/notifications",
+      "method": "get"
+    },
+    "NF02": {
+      "path": "/api/v1/notifications/unread-count",
+      "method": "get"
+    },
+    "NF03": {
+      "path": "/api/v1/notifications/{notification_id}",
+      "method": "patch"
+    },
+    "PR01": {
+      "path": "/api/v1/stores/{store_id}/permission-requests",
+      "method": "post"
+    },
+    "PR02": {
+      "path": "/api/v1/stores/{store_id}/permission-requests",
+      "method": "get"
+    },
+    "PR03": {
+      "path": "/api/v1/stores/{store_id}/permission-requests/{request_id}",
+      "method": "get"
+    },
+    "PR04": {
+      "path": "/api/v1/stores/{store_id}/permission-requests/{request_id}/actions",
+      "method": "post"
+    },
+    "MQ01": {
+      "path": "/api/v1/imports/{import_id}/mapping-submissions",
+      "method": "post"
+    },
+    "MQ02": {
+      "path": "/api/v1/stores/{store_id}/mapping-submissions",
+      "method": "get"
+    },
+    "MQ03": {
+      "path": "/api/v1/stores/{store_id}/mapping-submissions/{submission_id}",
+      "method": "get"
+    },
+    "P01": {
+      "path": "/api/v1/stores/{store_id}/products",
+      "method": "get"
+    },
+    "P02": {
+      "path": "/api/v1/stores/{store_id}/products/{product_id}",
+      "method": "get"
+    },
+    "V01": {
+      "path": "/api/v1/stores/{store_id}/inventory",
+      "method": "get"
+    },
+    "V02": {
+      "path": "/api/v1/stores/{store_id}/inventory/{ingredient_id}",
+      "method": "get"
+    },
+    "V03": {
+      "path": "/api/v1/stores/{store_id}/inventory/{ingredient_id}/lots",
+      "method": "get"
+    },
+    "V04": {
+      "path": "/api/v1/stores/{store_id}/inventory/{ingredient_id}/movements",
+      "method": "get"
+    },
+    "N6": {
+      "path": "/api/v1/stores/{store_id}/inventory/receipts",
+      "method": "post"
+    },
+    "N8": {
+      "path": "/api/v1/stores/{store_id}/inventory/{ingredient_id}/threshold",
+      "method": "put"
+    },
+    "N20": {
+      "path": "/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule",
+      "method": "get"
+    },
+    "N21": {
+      "path": "/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes",
+      "method": "post"
+    },
+    "N22": {
+      "path": "/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes/{change_id}",
+      "method": "get"
+    },
+    "I01": {
+      "path": "/api/v1/stores/{store_id}/imports",
+      "method": "post"
+    },
+    "H02": {
+      "path": "/api/v1/stores/{store_id}/imports",
+      "method": "get"
+    },
+    "I02": {
+      "path": "/api/v1/imports/{import_id}/files",
+      "method": "post"
+    },
+    "I03": {
+      "path": "/api/v1/imports/{import_id}/analyze",
+      "method": "post"
+    },
+    "I04": {
+      "path": "/api/v1/imports/{import_id}",
+      "method": "get"
+    },
+    "M01": {
+      "path": "/api/v1/imports/{import_id}/mapping-summary",
+      "method": "get"
+    },
+    "M02": {
+      "path": "/api/v1/imports/{import_id}/mappings",
+      "method": "get"
+    },
+    "M03": {
+      "path": "/api/v1/imports/{import_id}/sheets/{sheet_id}/field-options",
+      "method": "get"
+    },
+    "M04": {
+      "path": "/api/v1/imports/{import_id}/mappings/{mapping_id}",
+      "method": "patch"
+    },
+    "N5": {
+      "path": "/api/v1/stores/{store_id}/mapping-profiles/{profile_id}/decisions",
+      "method": "post"
+    },
+    "I05": {
+      "path": "/api/v1/imports/{import_id}/process",
+      "method": "post"
+    },
+    "I06": {
+      "path": "/api/v1/imports/{import_id}/completion",
+      "method": "get"
+    },
+    "J01": {
+      "path": "/api/v1/jobs/{job_id}",
+      "method": "get"
+    },
+    "N1": {
+      "path": "/api/v1/stores/{store_id}/planning-requirements",
+      "method": "post"
+    },
+    "N2": {
+      "path": "/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}",
+      "method": "get"
+    },
+    "N3": {
+      "path": "/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}",
+      "method": "put"
+    },
+    "N4": {
+      "path": "/api/v1/stores/{store_id}/planning-budget",
+      "method": "put"
+    },
+    "R01": {
+      "path": "/api/v1/stores/{store_id}/readiness",
+      "method": "get"
+    },
+    "C01": {
+      "path": "/api/v1/stores/{store_id}/planning-context",
+      "method": "get"
+    },
+    "C02": {
+      "path": "/api/v1/stores/{store_id}/procurement-plans",
+      "method": "post"
+    },
+    "N9": {
+      "path": "/api/v1/stores/{store_id}/procurement-plans",
+      "method": "get"
+    },
+    "C03": {
+      "path": "/api/v1/procurement-plans/{plan_id}",
+      "method": "get"
+    },
+    "C04": {
+      "path": "/api/v1/procurement-plans/{plan_id}/ingredients",
+      "method": "get"
+    },
+    "C05": {
+      "path": "/api/v1/procurement-plans/{plan_id}/ingredients/{ingredient_id}",
+      "method": "get"
+    },
+    "C08": {
+      "path": "/api/v1/procurement-plans/{plan_id}/explanation",
+      "method": "get"
+    },
+    "H01": {
+      "path": "/api/v1/stores/{store_id}/imports/calendar",
+      "method": "get"
+    },
+    "N10": {
+      "path": "/api/v1/procurement-plans/{plan_id}/exports",
+      "method": "post"
+    },
+    "N11": {
+      "path": "/api/v1/procurement-plans/{plan_id}/exports/{export_id}",
+      "method": "get"
+    }
+  }
+}

@@ -2,6 +2,13 @@
 
 ## CURRENT FACT — implemented scope
 
+C4 N9 hỗ trợ creator/Store-local accepted-date filters, applied_filters/timezone
+và captured_budget available/unavailable; Store cap đổi không sửa Run summary.
+EX01 phân biệt job status với available/missing/unverifiable bytes; hash/size/URL
+chỉ khi verified, N11 rechecks. Same current finance/export rights, no creator-only
+restriction. [Planning §17](../PROCUREMENT_API_CONTRACT_VI.md#planning-discovery)
+sở hữu DTO meaning; [runbook](../runbooks/FULL_TEST_FLOW.md#read-discovery-c4) có commands/query evidence/limits.
+
 Authority is PLAN15–16, IMP11/14.5 and the authorization contract. The accepted
 conditional PLAN16 nullability decision is recorded in
 [compatibility](../CONTRACT_COMPATIBILITY_CHANGELOG_VI.md).
@@ -14,6 +21,7 @@ conditional PLAN16 nullability decision is recorded in
 | N9 GET `/api/v1/stores/{store_id}/procurement-plans` | Store-wide current authorized Run summaries; status/date filters, `-accepted_at`, UUID tie-break, limit1–100/default50 and snapshot cursor. |
 | H01 GET `/api/v1/stores/{store_id}/imports/calendar` | Sparse calendar grouped by first-upload `imported_at` in Store timezone, matched/unfiltered distinct batch counts. |
 | H02 GET `/api/v1/stores/{store_id}/imports` | `import_date` selects Store-local first-upload day; uploaded batch metadata, `-imported_at`, pagination and unfiltered date count. |
+| EX01 GET `/api/v1/procurement-plans/{plan_id}/exports` | C4 retained locator/status/verified artifact discovery, option/status/pagination/snapshot; no render/job from GET. |
 | N10 POST `/api/v1/procurement-plans/{plan_id}/exports` | Durable PDF intent202, original queued receipt, resolved option/result digest/render version. |
 | N11 GET same exports path `/{export_id}` | Private verified PDF bytes; readiness/ownership/permission/artifact integrity fail closed. |
 | J01 GET `/api/v1/jobs/{job_id}` | Existing Import variants plus `planning_pdf_export`, `rendering`, export context/result discriminator. |

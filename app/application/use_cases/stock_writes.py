@@ -22,18 +22,7 @@ from app.application.use_cases.auth import AuthUseCases
 from app.application.use_cases.public_reads import PublicReads
 from app.application.stock_observation import validate_opening_observation
 
-def fingerprint(value):
-    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
-
-def normalized(body):
-    values = body.model_dump(mode="json")
-    for key in ("quantity", "unit_cost", "minimum_usable_quantity"):
-        if values.get(key) is not None:
-            value = decimal_text(Decimal(values[key]))
-            values[key] = value.rstrip("0").rstrip(".") if "." in value else value
-    if "observed_at" in values:
-        values["observed_at"] = body.observed_at.astimezone(timezone.utc).isoformat()
-    return values
+from app.application.receipt_identity import normalized, fingerprint
 
 class StockWrites:
     def __init__(self, auth: AuthUseCases, reads: PublicReads):
@@ -110,71 +99,23 @@ class StockWrites:
         required = ("inventory.receive", "inventory.read", "ingredient.read")
         if body.unit_cost is not None:
             required += ("procurement.cost.read",)
-        semantic = normalized(body)
-        semantic.pop("expected_inventory_version")
-        payload_digest = fingerprint(semantic)
+        from app.application.use_cases.inventory_receipts import InventoryReceipts
+        facts=dto.StockReceiptFacts.model_validate(body.model_dump(exclude={'expected_inventory_version'}))
         def action(s, actor, authorization, permissions, repo, basis, now, today):
-            old = s.scalar(select(InventoryReceiptRecord).where(InventoryReceiptRecord.store_id == store,
-                InventoryReceiptRecord.source_system_key == body.receipt_identity.source_system_key,
-                InventoryReceiptRecord.source_record_key == body.receipt_identity.source_record_id))
-            if old:
-                if old.payload_digest != payload_digest:
-                    raise AuthError("RECEIPT_IDENTITY_CONFLICT", 409)
-                return dto.StockReceiptResult.model_validate(old.record_json), True
-            ingredient = repo.ingredient(store, body.ingredient_id)
+            writer=InventoryReceipts(s,store)
+            old=writer.replay(facts)
+            if old is not None:
+                return old, True
+            ingredient=repo.ingredient(store,body.ingredient_id)
             if ingredient is None:
-                raise AuthError("RESOURCE_NOT_FOUND", 404)
-            version, _ = self.reads.snapshot_identity(token, store, actor, authorization, permissions, basis, today)
-            if version != body.expected_inventory_version:
-                raise AuthError("INVENTORY_VERSION_CONFLICT", 409)
-            if body.unit != ingredient["base_unit"]:
-                raise AuthError("INVALID_UNIT",422)
-            if ingredient["expiry_tracking"] and body.expiry_date is None:
-                raise AuthError("REQUIRED_EXPIRY_MISSING",422)
-            if body.currency != basis["currency"]:
-                raise AuthError("VALIDATION_ERROR", 422)
-            if body.observed_at > now:
-                raise AuthError("STALE_STOCK_OBSERVATION",409)
-            if body.origin == "OPENING_STOCK":
-                validate_opening_observation(s, store, body.ingredient_id, body.observed_at, body.lot_code)
-            if body.received_date is not None and body.received_date > today:
-                raise AuthError("VALIDATION_ERROR", 422)
-            rid, aid = uuid4(), uuid4()
-            mutation = InventoryUseCases(s).receive_in_transaction(ReceiveInventoryInput(
-                store_id=store, ingredient_id=body.ingredient_id, supplier_id=body.supplier_id,
-                lot_code=body.lot_code, quantity=Decimal(body.quantity), unit=body.unit,
-                received_date=body.received_date, expiry_date=body.expiry_date,
-                unit_cost=Decimal(body.unit_cost) if body.unit_cost is not None else None,
-                occurred_at=body.observed_at, reference_type=body.origin, reference_id=str(rid), note=body.reason),
-                opening=body.origin == "OPENING_STOCK")
-            movement = s.get(InventoryMovement, mutation.movement.id)
-            s.add(InventoryAudit(id=aid, store_id=store, actor_id=actor.user_id, movement_id=movement.id,
-                occurred_at=now, record_json=dict(origin=body.origin, receipt_id=str(rid), request=semantic)))
-            s.flush()
-            version, _ = self.reads.snapshot_identity(token, store, actor, authorization, permissions, repo.basis(store), today)
-            lots, _, first = repo.lots(store, ingredient, today, None, 100, True)
-            row = next((r for r in lots if r["id"] == mutation.lot.id), None)
-            if row is None:
-                lot = s.get(InventoryLot, mutation.lot.id)
-                row = {c.name: getattr(lot, c.name) for c in InventoryLot.__table__.columns}
-            lot = self.reads._lot(row, ingredient, today, first, basis["currency"], "procurement.cost.read" in permissions, version)
-            lot = lot.model_copy(update={"origin": body.origin})
-            warnings = []
-            for condition, code, field in ((body.received_date is None, "MISSING_RECEIVED_DATE", "received_date"),
-                (body.expiry_date is not None and body.expiry_date < today, "LOT_EXPIRED", "expiry_date"),
-                (body.origin == "ACTUAL_RECEIPT" and (body.observed_at.astimezone(ZoneInfo(basis["timezone"])).date() < today
-                 or (body.received_date is not None and body.received_date < today)), "LATE_RECEIPT_RECORDED", "observed_at")):
-                if condition:
-                    warnings.append(issue(code, "inventory_lot", mutation.lot.id, field, code))
-            result = dto.StockReceiptResult(receipt_id=rid, origin=body.origin, lot=lot,
-                movement=MovementRead(movement_id=movement.id, lot_id=movement.lot_id, batch_code=body.lot_code,
-                    kind=movement.movement_type.lower(), quantity_delta=decimal_text(movement.quantity_delta), unit=body.unit,
-                    occurred_at=movement.occurred_at, recorded_at=movement.created_at, actor_user_id=actor.user_id,
-                    reason=body.reason, reference=MovementReference(type=body.origin, id=str(rid)), origin=body.origin),
-                inventory_version=version, audit_reference=aid, warnings=tuple(warnings))
-            s.add(InventoryReceiptRecord(id=rid, store_id=store, source_system_key=body.receipt_identity.source_system_key,
-                source_record_key=body.receipt_identity.source_record_id, ingredient_id=body.ingredient_id,
-                lot_id=mutation.lot.id, origin=body.origin, payload_digest=payload_digest, record_json=result.model_dump(mode="json")))
+                raise AuthError('RESOURCE_NOT_FOUND',404)
+            version,_=self.reads.snapshot_identity(token,store,actor,authorization,permissions,basis,today)
+            if version!=body.expected_inventory_version:
+                raise AuthError('INVENTORY_VERSION_CONFLICT',409)
+            result=writer.create(facts,actor_id=actor.user_id,now=now,today=today,
+                store_timezone=basis['timezone'],currency=basis['currency'],
+                inventory_version=lambda:self.reads.snapshot_identity(token,store,actor,authorization,
+                    permissions,repo.basis(store),today)[0])
             return result, False
         return self._run(token, store, body, key, csrf, "N6", required, dto.StockReceiptResult, action)
 

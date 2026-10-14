@@ -10,15 +10,17 @@ CURRENT FACT: source/DTO của S4.6; kết quả kiểm chứng và giới hạn
 
 1. Owner duyệt toàn bộ mapping Store, identity binding/reservation và quy đổi có evidence.
    Staff đề xuất nhưng không activate mapping. Không nối identity theo tên gần giống.
-2. I01 → I02 nhiều calls → I03 seal → worker analyze → M01–M05 review.
+2. I01 → I02 nhiều calls → I03 seal → worker analyze → M01–M04 review, MQ01 submit khi cần và N5 Owner decision.
    Quota/source-set/seal/replay giữ semantics S4.4; không thêm route nhập theo từng bảng.
 3. I05 `phase=preview` → J01 → I04 `?include=preview,configurations`.
-   Preview không ghi canonical. Mười source schemas hiện có writer:
+   Preview không ghi canonical. Mười lăm source schemas hiện có writer:
    products, ingredients, sales, recipes, inventory_count, suppliers,
-   supplier_terms, payable_fees, scope_declarations và opening_stock.
+   supplier_terms, payable_fees, scope_declarations, opening_stock,
+   calendar_events, promotion_observations, usage_history, purchase_history
+   và inventory_receipts. [Schema inventory](IMPORT_SCHEMA_INVENTORY.md) sở hữu fields.
    Setup identity/Excel opening/count projection/completeness hiện hành thuộc
    [Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#setup-identity-excel-opening-stock-và-lot-count--current-fact).
-4. M06 xác nhận evidence của chính import; activation không thay xác nhận này.
+4. I05 `phase=confirm_review` xác nhận evidence của chính import; activation không thay xác nhận này.
    I05 `phase=commit` phải có If-Match hiện hành, preview_id/digest và confirm=true.
    `supplier_changes=[{action_id: PreviewRow.row_id, reason}]` phải đúng toàn bộ
    rows terms/phí có `confirmation_required=true`, gồm cả AMEND_* và CREATE_* bị CHANGED.
@@ -27,7 +29,8 @@ CURRENT FACT: source/DTO của S4.6; kết quả kiểm chứng và giới hạn
    I04 configurations có `state=committed`, canonical IDs/version thực từ completion;
    `internal_term_version` là phiên bản canonical theo supplier/ingredient.
    Preview digest/read-set vẫn là evidence lúc review; completion không viết lại preview.
-6. Tồn đầu kỳ/hàng thực nhận dùng N6 dưới đây. Không đưa file receipt vào inventory_count.
+6. Tồn đầu kỳ/hàng thực nhận dùng form N6 hoặc schema Excel riêng; C3 actual
+   receipt dùng cùng InventoryReceipts/N6 writer trong atomic Import transaction. Không đưa file receipt vào inventory_count.
    Owner sửa ngưỡng cảnh báo bằng N8; ngưỡng không trở thành planning constraint.
 
 ## Nhóm ghi và provenance

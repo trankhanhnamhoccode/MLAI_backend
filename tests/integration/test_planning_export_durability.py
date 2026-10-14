@@ -80,6 +80,8 @@ def test_proven_process_death_live_owner_and_bounded_controlled_retry(exports):
 def test_staff_current_read_export_replay_worker_and_download_rights(exports,monkeypatch,phase):
     flow,svc=exports;c,ingredient,_,worker=flow;response=submit(c);assert worker.run_one().status=='completed'
     location=response.headers['Location'];client=c[0][5]
+    from app.application.use_cases.staff import StaffUseCases
+    client.app.state.staff=StaffUseCases(c[0][2],c[0][0])
     assert client.get(location+'/ingredients').status_code==200  # Warm Owner cache.
     staff=setup(c[0],'pdf-staff@example.test',store=False)
     with Session(c[0][1]) as s:
@@ -91,8 +93,12 @@ def test_staff_current_read_export_replay_worker_and_download_rights(exports,mon
     staff_c=(c[0],c[1],c[2],{**c[3],'X-CSRF-Token':session['session']['csrf_token']})
     history=client.get(f'/api/v1/stores/{c[1].store_id}/procurement-plans')
     assert history.status_code==200 and history.json()['data']['items'][0]['created_by']['user_id']==str(c[1].user_id)
+    filtered=client.get(f'/api/v1/stores/{c[1].store_id}/procurement-plans',params={'created_by_user_id':str(c[1].user_id)})
+    assert filtered.status_code==200 and filtered.json()['data']['items']
+    assert client.get(f'/api/v1/stores/{c[1].store_id}/memberships').status_code==403
     key=str(uuid4());accepted=export(staff_c,location,key=key);assert accepted.status_code==202,accepted.text
     receipt=accepted.json()['data'];download=location+'/exports/'+receipt['export_id']
+    assert client.get(location+'/exports').status_code==200
     def revoke():
         with Session(c[0][1]) as s:s.query(MembershipGrant).filter(MembershipGrant.membership_id==mid,MembershipGrant.permission=='planning.export').delete();s.commit()
     if phase=='materialization':revoke()
@@ -105,6 +111,7 @@ def test_staff_current_read_export_replay_worker_and_download_rights(exports,mon
     assert export(staff_c,location,key=key).status_code==403
     assert client.get('/api/v1/jobs/'+receipt['job_id']).status_code==403
     assert client.get(download).status_code==403
+    assert client.get(location+'/exports').status_code==403
     assert client.get(location+'/ingredients').status_code==200 # Result rights are independent.
     with Session(c[0][1]) as s:s.query(MembershipGrant).filter(MembershipGrant.membership_id==mid,MembershipGrant.permission=='procurement.cost.read').delete();s.commit()
     for suffix in ('','/ingredients','/ingredients/'+str(ingredient),'/explanation'):

@@ -1,5 +1,30 @@
 # Domain model and business meaning
 
+## CURRENT FACT — C3 actual receipts
+
+Actual receipt là hàng thật đã nhận: một nguồn/record ổn định tạo một lot và
+RECEIPT dương. Excel và N6 dùng cùng canonical receipt identity/normalized digest
+và InventoryReceipts application writer. Cùng payload replay; khác payload conflict,
+không upsert/delete theo file mới. Opening stock là balance đầu kỳ; count là target
+observation của lot existing; purchase history chỉ lịch sử; Planning purchases là
+đề xuất hypothetical. Receipt không tự chứng minh completeness và không sửa Run cũ.
+Facts/date/supplier/cost unknown giữ null; zero cost là known value. Workflow do
+[Import §16](IMPORT_MAPPING_API_CONTRACT_VI.md#excel-actual-receipt) sở hữu.
+
+## CURRENT FACT — notification event foundation C1
+
+`NotificationEvent` là immutable plain Python v1, event/decision/object/recipient
+references và occurred_at; fixed server templates không nhận business facts từ
+client/LLM. Inbox là projection lịch sử và read state riêng, không task/decision
+authority. N13 PermissionEvent, PR submission/outcomes và MQ submission/N5 outcomes
+là producers thật. PermissionRequest giữ requested facts, approval additions và
+decision; current grants luôn live, approve union không replace quyền khác.
+MappingSubmission là retained full-spec task, có own revision riêng batch/profile;
+content/source/lifecycle drift làm review stale, không tự resubmit hay commit.
+Recipient/object visibility luôn theo current authorization, không theo event
+snapshot. [Notification contract](NOTIFICATION_API_CONTRACT_VI.md) sở hữu vocabulary,
+DTO/visibility/retention; [database schema](DATABASE_SCHEMA.md) sở hữu persistence.
+
 ## ACCEPTED DECISION / CURRENT FACT — A2 recorded support history
 
 CalendarEvent is a Store-scoped declared inclusive event, distinct from observed

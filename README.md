@@ -1,5 +1,12 @@
 # ShelfCash Competition Edition
 
+CURRENT FACT C4 checkpoint eabab333: Today/supplier/PDF discovery và Import/Planning read
+extensions đã có72 operations/66 paths, giữ head0026/catalogue43. C5 backend acceptance đã VERIFIED, runtime upgrade PREPARED; [commands và giới hạn C4](docs/runbooks/FULL_TEST_FLOW.md#read-discovery-c4).
+
+CURRENT FACT C3 local commit b1c906a: Excel hàng thực nhận đã nối shared N6 receipt writer;
+không endpoint/permission/migration mới. Xem luồng kiểm và giới hạn tại
+[FULL_TEST_FLOW — C3](docs/runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3).
+
 ShelfCash giúp quán F&B so sánh phương án mua nguyên liệu theo nhu cầu, công thức,
 tồn kho, hạn dùng, điều khoản nhà cung cấp và ngân sách. Backend tính toán và đề
 xuất; khách hàng quyết định. Hệ thống không tự đặt hàng.
@@ -7,9 +14,12 @@ xuất; khách hàng quyết định. Hệ thống không tự đặt hàng.
 CURRENT FACT: backend đã có đăng nhập và quyền theo Store (quán), Staff (nhân viên),
 đọc Menu/Kho, import có duyệt và ghi toàn batch trong một transaction, readiness
 (kiểm tra đủ dữ liệu), Planning (lập phương án), lịch sử và xuất PDF tiếng Việt.
-CURRENT FACT bản tích hợp Import A1–A3/Auth B1–B4: OpenAPI có59 operations/55 paths,
-catalogue permissions-v3/43 quyền và Alembic head `0024_integrate_import_auth`
-(64 bảng ứng dụng, cộng bảng Alembic).
+CURRENT FACT source C1/C2 local: OpenAPI69 operations/64 paths; NF01–NF03 inbox,
+PR01–PR04 yêu cầu quyền và MQ01–MQ03 queue mapping/N5 extension. Catalogue
+permissions-v3/43 giữ nguyên, head `0026_collaboration_requests` (70 bảng ứng dụng).
+C1 commit f85c7cdd, C2 local commit b9fe048; N13/PR/MQ producers và current target rights
+đã nối. Xem [commands/limits](docs/runbooks/FULL_TEST_FLOW.md#notifications-c1).
+Runtime Đợt2 dùng committed main; trạng thái thực và browser PENDING ở runbook C5.
 
 CURRENT FACT: forecast hỗ trợ baseline (mô hình cơ sở) và trained artifacts (tệp
 mô hình đã huấn luyện). Demo chọn BASELINE; chất lượng dữ liệu thật chưa đánh giá.
@@ -42,17 +52,18 @@ Rules/profile/manual flow hoạt động khi provider không có. Xem
 Mở Docker Desktop; instance PostgreSQL hiện có phải đang chạy. Dùng PowerShell:
 
 ```powershell
-Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-integrate-import-auth
-.\.venv\Scripts\python.exe -m scripts.integrated_demo status
-.\.venv\Scripts\python.exe -m scripts.integrated_demo start
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-main-integrated
+$demoPython = '..\backend-integrate-import-auth\.venv\Scripts\python.exe'
+& $demoPython -m scripts.integrated_demo status
+& $demoPython -m scripts.integrated_demo start
 # Khi cần dừng BE:
-.\.venv\Scripts\python.exe -m scripts.integrated_demo stop
+& $demoPython -m scripts.integrated_demo stop
 ```
 
 BE: **https://localhost:8103**. FE dự kiến: **https://localhost:5173**;
 launcher này chỉ BE, không khởi động/cấu hình FE. Expected status: DB
-`shelfcash_integration_demo`, head0024,65 bảng; sau start là server running và
-Import/Planning/PDF alive. Không reset/migrate/seed mỗi lần chạy.
+`shelfcash_integration_demo`, head0026,71 bảng; sau start là server running và
+Import/Planning/PDF/notification alive. Không reset/migrate/seed mỗi lần chạy.
 
 [**FULL_TEST_FLOW — hướng dẫn vận hành chính**](docs/runbooks/FULL_TEST_FLOW.md#integrated-demo-runtime)
 chứa setup lần đầu, trust certificate một lần, tài khoản local private,
@@ -64,9 +75,8 @@ startup bản tích hợp. Health chỉ liveness; OpenAPI là routes/DTO; docs/r
 
 ## Kiểm thử tự động
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest tests/unit/test_integrated_demo.py tests/unit/test_database_config.py tests/api/test_auth_openapi.py tests/api/test_staff_openapi.py -q --tb=short --show-capture=no
-```
+Các lệnh C5 và kết quả nằm trong [FULL_TEST_FLOW](docs/runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5).
+Chạy tests từ worktree notifications với DB test được guard; không dùng profile demo.
 
 Integration tests của bản tích hợp chỉ sở hữu `shelfcash_integration_test`/
 `shelfcash_integration_tester` theo TEST_DATABASE_URL, chạy tuần tự, cần PostgreSQL.

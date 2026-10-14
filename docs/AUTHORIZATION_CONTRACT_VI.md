@@ -1,5 +1,11 @@
 # Authorization — Store, session, Staff and approval
 
+CURRENT FACT C4: D01 section authorization, SU01 supplier picker, M01/M02/I04
+projections, N9 filters/budget và EX01 discovery reuse current Store/domain/finance
+grants; catalogue vẫn permissions-v3/43, không grant tự động hoặc quyền từ snapshot.
+[API](API_CONTRACT.md#today-operations), [Import](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-projections)
+và [Planning](PROCUREMENT_API_CONTRACT_VI.md#planning-discovery) sở hữu projection semantics.
+
 ## ACCEPTED DECISION / CURRENT FACT — A2 catalogue delta
 
 Catalogue `permissions-v3` có43 keys; thêm calendar.read/calendar.write,
@@ -451,7 +457,9 @@ CURRENT FACT B4: N19 OpenAPI declares accept with const:true. The strict before
 validator rejects false, numeric1 and string"true" with422. This corrects the
 structural representation of the accepted consent policy; decline remains IN01.
 HISTORICAL INFORMATION: B3 preserved boolean OpenAPI with a true-only validator;
-the historical review is recorded in [TD-BE-002](../008_TechDebt.md).
+the historical review is recorded as TD-BE-002 in the source branch's
+`008_TechDebt.md` task note (retained in the original backend worktree; not a
+document shipped by this worktree).
 
 Owner reason1..1000 nonblank; email1..320 canonical/validated; grants=[] hợp lệ
 nếu Owner chọn không quyền tính năng (Staff sau accept vẫn thấy Store context).
@@ -765,7 +773,13 @@ expired/reissued/consumed/concurrent tokens; RESET revoke mọi session; Origin/
 cases; email failure/restart; accept/decline race và new invitation sau decline.
 
 <a id="permission-requests"></a>
-## Yêu cầu cấp quyền thường xuyên — DESIGN_READY
+## Yêu cầu cấp quyền thường xuyên — IMPLEMENTED C2
+
+CURRENT FACT: PR01–PR04 tại `app/api/permission_requests.py`, application
+`PermissionRequests`, retained request/audit từ migration0026. `change_grants` là
+boundary chung với N13; no-op approval không tạo PermissionEvent hoặc tăng grants
+revision. N14 nullable request/decision references đọc cả historical events.
+Commands/verification ở [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#collaboration-c2).
 
 ACCEPTED DECISION: Staff active trong Store yêu cầu tập quyền hợp lệ; submit không
 grant; Owner quyết định thường quyền. Không Owner role, Owner-key, delegation quản
@@ -876,9 +890,9 @@ PR02 permission catalogue hiện có PermissionDescriptor, không new keys. Erro
 áp cả PR01–PR04; mutations audit actor/requester/version/reason không secrets;
 Staff xem decision trong own detail, không được đọc N14 toàn Store. FE thêm mục
 “Yêu cầu quyền”, Owner queue, subset review, CAS conflict/retry, refresh A03/T02 sau
-kết quả. Acceptance tương lai: no selfgrant/crossactor leak; partial/alreadygranted;
-one pending; N13 race/revoke; uncertain commit/replay; audited union và notification
-fault không undo committed decision. Không chạy acceptance trong task tài liệu.
+kết quả. HTTP/PostgreSQL acceptance ở `tests/integration/test_permission_requests.py`:
+subset/no-op/satisfied, duplicate/CAS/catalogue, current grants, race/lost ACK,
+revoke/replay và intent fault rollback. Browser UI chưa kiểm chứng.
 
 ## ACCEPTED DECISION / CURRENT FACT — Staff whole-sheet IGNORE, S4.7
 

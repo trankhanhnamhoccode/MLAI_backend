@@ -27,14 +27,40 @@ def descriptors(keys=None):
 
 
 def permission_event(s, member, *, actor, now, reason, before, before_version,
-                     after, request_id, source, operator=None, issuer=None):
+                     after, request_id, source, operator=None, issuer=None, permission_request_id=None, decision_id=None):
     result = dto.PermissionEvent(event_id=uuid4(), store_id=member.store_id,
         target_membership_id=member.id, actor_user_id=actor, occurred_at=now, reason=reason,
         before_grants=before, after_grants=after, before_version=before_version,
         after_version=membership_version(member, after), request_id=request_id,
-        source=source, operator_reference=operator, issuer_user_id=issuer)
+        source=source, operator_reference=operator, issuer_user_id=issuer,
+        permission_request_id=permission_request_id, decision_id=decision_id)
     s.add(PermissionEventRecord(id=result.event_id, store_id=member.store_id,
         membership_id=member.id, occurred_at=now, record_json=result.model_dump(mode="json")))
+    if source == "OWNER_CHANGE":
+        from app.domain.notifications import NotificationEvent, EventType
+        from app.repositories.notifications import enqueue
+        enqueue(s, NotificationEvent(event_id=result.event_id, event_type=EventType.GRANTS_CHANGED,
+            occurred_at=now, object_id=member.id, recipients=(member.user_id,),
+            store_id=member.store_id, object_revision=result.after_version))
+    return result
+
+
+def change_grants(s, member, grants, *, actor, now, reason, request_id, source,
+                  permission_request_id=None, decision_id=None):
+    """Existing membership fence owns every replace/union; no independent grant source."""
+    current = AuthRepository(s).grants(member.id)
+    if current == grants:
+        return None
+    before_version = membership_version(member, current)
+    StaffRepository(s).replace_grants(member.id, grants)
+    s.refresh(member)
+    member.updated_at = now
+    result = permission_event(s, member, actor=actor, now=now, reason=reason, before=current,
+        before_version=before_version, after=grants, request_id=request_id, source=source,
+        permission_request_id=permission_request_id, decision_id=decision_id)
+    if source == "OWNER_CHANGE":
+        from app.application.use_cases.permission_requests import reconcile_member
+        reconcile_member(s, member, now, actor, request_id)
     return result
 
 
@@ -182,12 +208,8 @@ class StaffUseCases:
                     raise AuthError("PERMISSION_REVISION_CONFLICT", 412)
                 event = None
                 if current.grants != body.grants:
-                    repo.replace_grants(member.id, body.grants)
-                    s.refresh(member)
-                    member.updated_at = self.clock()
-                    event = permission_event(s, member, actor=actor.user_id, now=self.clock(), reason=body.reason,
-                        before=current.grants, before_version=current.version, after=body.grants,
-                        request_id=request_id, source="OWNER_CHANGE")
+                    event = change_grants(s, member, body.grants, actor=actor.user_id, now=self.clock(),
+                        reason=body.reason, request_id=request_id, source="OWNER_CHANGE")
                 result = dto.PermissionUpdate(membership=self._member(s, member, user),
                     event_id=event.event_id if event else None, changed=event is not None)
                 self._save(s, actor, store, op, kd, fp, result)

@@ -1,6 +1,26 @@
 # S4.4 — Import staging/mapping/preview
 
-CURRENT FACT — consumer update S4.6: all nine existing schemas have atomic writers; N6/N8 stock workflows are separate. See [S4.6 feature](IMPORT_INVENTORY_SUPPLIER.md) and [evidence](../runbooks/FULL_TEST_FLOW.md). Four-schema/unsupported statements below describe the S4.5/S4.4 historical slice boundary.
+CURRENT FACT C4: M01/M02 counters đếm mapping issues theo AND filters, giữ legacy
+Progress; I04 source_effect dùng cached pinned source/effect và R05 raw/logical
+aggregates độc lập page size, không double-count grouped/multi-location actions.
+Canonical definitions/examples do [Import §17](../IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-projections)
+sở hữu; [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#read-discovery-c4) giữ commands/limits.
+
+CURRENT FACT C3: actual receipt schema, typed effect/completion and shared N6
+identity/writer implemented. [Import §16](../IMPORT_MAPPING_API_CONTRACT_VI.md#excel-actual-receipt)
+owns semantics; [schema inventory](IMPORT_SCHEMA_INVENTORY.md) owns source fields;
+[runbook](../runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3) owns commands/results.
+C2 MQ/N5 review is reused; approval does not commit inventory. C4 read projections are implemented in local source; no canonical writer policy change.
+
+CURRENT FACT C2: MQ01–MQ03 provide explicit pinned full-spec submissions and Store
+queue/detail; N5 resolves the live submission and supports request_changes.
+Content/lifecycle drift fences review, while approved history retains its pins.
+Approval activates a profile; preview/confirm/commit remain separate. MQ03 exposes
+bounded source evidence under current sensitive reads. C4 reuses its SourceEvidenceCell/bounds and adds I04/M01/M02 projections. Canonical workflow is in
+[mapping queue contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-queue);
+[FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#collaboration-c2) owns commands/limits.
+
+HISTORICAL INFORMATION — S4.6 had nine schemas. CURRENT FACT C3: fifteen schemas have atomic writers, including inventory_receipts sharing the N6 receipt boundary; N8 stays separate. See [S4.6 feature](IMPORT_INVENTORY_SUPPLIER.md) and [evidence](../runbooks/FULL_TEST_FLOW.md). Four-schema/unsupported statements below describe the S4.5/S4.4 historical slice boundary.
 
 ## CURRENT FACT — consumer S4.5
 

@@ -5,7 +5,7 @@
 
 CURRENT FACT: I01-I06/M01-M04/N5/J01/H01/H02/R01 are wired with Store authorization,
 immutable staging/preview/provenance, manual/approved-profile deterministic flow,
-canonical fourteen-schema adapters and durable history/completion. Upload/review/save/
+canonical fifteen-schema adapters and durable history/completion. Upload/review/save/
 HTTP202 are not canonical persistence. Runtime: app/api/import_staging.py,
 app/application/use_cases/import_staging.py and import workers/repositories.
 
@@ -65,7 +65,7 @@ Store/actor/file IDs/profile versions và semantic/parsing context không phải
 business bắt buộc. Không tự điền date/unit/currency/zero từ context chưa hỗ trợ.
 Chi tiết đủ fields, validation, writer và gaps:
 [inventory](features/IMPORT_SCHEMA_INVENTORY.md). Opening_stock Excel đã nối writer N6;
-Actual receipt Excel chưa triển khai; A2 purchase history là record-only riêng.
+Actual receipt Excel đã triển khai C3 tại mục16; A2 purchase history là record-only riêng.
 Không map các nhóm này sang inventory_count.
 
 ## ACCEPTED DECISION / CURRENT FACT — A2 recorded support domains
@@ -905,7 +905,7 @@ set chính xác. Không sửa metadata/recipe/price history immutable để làm
 | inventory_count: canonical lot_id + Ingredient/unit; observation known | Target balance=current NO_OP, vẫn giữ observation evidence; khác balance signed COUNT_CORRECTION có reason và freshness. Unknown/ambiguous lot block; không tạo lot, nhận hàng hoặc đổi expiry/cost/date. | import_preview CountSource, write_plan→adjust_in_transaction, stock_observation; temporal guards/read-set phải recheck ở commit. |
 | opening_stock: source_system_key + source_record_id trong shared N6 receipt ledger | CURRENT FACT source tích hợp kế thừa A3: OpeningSource/OpeningValue, same identity+normalized payload NO_OP/retained lot; khác RECEIPT_IDENTITY_CONFLICT. Lot quantity là physical remainder; newlot + COUNT_CORRECTION baseline0, không historical RECEIPT. Duplicate identity/ambiguous physical lot block. | import_opening_stock.receipt_semantics/write_opening, import_preview opening branch; evidence nhánh thuộc Import126b0f2/A3, gate tích hợp ở FULL_TEST_FLOW, không browser/deployment claim. |
 | scope_declarations: source_system_key + source_declaration_key + kind/scoped dependencies | Same payload+same dependency evidence NO_OP; changed declaration/dependencies phải explicit SET_SCOPE_DECLARATION/review, không assume complete từ receipt/count. Kind/Ingredient identity khác DECLARATION_IDENTITY_CONFLICT. | import_configuration_preview, OperationalConfiguration.declaration, post-write declaration_dependency; A3 kiểm canonical dependency digest, evidence nhánh thuộc Import126b0f2, gate tích hợp ở FULL_TEST_FLOW. |
-| inventory_receipts actual receipt | DESIGN_READY mục16; shared receipt source identity/dedupe, không sửa receipt cũ từ new file. Không dùng inventory_count/opening để giả actual receipt. | N6 ACTUAL_RECEIPT hiện có; Excel variant chưa implemented. |
+| inventory_receipts actual receipt | IMPLEMENTED C3 mục16; shared N6 receipt identity/writer, không sửa receipt cũ từ new file. Không dùng inventory_count/opening để giả actual receipt. | Excel và form N6 cùng InventoryReceiptRecord; atomic import. |
 
 CURRENT FACT: supplier term duplicate source key/active-period overlap được block;
 configuration preview namespace=(domain,source_system_key,key) chặn duplicate trong
@@ -1069,7 +1069,7 @@ khi có sheet_id/review_only/status filter; chỉ items và meta.pagination.tota
 theo filtered result. completed_fields gồm resolved và auto_mapped, không phải số
 auto/approved. Có thể đọc auto items với review_only=false&status=auto_mapped;
 không cộng items.length để suy totals. Per-file/per-sheet/origin/filter mapping
-counters chưa implemented; thiết kế extensions ở mục17. Preview aggregates R05
+counters IMPLEMENTED C4 ở mục17. Preview aggregates R05
 là đơn vị khác, xem mục17.1. Source: ImportStagingUseCases.mappings/_progress.
 
 M03 query mapping_id optional; returns schema/schema_version/schema_context_id,
@@ -2053,13 +2053,15 @@ CURRENT FACT thực tế xem CURRENT_STATE/feature hiện hành, không dùng l�
 rằng commit vẫn unsupported. Handoff ZIP cũ chưa phát hành lại.
 
 <a id="mapping-queue"></a>
-## 15. Submit và queue duyệt mapping toàn Store — DESIGN_READY
+## 15. Submit và queue duyệt mapping toàn Store — IMPLEMENTED C2
 
 ACCEPTED DECISION: Staff chuẩn bị → explicit “Gửi chủ quán duyệt” → Owner đọc pinned
 proposal → N5 quyết định → Staff xem kết quả/sửa/resubmit. Draft không tự thành
-queue task. CURRENT FACT: N5/M01–M04 đã có source ở `app/api/import_staging.py`,
-`ImportStagingUseCases.decision/summary/mappings`; N5 nhận approve_activate/reject/
-retire, không request_changes; source chưa có submission aggregate/Store queue.
+queue task. CURRENT FACT: MQ01–MQ03 tại `app/api/mapping_submissions.py` và
+`MappingSubmissions`; retained aggregate từ migration0026. N5 tại
+`ImportStaging.decision` nhận approve_activate/reject/request_changes/retire;
+live submitted được resolve/pin cả khi direct N5 không gửi submission fields.
+Commands/verification ở [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#collaboration-c2).
 N5 approve_activate là approve và activate cùng command, không thêm approve endpoint.
 
 TECHNICAL CHOICE: một submission là **một profile proposal đầy đủ**, có toàn bộ
@@ -2101,10 +2103,10 @@ Invalid data rows vẫn do preview xử lý, không giả mapping review đã va
 
 | ID/status | Method/path | Request → response |
 | --- | --- | --- |
-| MQ01 DESIGN_READY | POST /imports/{import_id}/mapping-submissions | Staff own batch (Owner cũng được), import.read+mapping.read+mapping.propose và batch sensitive reads như M04; Origin/CSRF/Idempotency-Key/If-Match import_revision. {action:"submit",profile_id:UUID,proposal_revision:Version,mapping_revision:Version,reason:string} hoặc {action:"withdraw",submission_id:UUID,expected_submission_version:Version,reason:string} → 201 submit/200 withdraw MappingSubmission. |
-| MQ02 DESIGN_READY | GET /stores/{store_id}/mapping-submissions | Owner toàn Store, Staff own submissions; import.read+mapping.read+domain read rights theo nguồn; query state?:enum,file_id?:UUID,import_id?:UUID,limit/cursor; sort -submitted_at/UUID. → 200 {items:MappingSubmission[]}. |
-| MQ03 DESIGN_READY | GET /stores/{store_id}/mapping-submissions/{submission_id} | Same scope; query evidence_limit1..100 default20,evidence_cursor? → 200 MappingReviewDetail, ETag submission.version. |
-| N5 IMPLEMENTED; queue extension DESIGN_READY | POST /stores/{store_id}/mapping-profiles/{profile_id}/decisions | Owner-only hiện hành; giữ If-Match lifecycle_revision + Idempotency-Key. Queue decision thêm submission_id:UUID,expected_submission_version:Version; union approve_activate/reject hiện có + request_changes với proposal_revision/reason. → 200 DecisionResult hiện có + submission:MappingSubmission|null,notification_delivery. |
+| MQ01 IMPLEMENTED | POST /imports/{import_id}/mapping-submissions | Staff own batch (Owner cũng được), import.read+mapping.read+mapping.propose và batch sensitive reads như M04; Origin/CSRF/Idempotency-Key/If-Match import_revision. {action:"submit",profile_id:UUID,proposal_revision:Version,mapping_revision:Version,reason:string} hoặc {action:"withdraw",submission_id:UUID,expected_submission_version:Version,reason:string} → 201 submit/200 withdraw MappingSubmission. |
+| MQ02 IMPLEMENTED | GET /stores/{store_id}/mapping-submissions | Owner toàn Store, Staff own submissions; import.read+mapping.read+domain read rights theo nguồn; query state?:enum,file_id?:UUID,import_id?:UUID,limit/cursor; sort -submitted_at/UUID. → 200 {items:MappingSubmission[]}. |
+| MQ03 IMPLEMENTED | GET /stores/{store_id}/mapping-submissions/{submission_id} | Same scope; query evidence_limit1..100 default20,evidence_cursor? → 200 MappingReviewDetail, ETag submission.version. |
+| N5 và queue extension IMPLEMENTED | POST /stores/{store_id}/mapping-profiles/{profile_id}/decisions | Owner-only hiện hành; giữ If-Match lifecycle_revision + Idempotency-Key. Queue decision thêm submission_id:UUID,expected_submission_version:Version; union approve_activate/reject hiện có + request_changes với proposal_revision/reason. → 200 DecisionResult hiện có + submission:MappingSubmission|null,notification_delivery. |
 
 MQ02 omitstate: Owner chỉ submitted **eligible hiện hành**, Staff tất cả own;
 explicit state cho lịch sử. Mọi rows check batch-sensitive permissions trước trả
@@ -2112,7 +2114,10 @@ source/evidence; danh sách có scope forbidden không silent page filter/count 
 deny whole response403 như Import hiện hành. Owner toàn catalogue vẫn đủ đọc.
 MQ03 trả pinned spec/evidence của submission, current_profile để báo drift; không
 thay spec bằng live proposal. Queue snapshot pin submissions/profile/batch/revisions;
-GET không mutation. MQ03 evidence pagination pin spec_digest/versions/actor.
+GET không mutation. MQ03 evidence pagination pin spec_digest/versions/actor;
+đọc captured source bất biến, chỉ dựng requested page, không reparse/provider.
+Source digest/header/offset index retained cùng pins; display vượt200 ký tự trả
+null + SOURCE_CELL_DISPLAY_UNAVAILABLE warning, original bytes vẫn retained.
 
 Submit lưu immutable spec/content digest và mọi pins + audit + notification intent
 atomic; một live submitted/profile, duplicate newkey409 MAPPING_ALREADY_SUBMITTED,
@@ -2197,26 +2202,30 @@ notification_delivery cùng decision_id):
 Allowed actions computed: submitted eligible Owner approve_activate/reject/
 request_changes (+withdraw), submitter withdraw; terminal chỉ view (resubmit là
 new submission sau sửa draft). Audit submit/withdraw/stale giữ actor/source/pins;
-decisions vẫn ImportAudit, không permission grant/audit. Acceptance tương lai:
-draft absent queue; pin edit/active pointer drift; own Staff isolation; grouped
-full-spec approval; N5 race/retry/revoke; returned reason/resubmit; no batch commit.
+decisions vẫn ImportAudit, không permission grant/audit. HTTP/PostgreSQL acceptance
+ở `tests/integration/test_mapping_submissions.py` và
+`tests/integration/test_collaboration_boundaries.py`; typed API ở
+`tests/api/test_collaboration_openapi.py`. Retained pinned evidence, stale edits,
+retirement, direct N5 queue resolution, rollback/retry/dispatcher và sensitive
+target denial được kiểm bằng fresh sessions. Browser continuation chưa chạy.
 
 <a id="excel-actual-receipt"></a>
-## 16. Excel hàng thực nhận — DESIGN_READY, reuse pipeline
+## 16. Excel hàng thực nhận — IMPLEMENTED C3
 
-ACCEPTED DECISION: Excel actual receipt bổ sung workflow **hàng đã thực nhận**;
-opening stock/count của phiên import hiện tại giữ nguyên. CURRENT FACT: registry
-Schema hiện có mười bốn variants gồm A2 history-only và opening_stock, `inventory_count` chỉnh canonical lot đã định danh;
-không `inventory_receipts`. N6 public receipt hỗ trợ OPENING_STOCK/ACTUAL_RECEIPT
-và source identity/durable receipt; implementation ở StockWrites.receive và
-InventoryUseCases.receive_in_transaction. Không mở receipt import endpoint riêng.
+ACCEPTED DECISION: actual receipt là hàng đã thực nhận; opening stock, count,
+purchase history và Planning purchases giữ nghiệp vụ riêng. CURRENT FACT: registry
+có mười lăm variants, gồm `inventory_receipts`, trong `import_schema/1`.
+Reusable receipt ProfileSpec yêu cầu inventory_semantics="actual_receipt".
+M03 advertises source fields; mapping/preview/commit/completion dùng pipeline hiện có.
+StockWrites.receive (N6), Excel actual và opening cùng `InventoryReceipts` →
+`InventoryUseCases.receive_in_transaction`, cùng ledger `InventoryReceiptRecord`;
+không HTTP loop, endpoint mới hoặc commit từng dòng. Caller giữ transaction,
+current authorization và inventory/read-set fences.
 
-DESIGN_READY extension: thêm schema `inventory_receipts` (import_schema/1 giữ version
-registry chung, reusable receipt profile khai inventory_semantics="actual_receipt").
-M03 descriptors advertise fields chỉ khi slice implement supported=true, không
-pretend target mới hiện available. Mapping/ProfileSpec giữ reviewed constants,
-batch-only IMPORT_VALUE, source provenance/exact conversion như pipeline hiện có.
-Không biến timestamp từ serial date-only, không derive expiry/observed_at từ upload.
+Mapping giữ reviewed unit/currency constants, batch-only IMPORT_VALUE và raw
+source/declaration/location/conversion provenance. Receipt facts không reusable
+defaults. observed_at cần timestamp ISO với timezone explicit; numeric/Excel serial,
+date-only và naive timestamp bị chặn, không suy timezone/date từ upload.
 
 ```text
 ActualReceiptValue={origin:"ACTUAL_RECEIPT",
@@ -2244,7 +2253,7 @@ source columns chỉ source-only/explicit IGNORE reviewed, không mandatory fake
 Không nhận opening stock bằng origin khác trong schema actual receipt.
 
 I01–I03 bytes/seal/analyze, M01–M04 và N5 mapping review **IMPLEMENTED routes**;
-schema receipt mới DESIGN_READY. I05 body giữ các phases hiện hành:
+schema receipt đã IMPLEMENTED C3. I05 body giữ các phases hiện hành:
 preview{phase,mapping_revision}, confirm_review{phase,preview_id,preview_digest,
 mapping_revision,confirm:true,reason}, commit{phase,preview_id,preview_digest,
 confirm:true,reason?,resolutions:SalesResolution[],supplier_changes?:SupplierConfirmation[]}.
@@ -2262,14 +2271,18 @@ different payload BLOCKED RECEIPT_IDENTITY_CONFLICT, không upsert quantity/cost
 File hash/filename/row_number/lot_code không business identity. Owner phải khai
 source namespace và per-receipt source_record_id ổn định, không tự tạo từ new file.
 Rows trong batch trùng identity cùng payload coalesce một action, giữ mọi physical
-source_locations; khác payload blocker toàn batch. Identity phải dùng chung N6
+source_locations và per-source transformation evidence trong nested_provenance
+`receipt_sources[index]`; khác payload blocker toàn batch. Identity phải dùng chung N6
 ledger: Excel rồi form/reverse retry cũng chỉ một receipt/lot/movement.
 
 Commit dùng cùng receipt identity/domain writer **trong transaction toàn import**,
 không HTTP loop hoặc một commit/dòng. Current auth fence và canonical locks/receipt
 CAS/read-set chung; stale409 PREVIEW_STALE, FE refresh preview và confirm lại.
+Receipt preview qua ngày mới theo Store timezone cũng stale ở confirm/commit để
+không dùng warning expiry/late của ngày cũ. Raw supplier/cost nonblank yêu cầu
+sensitive read trước capture/projection; cost "0" là nonnull, không bị bỏ guard.
 Recheck import.commit+inventory.receive+inventory.read+ingredient.read; supplier_id
-nonnull thêm supplier.read để đọc/bind locator; unit_cost nonnull thêm cost.read;
+nonnull thêm supplier.read để đọc/bind locator; unit_cost nonnull thêm procurement.cost.read;
 Import whole-response sensitive rights như mục10 vẫn áp toàn affected schema (cả
 preview/history/completion), không dùng N6 lot redaction để leak mixed workbook.
 Không bypass vì Owner đã approve profile; row validation/preview/write rights giữ.
@@ -2278,7 +2291,11 @@ Replay I05 cùng key trả retained job acceptance sau current rights; job publi
 identity+lot+movement+receipt+audit+completion atomically. Crash uncertain commit
 đối chiếu durable import và shared receipt ledger trước retry, không tạo new receipt
 do key khác. Completion extension row reference={source_identity,receipt_id,lot_id,
-movement_id,action:"CREATED"|"REUSED",audit_reference:UUID}; actual created effects
+movement_id,action:"CREATED"|"REUSED",audit_reference:UUID}, ở
+`CommitRowReference.receipt_reference`; receipt_effect giữ planned/retained IDs và
+recorded_at sau commit. REUSE_RECEIPT.quantity_delta là lượng movement đã ghi,
+không phải tăng kho lần nữa; inventory.updated=false cho receipt-only replay.
+Actual created effects
 khác raw row count. Không receipt khácunits quantity sum, không tổngunknowncost0.
 NO_OP batch duplicate vẫn có outcome riêng; không xác nhận stock completeness từ
 một receipt. PlanningRun purchases/hypothetical arrival không input actual receipts.
@@ -2297,19 +2314,21 @@ Errors: N6 domain codes INVALID_UNIT/REQUIRED_EXPIRY_MISSING422,
 RECEIPT_IDENTITY_CONFLICT409 hoặc preview blocker, PREVIEW_STALE409,
 PERMISSION_DENIED403, RESOURCE_NOT_FOUND404 scoped; common key/CSRF/job errors
 mục9–11. FE sửa declaration/source identity có evidence, không đổi key để lách
-duplicate. Acceptance tương lai: nullable supplier/cost/date; observed timestamp;
-tracked expiry/unit constraints; Excel↔N6 dedupe; mixed group atomic rollback;
-revoke/CAS race; fresh-session receipt/lot/movement/ledger evidence khi implement.
+duplicate. CURRENT FACT acceptance: public HTTP → worker → PostgreSQL → fresh-session
+inventory, nullable/known0/expiry/unit/late facts, Excel↔N6 replay, reversed duplicate
+order, current Staff grants/MQ/N5, retirement/spec drift, rollback/lost ACK/concurrency
+và retained PlanningRun được kiểm tại [runbook](runbooks/FULL_TEST_FLOW.md#excel-actual-receipt-c3).
+Browser/runtime8103 chưa nâng cấp/kiểm C3; C4 projections không thuộc lát này.
 
 <a id="mapping-projections"></a>
-## 17. Counters và source→canonical→effect — DESIGN_READY extensions
+## 17. Counters và source→canonical→effect — IMPLEMENTED C4
 
 CURRENT FACT: M01 có Progress/files/sheets/profile details; M02 có sheet_id,
 review_only/status/include_details/limit/cursor và MappingList.counts; issue origins
 tách resolution_origin APPROVED_PROFILE|USER_PROPOSAL|UNRESOLVED và suggestion_origin
 RULE|QWEN|REUSED|MANUAL|NONE. I04 có include_preview/preview_id/rows_limit/rows_cursor/
 classification/configurations; PreviewRow có source_location/provenance/before/after,
-supplier_term_semantics và recipe provenance. Không mô tả các tiện ích mới đã có.
+supplier_term_semantics và recipe provenance. C4 bổ sung counters/source projection dưới đây, không đổi nghĩa Progress hiện hành.
 
 M01 GET extension query file_id?:UUID,sheet_id?:UUID,review_only?:boolean,
 status?:MappingStatus,origin?:SuggestionOrigin; filters AND, cùng enum hiện có.
@@ -2325,6 +2344,8 @@ phạm vi M02, không số rows/cells/files. review_only defaulttrue như M02; b
 unfiltered, filtered áp chính filters request, không page-length. M01 legacy
 progress không đổi nghĩa. M01 counters và M02 page pin cùng mapping_revision;
 M02 thêm snapshot_id? để bind, changed409 SNAPSHOT_NOT_AVAILABLE.
+snapshot_id của M02 là mapping_revision từ M01, không quoted HTTP ETag. Filters
+áp counters/issues; legacy M01 files/sheets là batch metadata, không totals từ page.
 
 Ví dụ counter extension M02 (một column issue từ RULE, filter cùng revision):
 
@@ -2336,8 +2357,21 @@ I04 GET extension preview query file_id?:UUID,sheet_id?:UUID,projection?:
 summary|source_effect (defaultsummary); chỉ hợp lệ khi include_preview=true cùng
 preview_id. Response rows PreviewRow current + source_cells:SourceEvidenceCell[]
 và planned_effect: typed union ReceiptEffect|CatalogEffect|CountEffect|RecipeEffect|
-SupplierEffect|SalesEffect|DeclarationEffect. summary không cells/effect extension;
-source_effect chỉ selected rows page, không toàn workbook.
+SupplierEffect|SalesEffect|DeclarationEffect|OpeningEffect|HistoryEffect. summary không cells/effect extension;
+source_effect chỉ selected rows page, không toàn workbook. SourceEffectRow giữ
+PreviewRow fields và thêm source_cells/planned_effect/source_evidence_availability
+(available|partial|unavailable), source_cells_truncated. Tối đa200 cells/action và
+2000 cells/page; bounds không thay canonical facts hoặc aggregate totals.
+PreviewPage thêm mapping_revision/read_set_digest/source_evidence_digest; full
+internal read_set vẫn private. New preview pin digest cached sources và read
+permissions trong immutable payload. Old preview thiếu source pin trả unavailable
+evidence/raw count=null; không parse lại bytes hoặc lấy mapping mới làm evidence.
+Quyền của pinned preview được kiểm cả trước projection và fresh-authority readback;
+đổi mapping không hạ sensitive guard của preview cũ.
+File/sheet filters chọn logical actions có location liên quan. Mỗi action vẫn giữ
+toàn bộ locations và bounded evidence của chính action, kể cả location ở file scope
+khác; raw aggregate count chỉ đếm intersection đang chọn. Không lấy số cells hoặc
+toàn bộ locations của returned action để suy scoped raw total.
 
 ```text
 SourceEvidenceCell={location:SourceLocation,column_label:string|null,
@@ -2348,7 +2382,8 @@ CatalogEffect={kind:"catalog",entity:product|ingredient|supplier,id:UUID,
 CountEffect={kind:"count",lot_id:UUID,before_quantity:QuantityText,
  after_quantity:QuantityText,delta:SignedQuantityText,unit:string,
  expected_version:Version}
-RecipeEffect={kind:"recipe",product_id:UUID,recipe_id:UUID,action:"create_version",
+RecipeEffect={kind:"recipe",product_id:UUID,recipe_id:UUID|null,
+ identity_availability:available|not_reserved,recipe_version:int,action:create_version|reuse,
  effective_from:date,effective_to:date|null,dependency_ids:UUID[]}
 SupplierEffect={kind:"supplier",entity:supplier_term|payable_fee,id:UUID,
  action:create_version|close_period|reuse,expected_version:Version|null}
@@ -2359,12 +2394,22 @@ DeclarationEffect={kind:"declaration",id:UUID,action:declare|reuse,
  dependency_ids:UUID[],expected_version:Version|null}
 ```
 
+CURRENT FACT / TECHNICAL DEBT: example thiết kế RecipeEffect ban đầu dùng UUID
+bắt buộc, nhưng writer hiện hành chỉ cấp recipe_id lúc commit. C4 trả null với
+identity_availability=not_reserved và Product/version/date/dependencies, không bịa
+reserved identity hoặc sửa writer chỉ để dựng GET. Reuse effect có action=reuse.
+OpeningEffect (kind=opening_stock) giữ lot_id/quantity_delta/unit/observed_at và
+action create|reuse; HistoryEffect giữ domain/id/action record|reuse/expected_version.
+Đây là typed projections của nghiệp vụ đã có, không receipt/count/history mới.
+`dependency_ids` là `row_id` của các planned actions phụ thuộc; canonical entity IDs
+vẫn thuộc `entity_refs`/`nested_references`, không suy ra từ action IDs.
+
 ReceiptEffect thêm kind="receipt" khi union; canonical before/after giữ typed
 current CanonicalValue+ActualReceiptValue, không dictionary tùy ý. Raw null là
 empty/unknown source, không unknown canonical0. Formula chỉ báo presence, raw_value
 là cached visible value, không formula expression/external links. Source không
 established/unsupported chỉ blocked row+Notice; planned_effect=null khi không thể
-xác định action, không fabricated type/value. Source cell tối đa200 chars display,
+xác định action, không fabricated type/value. C4 reuse SourceEvidenceCell và bounded display builder với C2 MQ03. Source cell tối đa200 chars display,
 nếu lớn trả raw_value=null kèm row warning SOURCE_CELL_DISPLAY_UNAVAILABLE, không
 truncate thành evidence đầy đủ; raw bytes vẫn retained private. Header label cùng
 guard. Sheet/file filters phải đúng import, foreign404, malformed422 INVALID_FILTER.
@@ -2383,17 +2428,17 @@ recanonicalize trên GET. Different filters cursor422; data changed409 PREVIEW_S
 hoặc snapshot unavailable; FE refresh preview, không ghép rows từ hai digests.
 No new mutations/audit business, no async job từ GET. MQ03 evidence dùng cùng
 SourceEvidenceCell và quyền full spec; không expose whole workbook qua queue.
-Acceptance tương lai: counts scope/filters/status/origin/empty; matching pages;
+Acceptance C4 và regression liên quan: counts scope/filters/status/origin/empty; matching pages;
 source→exact canonical→effect provenance; finance denial; bounds không truncate
 audit facts; stale snapshot và no compute. Xem [bàn giao chung](API_CONTRACT.md#dot2-handoff).
 
 <a id="preview-aggregates"></a>
-### 17.1. R05 — Preview aggregates theo file/sheet — ACCEPTED / DESIGN_READY
+### 17.1. R05 — Preview aggregates theo file/sheet — IMPLEMENTED C4
 
 ACCEPTED DECISION — Product 13/10/2026: bổ sung aggregates theo file/sheet trên
 projection I04 hiện có, cùng preview_id và pinned preview_digest. Không thêm endpoint
 chỉ trả aggregates. CURRENT FACT: PreviewSummary/PreviewGroup toàn preview đã có;
-scoped aggregates này chưa implemented trong routes/DTO/consumer hiện hành.
+scoped aggregates implemented trong I04/PreviewAggregates, không thêm metrics route.
 
 Hai đơn vị phải trả riêng và có nhãn rõ:
 
@@ -2420,7 +2465,23 @@ Quyền whole-response sensitive reads, preview/read-set pins, foreign scope/err
 cursor/stale handling giữ mục17 và workflow I04 hiện hành. Acceptance khi triển khai:
 raw rows khác actions; multi-location dedupe; overlapping file/sheet scopes và batch
 distinct total; totals/page pin/filters; empty scope; stale preview và financial denial.
-Đây là design acceptance, không test PASS hoặc runtime handoff.
+CURRENT FACT C4: I04.preview.aggregates={preview_id,preview_digest,batch,selected,
+files:ScopedPreviewAggregate[],sheets:ScopedPreviewAggregate[]}.
+Mỗi scope có {scope:{file_id,sheet_id,classification},raw_source_rows:{availability,
+count},logical_action_count,by_classification,groups,blockers,warnings}. Groups đếm
+actions theo canonical_domain/proposed_action và số actions có blocker/warning;
+code counts đếm action một lần/code, không số Notice trùng trong grouped action.
+Classification filter áp sau canonical grouping; raw count khi có filter chỉ đếm
+distinct source records đóng góp matched actions. Không filter thì raw count gồm
+mọi retained data record trong scope, kể cả source không tạo action. File/sheet
+filters AND trước chọn actions; hai IDs hợp lệ nhưng intersection rỗng trả known0.
+Files không có sheet/action vẫn có empty aggregate nếu thuộc frozen source_files.
+Totals độc lập rows_limit/cursor; files/sheets là các scopes có thể overlap.
+
+Ví dụ hai file A/B cùng proven receipt: batch raw2/logical1; mỗi file raw1/logical1,
+không cộng logical1+1 thành batch2. Nếu có master reservation, đó là action khác
+và được đếm riêng dù dùng cùng physical source row. Source rows không nhân đôi.
+Xem [verification/commands/limits](runbooks/FULL_TEST_FLOW.md#read-discovery-c4).
 
 ## Canonical clarification for consumers
 

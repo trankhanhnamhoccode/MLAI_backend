@@ -4,8 +4,11 @@
 ## 1. Phạm vi và authority
 
 ACCEPTED DECISION — Đợt 2: inbox trong ứng dụng cho account đang đăng nhập;
-không browser push/SMS. Toàn bộ operations NF01–NF03 dưới đây là **DESIGN_READY**,
-chưa có route/DTO/storage trong source. Quy ước wire, retry và bảng lỗi dùng
+không browser push/SMS. CURRENT FACT C1: operations NF01–NF03 là **IMPLEMENTED**
+trên branch `feat/notifications-foundation`; C1 local commit f85c7cdd, chưa merge/push.
+C2 local checkpoint đã nối PR/MQ producers và current target authority; typed storage,
+durable enqueue/dispatcher giữ cùng foundation.
+Quy ước wire, retry và bảng lỗi dùng
 [bàn giao chung](API_CONTRACT.md#dot2-common). Không đổi authority của
 [permissions](AUTHORIZATION_CONTRACT_VI.md#permission-requests) hoặc
 [mapping](IMPORT_MAPPING_API_CONTRACT_VI.md#mapping-queue).
@@ -50,7 +53,7 @@ của sự kiện, không task store: notification không hiện/mất/đã đ�
 submission/request. FE khôi phục việc cần làm từ queue/detail qua current rights,
 không từ notification count. Không thêm delete/dismiss endpoint để quản lý task.
 
-## 3. Operations — DESIGN_READY
+## 3. Operations — IMPLEMENTED C1 backend
 
 | ID | Method/path | FE và typed request | Response |
 | --- | --- | --- | --- |
@@ -87,7 +90,7 @@ Ví dụ NF02 data và NF03 request → response data:
 {"notification_id":"00000000-0000-0000-0000-000000000031","read_at":"2026-10-13T02:01:00Z","version":"notification-2"}
 ```
 
-## 4. Events, delivery và recovery — DESIGN_READY
+## 4. Events, delivery và recovery — IMPLEMENTED C1/C2
 
 | Event type v1 | Recipient và object |
 | --- | --- |
@@ -103,7 +106,7 @@ Store/submission rồi lấy current state/review_eligibility/current_profile; p
 proposal_revision/mapping_revision/spec_digest giữ immutable. Nếu proposal đổi sau
 submit thì detail stale và Staff explicit resubmit ID mới; notification cũ không
 duyệt nhầm revision mới. N5 vẫn command authority approve_activate/reject/retire
-(request_changes là extension DESIGN_READY), queue không resolve sales/recipe/
+(request_changes là extension IMPLEMENTED C2), queue không resolve sales/recipe/
 supplier/inventory business conflict thay preview/resolutions.
 
 Template mapping_submission.approved bắt buộc body:
@@ -162,4 +165,54 @@ decision; missing intent rollback; failed payload recovery không tạo event m�
 notification read/hidden/missing không mất pending task; mapping approved wording
 không báo canonical completion; old link đọc current stale/retired state, không
 approve revision mới hoặc vượt current authority.
-Đây là specifications, chưa chạy tests hoặc delivery thực tế.
+CURRENT FACT C1: PostgreSQL/HTTP acceptance kiểm own-recipient/account/multi-Store,
+revoke/suppression, template/link denial, snapshot/read/no-op/CAS/replay, concurrent
+delivery/read, restart/lost ACK, retry và additive migration/retention. Real N13
+grants mutation kiểm business/grants + PermissionEvent + intent cùng transaction,
+rollback cả receipt khi enqueue lỗi; delivery failure không undo committed grants.
+Read mapping notification giữ nguyên batch Import thật còn chưa commit.
+Đây là backend acceptance, không browser E2E hoặc live email/provider evidence.
+
+### CURRENT FACT — composition boundary C1
+
+`NotificationEvent` là frozen plain Python v1, chỉ nhận IDs/type/time/revision và
+recipient references; không nhận title/body/cells/finance/URL. Backend producers
+resolve recipients rồi gọi `repositories.notifications.enqueue(session, event)`
+trong Session đang sở hữu business decision/audit. Helper không commit. Identity
+conflict với payload khác làm transaction fail; không ghi đè evidence.
+
+Producers thật đã nối: N13 `membership.grants_changed`, source OWNER_CHANGE,
+event_id chính là PermissionEvent ID, recipient Staff bị đổi grants. No-op và
+invitation acceptance không sinh event này. PR01/MQ01 submit resolve active Owner(s),
+PR04 approve/reject trả requester; N5 approve/reject/request_changes trả submitter.
+PR approval dùng event outcome riêng, không thêm grants_changed. Event ID là audit
+ID cùng transaction, decision_id giữ cùng decision; dedupe receipt không enqueue lại.
+Cancel/withdraw/satisfied/invalidated không notification bắt buộc. Intent persist
+failure rollback business transaction; dispatch sau commit không undo decision.
+Không public send endpoint, SMTP/push/SMS hoặc broadcast cả Store.
+
+Dispatcher dùng transaction riêng; lock User → Store/membership → intent, recheck
+pending/due và current recipient; row lock là ownership/fencing tới commit/rollback.
+Batch tối đa100, default20; lock timeout2s/statement timeout5s. Không external call
+trong lock. Pending tiếp tục sau restart; uncertain commit recheck identity/state
+trước backoff. Failed giữ payload bất biến; sửa dispatcher rồi explicit retry cùng
+intent ID, không rewrite payload/event. Không claim SLA khi PostgreSQL unavailable.
+Intent facts, inbox content và read receipts có DB trigger bảo vệ bất biến/retention;
+chỉ delivery state và read_at/revision được cập nhật. Không purge policy.
+
+Snapshot opaque≤256 bytes ký theo session/scope, cursor bind filter/limit/position.
+Fingerprint gồm current accessible membership/grants/name và toàn bộ visible
+notification/read revisions; không giữ historical copies. Restart process làm
+token ký cũ không dùng lại được; FE refetch inbox/count. PR/MQ links C2 resolve own
+request/submission hoặc current Owner đúng Store. MQ kiểm import.read/mapping.read
+và sensitive reads của current batch lẫn pinned spec; thiếu quyền target link=null.
+Paths allowlisted `/stores/{store_id}/permission-requests/{request_id}` và
+`/stores/{store_id}/mapping-submissions/{submission_id}`; không latest-profile alias.
+Membership chỉ sinh allowlisted `/stores/{store_id}`
+khi object chính là current active membership của recipient; mở T02 luôn reauthorize.
+Đây là relative locator, chưa chứng minh route browser FE được nối.
+
+Worker `shelfcash-notifications` mặc định OFF; chỉ bật
+`NOTIFICATION_WORKER_ENABLED=true` trong profile đã migrate0026, hoặc chạy một batch
+bằng command ở [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#notifications-c1).
+Không bật/migrate runtime demo8103 trong C1/C2.

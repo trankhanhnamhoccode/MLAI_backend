@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Literal
 from uuid import UUID
-from pydantic import Field, StrictStr, field_validator
+from pydantic import ConfigDict, Field, StrictStr, field_validator
 from app.application.contracts.auth import DTO, UserSummary, AuthError, canonical_email
 from app.domain.permissions import PERMISSIONS
 
@@ -126,6 +126,7 @@ class PermissionUpdate(DTO):
 
 
 class PermissionEvent(DTO):
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     event_id: UUID
     store_id: UUID
     target_membership_id: UUID
@@ -137,9 +138,11 @@ class PermissionEvent(DTO):
     before_version: str | None
     after_version: str
     request_id: str
-    source: Literal["ASSISTED_PROVISIONING", "OWNER_CHANGE", "INVITATION_ACCEPTANCE"]
+    source: Literal["ASSISTED_PROVISIONING", "OWNER_CHANGE", "INVITATION_ACCEPTANCE", "PERMISSION_REQUEST_APPROVAL"]
     operator_reference: str | None
     issuer_user_id: UUID | None
+    permission_request_id: UUID | None = None
+    decision_id: UUID | None = None
 
 
 class PermissionEvents(DTO):

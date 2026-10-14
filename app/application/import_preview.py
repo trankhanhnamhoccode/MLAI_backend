@@ -368,7 +368,7 @@ def normalize(source, spec, import_values=()):
         except ValueError as error:
             raise RowBlocked(str(error)) from None
     # Conversions must not launder unsupported lexical representations into valid facts.
-    if spec.schema in {"recipes", "opening_stock", "inventory_count"}:
+    if spec.schema in {"recipes", "opening_stock", "inventory_count", "inventory_receipts"}:
         try:
             model.model_validate(values)
         except ValidationError as e:
@@ -384,7 +384,7 @@ def normalize(source, spec, import_values=()):
             factor = Fraction(Decimal(c.factor.numerator)) / Fraction(
                 Decimal(c.factor.denominator)
             )
-            if spec.schema in {"recipes", "opening_stock", "inventory_count"}:
+            if spec.schema in {"recipes", "opening_stock", "inventory_count", "inventory_receipts"}:
                 unit_kind = "RECIPE" if spec.schema == "recipes" else "STOCK"
                 # Supported physical rules only; a declared factor is not density authority.
                 scales = {"mg": ("mass", Fraction(1, 1000)), "g": ("mass", Fraction(1)),
@@ -402,7 +402,7 @@ def normalize(source, spec, import_values=()):
                     expected_factor = source_unit[1] / target_unit[1]
                 if factor != expected_factor:
                     raise RowBlocked("INVALID_" + unit_kind + "_UNIT_FACTOR")
-            if spec.schema == "opening_stock" and values.get("unit_cost") is not None:
+            if spec.schema in {"opening_stock", "inventory_receipts"} and values.get("unit_cost") is not None:
                 values["unit_cost"] = exact_text(Fraction(Decimal(values["unit_cost"])) / factor)
                 provenance = [p for p in provenance if p.field != "unit_cost"] + [
                     derived_provenance(provenance, "unit_cost", ("conversion:" + c.evidence_reference,))]
@@ -565,6 +565,8 @@ def make_preview(
         refs = []
         supplier_semantics = None
         inventory_effect = None
+        receipt_effect = None
+        required_permissions = ()
         stockout_update = None
         source_stockout = None
         data = value.model_dump(mode="json")
@@ -699,6 +701,34 @@ def make_preview(
             if key in seen:
                 block("DUPLICATE_COUNT")
             seen.add(key)
+        elif isinstance(value, domains.ActualReceiptSource):
+            from app.application.import_actual_receipts import canonical_receipt, planned_effect
+            ing=entity('ingredient',value.ingredient_id,ingredients)
+            if value.supplier_id is not None:
+                entity('supplier',value.supplier_id,suppliers)
+                required_permissions+=('supplier.read',)
+            if value.unit_cost is not None:
+                required_permissions+=('procurement.cost.read',)
+            if ing and value.unit!=ing['base_unit']: block('INVALID_UNIT')
+            if ing and ing['expiry_tracking'] and value.expiry_date is None: block('REQUIRED_EXPIRY_MISSING')
+            if value.currency!=currency: block('CURRENCY_MISMATCH')
+            if value.observed_at>now: block('STALE_STOCK_OBSERVATION')
+            if value.received_date is not None and value.received_date>today: block('FUTURE_RECEIVED_DATE')
+            after=canonical_receipt(value,spec.scope.source_system_key)
+            receipt_effect=planned_effect(after,snapshot)
+            if receipt_effect.conflict_code: block(receipt_effect.conflict_code)
+            if receipt_effect.action=='REUSE_RECEIPT':
+                before=after
+                cls='UNCHANGED'
+            action=receipt_effect.action
+            refs.append(dto.EntityRef(entity='lot',canonical_id=receipt_effect.lot_id))
+            if value.received_date is None: warn('MISSING_RECEIVED_DATE')
+            if value.expiry_date is not None and value.expiry_date<today: warn('LOT_EXPIRED')
+            if value.observed_at.astimezone(ZoneInfo(store_timezone)).date()<today or value.received_date is not None and value.received_date<today:
+                warn('LATE_RECEIPT_RECORDED')
+            warn('INVENTORY_COMPLETENESS_REQUIRES_DECLARATION')
+            if blockers:
+                receipt_effect=receipt_effect.model_copy(update={'action':'BLOCKED','conflict_code':blockers[0].code})
         elif isinstance(value, domains.OpeningSource):
             from app.application.import_opening_stock import receipt_semantics, fingerprint
             from app.application.stock_observation import opening_observation_issue
@@ -1149,6 +1179,8 @@ def make_preview(
                 else None
             ),
         )
+        if receipt_effect is not None:
+            target=receipt_effect.receipt_id
         rows.append(
             dto.PreviewRow(
                 row_id=rid,
@@ -1170,6 +1202,8 @@ def make_preview(
                 expected_version=history_version,
                 supplier_term_semantics=supplier_semantics,
                 inventory_effect=inventory_effect,
+                receipt_effect=receipt_effect,
+                required_permissions=required_permissions,
             )
         )
     for key, group in sorted(recipe_groups.items()):
@@ -1407,4 +1441,6 @@ def make_preview(
     from app.application.import_configuration_preview import finish_configurations
     from app.application.import_dependencies import finalize_dependencies
     from app.application.import_sales_groups import finish_sales
+    from app.application.import_actual_receipts import finish_receipts
+    rows=finish_receipts(rows,specs)
     return finalize_dependencies(finish_configurations(finish_sales(rows, specs, snapshot), specs, snapshot, normalized, now, store_timezone))

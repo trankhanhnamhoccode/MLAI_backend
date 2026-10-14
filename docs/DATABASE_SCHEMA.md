@@ -1,6 +1,45 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
-## CURRENT FACT — integrated head0024
+CURRENT FACT C4: không migration/table/column mới, head0026/71 tables giữ nguyên.
+New immutable ImportPreview JSON pin source_evidence_digest/source_read_permissions;
+rows/canonical/read-set semantics giữ nguyên. History budget đọc retained acceptance;
+PDF discovery đọc retained exports và existing private bytes. Không backfill facts
+hoặc migrate/reset demo/development/DB test nhánh khác.
+
+CURRENT FACT C3: không DDL/migration mới; single head0026 và70 application
+tables/71 tổng giữ nguyên. Excel actual và form N6 dùng chung
+inventory_receipt_records (Store/source namespace/record unique), inventory_lots,
+inventory_movements và inventory_audit. Planned/committed receipt projection nằm
+trong immutable Import preview/completion JSON hiện có, cùng transaction batch.
+Không migrate/reset demo8103 hoặc DB khác.
+
+## CURRENT FACT — C2 head0026, retained integrated demo0024
+
+`0026_collaboration_requests` nối additive sau0025, thêm permission_requests,
+permission_request_audit và mapping_submissions:70 application tables/71 tổng.
+Partial UNIQUE giới hạn một pending Store/member và một submitted/profile.
+Mapping evidence giữ source digest/header/row offsets, tham chiếu captured sources
+và original bytes đã bất biến; MQ03 chỉ dựng bounded page, không copy mọi raw cells.
+Facts/spec/evidence/created identity bất biến; terminal records không reopen,
+audit không sửa/xóa; downgrade từ chối retained rows. Reconciliation/decision đổi
+state/version cùng transaction caller; không sửa migration lịch sử hoặc DB demo.
+Grants vẫn membership_grants; PermissionEvent JSON có nullable request/decision
+IDs và source PERMISSION_REQUEST_APPROVAL, không thêm permission catalogue.
+
+### HISTORICAL INFORMATION — C1 checkpoint0025
+
+C1 source head `0025_notifications_foundation` adds `notification_intents`,
+`notifications` and `notification_read_receipts` to0024:67 application tables,
+68 including Alembic. Intent identity unique(event_id,recipient_user_id,event_type),
+projection unique intent_id; read receipt unique(actor_id,notification_id,key_digest).
+FKs RESTRICT preserve provenance; nullable Store supports account scope. Payload
+version1, delivery status/attempt and positive read revision CHECKs. DB triggers
+retain immutable event/content/receipt facts; read_at changes advance revision,
+no-op retains it. Downgrade refuses any retained C1 rows, no auto purge/backfill.
+Only own `shelfcash_notifications_test` was migrated/reset during C1; demo8103
+remains0024/65 tables. [Contract](NOTIFICATION_API_CONTRACT_VI.md) owns workflow.
+
+## HISTORICAL INFORMATION — integrated head0024 base
 
 One head `0024_integrate_import_auth`, parents0021_import_support_history and
 0023_auth_permissions_v3, branching from0017 via Import0019 and Auth0018/0020/0022.

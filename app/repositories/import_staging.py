@@ -74,6 +74,7 @@ SCHEMA_TABLES = {
     "sales": (Product, SalesDaily),
     "inventory_count": (Ingredient, InventoryLot, InventoryMovement, ImportAudit),
     "opening_stock": (Ingredient, Supplier, InventoryLot, InventoryMovement, InventoryReceiptRecord, ImportAudit),
+    "inventory_receipts": (Ingredient, Supplier, InventoryLot, InventoryMovement, InventoryReceiptRecord, ImportAudit),
     "recipes": (Product, Ingredient, Recipe, RecipeLine),
     "products": (Product,),
     "ingredients": (Ingredient,),

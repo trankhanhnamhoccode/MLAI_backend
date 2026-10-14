@@ -14,7 +14,7 @@ class ReceiptIdentity(DTO):
     source_system_key: Text
     source_record_id: Text
 
-class StockReceiptRequest(DTO):
+class StockReceiptFacts(DTO):
     origin: Literal["OPENING_STOCK", "ACTUAL_RECEIPT"]
     receipt_identity: ReceiptIdentity
     ingredient_id: UUID
@@ -28,7 +28,6 @@ class StockReceiptRequest(DTO):
     currency: Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
     observed_at: AwareDatetime
     reason: Reason
-    expected_inventory_version: Text
 
     @field_validator("quantity")
     @classmethod
@@ -37,6 +36,10 @@ class StockReceiptRequest(DTO):
         if Decimal(value) <= 0:
             raise ValueError("Positive stock quantity required")
         return value
+
+
+class StockReceiptRequest(StockReceiptFacts):
+    expected_inventory_version: Text
 
 class StockReceiptResult(DTO):
     receipt_id: UUID

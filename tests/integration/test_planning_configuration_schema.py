@@ -13,7 +13,7 @@ from app.models.planning_configuration import SavedRequirement,PlanningConfigura
 from scripts.dev import migration_config
 from tests.integration.test_planning_configuration_public import env,config,save
 
-TABLES={'email_verification_tokens','email_verification_deliveries', 'password_reset_deliveries','import_history_records','planning_exports','planning_defaults','planning_budgets','saved_requirements','planning_configuration_events','planning_configuration_revisions','planning_configuration_receipts','model_serving_configurations','forecast_serving_identities'}
+TABLES={'email_verification_tokens','email_verification_deliveries', 'password_reset_deliveries','import_history_records','notification_intents','notifications','notification_read_receipts', 'permission_requests', 'permission_request_audit', 'mapping_submissions','planning_exports','planning_defaults','planning_budgets','saved_requirements','planning_configuration_events','planning_configuration_revisions','planning_configuration_receipts','model_serving_configurations','forecast_serving_identities'}
 
 
 def test_clean_roundtrip_exact_schema_metadata(database_settings):
@@ -26,7 +26,7 @@ def test_clean_roundtrip_exact_schema_metadata(database_settings):
         command.upgrade(migration_config(),'head')
         assert set(inspect(engine).get_table_names())==before
         with engine.connect() as c:
-            assert c.scalar(text('SELECT version_num FROM alembic_version'))=='0024_integrate_import_auth'
+            assert c.scalar(text('SELECT version_num FROM alembic_version'))=='0026_collaboration_requests'
             assert compare_metadata(MigrationContext.configure(c,opts={'compare_server_default':True}),Base.metadata)==[]
     finally:engine.dispose()
 
@@ -45,5 +45,5 @@ def test_creator_and_audit_immutable_and_evidence_refuses_downgrade(config):
         s.rollback()
     with pytest.raises(DBAPIError):command.downgrade(migration_config(),'0015_recipe_schedule')
     with Session(c[0][1]) as s:
-        assert s.scalar(text('SELECT version_num FROM alembic_version'))=='0024_integrate_import_auth'
+        assert s.scalar(text('SELECT version_num FROM alembic_version'))=='0026_collaboration_requests'
         assert 'tampered' not in s.scalar(select(PlanningConfigurationEvent)).record_json

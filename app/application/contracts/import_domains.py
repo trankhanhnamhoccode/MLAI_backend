@@ -5,7 +5,7 @@ from typing import Literal, Annotated
 from uuid import UUID
 from decimal import Decimal
 from fractions import Fraction
-from pydantic import Field, StrictBool, StrictInt, AwareDatetime, model_validator
+from pydantic import Field, StrictBool, StrictInt, AwareDatetime, model_validator, field_validator
 from app.application.contracts.import_scalars import ImportDTO as DTO
 from app.application.contracts.import_scalars import (
     Quantity,
@@ -73,6 +73,50 @@ class OpeningSource(DTO):
 
 class OpeningValue(OpeningSource):
     lot_id: UUID
+
+
+class ActualReceiptSource(DTO):
+    domain: Literal['inventory_receipts'] = 'inventory_receipts'
+    source_record_id: Annotated[str, Field(min_length=1,max_length=128,pattern=r'\S')]
+    ingredient_id: UUID
+    supplier_id: UUID | None
+    lot_code: Annotated[str, Field(min_length=1,max_length=128,pattern=r'\S')] | None
+    quantity: Quantity
+    unit: Annotated[str, Field(min_length=1,max_length=128,pattern=r'\S')]
+    received_date: date | None
+    expiry_date: date | None
+    unit_cost: Money | None
+    currency: Annotated[str, Field(pattern=r'^[A-Z]{3}$')]
+    observed_at: AwareDatetime
+    reason: Text
+
+    @field_validator('observed_at', mode='before')
+    @classmethod
+    def explicit_timestamp(cls, value):
+        if isinstance(value, datetime):
+            return value
+        if not isinstance(value, str) or 'T' not in value:
+            raise ValueError('EXPLICIT_TIMESTAMP_REQUIRED')
+        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        if parsed.utcoffset() is None:
+            raise ValueError('TIMEZONE_REQUIRED')
+        return value
+
+    @model_validator(mode='after')
+    def receipt_facts(self):
+        if Decimal(self.quantity)<=0:
+            raise ValueError('POSITIVE_RECEIPT_REQUIRED')
+        if self.received_date and self.expiry_date and self.expiry_date<self.received_date:
+            raise ValueError('EXPIRY_BEFORE_RECEIPT')
+        return self
+
+
+from app.application.contracts.stock_writes import StockReceiptFacts
+
+
+class ActualReceiptValue(StockReceiptFacts):
+    domain: Literal['inventory_receipts'] = 'inventory_receipts'
+    origin: Literal['ACTUAL_RECEIPT'] = 'ACTUAL_RECEIPT'
 
 
 class RecipeSource(DTO):
@@ -355,6 +399,7 @@ SourceValue = Annotated[
     SalesSource
     | CountSource
     | OpeningSource
+    | ActualReceiptSource
     | RecipeSource
     | ProductSource
     | IngredientSource
@@ -379,6 +424,7 @@ CanonicalValue = Annotated[
     SalesSource
     | CountSource
     | OpeningValue
+    | ActualReceiptValue
     | RecipeValue
     | ProductSource
     | IngredientSource
@@ -397,6 +443,7 @@ SOURCE_MODELS = {
     "sales": SalesSource,
     "inventory_count": CountSource,
     "opening_stock": OpeningSource,
+    "inventory_receipts": ActualReceiptSource,
     "recipes": RecipeSource,
     "products": ProductSource,
     "ingredients": IngredientSource,

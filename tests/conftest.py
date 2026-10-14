@@ -21,8 +21,9 @@ def test_database_url() -> str:
     try:
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT current_database()")) == url.database
-            if url.database == "shelfcash_integration_test":
-                assert connection.scalar(text("SELECT current_user")) == "shelfcash_integration_tester"
+            from scripts.dev import DEDICATED_TEST_ROLES
+            if url.database in DEDICATED_TEST_ROLES:
+                assert connection.scalar(text("SELECT current_user")) == DEDICATED_TEST_ROLES[url.database]
     except Exception:
         if url.database != "shelfcash_test":
             raise RuntimeError("Dedicated test database unavailable; check provisioning/effective TEST_DATABASE_URL") from None

@@ -74,3 +74,35 @@ def test_env_serialization_preserves_strings(value):
     from dotenv import dotenv_values
     from io import StringIO
     assert dotenv_values(stream=StringIO('DEMO_VALUE='+demo.env_value(value)),interpolate=False)['DEMO_VALUE']==value
+
+
+def test_upgrade_requires_intact_backup_and_unchanged_rows(monkeypatch,tmp_path):
+    import hashlib,json
+    monkeypatch.setattr(demo,'PRIVATE',tmp_path)
+    archive=tmp_path/'synthetic.dump';archive.write_bytes(b'synthetic test archive')
+    saved=dict(database=demo.DB,dump=str(archive),sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),counts={'users':3})
+    (tmp_path/'upgrade-backup.json').write_text(json.dumps(saved))
+    monkeypatch.setattr(demo,'schema_counts',lambda _: {'users':3})
+    assert demo.check_upgrade_backup(object())==saved
+    monkeypatch.setattr(demo,'schema_counts',lambda _: {'users':4})
+    with pytest.raises(ValueError):demo.check_upgrade_backup(object())
+    monkeypatch.setattr(demo,'schema_counts',lambda _: {'users':3})
+    archive.write_bytes(b'corrupt')
+    with pytest.raises(ValueError):demo.check_upgrade_backup(object())
+
+
+def test_migration_refuses_live_or_unknown_owned_process(monkeypatch,tmp_path):
+    import json
+    import app.infrastructure.planning_process as process
+    monkeypatch.setattr(demo,'PRIVATE',tmp_path)
+    (tmp_path/'server.json').write_text(json.dumps(dict(pid=1)))
+    for state in ('ALIVE','UNKNOWN'):
+        monkeypatch.setattr(process,'_birth',lambda _,state=state:(state,None))
+        with pytest.raises(ValueError):demo.quiescent(object())
+
+
+def test_runtime_refuses_uncommitted_source(monkeypatch):
+    from types import SimpleNamespace
+    monkeypatch.setattr(demo.subprocess,'run',lambda *a,**k:SimpleNamespace(stdout='synthetic-sha'))
+    monkeypatch.setattr(demo.subprocess,'check_output',lambda *a,**k:b' M app/main.py')
+    with pytest.raises(ValueError):demo.source_identity()

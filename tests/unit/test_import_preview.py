@@ -48,14 +48,15 @@ def case(
     sheets, issues, sources = discover(
         uuid4(), parse_source(buf.getvalue().encode(), "csv")
     )
+    context_values = dict(sales_semantics=semantics,
+        inventory_semantics="lot_stock_count" if schema == "inventory_count" else None)
+    context_values.update(context_fields or {})
     context = dto.SourceContext(
         kind="source_context",
         source_system_key="POS-A",
         report_type="report-1",
         evidence_reference="Synthetic explicit source",
-        sales_semantics=semantics,
-        inventory_semantics="lot_stock_count" if schema == "inventory_count" else None,
-        **(context_fields or {})
+        **context_values
     )
     issues = [
         i.model_copy(

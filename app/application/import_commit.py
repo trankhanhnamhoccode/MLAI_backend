@@ -27,7 +27,7 @@ from app.application.import_identity import content_digest
 from app.application.import_sales_sources import sources_for, latest_source
 from app.application.contracts.import_history import HISTORY_MODELS
 
-SUPPORTED = frozenset({"products", "ingredients", "sales", "recipes", "inventory_count", "opening_stock", "suppliers", "supplier_terms", "payable_fees", "scope_declarations", *HISTORY_MODELS})
+SUPPORTED = frozenset({"products", "ingredients", "sales", "recipes", "inventory_count", "opening_stock", "inventory_receipts", "suppliers", "supplier_terms", "payable_fees", "scope_declarations", *HISTORY_MODELS})
 
 
 def commit_rows(preview, body):
@@ -100,6 +100,8 @@ def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None,
         canonical_id = None
         movement_ids = ()
         canonical_version = None
+        receipt_reference = None
+        receipt_effect = row.receipt_effect
         try:
             if value.domain in {"products", "ingredients"}:
                 kind = "product" if value.domain == "products" else "ingredient"
@@ -189,6 +191,19 @@ def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None,
                     else:inserted+=1;configuration_impacts["declarations"]["created"]+=1
                 elif row.proposed_action!="NO_OP":raise AuthError("PREVIEW_BLOCKED",409)
                 canonical_version=str(session.get(ScopeDeclarationRecord,canonical_id).version)
+            elif value.domain == 'inventory_receipts':
+                from app.application.import_actual_receipts import write_actual_receipt
+                result,replay=write_actual_receipt(session,store_id,row,actor=actor_id,
+                    now=recorded_at or datetime.now(timezone.utc),
+                    store_timezone=snapshot['stores'][0]['timezone'],currency=snapshot['stores'][0]['currency'])
+                canonical_id=result.receipt_id
+                movement_ids=(result.movement.movement_id,)
+                receipt_effect=row.receipt_effect.model_copy(update={'recorded_at':result.movement.recorded_at})
+                receipt_reference=dto.ReceiptCommitReference(source_identity=value.receipt_identity,
+                    receipt_id=result.receipt_id,lot_id=result.lot.lot_id,movement_id=result.movement.movement_id,
+                    action='REUSED' if replay else 'CREATED',audit_reference=result.audit_reference)
+                if not replay:
+                    inserted+=1;inventory_changes+=1;affected_ingredients.add(value.ingredient_id)
             elif value.domain == "opening_stock":
                 canonical_id = value.lot_id
                 if row.proposed_action == "CREATE_OPENING_STOCK":
@@ -319,7 +334,7 @@ def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None,
                                               source_location=row.source_location),)
                 raise failure from error
             raise
-        if row.proposed_action == "NO_OP":
+        if row.proposed_action in {"NO_OP", "REUSE_RECEIPT"}:
             noops += 1
         completed.add(row.row_id)
         references.append(dto.CommitRowReference(
@@ -328,6 +343,8 @@ def write_rows(session, store_id, rows, specs, snapshot, body, *, actor_id=None,
             line_provenance=row.line_provenance, movement_ids=movement_ids,
             supplier_term_semantics=row.supplier_term_semantics,
             inventory_effect=row.inventory_effect,
+            receipt_effect=receipt_effect,
+            receipt_reference=receipt_reference,
             sales_contributions=row.sales_contributions,
             history_record=value if value.domain in HISTORY_MODELS else None,
             nested_references=row.nested_references,nested_provenance=row.nested_provenance,canonical_version=canonical_version,
