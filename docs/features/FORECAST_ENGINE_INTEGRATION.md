@@ -733,10 +733,12 @@ Diagnostics are five hash-enveloped JSON files (`summary`, `metrics`, `stages`,
 They use saved arrays/fit tables and pure feature reconstruction, with0 training or
 new benchmark execution. Source/input hashes identify this diagnostic calculation.
 
-### PROPOSAL — bounded F2 hypotheses, not authorized execution
+### HISTORICAL INFORMATION — F1 bounded hypotheses
 
 For any change informed by F1, /3 holdout is now exposed development evidence,
-not an independent final holdout. No improvement direction is proven yet. Freeze
+not an independent final holdout. These were the pre-F2 proposals; the separately
+authorized F2 below executes only closure parity and one endpoint variant, without
+anchor changes. No general improvement direction was proven by F1. Freeze
 one hypothesis/configuration and fresh chronological validation/calibration/evaluation
 scope before fitting; verify authorized POS/calendar availability and raw hashes first.
 Do not silently source the following week or reopen the original batch budget.
@@ -754,8 +756,166 @@ Artifacts and fit/point/calibration tables retain separate content identities.
 The scope is VERIFIED offline computation/replay, EXPLORATORY exposed demo evaluation.
 Real source vintages/unseen independent demand, more origins/diverse operational
 periods and later operational acceptance remain missing. Production/promotion LOCKED,
-E5 NOT_STARTED; /3 checkpoint is `a863fb5`; F1 changes remain uncommitted for review.
+E5 NOT_STARTED; /3 checkpoint is `a863fb5`; F1 is checkpointed at
+`6a50d815ba983f511a92388b2ade18d6fd6b4b93`. F2 changes remain uncommitted for review.
 Commands/recovery: [runbook](../runbooks/FULL_TEST_FLOW.md#challenger-demo-abc).
+
+<a id="forecast-f2"></a>
+## CURRENT FACT — F2 shared closure and one endpoint calibration variant
+
+User-authorized offline `forecast_f2/1` is a new retained-array experiment, not a
+rewrite of /3 or a production-policy change. Identity:
+`ee4d7cb4de28dabb842c8900b4ebb3b9b32e8f423bd5f6611395f539323ecbc7`.
+The F1 checkpoint above has exactly14 files, no runtime/workbooks/models/secrets.
+F2 source/config and94 input-file hashes were frozen before fitting. Earlier
+unexecuted admission drafts remain retained; only this identity consumed the one
+global F2 batch marker. No source/config change or identity can reopen that budget.
+
+### Admission, availability and retained controls
+
+All six workbooks in runtime were read-only inventoried by sheet signature, exact
+path/SHA-256 and physical headers; no suffix/mtime winner was selected. POS SHA
+`23010aaa…d891dc` still covers01/01–08/07/2026; calendar SHA `042e9745…71bb0`
+covers through15/07, with no POS09–15/07 or other new workbook in runtime. Existing
+five-Product t1–t5 `ly` identities, Asia/Ho_Chi_Minh, source revision, scoped
+retrospective POS/calendar declarations remain bound. No new known-at assumption
+or unseen-label claim is introduced. The workbook inventory is retained under
+`runtime/challenger/f2/preflight/workbook-inventory.json`.
+
+Reuse is compatible at the exact four /3 origins10/06,17/06 validation and24/06,01/07
+exposed evaluation, with unchanged train O−48, point O−47..O−28 and calibration
+O−27..O windows. Retained C artifact/checkpoint/evidence identities and windows,
+B model-file digest, raw workbook hashes and fit-table envelopes are checked.
+Boosters, features, anchors, point correction, native minima and14-date holdout
+quarantine are unchanged. No rebuild or native inference is needed. A/B/C package
+outputs remain separate controls; raw pre-policy C is reconstructed from retained
+sorted quantities+point offset, with exact open-date P50 verification. Inputs/artifacts
+are read, never rewritten or published under a new historical identity.
+
+### Frozen policies and validation-only rule
+
+`shared_explicit_closure/1` uses the same Store/Product scope, unit, target date,
+source declaration and origin cutoff for all arms. Only explicit closed facts with
+source and `available_at≤next_run(origin)` zero quantiles and any existing interval.
+Unknown/missing/late calendar does not become open/closed or block A/B; holidays do
+not imply closure. Duplicate/conflicting calendar, wrong scope or positive sales
+on a declared closure reject admission. Actual zero is never the override trigger.
+C's native override is verified, then its pre-closure arrays feed the benchmark
+policy once; it is not applied again to already-zeroed native values. Each variant
+retains before/after arrays and policy counts. C0 is C under this common policy;
+C1 uses one endpoint correction before the same policy. C0 matches C_native here.
+
+One method only: `pooled_horizon_endpoint_residual_nearest_rank/1`. For each horizon,
+pool the exact five Products in the same selling unit; require≥30 tasks,≥7 distinct
+target dates and all Products represented. Compute lower correction as the empirical
+.25 quantile of `(y−base_P25)`, upper correction as the empirical .75 quantile of
+`(y−base_P75)`, using sorted residual rank `ceil(n*tau)`,1-indexed, no interpolation.
+The objective is endpoint pinball, not maximizing coverage. No clipping cap, tuning,
+variant search or CQR relabeling is used. Preserve median exactly; project lower to
+`max(0,min(P50,raw_lower))` and upper to `max(P50,raw_upper)`. If any horizon lacks
+support, the whole origin is NOT_FITTED and C1 equals C0; minima are not lowered.
+
+Only retained, point-corrected calibration predictions on eligible OPEN/known-false
+labels are used. Feature cutoff must follow point availability, precede target,
+and match horizon; actual known-at must match the retained observation and precede
+the origin forecast instant. Calibration labels are within O−27..O, outside global
+holdout quarantine; evaluation starts O+1. This is disjoint from booster/point fit
+windows and the same-origin scoring labels, but overlaps the parent's CQR fit labels.
+Choosing this reuse preserves boosters/P50 without new inference or rebuilding CQR;
+it does not provide an independent calibration split from CQR, exchangeability or
+split-conformal guarantee. Predictions in saved fit tables have10-decimal precision.
+Parameters, fit residual rows, support/ranks, windows and exact artifact/source bindings
+are retained. All4 origins fitted,28 horizon statistics; per-group support74–138
+tasks and15–28 dates, above the frozen minima.
+
+CQR stays byte-equivalent to C0 and remains a separate interval. C1 does not inherit
+a calibrated-quantile guarantee from it. Selection uses only validation OPEN primary
+outcomes: strict improvement of mean endpoint pinball; each endpoint pinball and
+total absolute tail deviation from .25 nonworse; no mean endpoint-pinball regression
+in any Product, horizon or Product×horizon cell. Ties/failure retain C0. No ensemble,
+Product switching, serving selection or exposed-evaluation optimization is allowed.
+
+### Results and limits
+
+All7 arrays (A/B/C native, A/B common, C0/C1) contain140 matching tasks each. Each
+partition has69 primary outcomes,1 excluded censored lower-bound outcome,0 missing/
+unknown,14 dates/two origins. Evaluation has64 OPEN outcomes on13 dates and5 CLOSED
+outcomes on30/06; validation has69 OPEN and0 CLOSED. Censored metrics are diagnostic
+observed lower bounds, not demand truth. Full1540 populated metric groups retain
+partition/mask/cohort/Product/horizon/Product×horizon; absent cohorts remain absent.
+
+| Package/policy | Validation MAE / WAPE | Exposed evaluation MAE / WAPE |
+|---|---:|---:|
+| A native | 7.2029 /19.1007% | 8.2174 /23.2282% |
+| B native | 5.0141 /13.2965% | 6.0417 /17.0781% |
+| C native | 4.5849 /12.1584% | 4.2723 /12.0766% |
+| A common closure | 7.2029 /19.1007% | 5.8406 /16.5096% |
+| B common closure | 5.0141 /13.2965% | 3.7491 /10.5976% |
+| C0 / C1 common closure | 4.5849 /12.1584% | 4.2723 /12.0766% |
+
+After fair closure treatment, B has better exposed point error than C0/C1; on
+validation C0/C1 still have lower point error than B. C1's P50/MAE/WAPE/bias and
+CQR are unchanged from C0. Their bias is−0.2622 ly validation,+1.0246 evaluation
+(OPEN evaluation+1.1046); B common bias is−0.8818 and−1.3736 respectively.
+
+| OPEN primary cohort | Pinball P25/P50/P75 | P25–P75 coverage / mean width ly | y<P25 / y≤P50 / y>P75 |
+|---|---|---|---|
+| B validation69 | 2.1272/2.5071/1.8669 | 43.4783% /8.4501 | 28.9855% /55.0725% /27.5362% |
+| C0 validation69 | 1.8758/2.2925/2.0021 | 26.0870% /3.3607 | 37.6812% /47.8261% /36.2319% |
+| C1 validation69 | 1.7537/2.2925/1.9622 | 36.2319% /5.6181 | 27.5362% /47.8261% /36.2319% |
+| B evaluation64 | 1.8447/2.0210/1.5303 | 50.0000% /8.5569 | 15.6250% /42.1875% /34.3750% |
+| C0 evaluation64 | 2.1833/2.3030/1.8544 | 20.3125% /3.8592 | 45.3125% /57.8125% /34.3750% |
+| C1 evaluation64 | 1.9296/2.3030/1.7768 | 53.1250% /7.0407 | 28.1250% /57.8125% /18.7500% |
+
+Coverage is inclusive; lower/upper tails are strict, median proportion inclusive.
+OPEN B/C0/C1 have0 endpoint/median ties here. Five CLOSED evaluation tasks have
+quantiles/CQR all0, inclusive coverage100%, width/error0 and5 ties at each quantile.
+Do not count that as learned calibration. Across all69 evaluation outcomes C1
+coverage56.5217%/width6.5305 versus C0 26.0870%/3.5796. C0/C1 CQR remains34.7826%/
+5.5367 validation,55.0725%/6.4328 evaluation; OPEN evaluation51.5625%/6.9354.
+
+Validation aggregate endpoint pinballs and total tail deviation improve, but the
+frozen subgroup guard fails: H7 mean endpoint pinball1.1342→1.1544 and12 Product×horizon
+cells regress. Full cell values are in summary/metrics. Therefore the frozen rule
+retains **C0**, not C1. C1 is an exploratory aggregate improvement with unresolved
+local regressions, not an accepted candidate. No additional trial followed. B's
+exposed evaluation advantage does not authorize production selection either.
+
+### Verification, resource receipts and next gate
+
+One global consumed batch, hard300s subprocess deadline including startup/preflight;
+actual parent3.844s, compute1.641s.0 booster fits,0 point/CQR fits,4 endpoint artifacts
+(28 group statistics); parameters13,295 bytes, fit evidence694,010 bytes.17,038,149
+bytes of existing model content were pinned/reused, no new model binaries.
+Endpoint projection crossing/clamp counts0; final crossings0. Original raw crossings
+A0/B1/C24 remain separately reported, not overwritten by endpoint statistics.
+P50/CQR equality and full140-task paired masks are independently verified.
+
+Fresh-process replay restores parameters and checks support/rank arithmetic and all
+outputs, with booster and endpoint fitting entrypoints forbidden: F2_READONLY_REPLAY_VERIFIED,
+4 origins,0 fits/forbidden IO/original writes. Original /3 generic historical replay
+still matches its dedicated verifier12 checkpoints/4 artifacts and future-label probe.
+An independent Decimal scorer agrees with all1540 metric groups within1e−25;
+all1234 pre-F2 runtime/source-snapshot/workbook files retain SHA-256. Focused tests
+cover unknown/holiday/conflict calendars, sparse/causal/quarantined fit samples,
+future-label invariance, P50/unit/order, consumed batch, source/parameter/artifact/
+dataset/version tamper and validation-only subgroup rejection. No API/schema/DB,
+browser, full regression, impact or real unseen accuracy acceptance is claimed.
+
+Outputs: `runtime/challenger/f2/experiments/<identity>/admission.json`,
+`<origin>-parameters.json`, `<origin>-fit-evidence.json`, `predictions.json`,
+`stages.json`, full `metrics.json`, `summary.json`, resource/execution/run/replay
+and independent verification receipts. Source/config/input hashes bind this exact
+execution; source drift rejects replay. A changed source cannot reopen the consumed
+global marker. See [F2 commands](../runbooks/FULL_TEST_FLOW.md#forecast-f2).
+
+PROPOSAL — F3 remains unauthorized/NOT_STARTED. Before a real Planning impact study,
+freeze a separately approved forecast choice, causal demand evaluation scope and
+compatible operational snapshots (BOM/recipes/loss, stock/lot/expiry/receipts,
+supplier packs/prices/lead times/fees and constraints). Verify fresh label provenance
+and calendar availability for any generalization claim. Current exposed forecast
+metrics and the08/07 snapshot cannot establish realized savings or inventory impact.
+Production/promotion stays LOCKED; no F3 solve, source-engine change or main integration.
 
 <a id="demo-baseline-ab"></a>
 ## CURRENT FACT — baseline demo A/B after main readiness merge

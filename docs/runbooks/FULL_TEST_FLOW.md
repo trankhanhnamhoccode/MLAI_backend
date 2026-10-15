@@ -1,5 +1,77 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="forecast-f2"></a>
+## CURRENT FACT — F2 retained-array closure/endpoint verification
+
+[Canonical F2 design/results](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f2)
+owns method, selection rule, fit dependencies and limits. F1 is locally committed
+at `6a50d815ba983f511a92388b2ade18d6fd6b4b93`; F2 remains WIP. No server, DB,
+provider/network/SMTP, Planning, external engine repo or other worktree is involved.
+The six raw files still provide POS through08/07 only; no fresh09–15/07 labels.
+All validation/evaluation is EXPOSED development evidence.
+
+```powershell
+$f2Identity = 'ee4d7cb4de28dabb842c8900b4ebb3b9b32e8f423bd5f6611395f539323ecbc7'
+# Read-only freeze verification: same identity/source/inputs, no fit.
+.venv/Scripts/python.exe -m scripts.forecast_f2 --enable freeze
+# Supported fresh-process verification: no fitting entrypoint may execute.
+.venv/Scripts/python.exe -m scripts.forecast_f2 --enable replay --identity $f2Identity
+# Focused F2 invariants, arithmetic, causal windows, tamper, replay and batch guards.
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_f2.py -q
+# Affected F1/demo regressions (no booster training).
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_f2.py tests/unit/test_forecast_f1.py tests/unit/test_demo_calendar_abc.py tests/unit/test_forecast_benchmark.py -q
+git diff --check
+```
+
+Historical first and only batch invocation was
+`python -m scripts.forecast_f2 --enable run --identity <f2Identity>`.
+**Do not run it again.** Global `runtime/challenger/f2/bounded-batch-start.json`
+and per-experiment exclusive `execution-claim.json` are consumed evidence. Changed
+source/identity, missing outputs or PARTIAL status do not authorize another batch.
+Never remove/reset those markers/ledgers or chain more budget. Pre-fit admission
+drafts with no execution claim remain unexecuted; only the identity above was run.
+The parent deducts preflight elapsed time from its300s subprocess deadline, kills
+and waits on timeout, and retains a PARTIAL receipt; child offline guard denies
+DB/provider imports, network and grandchildren. Per-origin parameters/evidence and
+resource ledgers are published as completed, so a partial batch stays inspectable.
+
+Expected freeze: F2_FROZEN_BEFORE_ENDPOINT_FITS, version forecast_f2/1,
+0 booster/point/CQR fits, maximum4 endpoint artifacts. Actual run:
+F2_EXPLORATORY_COMPLETE,4 fitted origins/28 horizon statistics, parent3.844s,
+compute1.641s,0 forbidden attempts. Parameters13,295 bytes, fit evidence694,010 bytes;
+all source boosters/point/CQR reused, no new model binaries. Expected replay:
+F2_READONLY_REPLAY_VERIFIED,4 origins,0 endpoint/booster/point/CQR fits/original writes.
+The worker fail-fast forbids fitting even though parameter arithmetic is checked.
+
+All results are hash envelopes under `runtime/challenger/f2/experiments/<f2Identity>/`:
+
+- Read `admission.json` for frozen method/windows/source+94 input hashes and budget.
+- Read `summary.json` for package-native/common-policy comparisons, open/closed
+  metrics, validation guard failures and C0 decision; `metrics.json` has1540 populated
+  Product/horizon/Product×horizon groups. `predictions.json`/`stages.json` retain raw,
+  before-policy, corrected and final arrays separately.
+- `<origin>-parameters.json` and `<origin>-fit-evidence.json` bind ranks/residuals,
+  support, causal labels and parent artifact identities. Endpoint fit windows overlap
+  parent's CQR data; do not describe them as independent split-conformal calibration.
+- `execution.json`, `run-receipt-f98aaf0c7a4994482712970454534383656f6eaccb5450261402b12db08d84f8.json`,
+  `replay-receipt-d5702dedf43dd92de85b1923425af93a1604845605d609adf5f8b5ae075faabb.json`
+  and `verification-4339557169a457471ea8771dd1373164e1ed095fb9302cdae3e117dc16b77b3b.json`
+  record actual budget, no-fit replay, independent Decimal scoring/paired masks and
+  preservation of1234 original files including six workbooks.
+
+Actual focused combined gate70 passed/6.00s before the two additional quarantine/
+selection tests; latest F2-only gate16 passed/0.74s includes those tests. Coverage
+overlaps; do not sum repeated runs. Original /3 historical generic replay was also
+rechecked against its dedicated verifier:12 checkpoints/4 native artifacts and35
+identical earlier predictions after140 future-label changes,0 fitting/forbidden IO.
+No full suite, DB/browser or accuracy-generalization claim. OpenAPI unchanged.
+
+The requested temporary review ZIP is `runtime/shelfcash_F2_review.zip`: source/tests/
+docs, direct review dependencies, small admission/parameters/metrics/replay receipts,
+README and SHA-256 manifest only. It is ignored by Git and contains copies; deleting
+it after transfer does not delete any original source/evidence. No other F2 ZIP,
+workbook/model/.env/DB/credential/large-log inclusion is authorized.
+
 <a id="challenger-demo-abc"></a>
 ## CURRENT FACT — offline demo A/B/C protocol /3
 
@@ -7,7 +79,7 @@
 owns the typed calendar assumption, native support matrix, frozen windows/model
 settings, Product/horizon trade-offs and limits. A/B/admission checkpoint is `c4ff88a`;
 /3 exploratory checkpoint is `a863fb5b1a85c1fba3455628853fb4f76eb0a467`.
-F1 loader/diagnostics remain uncommitted WIP. Use only the challenger's pinned venv.
+F1 loader/diagnostics checkpoint is `6a50d81`. Use only the challenger's pinned venv.
 Do not start DB/app/provider/SMTP/Planning/E4 or change another worktree.
 
 ```powershell

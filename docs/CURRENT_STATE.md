@@ -51,10 +51,23 @@ round-trip và dùng verified historical source riêng với current loader,12 c
 nhân learning/calibration. H6 đóng góp106.484% lợi thế B−C, tập trung closure30/06;
 bỏ H6 hoặc ngày này thì B có MAE tốt hơn. Official package scores vẫn tái lập được,
 không chứng minh learned-model superiority. /3 holdout là exposed development
-evidence cho mọi F2 dựa trên findings; F2 chỉ PROPOSAL, chưa chạy.
+evidence cho mọi F2 dựa trên findings. F1 checkpoint local
+`6a50d815ba983f511a92388b2ade18d6fd6b4b93`.
+CURRENT FACT F2: offline protocol `forecast_f2/1` đã chạy một batch trên retained
+artifacts/predictions /3, shared eligible closure policy và một endpoint residual
+nearest-rank variant,0 booster/point/CQR fits và4 endpoint artifacts, parent3.844s.
+Không có POS09–15/07/fresh labels; cả validation/evaluation là exposed development.
+B common closure evaluation MAE3.7491 so C0/C1 4.2723; validation C0/C1 4.5849 so
+B5.0141. C1 giữ P50/CQR, cải thiện aggregate endpoint pinball và open evaluation
+coverage20.3125→53.125%, nhưng fail frozen validation subgroup guard (H7 và12
+Product×horizon cells): giữ C0 cho endpoints, không chọn C1 hoặc promote B/C.
+F2 fresh-process replay0 fits và independent1540-group Decimal audit VERIFIED;
+1234 files gốc giữ SHA-256. [Canonical F2](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f2)
+sở hữu method, overlap calibration/CQR, regressions, budget và limits;
+[runbook F2](runbooks/FULL_TEST_FLOW.md#forecast-f2) sở hữu commands/evidence.
 Canonical [original A/B evidence](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab)
 sở hữu exact selection, origins, metrics và limits; [runbook](runbooks/FULL_TEST_FLOW.md#challenger-demo-ab)
-sở hữu commands. F1 sau checkpoint `a863fb5` giữ WIP để review; không promote.
+sở hữu commands. F2 sau checkpoint `6a50d81` giữ WIP để review; F3 chưa mở, không promote.
 
 ## CURRENT FACT — Data Readiness D1–D5 tích hợp main local
 

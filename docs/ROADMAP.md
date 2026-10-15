@@ -36,11 +36,20 @@ CURRENT FACT F1: generic read-only historical replay verified12 checkpoints/4 ar
 typed budget representation fixed without changing original identities; independent
 1176-group metric audit agrees. H6 advantage is closure-concentrated (106.484% of net
 B−C benefit); quantile undercoverage precedes point/sorting. No model improvement
-or general superiority proven. F1 remains uncommitted; E5/promotion NOT_STARTED.
-PROPOSAL F2: at most three bounded closure-parity/endpoint-calibration/anchor-fallback
-hypotheses in canonical /3 integration. /3 holdout is exposed development evidence;
-fresh authorized data, frozen scope/configuration/budget and separate authorization
-are required before fitting/evaluation. No F2 execution or new data sourcing started.
+or general superiority proven. F1 checkpoint `6a50d815ba983f511a92388b2ade18d6fd6b4b93`;
+E5/promotion NOT_STARTED. CURRENT FACT F2: authorized shared closure comparison and
+one endpoint residual-quantile variant completed in one3.844s batch,0 boosters/
+point/CQR fits,4 endpoint artifacts on exact retained /3 origins. No anchor/feature
+search or fresh data found/assumed; all evaluation remains exposed development.
+C1 improves aggregate endpoints/coverage while preserving P50/CQR but fails frozen
+validation subgroup guard; retain C0 endpoints. Common-policy B has lower exposed
+evaluation point error; no serving winner is selected. No-fit replay, independent
+1540-group score audit and original-file preservation verified. F2 stays WIP.
+Details and limits: [canonical F2](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f2).
+PROPOSAL F3 impact remains NOT_STARTED/unauthorized: needs explicit frozen forecast/
+operational scope, causal BOM/stock/lot/expiry/receipt/vendor/constraint snapshots
+and appropriate evaluation provenance. Forecast metrics do not certify savings,
+inventory impact, calibration or production promotion. No main/FE/DB integration.
 
 ## CURRENT FACT / PROPOSAL — data readiness D1–D5
 
