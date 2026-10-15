@@ -25,10 +25,11 @@ def migration_config() -> Config:
     return Config(str(ROOT / "alembic.ini"))
 
 
-TEST_DATABASE_NAMES = frozenset({"shelfcash_test", "shelfcash_import_test", "shelfcash_auth_test", "shelfcash_integration_test", "shelfcash_notifications_test", "shelfcash_local_test", "shelfcash_readiness_test"})
+TEST_DATABASE_NAMES = frozenset({"shelfcash_test", "shelfcash_import_test", "shelfcash_auth_test", "shelfcash_integration_test", "shelfcash_notifications_test", "shelfcash_local_test", "shelfcash_readiness_test", "shelfcash_challenger_test"})
 DEDICATED_TEST_ROLES = {"shelfcash_integration_test": "shelfcash_integration_tester",
                         "shelfcash_notifications_test": "shelfcash_notifications_tester", "shelfcash_local_test": "shelfcash_local_tester",
-                        "shelfcash_readiness_test": "shelfcash_readiness_tester"}
+                        "shelfcash_readiness_test": "shelfcash_readiness_tester",
+                        "shelfcash_challenger_test": "shelfcash_challenger_tester"}
 
 
 def validate_reset_target(settings: Settings) -> None:
@@ -36,6 +37,8 @@ def validate_reset_target(settings: Settings) -> None:
     if settings.environment not in {"development", "test"}:
         raise ValueError("Reset requires ENVIRONMENT=development or test")
     url = make_url(settings.database_url)
+    if url.database == 'shelfcash_challenger_test' and (settings.environment != 'test' or url.host not in {'127.0.0.1', 'localhost', '::1'} or url.port != 5438):
+        raise ValueError('Challenger requires test environment and dedicated loopback port5438')
     if url.database in DEDICATED_TEST_ROLES and url.username != DEDICATED_TEST_ROLES[url.database]:
         raise ValueError("Integration test database requires its dedicated tester role")
     if url.host not in {"localhost", "127.0.0.1", "::1", "postgres"} or url.query:

@@ -1,5 +1,11 @@
 # Forecast execution contract and historical quantile baseline — S2.1 / S2.2
 
+CURRENT FACT F4: explicit challenger test composition alone uses prepared schema3,
+`engine_native_reconstruction_v1`, retaining raw stockout observations without host
+demand_records. Native reconstruction owns that path once; normal host capture
+remains schema2. Serialization1 and historical schema1/schema2 bytes retain their
+rules. See [canonical test boundary](FORECAST_ENGINE_INTEGRATION.md#forecast-f4).
+
 CURRENT FACT A1: new capture schema 2 retains typed derived demand records
 and `causal_stockout_v1`. Baseline samples and trained lag/rolling/labels use usable
 demand, excluding unsupported censored days; unknown history retains observed values

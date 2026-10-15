@@ -7,21 +7,30 @@ from app.application.contracts.common import Contract
 from app.application.contracts.model_serving import ServingRecord,ForecastIdentity
 from app.application.contracts.planning_public import PlanningNotification,ForecastView
 from app.application.contracts.readiness import SourceVersions
+from app.application.contracts.planning_challenger import ChallengerTestPin
 
 
 class PublicPlanningAcceptance(Contract):
-    schema_version: Literal['planning_public_acceptance/1']='planning_public_acceptance/1'
+    schema_version: Literal['planning_public_acceptance/1','planning_public_acceptance/2']='planning_public_acceptance/1'
     session_digest: str=Field(pattern=r'^[0-9a-f]{64}$')
     authorization_version: str
     serving: ServingRecord
     receipt_warnings: tuple[PlanningNotification,...]
     overall_stage_seconds: Literal[180]=180
     offer_eligibility_policy: Literal['offer_eligibility/1'] | None=None
+    challenger_test: ChallengerTestPin | None=None
+
+    @model_validator(mode='after')
+    def pin_version(self):
+        if (self.schema_version=='planning_public_acceptance/2') != (self.challenger_test is not None):
+            raise ValueError('Challenger pin requires explicit acceptance/2')
+        return self
 
     @model_serializer(mode='wrap')
     def preserve_legacy(self,handler):
         result=handler(self)
         if result.get('offer_eligibility_policy') is None:result.pop('offer_eligibility_policy',None)
+        if result.get('challenger_test') is None:result.pop('challenger_test',None)
         return result
 
 

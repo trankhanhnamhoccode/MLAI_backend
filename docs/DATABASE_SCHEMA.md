@@ -1,5 +1,13 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
+CURRENT FACT on the isolated challenger branch: head `f4_20261016_metadata_v2`
+follows0027 and only permits execution metadata schema2 alongside1 in the existing
+`forecast_execution_metadata` check constraint. No table/column/backfill or existing
+payload change. Downgrade refuses retained schema2 rows; an empty dedicated F4 test
+DB can roundtrip to0027. Main/development/demo/other test DBs are not migrated.
+[Forecast integration](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4) owns
+the private test-only payload semantics; public schema/permissions stay unchanged.
+
 CURRENT FACT self-service: head0027_self_service_stores,71 application tables/72 tổng.
 Additive store_creation_receipts: composite PK(actor_id,key_digest), request_digest,
 Store RESTRICT FK/unique, immutable typed result JSONB và created_at. T03 Store,

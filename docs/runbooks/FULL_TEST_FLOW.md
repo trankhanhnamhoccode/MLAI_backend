@@ -1,11 +1,120 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="forecast-f4"></a>
+## CURRENT FACT — F4 isolated technical acceptance
+
+[Canonical F4](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4) owns the
+test-only admission/versioning/rollback boundaries. F3 is checkpointed at `5a8e0a8`,
+PARTIAL19/24 synthetic; never resume its five missing cases. F4 stays WIP for review.
+Default app composition remains host, C1 experimental, production LOCKED, browser
+E2E unverified. No provider, FE or demo8103 startup is part of this workflow.
+
+Clone setup uses CPython3.11.9 and the committed vendor snapshot, installed as a
+non-editable wheel. The F4 lock records the verified host/auth/native test environment.
+No training is needed or authorized:
+
+```powershell
+py -3.11 -m venv .venv
+.venv/Scripts/python.exe -m pip install -r scripts/requirements-forecast-challenger-f4-test.lock.txt
+.venv/Scripts/python.exe -m pip install --no-deps -e .
+.venv/Scripts/python.exe -m pip wheel --no-deps --no-build-isolation --wheel-dir runtime/challenger/wheels ./vendor/forecast_challenger
+.venv/Scripts/python.exe -m pip install --no-deps runtime/challenger/wheels/shelfcash_forecast_challenger_snapshot-0.1.0+62b94fa.e2-py3-none-any.whl
+```
+
+Native acceptance additionally needs the original synthetic constant artifact directory
+`runtime/challenger/artifacts/0c3c2b7539c0050bdf52fbfffa56f6ddac03c68654b3462ad1d2f2626896d936/`
+with its canonical manifest, eleven hash-verified files and unchanged booster text.
+The isolated host-LightGBM regression additionally reads `host-model.json` and
+`checkpoint.json` under `runtime/challenger/benchmarks/fits/12aceff4a568a50967aa253ead93d37a67b244b746f430b0da4af133a89bd0ad/`.
+These model payloads are not in the review ZIP or Git: copy these exact retained
+inputs from the authorized workspace/backup; `source-artifacts.json` in F4 evidence
+lists SHA-256. Do not substitute a research artifact, regenerate models or disable
+checks if the files are absent. The tiny native fixture rebinds synthetic scope/
+runtime into a new disposable test artifact; it never trains or promotes.
+
+PostgreSQL17 runs in its own Compose named volume, loopback5438. First-time setup:
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.setup_challenger_test
+```
+
+This generates private local credentials under ignored `runtime/challenger/f4/private`;
+it refuses to overwrite an existing setup. Runtime uses only
+`shelfcash_challenger_test` / `shelfcash_challenger_tester`, with no superuser,
+createdb/createrole/replication/bypassrls or CONNECT to other connectable databases.
+`scripts.dev.validate_reset_target` explicitly allowlists this name/role/test-only
+environment/port; `scripts.test_challenger` validates the URL before connecting,
+checks actual identity/privileges, then runs tests sequentially against that DB.
+It disables provider/email/worker flags. Never point these checks at development,
+demo, Assistant/import DBs or another port. No runtime role credentials belong in Git.
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.test_challenger tests/integration/test_planning_challenger.py tests/integration/test_challenger_migration.py -q
+.venv/Scripts/python.exe -B -m scripts.test_challenger tests/integration/test_planning_public.py::test_real_baseline_worker_stock_and_retained_poll tests/integration/test_planning_public.py::test_receipt_retained_queued_replay_and_original_presence tests/integration/test_planning_public_security.py::test_store_membership_read_is_not_creator_only_and_foreign_hidden -q
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_planning_challenger.py tests/unit/test_forecast_serialization.py tests/unit/test_database_config.py tests/unit/test_planning_public_contract.py tests/unit/test_forecast_execution.py tests/unit/test_forecast_model_contracts.py tests/unit/test_forecast_stockout.py tests/unit/test_forecast_baseline.py tests/unit/test_planning_run.py tests/api/test_planning_public_openapi.py tests/api/test_planning_inspection_exports_openapi.py -q
+.venv/Scripts/python.exe -B -m scripts.verify_challenger_openapi
+git diff --check
+```
+
+Observed checks:230 unique unit/API and18 unique PostgreSQL checks passed, counting
+overlapping focused reruns once. The PG set includes14 F4 cases, one empty-DB
+constraint roundtrip, and three existing host/public regressions (baseline worker,
+receipt/replay and foreign-Store read). After small fixes only affected checks were
+rerun; these counts are targeted coverage, not a full-suite result. Unit/API coverage
+includes one actual frozen host LightGBM inference with the C package import blocked.
+Existing host training/evaluation/persistence suites that fit models were not run.
+
+Actual native acceptance: real pinned package, public C02 session/Origin/CSRF, actual
+PlanningExecution, retained ForecastRun/PlanningRun, C03/C08, fresh Session and spawned
+process read. Stock-only synthetic case has zero purchase/fee/outlay, exact100%
+service and requested LOW54/BASE66/HIGH78; factual seventh-day closure is applied
+once, CQR7..15 does not replace quantiles9/11/13. Separate fault injection covers
+dependency/native errors, artifact mutation/missing, source-code pin change, lost
+commit ACK and concurrent claims. Actual process test kills an owner after durable
+claim, then verifies recovery by a new worker instance and stale/terminal fences;
+it does not prove death during native inference or an HTTP server restart. Public
+security uses current grants/Store membership; no real-user credentials are bundled.
+
+Migration `f4_20261016_metadata_v2` follows0027; it only widens the metadata version
+constraint. Dedicated DB upgrade→downgrade0027→upgrade passed with no application
+rows. Other-branch Assistant revisions are left untouched; reconcile lineage before
+any later main integration. Historical schema1/metadata1/capture1 bytes keep their
+serializers; old native experiment replay still needs its original source/runtime.
+
+OpenAPI compared against local main `b0db90cedd3962d8cb2e3f2dfe4696ec83b4e52a`:
+73 operations, unchanged SHA-256
+`7a6d13ca1e7bafdee247504e9a0fa131c28c9796a0436691dfa309a847fbd366`.
+Private acceptance/input/metadata versions and safe failure codes are the only
+contract extensions; no new public fields/routes or FE model choice.
+
+The single profiling claim is consumed. `scripts.profile_planning_f4` stopped at
+artifact/runtime admission after2.6144s with zero Planning/inference/fits; no requested
+stage timing/cold-warm/Python-vs-native diagnosis was established. Do not rerun it,
+remove its claim or broaden its budget. No validation optimization was made. Timing,
+real unseen/vintage/operational quality, broader performance and browser E2E remain
+unverified; a batch cap is not an SLA.
+
+Review packaging (no execution/training):
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.review_challenger_f4
+```
+
+It copies explicit WIP source/tests, direct dependencies, canonical docs/delta,
+sanitized evidence/one synthetic trace and path/hash manifests into ignored
+`runtime/shelfcash_F4_review.zip`; checks secrets/CRC/hash/source correspondence
+and that nothing is staged. Original evidence remains under `runtime/challenger/f4`.
+Deleting that ZIP only deletes a temporary copy. Model payloads/wheel, workbooks,
+private config, DB dumps and large logs are excluded.
+
 <a id="forecast-f3"></a>
 ## CURRENT FACT — F3 counterfactual Planning verification
 
 [Canonical F3](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3) owns operational
 admission, synthetic assumptions, frozen arms/limits and interpretation. F2 checkpoint
-is `fcb33abb9c2316d41d564d5653233f6dc4e80a5e`; F3 remains uncommitted WIP.
+is `fcb33abb9c2316d41d564d5653233f6dc4e80a5e`; F3 checkpoint is `5a8e0a8`.
+F4 source changes the adapter runtime identity; the commands below describe F3's
+original committed source/environment. Do not rewrite manifests to replay on F4.
 Source-faithful remains BLOCKED; these fixtures are explicitly F3_SYNTHETIC and do
 not use08/07 balances as historical June stock. Primary B_COMMON vs C0_COMMON;
 C1_COMMON sensitivity is not selected by forecast or impact evaluation.

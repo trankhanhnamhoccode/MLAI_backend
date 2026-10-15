@@ -153,8 +153,24 @@ class PlanningRunRecord(Contract):
                     raise ValueError('Absent public forecast contains fabricated identity')
             else:
                 identity=public.identity
-                if identity is None or fact is None or identity.serving_version!=self.public_acceptance.serving.version:
+                pin=self.public_acceptance.challenger_test
+                from app.application.import_identity import content_digest
+                expected_serving_version=content_digest(pin.model_dump(mode='json')) if pin else self.public_acceptance.serving.version
+                if identity is None or fact is None or identity.serving_version!=expected_serving_version:
                     raise ValueError('Forecast identity not bound to accepted serving/source')
+                if pin:
+                    from app.application.contracts.planning_challenger import canonical_matches
+                    evidence=fact.execution.challenger_evidence if fact.execution else None
+                    if (evidence is None or evidence.input!=pin.input or evidence.output.artifact!=pin.artifact
+                        or evidence.output.runtime!=pin.runtime or fact.retained is None or not canonical_matches(fact.retained,pin.input)
+                        or (fact.model_type,fact.model_version,fact.artifact_key)!=(pin.artifact.model_type,pin.artifact.model_version,pin.input.artifact_identity)):
+                        raise ValueError('Challenger retained forecast differs from immutable acceptance pin')
+                    from app.application.forecast_challenger_validation import validate_output
+                    validate_output(pin.input,evidence.output)
+                    retained_points=tuple(p.model_dump(include={'product_id','forecast_date','p25','p50','p75'}) for p in fact.predictions)
+                    expected_points=tuple(p.model_dump() for p in evidence.output.forecast.predictions)
+                    if sorted(retained_points,key=lambda p:(p['forecast_date'],p['product_id']))!=list(expected_points):
+                        raise ValueError('Canonical predictions differ from native retained quantiles')
                 wire=public.forecast
                 if (wire.model_type,wire.model_version,wire.artifact_identity,wire.input_digest)!=(fact.model_type,fact.model_version,fact.artifact_key,fact.retained_digest) or (identity.model_type,identity.model_version,identity.artifact_identity,identity.prepared_digest)!=(fact.model_type,fact.model_version,fact.artifact_key,fact.retained_digest):
                     raise ValueError('Public forecast metadata differs from verified source')

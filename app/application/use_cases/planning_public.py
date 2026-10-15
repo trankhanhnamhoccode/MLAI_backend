@@ -103,7 +103,9 @@ class PublicPlanning:
         def metadata(s,resolved):
             current,summary,_=self.auth.authorize_in_session(s,token,store,RUN_PERMISSIONS,csrf=csrf or '')
             facts=load_readiness(s,store)
-            return PublicPlanningAcceptance(session_digest=current.session_digest,authorization_version=summary.authorization_version,
+            pin=self.forecast.acceptance_pin(facts,store,request.forecast_start_date)
+            return PublicPlanningAcceptance(schema_version='planning_public_acceptance/2' if pin else 'planning_public_acceptance/1',
+                challenger_test=pin,session_digest=current.session_digest,authorization_version=summary.authorization_version,
                 serving=facts.serving,offer_eligibility_policy='offer_eligibility/1',receipt_warnings=tuple(dto.PlanningNotification(code=w.code,message='Review saved/default change history.',
                     details=dto.PlanningNotificationDetails(field=w.field,default_updated_at=w.default_updated_at,saved_updated_at=w.saved_updated_at)) for w in resolved.warnings))
         try:return self.runs.accept(actor.user_id,store,key,request,resolve,authority=authority,public_metadata=metadata)

@@ -15,8 +15,9 @@ inference/cache/fresh-process replay are verified on tiny synthetic artifacts.
 E3 implements bounded causal A/B/C training and paired scoring; newly fitted native
 residual/point/CQR artifacts and all three arms replay exactly in a fresh process
 on synthetic correctness data. E3 is PARTIAL / REAL_BENCHMARK_BLOCKED, not real
-accuracy VERIFIED. Operational DB/public serving wiring and promotion have not run.
-No public API, schema, permission, accepted ADR or production configuration changes.
+accuracy VERIFIED. F4 adds only the isolated test opt-in Planning integration below;
+production serving and promotion remain locked. Public DTOs/routes/permissions and
+accepted ADR intent are unchanged; private versioned captures/metadata have evolved.
 E4 adds an offline counterfactual host Planning benchmark; E5 remains NOT_STARTED.
 
 Authority: [ADR-012](../adr/ADR-012-observed-sales-forecast-execution-contract.md),
@@ -30,6 +31,84 @@ Shared conventions stay in [API](../API_CONTRACT.md); Planning workflow stays in
 [Planning](../PROCUREMENT_API_CONTRACT_VI.md); current authorization stays in
 [Authorization](../AUTHORIZATION_CONTRACT_VI.md). This document owns the new
 integration compatibility and experiment protocol, not those existing contracts.
+
+<a id="forecast-f4"></a>
+## CURRENT FACT — C0 test-only Planning integration
+
+F3 is checkpointed at `5a8e0a853519004237d4e0900a1266d0a69caac1`:
+implementation/retained semantic replay verified, benchmark PARTIAL19/24, synthetic
+operations only. Its consumed batch and five missing cases are not resumed. F4 is
+uncommitted review work on that checkpoint. Local main observed at
+`b0db90cedd3962d8cb2e3f2dfe4696ec83b4e52a` adds dev-account/shutdown tooling;
+no dependency required merging it. No fetch/push or main/demo modification.
+
+`ChallengerPlanningServing` is an explicit internal test composition; application
+startup still installs host `ForecastServing`. There is no new model action, FE
+choice, setting that activates production, route, permission or automatic winner.
+Construction requires enabled=True, ENVIRONMENT=test, exact dedicated DB/limited
+role on loopback5438 and a matching Engine; connected identity/role flags are checked.
+Host BASELINE/TRAINED operator configuration remains unchanged. C1 is exploratory
+endpoint sensitivity only and cannot enter this path.
+
+C02 retains `planning_public_acceptance/2` with `ChallengerTestPin`: complete raw
+canonical input, explicit observation availability and dense calendar declarations,
+artifact manifest/hash, native package/source/runtime and F4 integration-code digest,
+scope/units/configuration and `native_explicit_calendar_once/1`. Only existing
+unpromoted `synthetic_correctness`/SYNTHETIC_ONLY artifacts are eligible here.
+Research/benchmark artifacts do not acquire production eligibility. These explicit
+synthetic declarations are not historical vintages or unseen-data evidence.
+
+The worker uses the accepted pin, never the current declaration/registry/latest.
+It verifies current canonical observations against it; missing/changed/foreign facts
+fail closed. `PreparedForecastInput` schema3 retains raw observations with
+`engine_native_reconstruction_v1` and no host demand_records: native reconstruction,
+point correction and factual closure execute once. P25/P50/P75 feed the unchanged
+host BOM/procurement/serving/selector; CQR stays private, separate interval evidence.
+Serialization1, schema1/schema2 and capture/1 historical bytes retain their rules.
+Private `ExecutionDetails` schema2 retains actual native input/output/provenance in
+the existing ForecastRun metadata table. Its legacy schema1 serializer omits new
+fields. Migration `f4_20261016_metadata_v2`, parent0027, only widens the metadata
+version check; no new table, backfill or changes to old rows. Downgrade refuses
+retained metadata2. Assistant revisions on other branches are not merged or edited.
+
+ForecastRun completion reuses owned transactions and uncertain-commit reconciliation;
+Planning acceptance/claim/retain/finalize keeps existing authority, lost-ACK, process
+incarnation, terminal and stale-writer fences. Retained native quantiles and raw input
+are reconciled against the acceptance pin in the durable aggregate. Existing public
+C03/C08 reads require current sensitive grants/Store membership and expose actual
+model/version/artifact digest, not private declarations, paths or native metadata.
+F4 forecast replay is a retained read with no artifact I/O, inference, training,
+procurement or live operational capture. Old host computational replay entrypoints
+keep their existing semantics; the offline E2/F3 semantic verifier is a different tool.
+
+Failures retain explicit `CHALLENGER_ARTIFACT_MISSING` or sanitized categories `CHALLENGER_DATA_BLOCKED`,
+`CHALLENGER_RUNTIME_UNAVAILABLE`, `CHALLENGER_ARTIFACT_CORRUPT` or
+`CHALLENGER_TECHNICAL_FAILURE`; raw native exceptions remain chained internally.
+No challenger failure falls back to B. Artifact mutation after acceptance rejects
+execution; mutation after completion cannot change old retained reads.
+
+The no-training fixture rebinds only the known E2 constant synthetic artifact
+`0c3c2b7539c0050bdf52fbfffa56f6ddac03c68654b3462ad1d2f2626896d936`.
+Booster bytes remain identical; declared test scope/runtime/publication produce a
+new artifact identity with parent provenance. It is not a relabelled research model.
+The original artifact and old experiments are never overwritten. The schema3 source
+change alters native adapter runtime identity: historical E2/F2/F3 source/runtime
+replay must use its original committed source/environment and retained receipts,
+not rewritten manifests or silent compatibility under F4 source.
+
+Profiling is **UNRESOLVED**: the single authorized hard120s batch consumed its
+claim, then stopped at2.6144s with ARTIFACT_RUNTIME_MISMATCH on an older retained
+artifact. Zero new Planning executions/inference/fits occurred in that batch; no
+cold/warm, solver, BOM, serving or storage timings were established. The selected
+artifact was not prechecked for compatibility. No retry, budget expansion or
+optimization followed. F3 timeout/INCOMPLETE causes remain unproven; batch caps are
+not per-request SLAs. Correctness tests below are independent of that consumed batch.
+
+Current commands, verification scope and limitations:
+[F4 runbook](../runbooks/FULL_TEST_FLOW.md#forecast-f4). Production promotion remains
+LOCKED; no accuracy/real savings claim, browser E2E or production runtime acceptance.
+Rollback removes test composition and F4 caller wiring while preserving every
+ForecastRun/PlanningRun, artifact and receipt. Never downgrade away retained metadata2.
 
 ## Source snapshots and trace reliability
 
@@ -758,7 +837,8 @@ Real source vintages/unseen independent demand, more origins/diverse operational
 periods and later operational acceptance remain missing. Production/promotion LOCKED,
 E5 NOT_STARTED; /3 checkpoint is `a863fb5`; F1 is checkpointed at
 `6a50d815ba983f511a92388b2ade18d6fd6b4b93`. F2 checkpoint is
-`fcb33abb9c2316d41d564d5653233f6dc4e80a5e`; F3 changes remain uncommitted for review.
+`fcb33abb9c2316d41d564d5653233f6dc4e80a5e`; F3 checkpoint is
+`5a8e0a853519004237d4e0900a1266d0a69caac1`, retaining PARTIAL19/24 status.
 Commands/recovery: [runbook](../runbooks/FULL_TEST_FLOW.md#challenger-demo-abc).
 
 <a id="forecast-f2"></a>
@@ -1336,7 +1416,7 @@ conversation, not an accumulating report in this document.
 | E2 | COMPLETE internal opt-in adapter: strict typed capture/artifact admission, pinned installed native stages, separate quantile/CQR/provenance, private immutable evidence/cache and exact fresh-process replay. Local checkpoint b92d2c43cbf82e8308043f60630c9f83f65abefb; production wiring/activation disabled. |
 | E3 | PARTIAL: causal per-origin A/B/C training/point/CQR harness, paired metrics and fresh-process replay VERIFIED on synthetic correctness corpus. REAL_BENCHMARK_BLOCKED / INSUFFICIENT_EVIDENCE; real accuracy not verified. |
 | E4 | PARTIAL / COUNTERFACTUAL_SYNTHETIC: common frozen operational fixtures, host forecast-only planning, separate fixed-basket observed realized evaluation, hand/finite oracles and retained checkpoints. Bounded manifest INCOMPLETE at wall budget; REAL_IMPACT_BLOCKED, no savings/promotion claim. |
-| E5 | NOT_STARTED: integration acceptance/current authorization and fresh-session persistence/restart/replay→review evidence→explicit user promotion/config selection and rollback; no automatic promotion. |
+| E5 | Production activation/promotion NOT_STARTED. F4 separately covers isolated synthetic test integration/current auth/fresh-session/process retention; it does not authorize production selection, activation or automatic promotion. |
 
 E1–E4/admission are checkpointed locally; the main-readiness merge and separate
 A/B demo execution above do not open E5. Changes after checkpoint/merge remain WIP.

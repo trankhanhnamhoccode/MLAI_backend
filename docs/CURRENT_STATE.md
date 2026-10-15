@@ -1,5 +1,18 @@
 # Current state
 
+CURRENT FACT F4 (challenger branch, test-only): C0 explicit internal composition
+connects canonical observations → pinned native inference → retained ForecastRun →
+unchanged host Planning worker → durable PlanningRun/C03/C08. Default startup stays
+host; C1 experimental, production LOCKED. Private acceptance/2, raw input schema3
+and execution metadata2 preserve older serializers/digests. Dedicated limited-role
+PostgreSQL test target is loopback5438; constraint-only head
+`f4_20261016_metadata_v2` follows0027. No production/FE/API DTO or permission change.
+F3 checkpoint `5a8e0a8` remains PARTIAL19/24 synthetic, not real impact acceptance.
+One120s profiling batch failed admission at2.6144s/zero Planning executions;
+timing causes unresolved, no retry/optimization. F4 stays WIP for review.
+Canonical [F4 behavior and limits](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
+and [verification/setup](runbooks/FULL_TEST_FLOW.md#forecast-f4) own the details.
+
 ## CURRENT FACT — forecast challenger E1–E4 (isolated branch)
 
 E1 compatibility/protocol và E2 internal adapter COMPLETE trong worktree riêng
@@ -14,7 +27,7 @@ synthetic correctness artifact; không accuracy/calibration/promotion proof.
 
 ACCEPTED DECISION theo yêu cầu E1: BE làm host, forecast mới qua adapter riêng;
 giữ BOM/loss/Product serving/FEFO/procurement/requirements/winner/retained Planning.
-E1–E5 không LLM/OpenRouter. Production serving/API/schema/permissions, FE, engine
+E1–E5 không LLM/OpenRouter. Production serving/public API/permissions, FE, engine
 source và runtime/DB người dùng không đổi. E2 production mode bị khóa, CLI OFF mặc
 định, không operational DB caller. E2 checkpoint local
 `b92d2c43cbf82e8308043f60630c9f83f65abefb`; E3 harness checkpoint local
@@ -83,7 +96,8 @@ ledgers trong53.5s,0 solves/fits, báo rõ5 missing; read-only metrics ở names
 F3 verifications, không giả final report của batch bị timeout.
 [Canonical F3](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3) sở hữu setup,
 limits/proof/partial results; [runbook](runbooks/FULL_TEST_FLOW.md#forecast-f3) sở hữu
-commands/evidence. F3 giữ WIP chưa commit; F4 chưa mở, promotion LOCKED.
+commands/evidence. F3 checkpoint `5a8e0a8`; F4 test-only integration is described above,
+promotion LOCKED.
 
 ## CURRENT FACT — Data Readiness D1–D5 tích hợp main local
 

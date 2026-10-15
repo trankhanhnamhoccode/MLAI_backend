@@ -1,5 +1,16 @@
 # Remaining work and acceptance gates
 
+CURRENT FACT F4: isolated C0 test opt-in reaches the real ForecastRun/Planning worker
+and retained public reads; production/default serving remains host, C1 exploratory.
+F3 checkpoint `5a8e0a8` is PARTIAL19/24 synthetic, not production/real-impact acceptance.
+Profiling consumed its sole batch at an artifact/runtime admission error, so timing
+diagnosis and optimization remain unresolved. F4 changes stay uncommitted for review;
+no next slice, promotion, main merge-back or deployment is authorized. See the
+[canonical F4 boundary/gates](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
+and [F4 verification](runbooks/FULL_TEST_FLOW.md#forecast-f4). Before main integration:
+review migration lineage against other branches, preserve original replay source/
+artifacts, and resolve remaining timing/production eligibility and browser E2E gates.
+
 ## ACCEPTED DECISION / CURRENT FACT — forecast engine challenger
 
 Phạm vi E1 được người dùng duyệt: giữ BE host và toàn bộ Planning business authority;
@@ -18,9 +29,10 @@ real accuracy REAL_BENCHMARK_BLOCKED, promotion INSUFFICIENT_EVIDENCE.
 E4 PARTIAL: counterfactual shared-facts host Planning + fixed-basket realized harness;
 bounded execution INCOMPLETE khi chạm wall budget, checkpoints giữ nguyên, không
 thay fixtures/search resources để tìm kết quả đẹp. Real impact REAL_IMPACT_BLOCKED.
-E5 acceptance/promotion NOT_STARTED. Thiếu authorized unseen demand/vintages/calendar
-và historical operational snapshots chặn real quality/impact claims. Đã dừng sau E4;
-bước E5/serving activation vẫn chưa được mở. CURRENT FACT: A/B demo hồi cứu manifest/2
+E5 production activation/promotion NOT_STARTED; isolated technical integration is
+covered separately by the explicit F4 scope above. Thiếu authorized unseen demand/
+vintages/calendar và historical operational snapshots chặn real quality/impact claims.
+Không mở production serving. CURRENT FACT: A/B demo hồi cứu manifest/2
 đã chạy và replay8 checkpoints VERIFIED trên baseline đến08/07, với declarations
 được duyệt theo dataset hash. Đây là EXPLORATORY A/B, không phải bằng chứng C.
 C tại /2 vẫn BLOCKED (calendar vintages/native train minimum). CURRENT FACT /3:
@@ -56,7 +68,7 @@ Both finite-oracle cases pass without upgrading native proof. Common baskets on
 24/06 yield identical fixed-basket observed service; on01/07 scarce_purchase B
 buys3 packs/63 VND vs C0/C1 4 packs/83 VND, but censored truth blocks realized
 evaluation. No empirical production winner, savings or inventory-impact claim.
-F3 stays WIP; [canonical F3](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3)
+F3 is checkpointed at `5a8e0a8`; [canonical F3](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3)
 owns assumptions, resources, proof/partial results and replay limits.
 PROPOSAL F4 acceptance/integration remains NOT_STARTED/unauthorized: requires
 reviewed forecast choice, provenance/availability and operational completeness,

@@ -1,0 +1,18 @@
+name: shelfcash-challenger-f4
+services:
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${F4_POSTGRES_PASSWORD:?Use private F4 env file}
+    ports:
+      - "127.0.0.1:5438:5432"
+    volumes:
+      - challenger-f4-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+volumes:
+  challenger-f4-data:

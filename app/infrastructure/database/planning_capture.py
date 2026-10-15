@@ -44,7 +44,8 @@ class PostgresPlanningCapture:
                 facts=load_readiness(s,record.store_id)
                 now=self.clock()
                 matched=True
-                try:current=prepare_observations(facts,record.store_id,record.request.forecast_start_date)
+                try:current=prepare_observations(facts,record.store_id,record.request.forecast_start_date,
+                    native_challenger=record.public_acceptance.challenger_test is not None)
                 except AuthError as error:
                     if error.code!='NO_COMPUTABLE_PRODUCTS':raise
                     matched=served is None
