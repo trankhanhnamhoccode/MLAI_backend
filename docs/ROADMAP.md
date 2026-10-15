@@ -9,8 +9,8 @@ matrix, current gaps, issue/assumption proposal, API impact và acceptance cases
 | Slice | Status và gate |
 | --- | --- |
 | D1 audit/policy | COMPLETE, local checkpoint c930dfe66cfda5de5896164e16fcf8f4c7acaefe từ main052cddee; documentation-only, không runtime/API delta; không push/merge. |
-| D2 forecast eligibility/fallback | COMPLETE trong authorized BE scope, source/tests/docs WIP chưa commit. Shared choice + typed internal assessment, scoped all-censored R01/C01/Today fix, dependency/runtime-vs-integrity; focused forecast/HTTP/PG/replay gates, OpenAPI giữ nguyên. Commands ở runbook D2; không full-suite/accuracy claim. |
-| D3 confirmed facts/partial scope | PROPOSAL; reuse declarations/config/provenance, scoped exclusions và sound alternative offers; giữ unknown khác zero. Chưa authorized. |
+| D2 forecast eligibility/fallback | COMPLETE, local checkpoint9f720caf01fdf0a8f586c049660a2fcc9447ade3. Shared choice + typed internal assessment, scoped all-censored R01/C01/Today fix, dependency/runtime-vs-integrity; focused forecast/HTTP/PG/replay gates, OpenAPI giữ nguyên. Không full-suite/accuracy claim. |
+| D3 confirmed facts/partial scope | COMPLETE trong authorized scope, local WIP chưa commit: accepted offer_eligibility/1, scoped local omission/source proof, remaining eligible domain/zero purchase; shared unknown/invalid/safety vẫn block; old-policy queued/retained payloads giữ semantics/digests. Focused acceptance tại runbook D3; contextual can_generate không đổi. |
 | D4 public readiness/warnings | PROPOSAL; additive existing R01/C01/I06/Planning projections, mode semantics review/FE delta/OpenAPI diff; no GET computation. Chưa authorized. |
 | D5 acceptance/benchmark | PROPOSAL; deterministic linked acceptance và protocol mới nếu thử fallback/assumptions; E1–E4 evidence giữ nguyên. Chưa authorized. |
 

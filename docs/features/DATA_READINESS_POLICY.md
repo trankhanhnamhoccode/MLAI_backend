@@ -14,7 +14,9 @@ HISTORICAL INFORMATION — D1 là audit source/design tại checkpoint local
 implementation WIP trong nhánh D, chưa merge/main runtime; xem mục D2 bên dưới.
 Main được audit tại
 `052cddee075e165af2c0cea42ebc2e616c396760`. Worktree D1 `backend-data-readiness`,
-branch `feat/data-readiness`, xuất phát đúng main này. Không nhập E1–E4.
+branch `feat/data-readiness`, xuất phát đúng main này. D2 checkpoint local
+`9f720caf01fdf0a8f586c049660a2fcc9447ade3`; D3 source/tests/docs WIP, chưa merge/main.
+Không nhập E1–E4.
 Đối chiếu read-only challenger tại `c2544c1025815bd0ccef9acb524f6f265dd03c45`
 cộng E4/dataset-admission WIP; các findings này không phải khả năng của main.
 Ma trận/source trace D1 dưới đây là kiểm tra tĩnh; kết quả implementation/verification
@@ -59,7 +61,8 @@ files trong các entrypoints đã trace. Đây không phải kết luận mọi 
 
 Mọi code không có nhãn PROPOSED là code đang có tại consumer được chỉ ra; tên code
 có thể khác qua adapter. `B` = blocker, `W` = warning, `I` = irrelevant/no issue.
-Classification bên dưới mô tả current behavior rồi chỉ ra delta PROPOSAL khi cần.
+Ma trận này ghi baseline main/D1; implementation D2/D3 và proposals còn lại được
+phân biệt trong các mục cùng tên bên dưới.
 Invalid/conflicting không được xem như merely missing để fallback bỏ qua.
 
 | Fact/field; source → consumer | Action / scope; khi thực sự bắt buộc | Classification khi thiếu; fallback/declaration hiện có | Code, hệ quả, bổ sung và delta |
@@ -105,12 +108,12 @@ Invalid/conflicting không được xem như merely missing để fallback bỏ 
    `custom.available` đồng thời `can_generate=false` do default unknown. Đây là
    scope limitation của readiness, không chứng minh C02 bị chặn bởi cùng guard.
    R01 chưa nhận selected custom/saved intent nên không thể chứng nhận request đó.
-4. **Offer thiếu fact kéo scope lớn hơn offer**: `declarations_for` thêm
+4. **Offer thiếu fact kéo scope lớn hơn offer tại main/D1–D2**: `declarations_for` cũ thêm
    `OFFER_BOUND_UNKNOWN` dạng Store blocker và bỏ offer; `project_capture_v2` biến
    `SUPPLIER_TERM_FACT_UNAVAILABLE` thành dependent Product exclusion. Do đó một
-   alternative đủ facts không tự giải được blocker này. PROPOSAL D3 chỉ cho bỏ offer
-   khi chứng minh scope/cost/constraints của phần còn lại sound, retain omission và
-   hạ proof về captured eligible domain. Không mặc định missing offer=no supplier.
+   alternative đủ facts không tự giải được blocker này. D3 thêm admission versioned
+   cho new Runs như mục dưới, giữ old-policy Runs và nguyên tắc missing offer không
+   phải no-supplier proof. Contextual R01/C01 refinement vẫn thuộc D4.
 5. **Thông tin fallback chưa đi hết public R01/C01**: tại main/D1, `assess` trả
    `None` khi choice fallback hợp lệ. D2 internal assessment đã có method/reason/
    warnings, nhưng public projection giữ nguyên; C01 chỉ
@@ -176,14 +179,94 @@ explicit no-history scope và foreign Store denial. Synthetic tests không chứ
 real accuracy. Commands/owned DB/manual flow tại
 [runbook D2](../runbooks/FULL_TEST_FLOW.md#data-readiness-d2).
 
-D2 giữ các vấn đề default/custom/saved contextual readiness, offer omission và public
-warning/method fields ở D3/D4. Current public action warnings không tự thêm
+D2 giữ các vấn đề default/custom/saved contextual readiness và public warning/method
+fields ở D4; offer omission được triển khai D3 riêng. Current public action warnings không tự thêm
 BASELINE_FALLBACK từ internal assessment trong slice này. Không sửa FE/permissions,
 accepted ADR, E1–E4, runtime người dùng hoặc workbook gốc. Sáu workbook mới trong
 ignored runtime/uploads là optional acceptance inputs theo consumer, chưa dùng/train
 trong D2; không kế thừa findings calendar của demo cũ.
 
-## Warning/blocker/assumption public extension — PROPOSAL D3–D4
+## CURRENT FACT — D3 confirmed source facts và offer admission
+
+New C02 acceptance pin `offer_eligibility/1` trong private PublicPlanningAcceptance.
+PlanningPipelineDeclarations/operational request giữ typed
+[OfferAdmission/OfferOmission](../../app/application/contracts/offer_admission.py):
+Store/term/supplier/Ingredient IDs, canonical term version/effective dates, reason,
+missing fields và canonical source reference. Proof scope là
+CAPTURED_ELIGIBLE_OFFERS_ONLY. Capture/result digests bao gồm policy/omissions;
+không thay objective, requirements, native resource/deadline/certification policy,
+serving fairness, loss hoặc winner rules.
+
+| Classification | Admission D3 |
+| --- | --- |
+| A — thiếu fact local, identity/version/effectivity/dependencies xác định | Omit offer, giữ OFFER_OMITTED warning/evidence. Không loại Product nếu alternatives hoặc existing stock vẫn cho bài toán xác định. |
+| B — invalid/conflicting, corrupt, cross-Store, không xác định scope | Giữ blocker/execution failure đúng source boundary; không dùng omission để che. Unit/date/identity conflicts và negative values không coi như absent. Unknown recipe graph vẫn global blocker. |
+| C — shared budget/fee/context/capacity/supplier-limit/inbound unknown | Giữ blocker ngay cả khi omit hết offers; không đặt fees0, unlimited hay CONFIRMED_NONE ngầm. |
+
+A được nhận trong các trường hợp cụ thể: zero-cost term không có finite source/
+declared bound; absent/null required scalar pack price/size/MOQ/lead/unit nếu các
+facts còn lại validate và identity/date scope đủ; shelf_life_days unknown khi
+Ingredient có expiry_tracking. Shelf life không cần cho untracked Ingredient không
+phát issue. Canonical term promotion vẫn strict; omission không cho phép import
+record thiếu required facts vào DB. Missing scalar path chủ yếu là detached/source
+admission boundary; shelf-life nullable và zero-cost bound là cases canonical thật.
+Không sửa price basis/MOQ/positive-price value để làm offer eligible.
+
+Bound và quantities/costs chỉ tính từ offers còn eligible. Original source facts,
+term identities và raw menu vẫn retained trong capture; omitted terms không vào
+PreparedDecisionInput/procurement input. Fee coverage được kiểm lại trên remaining
+offers và known component bindings, nhưng vẫn cần unique COMPLETE declaration,
+đúng currency/horizon/mode. Coverage UNKNOWN, unresolved component identity,
+multiple current fee rows, conflicting currency/effectivity không được omission
+giải quyết. Supplier constraints/capacity được validate trên original declarations
+trước projection; chỉ bỏ scoped purchase limit của omitted-only pair khỏi computed
+envelope, giữ original proof. Applicable safety-stock kể cả0 vẫn block như trước.
+
+Không eligible offer vẫn xét zero-purchase trong engine hiện có. Stock đủ có thể có
+winner/outlay0; stock không đủ có thể no eligible candidate. Engine proof vẫn
+CAPTURED_FINITE_DOMAIN_ONLY, liên kết admission marker để chỉ rõ domain đã hạn chế;
+không có market-infeasibility hoặc no-supplier claim. Existing technical bounds
+không thành physical supplier capacity. Không mở search universe.
+
+Confirmed inventory vẫn dùng current dependency-bound COMPLETE_CURRENT_LOTS hoặc
+CONFIRMED_EMPTY; mutation hoặc multiple-current proofs không được chọn thuận lợi.
+Explicit fee NONE khác unknown; effective procurement declarations/approved unit
+conversions vẫn cùng workflows. Không thêm assumptions service/declaration/default,
+không sửa canonical stock/terms/fees khi Planning. Missing recipe/stock dependencies
+giữ Product/date exclusions, raw menu và override NOT_EVALUATED; standalone BOM
+all-or-error giữ nguyên. Forecast serving không nhận thêm Planning prerequisites.
+
+Private PlanningSourceEvidence bổ sung optional typed confirmations: exact source
+keys/entity IDs, provenance digest, unique matching immutable Import audit ID/actor/
+canonical commit time khi có proof. Đây là actor/time của source writer audit,
+không tự nhận là Owner profile approver hoặc thời điểm người dùng review trước đó.
+Thiếu hoặc ambiguous audit giữ actor/time/audit=null;
+không dùng Run actor giả làm source confirmer. Existing term/fee/declaration payloads
+giữ values, versions và effectivity; no live rebuild khi read. Existing immutable
+mapping approval/reuse và IMPORT_VALUE/batch-facts rules không đổi, không review lại
+mỗi upload nếu proof còn hợp lệ. Internal/manual source không có Import audit thì
+actor proof vẫn unknown rõ ràng; D3 không tạo approval fact để lấp gap này.
+
+Legacy fields mặc định null và được serializer elide khi absent; /1 và old /2 request/
+source/capture bytes/digests giữ nguyên. Old queued public acceptance không có marker
+tiếp tục old admission khi worker chạy; completed Runs không reclassify từ live facts.
+Retained validator đối chiếu accepted policy, omission identity/version/source bound
+và source-proof coverage. Không migration hoặc đổi planning_storage/1/package1.
+
+Public C03/result, Ingredient inspection và explanation reuse PlanningNotification
+OFFER_OMITTED với existing details.entity_id/ingredient_ids/classification/proof_scope/
+suggested_action; không endpoint/DTO field mới. FE generic warning renderer có thể
+đọc existing fields, không có FE source change. Tổng thể readiness/warning UX thuộc
+D4. R01/C01 vẫn conservative với old offer-bound checks và default-mode estimate;
+D3 không âm thầm đổi can_generate theo selected mode.
+
+Coverage mới tại [unit admission](../../tests/unit/test_offer_admission.py) và
+[HTTP/PG](../../tests/integration/test_planning_offer_admission.py); Import source
+proof nối [supplier acceptance](../../tests/integration/test_import_supplier_basis.py).
+Commands/expected cases ở [runbook D3](../runbooks/FULL_TEST_FLOW.md#data-readiness-d3).
+Synthetic correctness không là forecast accuracy hay research benchmark evidence.
+
+## Warning/blocker/assumption public extension — PROPOSAL D4
 
 ACCEPTED DECISION — warning vẫn cho chạy; blocker chặn đúng action/scope; irrelevant
 missing không có issue. Existing retained Runs không bị update/reclassify theo policy
@@ -336,7 +419,7 @@ không đổi C thành baseline trong old paired cohort hoặc nới gate để 
 | --- | --- | --- |
 | D1 | Audit/policy này, CURRENT_STATE/ROADMAP; không runtime/API/schema delta | Source/test trace, JSON examples, local links, UTF-8/whitespace; dừng chưa commit/push/merge |
 | D2 | CURRENT FACT implementation WIP: shared choice + typed internal assessment, scoped history blockers và dependency/runtime classification; public shapes/replay giữ nguyên | Focused forecast/HTTP/PostgreSQL regressions, linked all-censored fail→fix, fresh-session retained evidence; không challenger activation |
-| D3 | Confirmed facts và partial scope; reuse M04/N5/preview/commit, scope declarations, config revisions; proof cho offer omission/known dependency exclusions | Tests alternatives/unknown graph, stale/conflict/version/actor/effectivity, retained facts và no canonical hypothetical writes; fresh-session PG khi thay persistence |
+| D3 | CURRENT FACT COMPLETE, local WIP chưa commit: accepted versioned offer admission, existing confirmed facts/source proof, scoped omission và retained eligible domain; /1/legacy giữ nguyên | Focused alternatives/fee/capacity/safety/unknown graph/stock/stale/permissions/Import/replay, fresh-session PG và OpenAPI equality |
 | D4 | Public contextual readiness/warnings; reuse R01/C01/I06/C02/C03, existing fields/extensions; không endpoint chỉ để warnings/config facts | OpenAPI diff và additive DTO/FE adapters, current authorization/no leak, GET no solver/business mutation, retained/new policy separation |
 | D5 | Acceptance/benchmark; protocol mới chỉ khi cần fallback/assumptions; không sửa E1–E4 | Deterministic end-to-end cases, fresh-session persistence, authorized dataset/protocol masks, reproducible manual flow; full suite ở integration milestone nếu thay đổi rộng |
 
@@ -362,15 +445,15 @@ safety stock nếu muốn hỗ trợ, và nguồn/phạm vi/effectivity của m�
 declaration mới nếu existing workflows chưa biểu diễn được. Không cần hỏi lại Owner
 cho immutable proof hợp lệ. CQR/calendar changes hoặc research promotion có review
 riêng, không là điều kiện để dùng baseline hiện có. D2 được authorized riêng;
-D3–D5 chưa được mở.
+D3 được authorized riêng; D4–D5 chưa được mở.
 
 ## Acceptance cases — D2 coverage và PROPOSAL D3–D5
 
 CURRENT FACT D2: forecast/stockout/eligibility/GET/replay cases được cover bởi
 [unit eligibility](../../tests/unit/test_forecast_eligibility.py),
 [linked HTTP/PG](../../tests/integration/test_forecast_readiness.py) và regressions
-F1–F3/R1. Các thay đổi facts/offer/public extensions ghi D3/D4/D5 vẫn là PROPOSAL,
-không suy từ passing forecast cases rằng các slices đó đã triển khai.
+F1–F3/R1. D3 facts/offer cases có coverage riêng nêu trên; public extensions D4/D5
+vẫn là PROPOSAL, không suy từ passing forecast/Planning cases rằng đã triển khai.
 
 | Case | Outcome cần giữ/chứng minh | Coverage / slice |
 | --- | --- | --- |
@@ -389,7 +472,10 @@ không suy từ passing forecast cases rằng các slices đó đã triển khai
 | Approved immutable mapping proof reuse vs batch IMPORT_VALUE | Không reapprove không cần thiết; source/rows/current rights vẫn validate; batch facts không reusable defaults | Import existing workflow, D3 |
 | Readiness/read/replay sau policy/config thay đổi | GET không solve/infer/train/business mutate; no sensitive-data leak; old Run không rewrite/reclassify; new Run new identity | R1/P2, D4/D5 |
 
-Rollback scope D1: ba tài liệu tại checkpoint c930dfe. Rollback D2 chỉ source/tests/
-docs và test-target allowlist của D2; giữ retained data/artifacts và private test config.
+Rollback scope D1: ba tài liệu tại checkpoint c930dfe. D2 checkpoint9f720caf;
+D3 scope chỉ admission/capture/source proof/projections/contracts/tests/docs.
+Giữ retained data/artifacts/private test config. Khi đã có D3 Runs, rollback new
+acceptance cần giữ reader hiểu D3 optional fields; binary D2 không tự hiểu payload
+D3 extra fields. Không xóa evidence hoặc đổi digest để ép đọc bằng binary cũ.
 Không downgrade DB, sửa main/challenger WIP hoặc xóa workbook/runtime để rollback.
 Verification commands/results thuộc conversation; đây không phải PASS report.

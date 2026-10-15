@@ -104,7 +104,7 @@ class PublicPlanning:
             current,summary,_=self.auth.authorize_in_session(s,token,store,RUN_PERMISSIONS,csrf=csrf or '')
             facts=load_readiness(s,store)
             return PublicPlanningAcceptance(session_digest=current.session_digest,authorization_version=summary.authorization_version,
-                serving=facts.serving,receipt_warnings=tuple(dto.PlanningNotification(code=w.code,message='Review saved/default change history.',
+                serving=facts.serving,offer_eligibility_policy='offer_eligibility/1',receipt_warnings=tuple(dto.PlanningNotification(code=w.code,message='Review saved/default change history.',
                     details=dto.PlanningNotificationDetails(field=w.field,default_updated_at=w.default_updated_at,saved_updated_at=w.saved_updated_at)) for w in resolved.warnings))
         try:return self.runs.accept(actor.user_id,store,key,request,resolve,authority=authority,public_metadata=metadata)
         except PlanningPersistenceError as error:public_failure(error)

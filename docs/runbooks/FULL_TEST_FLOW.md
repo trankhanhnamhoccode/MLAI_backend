@@ -1,5 +1,60 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="data-readiness-d3"></a>
+## CURRENT FACT — D3 offer admission/confirmed facts, isolated acceptance
+
+Worktree/branch/test-only DB/role/interpreter như [D2 setup](#data-readiness-d2).
+D2 checkpoint local `9f720caf01fdf0a8f586c049660a2fcc9447ade3`; D3 WIP chưa commit/
+push/merge. Chạy D2 target/current_database/current_user/limited-role/flags guard
+trước tests/reset/migration; chỉ shelfcash_readiness_test/shelfcash_readiness_tester
+tại loopback5435, không main local DB hoặc DB test nhánh khác. Không background
+workers/provider/email/training/benchmark; Planning worker trong tests được gọi
+`run_one()` đồng bộ. Fixtures portable synthetic, không đọc/sửa raw workbook.
+
+Focused commands từ worktree D, chạy tuần tự, với `$readinessPython` ở setup D2:
+
+```powershell
+& $readinessPython -m pytest tests/unit/test_offer_admission.py tests/unit/test_import_inventory_completeness.py tests/unit/test_planning_run.py tests/unit/test_application_contracts.py::test_application_has_no_http_or_direct_queries -q --tb=short
+& $readinessPython -m pytest tests/integration/test_planning_offer_admission.py tests/integration/test_planning_public.py tests/integration/test_planning_public_sources.py tests/integration/test_planning_inspection.py -q --tb=short
+& $readinessPython -m pytest tests/integration/test_planning_public_security.py::test_current_revoke_at_every_boundary tests/integration/test_planning_public_security.py::test_store_membership_read_is_not_creator_only_and_foreign_hidden tests/integration/test_planning_public_security.py::test_retained_digest_and_typed_evidence_corruption_fails_closed tests/integration/test_import_supplier_basis.py::test_public_import_to_planning_capture_and_retained_price tests/integration/test_import_supplier_basis.py::test_shared_basis_reuse_never_reuses_commercial_values tests/integration/test_import_supplier_basis.py::test_fee_dependency_change_invalidates_preview tests/integration/test_import_setup_stock.py::test_fresh_multifile_setup_readiness_custom_planning_and_retained_run -q --tb=short
+& $readinessPython -m scripts.dev status --test-database
+git diff --check
+```
+
+Legacy internal /2 regression gate khi thay capture/contracts:
+`python -m pytest tests/unit/test_decision_pipeline_v2.py tests/unit/test_decision_snapshot_adapter_v2.py tests/unit/test_planning_run.py tests/unit/test_planning_setup.py -q --tb=short`.
+Không tự lặp lại broad gate sau chỉ documentation/presentation change nếu affected
+checks đủ. All suites/fixtures trên dùng supported reset/migration test helper;
+head0027 giữ nguyên, không có D3 migration hoặc operational seed.
+
+Manual cases/expected evidence:
+
+- Zero-cost offer không bound + alternative đầy đủ → recommendation trên remaining
+  domain; capture giữ omitted ID/version/reason, public OFFER_OMITTED warning có
+  existing classification/proof_scope/suggested_action. Ingredient detail/explanation
+  cũng giữ issue; fresh Session chứng minh raw term/stock không bị Planning sửa.
+- Không eligible offer + stock đủ → zero-purchase winner; thiếu stock → no eligible
+  candidate với proof captured finite domain/UNPROVEN, không market impossibility.
+- Expiry-tracked Ingredient với nullable shelf-life của một offer → omit offer đó,
+  dùng alternative có shelf-life nếu đủ facts. No tracking không đòi shelf-life.
+- Missing fee coverage/currency/horizon/binding/multiple current fee facts vẫn block;
+  explicit COMPLETE NONE khác unknown. Remaining offer fees được tính từ đúng keys.
+- Inventory proof stale sau mutation hoặc nonunique → dependent Product exclusion;
+  CONFIRMED_EMPTY khác missing stock. Unknown graph vẫn block capture; mandatory
+  safety constraint0 vẫn block trước solver. Không đổi standalone BOM all-or-error.
+- New acceptance pin offer_eligibility/1; existing queued/retained Run không marker
+  giữ old semantics. New Runs retain source values/versions/effectivity và exact
+  Import audit actor/time khi unique proof; unknown source actor giữ null. Current
+  revoked rights/foreign Store vẫn deny, immutable mapping reuse không reapprove
+  khi spec còn hợp lệ; stale preview và batch commercial values giữ guards cũ.
+
+OpenAPI compare với checkpoint D2 dùng archived tracked source trong ignored
+runtime/verification/d3 và own interpreter, block DB connect; DTO/routes không đổi.
+New warning meanings dùng existing fields; không thay R01/C01 can_generate/default/
+custom/saved estimate. [Policy D3](../features/DATA_READINESS_POLICY.md) sở hữu
+admission/proof/version rules và remaining D4/D5 scope. Commands/results thực thi
+thuộc conversation; không claim full-suite, FE E2E, accuracy hoặc E3/E4 evidence.
+
 <a id="data-readiness-d2"></a>
 ## CURRENT FACT — D2 forecast readiness trên test target riêng
 

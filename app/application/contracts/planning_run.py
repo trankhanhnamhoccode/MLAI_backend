@@ -102,7 +102,7 @@ class PlanningRunRecord(Contract):
         if self.public_execution is not None and self.status not in ('completed','failed'):
             raise ValueError('Terminal execution metrics cannot be published early')
         if self.public_capture is not None:
-            if self.capture is None:raise ValueError('Public capture needs retained operational capture')
+            if self.capture is None or self.declarations is None:raise ValueError('Public capture needs retained operational capture and declarations')
             if self.public_capture.forecast is not None and (self.declarations is None or self.public_capture.forecast.forecast_run_id!=self.declarations.forecast_run_id):
                 raise ValueError('Public forecast/operational capture identity mismatch')
             public=self.public_capture
@@ -111,10 +111,31 @@ class PlanningRunRecord(Contract):
                 if {i.ingredient_id for i in public.ingredient_labels}!=expected_ids:
                     raise ValueError('Captured ingredient label scope differs from computed scope')
             sources=public.operational_evidence
+            admission=self.declarations.offer_admission
+            if self.public_acceptance.offer_eligibility_policy!=(admission.policy if admission else None):
+                raise ValueError('Captured offer policy differs from accepted policy')
+            if admission and (sources is None or sources.confirmations is None):
+                raise ValueError('New offer policy requires captured source proof references')
             if sources is not None:
+                if sources.confirmations is not None:
+                    expected={(kind,getattr(e,'term_id' if kind=='supplier_term' else 'supplier_id' if kind=='supplier' else 'id'),
+                        e.source_system_key,e.source_record_key) for kind,rows in (
+                            ('supplier_term',sources.terms),('supplier',sources.suppliers),
+                            ('fee',sources.fees),('declaration',sources.declarations)) for e in rows}
+                    actual=[(e.entity,e.entity_id,e.source_system_key,e.source_record_key) for e in sources.confirmations]
+                    if len(actual)!=len(set(actual)) or set(actual)!=expected:
+                        raise ValueError('Source confirmation scope differs from retained source revisions')
                 offers={o.term_id:o for o in self.declarations.offers}
                 terms={t.id:t for t in self.capture.source.facts.supplier_terms} if self.capture.source else {}
                 evidence={e.term_id:e for e in sources.terms}
+                if admission:
+                    for omitted in admission.omissions:
+                        original=evidence.get(omitted.term_id)
+                        if original and original.version!=omitted.version:
+                            raise ValueError('Omission source revision differs from captured term revision')
+                        if (omitted.reason=='OFFER_BOUND_UNKNOWN' and original
+                                and original.payload.maximum_order_base_quantity is not None):
+                            raise ValueError('Cannot omit a source-bounded offer as unbounded')
                 if len({b.term_id for b in sources.bounds})!=len(sources.bounds) or {b.term_id for b in sources.bounds}!=set(offers):
                     raise ValueError('Retained offer bound coverage differs from declarations')
                 for bound in sources.bounds:

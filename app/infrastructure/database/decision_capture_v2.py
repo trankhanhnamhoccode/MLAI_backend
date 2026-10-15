@@ -17,6 +17,7 @@ from app.application.contracts.supplier import SupplierTermResult
 from app.application.contracts.forecast_model import ExecutionDetails
 from app.application.decision_snapshot_source import OperationalDataError
 from app.application.forecast_serialization import restore_prepared, RetainedInputError
+from app.application.offer_admission import missing_offer_fields
 from app.domain.forecasting.validation import forecast_dates
 from app.infrastructure.database.forecast_execution_session import _execution_session
 from app.repositories.identity import StoreRepository
@@ -85,6 +86,12 @@ def read_operational_facts_v2(session: Session,request: OperationalDecisionInput
         try:
             return cls(**fields) if fields else cls.model_validate(row)
         except ValidationError as error:
+            admission=request.procurement.offer_admission
+            if entity=='supplier_term' and admission:
+                omitted=next((o for o in admission.omissions if o.term_id==row.id and o.reason=='SUPPLIER_TERM_FACT_UNAVAILABLE'),None)
+                values={field:getattr(row,field,None) for field in SupplierTermResult.model_fields}
+                if omitted and missing_offer_fields(values,error)==omitted.missing_fields:
+                    return None  # Original identity/version and missing fields remain in captured admission.
             if entity=='recipe_line':
                 problems.append(CaptureProblem(code='INVALID_RECIPE_LINE',kind='DATA_BLOCKER',entity='product',entity_id=product_id,field='recipe_line',detail=str(error)))
                 return None
@@ -153,8 +160,11 @@ def read_operational_facts_v2(session: Session,request: OperationalDecisionInput
             if supplier is None:
                 fail('TERM_SUPPLIER_SCOPE_MISMATCH', 'supplier_term', term.id, 'supplier_id', 'Supplier unavailable in Store')
             scoped(supplier, 'supplier'); remember(supplier, 'supplier')
+            if request.procurement.offer_admission and not supplier.active:
+                continue  # Same explicit active-supplier scope as declarations_for; /1 and legacy /2 stay unchanged.
             term_scope.append(SupplierTermIdentity(store_id=term.store_id,term_id=term.id,
-                ingredient_id=term.ingredient_id,supplier_id=term.supplier_id))
+                ingredient_id=term.ingredient_id,supplier_id=term.supplier_id,
+                version=term.version if request.procurement.offer_admission else None))
             terms.append(value(SupplierTermResult, term, 'supplier_term'))
     for row in ConstraintsRepository(session).list_constraints(request.store_id):
         scoped(row, 'constraint')

@@ -3,7 +3,7 @@ from datetime import timedelta
 from fractions import Fraction
 from app.application.contracts import planning_inspection as dto
 from app.application.contracts.planning_configuration import ConfigurationError
-from app.application.planning_public_projection import quantity,fraction,notice,plain,PUBLIC_CODES
+from app.application.planning_public_projection import quantity,fraction,notice,plain,PUBLIC_CODES,capture_warning
 from app.application.contracts.planning_public import PlanningNotification,PlanningNotificationDetails
 
 
@@ -62,9 +62,11 @@ def scoped_issues(record,ingredient_id,option=None):
     products={p.product_id for p,_,_ in related(prepared,ingredient_id)}
     lots={l.id for l in prepared.lots if l.ingredient_id==ingredient_id}
     terms={t.id for t in prepared.supplier_terms if t.ingredient_id==ingredient_id}
+    admission=record.declarations.offer_admission if record.declarations else None
+    if admission:terms.update(o.term_id for o in admission.omissions if o.ingredient_id==ingredient_id)
     allowed={'ingredient':{ingredient_id},'product':products,'inventory_lot':lots,'supplier_term':terms}
     problems=record.result.problems if record.result else record.capture.problems
-    output=[notice(p.code,p.field,p.entity,p.entity_id,(p.day,) if p.day else None) for p in problems if p.entity_id in allowed.get(p.entity,set())]
+    output=[capture_warning(record,p) if p.kind=='WARNING' else notice(p.code,p.field,p.entity,p.entity_id,(p.day,) if p.day else None) for p in problems if p.entity_id in allowed.get(p.entity,set())]
     retained=next((o for o in record.result.comparison.options if option and o.token==option.option_id),None) if record.result and record.result.comparison else None
     for issue in retained.issues if retained else ():
         output.extend(n for n in engine_notices(issue) if n.details.entity_id in allowed.get(n.details.entity,set()))
@@ -130,7 +132,7 @@ def explanation(record,view,option_id):
     result=view.result
     problems=record.result.problems if record.result else record.capture.problems if record.capture else ()
     blockers=list(notice(p.code,p.field,p.entity,p.entity_id,(p.day,) if p.day else None) for p in problems if p.kind=='DATA_BLOCKER')
-    warnings=list(notice(p.code,p.field,p.entity,p.entity_id,(p.day,) if p.day else None) for p in problems if p.kind=='WARNING')
+    warnings=list(capture_warning(record,p) for p in problems if p.kind=='WARNING')
     if view.forecast:warnings.extend(view.forecast.warnings)
     if result:warnings.extend(result.warnings)
     engine_issues=tuple(record.result.bom.issues) if record.result and record.result.bom else ()

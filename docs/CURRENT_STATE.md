@@ -1,10 +1,11 @@
 # Current state
 
-## CURRENT FACT — D2 forecast eligibility/readiness, local WIP
+## CURRENT FACT — D3 confirmed facts/partial Planning scope COMPLETE, local WIP
 
 Isolated `backend-data-readiness` / `feat/data-readiness` từ main052cddee, D1 committed
-local `c930dfe66cfda5de5896164e16fcf8f4c7acaefe`. D2 COMPLETE trong BE scope đã giao,
-source/tests/docs còn WIP để review, chưa commit/push/merge/deploy. Shared forecast
+local `c930dfe66cfda5de5896164e16fcf8f4c7acaefe`; D2 local checkpoint
+`9f720caf01fdf0a8f586c049660a2fcc9447ade3`. D3 source/tests/docs WIP để review,
+chưa commit/push/merge/deploy. Shared forecast
 choice và typed internal assessment giữ actual method/candidate/reason/warnings,
 scoped history blockers, recognized-only whole-scope fallback và exact retained
 replay. R01/C01 all-censored TRAINED trước trả503, nay trả200 blocked assessment;
@@ -12,13 +13,22 @@ Today caller cùng fix. Dependency/runtime unavailable tách artifact invalid;
 invalid/programming errors không success-fallback. OpenAPI/DTO/routes giữ nguyên.
 
 [Canonical policy/matrix](features/DATA_READINESS_POLICY.md) tách main/D1 audit,
-current D2 và proposals D3–D5. Sales-only/sparse0/stockout/retained/schema1 replay,
+current D2/D3 và proposals D4–D5. Sales-only/sparse0/stockout/retained/schema1 replay,
 HTTP/PG/current-rights/Store isolation có focused acceptance, không full-suite hay
 real-accuracy claim. Own venv/test-only PostgreSQL5435, shelfcash_readiness_test /
 shelfcash_readiness_tester, head0027; provider/email/workers OFF. Commands/expected
-responses tại [runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d2).
-Default/custom/saved contextual readiness, offer omission và public warning fields
-còn D3/D4; integrity/unknown-fee/safety guards giữ nguyên. Main8103/local DB/config/
+responses tại [D2 runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d2) và
+[D3 acceptance](runbooks/FULL_TEST_FLOW.md#data-readiness-d3).
+D3 pin offer_eligibility/1 tại new acceptance; known local missing facts/finite bound
+được omit với retained ID/version/reason/proof, remaining offers/fees/constraints được
+kiểm lại. No offers vẫn xét zero purchase; không market-infeasibility claim. Missing
+shared fees/budget/context, invalid/conflicting/unknown graph và applicable safety
+vẫn block. Existing declarations/proofs được reuse; audit actor/time chỉ retain khi
+exact unique source proof, unknown giữ null. Old queued/retained /1 và /2 không marker
+giữ semantics/digests cũ, không migration/rewrites. C03/Ingredient/explanation dùng
+existing warning details OFFER_OMITTED; OpenAPI/DTO/routes giữ nguyên.
+Default/custom/saved contextual readiness và tổng thể public warning fields còn D4;
+integrity/unknown-fee/safety guards giữ nguyên. Main8103/local DB/config/
 artifacts, challenger E4/dataset WIP và sáu baseline workbooks ngoài Git được giữ
 nguyên; không chạy E3/E4 benchmark hoặc training bằng workbook.
 

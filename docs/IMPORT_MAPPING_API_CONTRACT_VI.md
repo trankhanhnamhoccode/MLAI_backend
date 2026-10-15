@@ -1724,6 +1724,16 @@ không “mặc định không có” trong code. Typed discriminated variants:
 All declarations retain actor/source/profileversion/expectedreadset/digest. Import
 profile normalizations may bind sourcecolumns but not manufacture absencefacts.
 
+CURRENT FACT D3 trên nhánh data-readiness: Planning new-policy capture reuse các
+immutable declarations/term/fee sources này, giữ versions/effectivity và typed
+source confirmation references. Actor/time/audit chỉ known nếu có unique exact
+Import canonical audit match; absent/ambiguous proof giữ null, không dùng Run actor
+thay source confirmer. Không đổi Import required fields, approval/reuse/current
+rights/stale-preview hoặc IMPORT_VALUE/batch semantics; không promote incomplete
+term thành canonical. Planning offer omission là consumer admission riêng, không
+workflow ghi assumptions/defaults mới. [Policy](features/DATA_READINESS_POLICY.md)
+sở hữu admission rules; public readiness/warning extensions còn D4.
+
 Rights: source/read fullscope including supplier.read+procurement.cost.read for
 term/fee prices; importactions/mappingkeys + domainactions supplier.create fornew,
 supplier.terms.create, supplier.terms.correct for amendment, supplier.fees.manage

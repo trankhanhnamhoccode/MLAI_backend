@@ -3,6 +3,10 @@ from dataclasses import dataclass
 from decimal import Decimal,localcontext
 from fractions import Fraction
 from uuid import UUID,uuid5
+from pydantic import ValidationError
+from app.application.contracts.offer_admission import OfferAdmission
+from app.application.offer_admission import term_from_snapshot,missing_offer_fields,omission
+from app.application.planning_source_proof import source_confirmation
 from app.application.contracts import import_domains as domains
 from app.application.contracts.decision_capture import InventoryScopeDeclaration,CaptureProblem
 from app.application.contracts.decision_capture_v2 import DecisionCaptureOutcomeV2
@@ -50,6 +54,8 @@ def fee_total(components):
 def declarations_for(record,facts,forecast_id,now):
     snap=facts.snapshot;store=record.store_id;start=record.request.forecast_start_date
     end=record.resolution.forecast_end_date;problems=[]
+    admission_policy=record.public_acceptance.offer_eligibility_policy if record.public_acceptance else None
+    omissions=[]
     active={r['id'] for r in snap['products'] if r['active']}
     recipes={r['id'] for r in snap['recipes'] if r['assigned'] and r['product_id'] in active and r['effective_from']<=str(end) and (r['effective_to'] is None or r['effective_to']>=str(start))}
     required={r['ingredient_id'] for r in snap['recipe_lines'] if r['recipe_id'] in recipes}
@@ -75,9 +81,22 @@ def declarations_for(record,facts,forecast_id,now):
         coverage='UNKNOWN';problems.append(problem('PAYABLE_FEE_DECLARATION_CONFLICT',store,'fees'))
     fee_system=fees[0]['source_system_key'] if len(fees)==1 else None
     bindings=fee_bindings(snap['term_source_records'],snap['supplier_source_records'],fee_system)
-    if fee and not bindings.covers(fee,terms):coverage='UNKNOWN'
     offers=[];bound_evidence=[]
     for term in terms:
+        if admission_policy:
+            try:term_from_snapshot(term)
+            except ValidationError as error:
+                missing=missing_offer_fields(term,error)
+                if missing:
+                    omissions.append(omission(term,'SUPPLIER_TERM_FACT_UNAVAILABLE',missing))
+                else:
+                    problems.append(CaptureProblem(code='INVALID_SOURCE_ROW',kind='DATA_BLOCKER',entity='ingredient',
+                        entity_id=term['ingredient_id'],field='supplier_term',detail='Invalid/conflicting offer fact; not eligible for omission'))
+                continue
+            ingredient=next((i for i in snap['ingredients'] if i['id']==term['ingredient_id']),None)
+            if ingredient and ingredient['expiry_tracking'] and term['shelf_life_days'] is None:
+                omissions.append(omission(term,'SUPPLIER_TERM_FACT_UNAVAILABLE',('shelf_life_days',)))
+                continue
         bounds=[];supplier_bounds=[]
         cost=Fraction(Decimal(term['pack_cost']));pack=Fraction(Decimal(term['pack_size_base_quantity']))
         if cost:bounds.append(int(Fraction(record.resolution.budget.amount)//cost))
@@ -88,7 +107,9 @@ def declarations_for(record,facts,forecast_id,now):
         supplier_bounds.extend(declared_bounds)
         if supplier_bounds:bounds.extend(supplier_bounds)
         if not bounds:
-            problems.append(problem('OFFER_BOUND_UNKNOWN',store,'offers'));continue
+            if admission_policy:omissions.append(omission(term,'OFFER_BOUND_UNKNOWN'))
+            else:problems.append(problem('OFFER_BOUND_UNKNOWN',store,'offers'))
+            continue
         payable=None
         if fee and fee.mode=='NONE':payable=Decimal(0)
         elif fee and fee.mode=='PER_OFFER':
@@ -104,9 +125,12 @@ def declarations_for(record,facts,forecast_id,now):
                 derivation=f'S49-bound/1: floor(accepted effective budget / positive pack cost), intersect captured source maximum and declared supplier limits; budget version {record.resolution.budget_version}',
                 proof_scope='CAPTURED_FINITE_DOMAIN_ONLY'),payable_fee=payable,
             provenance='Captured effective Store supplier term; hypothetical one-order arrival identity'))
+    eligible_ids={str(o.term_id) for o in offers}
+    fee_terms=[t for t in terms if t['id'] in eligible_ids] if admission_policy else terms
+    if fee and not bindings.covers(fee,fee_terms):coverage='UNKNOWN'
     supplier_fees=[]
     if fee and fee.mode=='PER_SUPPLIER_ORDER':
-        for supplier in sorted({t['supplier_id'] for t in terms}):
+        for supplier in sorted({t['supplier_id'] for t in fee_terms}):
             aliases=bindings.supplier_keys.get(supplier,frozenset())
             supplier_fees.append(SupplierFee(supplier_id=supplier,amount=fee_total(c for c in fee.components if c.source_supplier_key in aliases)
                 if aliases & set(fee.covered_source_supplier_keys) else None,provenance=fee.evidence_reference))
@@ -122,7 +146,8 @@ def declarations_for(record,facts,forecast_id,now):
         snapshot_policy=DecisionPolicy(),offers=tuple(offers),supplier_fees=tuple(supplier_fees),capacities=capacities,supplier_limits=limits,
         capacity_state=context.capacity_state if context else 'UNKNOWN',supplier_limit_state=context.supplier_limit_state if context else 'UNKNOWN',
         provenance='S49 coherent RR operational source and explicit declarations',payable_fee_coverage=coverage,
-        payable_fee_coverage_provenance=fee.evidence_reference if fee else 'No unique complete payable fee evidence'),tuple(problems),tuple(bound_evidence)
+        payable_fee_coverage_provenance=fee.evidence_reference if fee else 'No unique complete payable fee evidence',
+        offer_admission=OfferAdmission(omissions=tuple(omissions)) if admission_policy else None),tuple(problems),tuple(bound_evidence)
 
 
 class PostgresPlanningCapture:
@@ -155,7 +180,14 @@ class PostgresPlanningCapture:
                     declarations=tuple(DeclarationEvidence(id=r['id'],version=r['version'],source_system_key=r['source_system_key'],source_record_key=r['source_record_key'],
                         dependency_digest=r['dependency_digest'],payload=r['payload']) for r,d in latest_declarations(snap)),bounds=bounds,
                     observed_history_product_ids=tuple(sorted({UUID(r['product_id']) for r in snap['sales_daily'] if r['sales_date']<=str(record.resolution.cutoff_date)
-                        and any(p['id']==r['product_id'] and p['active'] for p in snap['products'])})))
+                        and any(p['id']==r['product_id'] and p['active'] for p in snap['products'])})),
+                    confirmations=tuple(source_confirmation(entity,identifier,r,snap['import_audit'])
+                        for entity,rows in (
+                            ('supplier_term',[(r['id'],r) for r in snap['term_source_records'] if r['id'] in term_ids]),
+                            ('supplier',[(r['supplier_id'],r) for r in snap['supplier_source_records']]),
+                            ('fee',[(r['id'],r) for r in current_fees(snap) if contains(r['payload'],record.request.forecast_start_date)]),
+                            ('declaration',[(r['id'],r) for r,d in latest_declarations(snap)]))
+                        for identifier,r in rows) if declarations.offer_admission else None)
         capture=DecisionCaptureOutcomeV2(semantics_version='operational_capture/2',request=request,captured_at=source.facts.captured_at,
             source=source,**project_capture_v2(request,source))
         identity=served.identity if served else None

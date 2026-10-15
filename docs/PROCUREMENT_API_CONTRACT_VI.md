@@ -1,5 +1,19 @@
 # Planning — configuration, computation and retained results
 
+CURRENT FACT D3 trên nhánh data-readiness: new C02 acceptance pin private
+offer_eligibility/1; known local missing offer facts/bound được omit có retained
+identity/version/reason, không tự loại Product nếu alternatives hoặc stock vẫn đủ.
+Original menu/exclusions/overrides và shared budget/fee/constraint guards giữ nguyên.
+No eligible offer không là market-infeasibility proof; zero-purchase vẫn được xét.
+Existing C03/Ingredient/explanation warnings thêm code OFFER_OMITTED, dùng existing
+details.entity_id/ingredient_ids/classification/proof_scope/suggested_action;
+classification là OFFER_BOUND_UNKNOWN hoặc SUPPLIER_TERM_FACT_UNAVAILABLE,
+proof_scope=CAPTURED_ELIGIBLE_OFFERS_ONLY. Không DTO/routes delta hoặc FE source change.
+Old accepted/retained Runs không marker giữ policy/digests cũ. R01/C01 contextual
+can_generate không đổi trong D3. [Policy](features/DATA_READINESS_POLICY.md) sở hữu
+conditions/version/remaining D4 gaps; [runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d3)
+sở hữu commands/expected evidence. Không thay requirements/objective/serving/winner.
+
 CURRENT FACT: C01-C05/C08, N1-N4/N9-N11 and readiness/shared PDF jobs are wired.
 C06 is merged into C05; C07 polling responsibility is C03. This contract owns
 approved requirements/budget/forecast/capture/strategy/result meanings and
