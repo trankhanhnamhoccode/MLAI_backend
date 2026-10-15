@@ -13,7 +13,7 @@ from app.infrastructure.import_parser import parse_source, MAIN, DOC_REL
 ROLE_SHEETS = {
     'pos': ('POS_T7_2026',),
     'usage': ('NL_thực_dùng',),
-    'stock_vendor': ('KiemKe_27-07', 'PNK tháng 7', 'Vendor rules'),
+    'stock_vendor': ('PNK tháng 7', 'Vendor rules'),
     'recipes_rules': ('Định lượng món', 'Điều kiện vận hành'),
     'calendar': ('Calendar + Weather',),
     'menu': ('06_Menu',),
@@ -35,8 +35,9 @@ def read_workbook(path: Path) -> DemoWorkbook:
     parsed=parse_source(content,'xlsx')
     names={s.name for s in parsed.sheets}
     roles=[r for r,expected in ROLE_SHEETS.items() if set(expected)<=names]
-    if len(roles)!=1: raise ValueError('WORKBOOK_ROLE_SIGNATURE_AMBIGUOUS_OR_UNKNOWN')
-    metadata=dict(role=roles[0],path=str(path.resolve()),sha256=digest,bytes=len(content),excel_date_system=parsed.excel_date_system,
+    if len(roles)>1: raise ValueError('WORKBOOK_ROLE_SIGNATURE_AMBIGUOUS')
+    role=roles[0] if roles else 'unclassified'
+    metadata=dict(role=role,path=str(path.resolve()),sha256=digest,bytes=len(content),excel_date_system=parsed.excel_date_system,
                   formulas_evaluated=False,sheets=[],aliases=[])
     # parse_source has already enforced archive/XML bounds, path and external-link guards.
     with ZipFile(io.BytesIO(content)) as archive:
@@ -59,17 +60,18 @@ def read_workbook(path: Path) -> DemoWorkbook:
                 populated_cells=sum(c.raw is not None for r in sheet.rows for c in r.cells),
                 formula_count=len(formulas),formulas=formulas))
     if hashlib.sha256(path.read_bytes()).hexdigest()!=digest: raise ValueError('RAW_CHANGED_DURING_READ')
-    return DemoWorkbook(roles[0],path.resolve(),digest,parsed,metadata)
+    return DemoWorkbook(role,path.resolve(),digest,parsed,metadata)
 
 
 def discover_workbooks(directory: Path) -> tuple[DemoWorkbook,...]:
     found={role:{} for role in ROLE_SHEETS}
     for path in sorted(directory.glob('*.xlsx'),key=lambda p:p.name.casefold()):
         book=read_workbook(path)
+        if book.role=='unclassified': continue
         found[book.role].setdefault(book.sha256,[]).append(book)
     result=[]
     for role,variants in found.items():
-        if not variants: raise ValueError('MISSING_WORKBOOK_ROLE:'+role)
+        if not variants: continue
         if len(variants)!=1: raise ValueError('DISTINCT_WORKBOOK_VARIANTS_REQUIRE_EXPLICIT_SELECTION:'+role)
         copies=next(iter(variants.values()))
         book=copies[0]

@@ -438,8 +438,8 @@ retrospective correctness on admitted inputs, not historical deployment availabi
 Schema3 artifacts use E2 strict checksum/runtime/scope/point/CQR admission and replay.
 No artifact is promoted and production_available_at remains null.
 
-CURRENT FACT data inventory: only the portable synthetic generator
-`tests/fixtures/forecast_engine/benchmark_setup.py` is admitted for this execution.
+HISTORICAL INFORMATION — original E3/1 data inventory: only the portable synthetic
+generator `tests/fixtures/forecast_engine/benchmark_setup.py` was admitted for that execution.
 It declares fictional calendar independently before sales generation, with missing,
 zero, known-false, censored and unknown observations; two synthetic Products use cup
 and piece, daily history2025-11-01..2026-06-29, explicit calendar through2026-07-06,
@@ -449,7 +449,7 @@ the execution dates were frozen before training and before actual local artifact
 Dataset digest is `3178e138eff2be24654400e07a03033a3df29b89e4cca3f6ce658d8ad6451b80`.
 The earlier120-day host fixture lacks a sourced operating calendar and sufficient
 native split evidence; the E2 tiny artifact proves inference correctness only.
-The six external demo workbooks remain metadata-only inventory with unverified
+At that checkpoint, the six external demo workbooks were metadata-only inventory with unverified
 scope/schema/units/vintages/use rights; the old research holdout is exposed. Neither
 operational shelfcash_local nor customer/demo rows were queried/copied for E3.
 
@@ -492,6 +492,113 @@ no operational recipe/BOM/loss, inventory/lot/expiry/receipts, supplier/pack/pri
 budget/constraint/policy or search-resource capture. E4 separately freezes the same
 synthetic host operational context for all arms. No historical impact/savings evidence
 exists from E3 or the E4 counterfactual fixtures. E5 is not executed here.
+
+<a id="demo-baseline-ab"></a>
+## CURRENT FACT — baseline demo A/B after main readiness merge
+
+E4/admission WIP was checkpointed at `eaf40b9`; merge `1c48162` contains local main
+`869eaec914aa6905d6b935889afebe7d973004ae`. Only CURRENT_STATE/ROADMAP conflicted;
+both challenger and readiness accounts were preserved. Merged host eligibility,
+recognized-only fallback, contextual resolver/admission/capture, offer omission,
+finite proof scope and retained version/provenance remain main's implementations.
+Offline C admission stays separate. No host fallback or supplier omission can certify C.
+No DB, migration, public API, FE, assistant or production serving change is made.
+
+ACCEPTED DECISION (this explicit request and dataset-specific reply): benchmark only
+five single items t1–t5, retain literal units `ly` and every Menu status, timezone
+Asia/Ho_Chi_Minh, and assume current-revision POS labels available at next-day start
+for retrospective demo A/B. This is not recovered historical availability. Declarations
+are bound to raw-bundle revision
+`f79b217d99a47db6133591c6d3e01cd73820ab80849447147043a2ada152b592`.
+Another bundle needs its own approval/evidence. Combo absence is not zero demand.
+
+The entire runtime contains one complementary six-workbook baseline pack, all under
+`runtime/uploads`; there is no next-week POS/CSV or competing variant. Selection is
+by sheet signatures/content/hash, never suffix, mtime or filename recency.
+
+| File | Bytes | SHA-256 prefix | Sheets |
+| --- | ---: | --- | --- |
+| 01_POS_BASELINE_to_2026-07-08.xlsx | 41529 | 23010aaa9a8a88e0 | README; POS_T7_2026 |
+| 02_USAGE_BASELINE_to_2026-07-08.xlsx | 21008 | e47eefcb233dce82 | NL_thực_dùng |
+| 03_INVENTORY_PURCHASE_BASELINE_snapshot_2026-07-08.xlsx | 14468 | ab3c5764c9fe230d | KiemKe_08-07; PNK tháng 7; Vendor rules |
+| 04_RECIPES_BUSINESS_RULES.xlsx | 14104 | a4370e477ffc4cfe | Định lượng món; Điều kiện vận hành |
+| 05_CONTEXT_HISTORY_and_W1_FORECAST_2026-01-01_to_2026-07-15.xlsx | 12317 | 042e97456d2293b4 | Calendar + Weather |
+| 06_MENU.xlsx | 14885 | 6864dc86b9cbcca1 | 06_Menu |
+
+Full paths/SHA-256/sheet dimensions, physical row counts, headers/notes, date coverage,
+formulas/cache metadata are retained in ignored
+`runtime/challenger/dataset-admission/inventories/6b174139bcd304ca869e9220cfb37bffc6afd22a6f773b1f2541b3b21b6b192c/inventory.json`.
+No formula/macro/external link is executed, cached formula value promoted, or workbook
+saved. Content supersedes stale README counts and descriptive combo pause claims:
+945 Product/day rows over189 dates,01/01–08/07,5 Products,23 explicit zeros,
+18 stockout=true and927 false; no duplicate/conflicting keys, blank quantities,
+unknown stockout or missing Product/day. Calendar covers196 dates01/01–15/07.
+This is a demo/test pack with synthetic operational stock and POS-derived usage;
+POS generation is not independently verified. It is exposed demo evidence.
+
+Manifest `causal_benchmark/2` explicitly selects A/B, preserving E1 model settings,
+two validation/two holdout origins, seven-day spacing/horizon, O−56/point/CQR windows
+and all-holdout-label quarantine. Its source/host hashes participate in experiment
+and fit identities. E3/E4 /1 bytes/results remain frozen and are not pooled with /2.
+Old experiments require their original source/runtime; merged-source replay must fail
+closed rather than overwrite old receipts. Admission does not require six files:
+sales+Menu can support A/B; optional calendar issues block only C.
+
+| Arm/action | Status on supplied pack | Reason / comparison scope |
+| --- | --- | --- |
+| A host baseline | VERIFIED outputs/replay; EXPLORATORY | 4 origins,140 predictions, fixed causal baseline,0 fallback |
+| B trained host | VERIFIED outputs/artifacts/replay; EXPLORATORY | 4 origins,12 quantile booster fits,140 predictions,0 fallback |
+| C challenger | BLOCKED,0 fits | Historical known-at calendar/revision evidence absent; first native split has at most77 eligible distinct target dates after28-day prefix, below84. Complete current calendar is not historical vintage proof. |
+| E4 supplied pack | BLOCKED,0 solves | Historical operational population/basis, exact price/MOQ/fees/loss/completeness/requirements and applicable unsupported safety constraints remain unresolved. Old E4 remains COUNTERFACTUAL_SYNTHETIC / INCOMPLETE. |
+
+Origins are10/06,17/06 (validation),24/06,01/07 (exposed demo holdout). The common
+mask covers140 distinct Product/day outcomes across28 dates;138 known-false are
+primary (69 per partition),2 censored lower bounds are excluded from primary scores.
+Missing/unknown counts are0. No09–15/07 outcomes were supplied, so no next-week
+accuracy claim is made. Training/selection never uses the14 holdout target dates;
+mature past observations may remain inference features under the existing policy.
+
+| Arm | Partition | MAE ly | WAPE | Bias ly | Pinball P25/P50/P75 | P25–P75 coverage / width ly |
+| --- | --- | ---: | ---: | ---: | --- | --- |
+| A | validation | 7.2029 | 19.1007% | −5.1159 | 2.4130 / 3.6014 / 3.2382 | 65.2174% /10.5761 |
+| B | validation | 5.0141 | 13.2965% | −0.8818 | 2.1272 / 2.5071 / 1.8669 | 43.4783% /8.4501 |
+| A | holdout | 8.2174 | 23.2282% | −2.4493 | 3.8406 / 4.1087 / 2.9348 | 53.6232% /10.6377 |
+| B | holdout | 6.0417 | 17.0781% | +0.9190 | 3.2157 / 3.0208 / 2.0553 | 46.3768% /8.4740 |
+
+WAPE denominator is sum of primary paired observed quantities, null if zero.
+Validation-only equal-task mean pinball selects B (2.1670 vs3.0842); no deployment
+selection is performed. Raw quantile crossings A0/B1, final0; CQR absent, never
+labelled as the P25–P75 interval. Per-Product/unit/horizon/partition/mask metrics,
+model bytes and exact training keys live in retained outputs. Mathematical scores
+are not business value/savings or proof of calibrated demand under stockouts.
+
+One hard-bounded subprocess batch ran in about7.4s, below300s, with12 boosters,
+0 postprocess fits/0 solves, no trials/repeats. Retained compute times: A0.172s,
+B training5.063s/inference0.171s. The runner denies DB/provider imports, socket/DNS
+and subprocess launches before benchmark imports; Windows standard-library platform
+metadata is primed first. Run/replay receipts contain zero forbidden attempts.
+Fresh-process replay verifies all8 checkpoints without fitting. The post-run repair
+only scopes malformed optional calendar findings to C; the new admission has exactly
+the same dataset/plan identities, replays the same run, and is not a new benchmark.
+
+Current admission/selection:
+`runtime/challenger/dataset-admission/datasets/571fb650d4a867e7e8e51e485fc83b960dc5c1dd4aa52ab260d9a924c67ad21d`.
+Original batch admission is retained at `7fda37d4bd872adb6de42d60a854ee55c196bce8772c70211e52622feec7d9c6`.
+Experiment/output directory:
+`runtime/challenger/benchmarks/experiments/efb23096f8613c8e77238d72daaac0a54c9d78bab577a89e675499807d171a1c`.
+Dataset digest is `eb34bc5d8b8e94ed79efb0642cfa4ed89d4ac71ccdc81bfc5b0f6080a1459fd1`.
+Promotion remains INSUFFICIENT_EVIDENCE / LOCKED; E5 NOT_STARTED.
+
+Remaining E4 evidence is localized in admission findings: `Vendor rules` price
+denominator/currency/MOQ and dated deliveries, payable fees/effectivity/known-at;
+`Định lượng món` loss/basis/version availability (not usage Hao hụt); `KiemKe_08-07`
+completeness/expiry-tracking and operational temporal basis; `Điều kiện vận hành`
+weekly budget versus order cap, capacity units, Product/path requirements and
+unsupported safety-stock semantics. Explicit `shelf_life_days` is retained, not
+reported absent. A July08 stock snapshot cannot represent earlier rolling origins
+or realized stock from a simulated basket. Receipt date remains unknown/warning,
+not inferred from lot codes. Declarations alone cannot implement unsupported policy.
+See [reproduction/recovery](../runbooks/FULL_TEST_FLOW.md#challenger-demo-ab).
 
 ## E4 counterfactual Planning impact
 
@@ -619,7 +726,8 @@ conversation, not an accumulating report in this document.
 | E4 | PARTIAL / COUNTERFACTUAL_SYNTHETIC: common frozen operational fixtures, host forecast-only planning, separate fixed-basket observed realized evaluation, hand/finite oracles and retained checkpoints. Bounded manifest INCOMPLETE at wall budget; REAL_IMPACT_BLOCKED, no savings/promotion claim. |
 | E5 | NOT_STARTED: integration acceptance/current authorization and fresh-session persistence/restart/replay→review evidence→explicit user promotion/config selection and rollback; no automatic promotion. |
 
-Stop after E4; E1–E3 committed locally, E4 remains uncommitted WIP.
+E1–E4/admission are checkpointed locally; the main-readiness merge and separate
+A/B demo execution above do not open E5. Changes after checkpoint/merge remain WIP.
 E3 checkpoint: `c2544c1025815bd0ccef9acb524f6f265dd03c45`.
 Rollback E4 consists of its detached impact contracts/harness/tooling/fixtures and
 current documentation changes; retain private artifacts/evidence and operational data.

@@ -23,14 +23,15 @@ def attach_targets(data: BenchmarkDataset, checkpoint: ArmCheckpoint) -> tuple[B
 
 
 def summary(data: BenchmarkDataset, plan: BenchmarkPlan, checkpoints: tuple[ArmCheckpoint,...], *, complete:bool) -> dict:
+    arms=plan.configuration_ids
     rows=tuple(p for c in checkpoints for p in attach_targets(data,c))
     task=lambda r:(r.store_id,r.product_id,r.origin,r.horizon)
-    keys={arm:{task(r) for r in rows if r.arm==arm} for arm in ARMS}
-    common=set.intersection(*(keys[a] for a in ARMS))
+    keys={arm:{task(r) for r in rows if r.arm==arm} for arm in arms}
+    common=set.intersection(*(keys[a] for a in arms))
     population=len(plan.tasks)*len(data.products)*7
     paired=tuple(r for r in rows if task(r) in common)
     group_metrics=[]
-    for arm in ARMS:
+    for arm in arms:
         for partition in ('validation','holdout'):
             for mask in ('primary_known_false','supplementary_unknown','censored_lower_bound','missing'):
                 subset=tuple(r for r in paired if (r.arm,r.partition,r.mask)==(arm,partition,mask))
@@ -47,24 +48,26 @@ def summary(data: BenchmarkDataset, plan: BenchmarkPlan, checkpoints: tuple[ArmC
                     group_metrics.append({'arm':arm,'partition':partition,'mask':mask,'dimension':dimension,
                         'value':value,'available_tasks':len(group),**metrics(scores)})
     aggregate={(m['arm'],m['partition']):m for m in group_metrics if m['dimension']=='all' and m['mask']=='primary_known_false'}
-    losses={a:aggregate[a,'validation']['mean_pinball'] for a in ARMS}
+    losses={a:aggregate[a,'validation']['mean_pinball'] for a in arms}
     selected=None
     validation_origins={a:len({r.origin for r in paired if r.arm==a and
-                              r.partition=='validation' and r.mask=='primary_known_false'}) for a in ARMS}
+                              r.partition=='validation' and r.mask=='primary_known_false'}) for a in arms}
     if complete and all(v is not None for v in losses.values()) and all(n>=2 for n in validation_origins.values()):
-        selected=min(ARMS,key=lambda a:(losses[a],ARMS.index(a)))
+        selected=min(arms,key=lambda a:(losses[a],arms.index(a)))
     primary_counts={p:aggregate[ARMS[0],p]['distinct_outcomes'] for p in ('validation','holdout')}
     origin_counts={p:len({r.origin for r in paired if r.arm==ARMS[0] and r.partition==p and r.mask=='primary_known_false'})
                    for p in ('validation','holdout')}
     numeric_gate=(complete and len(common)==population and all(n>=28 for n in primary_counts.values())
                   and all(n>=2 for n in origin_counts.values()))
-    improvement=all(aggregate[ARMS[2],p]['mean_pinball'] is not None and all(
-        aggregate[ARMS[2],p]['mean_pinball'] < aggregate[a,p]['mean_pinball'] for a in ARMS[:2])
+    improvement=ARMS[2] in arms and all(aggregate[ARMS[2],p]['mean_pinball'] is not None and all(
+        aggregate[ARMS[2],p]['mean_pinball'] < aggregate[a,p]['mean_pinball'] for a in arms[:2])
         for p in ('validation','holdout')) if numeric_gate else False
-    return {'schema_version':1,'status':'SYNTHETIC_CORRECTNESS' if complete and data.classification=='SYNTHETIC'
+    return {'schema_version':2 if plan.harness_version=='causal_benchmark/2' else 1,'comparison_arms':arms,
+        'challenger_evidence':ARMS[2] in arms,
+        'wape_denominator_policy':'sum eligible observed actual quantities on paired mask; null at zero denominator','status':'EXPLORATORY' if plan.harness_version=='causal_benchmark/2' and complete else 'SYNTHETIC_CORRECTNESS' if complete and data.classification=='SYNTHETIC'
             else 'EXPLORATORY' if complete else 'INCOMPLETE',
         'real_benchmark':'REAL_BENCHMARK_BLOCKED' if data.classification=='SYNTHETIC' else 'EXPLORATORY' if data.classification=='REAL_EXPOSED' else 'EVALUATED_UNSEEN_NOT_PROMOTED',
-        'population_tasks_per_arm':population,'output_coverage':{a:len(keys[a]) for a in ARMS},
+        'population_tasks_per_arm':population,'output_coverage':{a:len(keys[a]) for a in arms},
         'paired_tasks':len(common),'paired_coverage_fraction':Decimal(len(common))/population,
         'distinct_outcomes':len({(r.store_id,r.product_id,r.target_date) for r in paired}),
         'distinct_dates':len({r.target_date for r in paired}),
@@ -73,7 +76,7 @@ def summary(data: BenchmarkDataset, plan: BenchmarkPlan, checkpoints: tuple[ArmC
         'selected_by_validation_only':selected,'primary_distinct_outcomes':primary_counts,
         'primary_origin_counts':origin_counts,
         'validation_origins_with_primary_targets':validation_origins,
-        'raw_crossing_tasks':{a:sum(r.raw_crossing for r in rows if r.arm==a) for a in ARMS},
+        'raw_crossing_tasks':{a:sum(r.raw_crossing for r in rows if r.arm==a) for a in arms},
         'final_crossing_count':0 if complete else None,'nonfinite_final_predictions':0 if complete else None,
         'technical_failure_count':sum(c.status=='TECHNICAL_FAILURE' for c in checkpoints),
         'accuracy_numeric_gate':numeric_gate,'challenger_strict_improvement':improvement,
@@ -81,4 +84,8 @@ def summary(data: BenchmarkDataset, plan: BenchmarkPlan, checkpoints: tuple[ArmC
         'mixed_unit_interpretation':'mathematical equal-task scores only; not monetary or business accuracy guarantee',
         'data_classification':data.classification,'availability_basis':data.availability_basis,'limitations':data.limitations,
         'training_seconds':sum(c.training_seconds for c in checkpoints),'inference_seconds':sum(c.inference_seconds for c in checkpoints),
+        'arm_execution':{a:dict(completed=sum(c.status=='COMPLETED' for c in checkpoints if c.arm==a),
+            training_seconds=sum(c.training_seconds for c in checkpoints if c.arm==a),
+            inference_seconds=sum(c.inference_seconds for c in checkpoints if c.arm==a),
+            fallback_count=0,method=a) for a in arms},
         'artifact_bytes':sum(c.artifact_bytes for c in checkpoints),'metrics':group_metrics}

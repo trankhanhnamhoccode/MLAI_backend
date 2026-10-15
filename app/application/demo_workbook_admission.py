@@ -24,9 +24,17 @@ OP_TABLES={
 def source_tables(books):
     lookup={b.role:b for b in books};result=[]
     for kind,(role,sheet,headers) in OP_TABLES.items():
+        if role not in lookup:
+            result.append(dict(kind=kind,file_sha256=None,sheet=None,headers=headers,rows=()))
+            continue
+        if kind=='inventory':
+            candidates=[v.name for v in lookup[role].parsed.sheets if v.name.startswith('KiemKe_')]
+            if len(candidates)!=1: raise ValueError('INVENTORY_SHEET_SELECTION_REQUIRED')
+            sheet=candidates[0]
         table=Table(lookup[role],sheet,headers)
-        result.append(dict(kind=kind,file_sha256=lookup[role].sha256,sheet=sheet,headers=headers,
-            rows=tuple(tuple(table.evidence(row,c) for c in range(len(headers))) for row in table.rows())))
+        source_headers=tuple(table.header.get(c) for c in range(max(table.header,default=-1)+1))
+        result.append(dict(kind=kind,file_sha256=lookup[role].sha256,sheet=sheet,headers=source_headers,
+            rows=tuple(tuple(table.evidence(row,c) for c in range(len(source_headers))) for row in table.rows())))
     return tuple(result)
 
 
@@ -60,7 +68,7 @@ def forecast_projection(data,declarations,findings,tasks):
     if any(f.classification=='BLOCKER' and f.area in ('DATA','IDENTITY') for f in findings): return None,None
     value=BenchmarkDataset(classification='SYNTHETIC',use_authority='user_authorized:workspace_demo_workbook_preparation/1',
         source_revision=data.source_revision,availability_basis='retrospective_current_revision',
-        limitations=('DEMO_GENERATED_EXPOSED, not real/unseen evidence; no promotion.',
+        limitations=('DEMO_EXPOSED test pack; POS generation unverified, not real/unseen evidence; no promotion.',
             'Explicit retrospective next-run label availability assumption; not recovered historical vintages.',
             'Five single-item benchmark scope only; source Menu status unchanged.',
             'No sourced calendar issue/availability times. Calendar facts retained in staging; runtime C remains blocked.'),
@@ -70,7 +78,8 @@ def forecast_projection(data,declarations,findings,tasks):
             selling_unit=next(p.selling_unit for p in data.products if p.product_id==r.product_id),is_stockout=r.is_stockout,
             available_at=next_run(r.sales_date,declarations.timezone),source=challenger_digest('source-cells',r.sources))
             for r in data.sales if r.quantity is not None),calendar=())
-    plan=BenchmarkPlan(dataset_digest=challenger_digest('dataset',value),tasks=tasks)
+    plan=BenchmarkPlan(harness_version='causal_benchmark/2',configuration_ids=ARMS[:2],
+        dataset_digest=challenger_digest('dataset',value),tasks=tasks)
     admit_plan(value,plan)
     return value,plan
 
@@ -82,7 +91,9 @@ def assess(data,books,declarations,normalization_issues,protocol):
     findings=list(normalization_issues)
     def fact(code,classification,area,detail,*sources):
         findings.append(AdmissionFinding(code=code,classification=classification,area=area,detail=detail,sources=sources))
-    def cell(role,sheet,address): return evidence_at(lookup[role],sheet,address)
+    def cell(role,sheet,address):
+        if sheet=='KiemKe_27-07': sheet=by_kind['inventory']['sheet']
+        return evidence_at(lookup[role],sheet,address)
     if not data.products or not data.sales: raise ValueError('NO_NORMALIZED_POS_SCOPE')
     profiles={}
     for kind,column in (('usage',0),('inventory',0),('purchase_history',0),('recipes',7),('constraints',5)):
@@ -127,9 +138,11 @@ def assess(data,books,declarations,normalization_issues,protocol):
         calendar_missing_over_sales_history=len(days-set(calendar)))
     pos_note=cell('pos','POS_T7_2026','A2')
     demo_declared=pos_note.raw is not None and 'demo' in pos_note.raw.casefold() and any(w in pos_note.raw.casefold() for w in ('giả lập','mô phỏng','synthetic'))
-    fact('DEMO_NOT_REAL_UNSEEN' if demo_declared else 'DEMO_SOURCE_CLASSIFICATION_UNCONFIRMED',
-        'CURRENT_FACT' if demo_declared else 'BLOCKER','DATA',
-        'POS explicitly declares generated demo data; no real/unseen or promotion evidence.' if demo_declared else 'Source content does not establish generated DEMO classification.',pos_note)
+    demo_pack=any('demo' in (c.raw or '').casefold() or 'test pack' in (c.raw or '').casefold()
+                  for b in books for sh in b.parsed.sheets for r in sh.rows if r.row_number<=3 for c in r.cells)
+    fact('DEMO_NOT_REAL_UNSEEN' if demo_pack else 'DEMO_SOURCE_CLASSIFICATION_UNCONFIRMED',
+        'CURRENT_FACT' if demo_pack else 'BLOCKER','DATA',
+        'Workbook pack declares test/demo context; POS generation is not independently verified. Treat as exposed demo, never real/unseen promotion evidence.',pos_note)
     fact('FIVE_SINGLE_ITEM_SCOPE','PROPOSAL','IDENTITY','Benchmark only the five single items by unique Menu code/name/unit; do not mutate source active statuses.',cell('menu','06_Menu','A2'))
     if len(data.products)!=5:
         fact('EXPECTED_FIVE_SINGLE_ITEMS','BLOCKER','IDENTITY','This named DEMO adapter requires exactly five single items.')
@@ -139,11 +152,11 @@ def assess(data,books,declarations,normalization_issues,protocol):
         fact('SINGLE_ITEM_SCOPE_DECLARATION_REQUIRED','BLOCKER','FORECAST_AB','Explicitly accept the five single-item codes/names as benchmark-only scope; active combos remain unchanged.')
     if declarations.observation_availability=='UNDECLARED':
         fact('OBSERVATION_VINTAGE_REQUIRED','BLOCKER','FORECAST_AB','Provide historical revision availability or explicitly declare retrospective next-run assumption for DEMO only.')
-    fact('CALENDAR_HISTORY_AND_VINTAGE_MISSING','BLOCKER','FORECAST_C',
-        'C requires sourced dense prefix calendar at each feature origin plus D+1..D+7 known-ahead facts. Missing dates are not default-open; issue times are absent.',
-        cell('calendar','Calendar + Weather','A2'),cell('calendar','Calendar + Weather','A4'))
+    fact('CALENDAR_VINTAGE_MISSING','BLOCKER','FORECAST_C',
+        'C requires sourced dense prefix calendar at each feature origin plus D+1..D+7 known-ahead facts. Current coverage is reported separately; historical issue/availability times are absent.',
+        *( (cell('calendar','Calendar + Weather','A2'),cell('calendar','Calendar + Weather','A4')) if 'calendar' in lookup else () ))
     if any(c.closed is True and r.quantity is not None and r.quantity>0 for r in data.sales if (c:=calendar.get(r.sales_date)) is not None):
-        fact('POS_POSITIVE_ON_CLOSED_DATE','BLOCKER','DATA','Resolve positive sales contradicting explicit closure before C admission.')
+        fact('POS_POSITIVE_ON_CLOSED_DATE','BLOCKER','FORECAST_C','Positive sales contradict explicit closure: blocks C; host A/B do not consume closure calendar.')
     menu=lookup['menu'];sheet=next(s for s in menu.parsed.sheets if s.name=='06_Menu')
     combos=[]
     for row in sheet.rows:
@@ -154,43 +167,48 @@ def assess(data,books,declarations,normalization_issues,protocol):
     if combos and menu_note.raw and ('tạm dừng' in menu_note.raw.casefold() or 'paused' in menu_note.raw.casefold()):
         fact('MENU_COMBO_STATUS_CONFLICT','CURRENT_FACT','IDENTITY','Description says combos paused; some literal row statuses remain active. No source status rewritten.',
              cell('menu','06_Menu','A2'),*combos)
-    usage_note=cell('usage','NL_thực_dùng','A2')
-    derived=usage_note.raw is not None and all(w in usage_note.raw.casefold() for w in ('pos','recipe'))
-    fact('USAGE_DERIVED_NOT_INDEPENDENT_TRUTH' if derived else 'USAGE_INDEPENDENCE_UNESTABLISHED',
-        'CURRENT_FACT' if derived else 'BLOCKER','E4',
-        'Usage description explicitly ties quantities to POS + recipe; not independent realized-demand/consumption evidence.' if derived else 'Independent usage truth not established.',
-        usage_note,cell('usage','NL_thực_dùng','F4'))
-    inventory=by_kind['inventory']['rows']
-    inventory_dates=sorted({day(row[0].raw,lookup['stock_vendor'].parsed.excel_date_system) for row in inventory})
-    fact('SINGLE_STOCK_SNAPSHOT','BLOCKER','E4',
-        'Only snapshot dates '+','.join(map(str,inventory_dates))+'. No historical stock at the proposed July/August origins; current balance cannot silently become historical stock.',
-        cell('stock_vendor','KiemKe_27-07','A1'),cell('stock_vendor','KiemKe_27-07','A4'))
-    fact('VENDOR_PRICE_MOQ_BASIS_REQUIRED','BLOCKER','E4',
-        'Declare price denominator/currency and MOQ unit for each offer. Retain raw price and pack fields; do not infer pack_cost from purchase history.',
-        *(cell('stock_vendor','Vendor rules',a) for a in ('C3','D3','E3','H3','C4','D4','E4','F4','H4')))
-    fact('FEES_SHELF_LIFE_AND_EFFECTIVITY_REQUIRED','BLOCKER','E4',
-        'Vendor rows omit payable fees, future purchased-lot shelf life and effective-from/known-at times. Receipt expiry and shelf_life_target are not future offer shelf life.',
-        cell('stock_vendor','Vendor rules','A3'),cell('stock_vendor','Vendor rules','I3'),cell('recipes_rules','Điều kiện vận hành','A11'))
-    fact('DELIVERY_SCHEDULE_NOT_FIXED_LEAD_ONLY','BLOCKER','E4',
-        'Weekday delivery schedules are explicit. Existing lead-days-only arrivals cannot silently ignore them; supply effective dated arrivals/semantics or implement an authorized policy.',
-        cell('stock_vendor','Vendor rules','G4'),cell('stock_vendor','Vendor rules','I4'))
-    fact('RECIPE_LOSS_NOT_USAGE_WASTE','BLOCKER','E4',
-        'Recipe yield is explicit; process_loss_rate and historical revision availability are not. Usage Hao hụt is not a recipe loss rate.',
-        cell('recipes_rules','Định lượng món','E4'),cell('recipes_rules','Định lượng món','G4'),cell('recipes_rules','Định lượng món','H4'),cell('usage','NL_thực_dùng','E3'))
-    constraint_rows=by_kind['constraints']['rows']
-    safety=[r for r in constraint_rows if r[0].raw=='safety_stock']
-    if safety:
-        fact('SAFETY_STOCK_UNSUPPORTED','BLOCKER','E4','Captured safety constraints remain unsupported by host; declarations cannot turn them into supported policy or discard them.',
-            *(v for r in safety for v in (r[0],r[1],r[2],r[3],r[6])))
-    fact('BUDGET_CAPACITY_REQUIREMENT_SEMANTICS_REQUIRED','BLOCKER','E4',
-        'Weekly budget is not automatically a one-order limit; aggregate storage volume is not independent Ingredient capacities; service_level_target does not specify paths/per-Product/horizon overrides. Unit aliases remain proposals.',
-        *(cell('recipes_rules','Điều kiện vận hành',a) for a in ('A4','C4','G4','A5','C5','D5','G5','A9','C9','D9','A12','C12','G12')))
-    missing_expiry=[r[4] for r in inventory if r[4].raw in (None,'')]
-    if missing_expiry:
-        fact('EXPIRY_TRACKING_DECLARATION_REQUIRED','BLOCKER','E4','Expiry-tracking flags are absent; unknown lot expiry cannot be made untracked without a declaration.',*missing_expiry)
-    fact('PURCHASE_HISTORY_NOT_CURRENT_STOCK_OR_INBOUND','CURRENT_FACT','E4','Purchase rows remain history; do not add them to snapshot balances or scheduled inbound.',cell('stock_vendor','PNK tháng 7','A2'))
-    fact('LOT_RECEIPT_DATE_UNKNOWN','CURRENT_FACT','E4','Count date is not lot receipt date; do not parse receipt dates from batch codes. Unknown receipt remains optional-warning/null under ADR-010.',
-        cell('stock_vendor','KiemKe_27-07','A3'),cell('stock_vendor','KiemKe_27-07','F4'))
+    inventory_dates=[];missing_expiry=[];constraint_rows=[]
+    if all(role in lookup for role in ('usage','stock_vendor','recipes_rules')):
+        usage_note=cell('usage','NL_thực_dùng','A2')
+        derived=usage_note.raw is not None and all(w in usage_note.raw.casefold() for w in ('pos','recipe'))
+        fact('USAGE_DERIVED_NOT_INDEPENDENT_TRUTH' if derived else 'USAGE_INDEPENDENCE_UNESTABLISHED',
+            'CURRENT_FACT' if derived else 'BLOCKER','E4',
+            'Usage description explicitly ties quantities to POS + recipe; not independent realized-demand/consumption evidence.' if derived else 'Independent usage truth not established.',
+            usage_note,cell('usage','NL_thực_dùng','F4'))
+        inventory=by_kind['inventory']['rows']
+        inventory_dates=sorted({day(row[0].raw,lookup['stock_vendor'].parsed.excel_date_system) for row in inventory})
+        fact('SINGLE_STOCK_SNAPSHOT','BLOCKER','E4',
+            'Only snapshot dates '+','.join(map(str,inventory_dates))+'. No historical stock at the proposed rolling origins; current balance cannot silently become historical stock.',
+            cell('stock_vendor','KiemKe_27-07','A1'),cell('stock_vendor','KiemKe_27-07','A4'))
+        fact('VENDOR_PRICE_MOQ_BASIS_REQUIRED','BLOCKER','E4',
+            'Declare price denominator/currency and MOQ unit for each offer. Retain raw price and pack fields; do not infer pack_cost from purchase history.',
+            *(cell('stock_vendor','Vendor rules',a) for a in ('C3','D3','E3','H3','C4','D4','E4','F4','H4')))
+        fact('FEES_AND_EFFECTIVITY_REQUIRED','BLOCKER','E4',
+            'Vendor payable fees and effective-from/known-at times are absent. Explicit shelf_life_days, if present, is retained separately; do not substitute a shelf_life_target.',
+            cell('stock_vendor','Vendor rules','A3'),cell('stock_vendor','Vendor rules','I3'),cell('recipes_rules','Điều kiện vận hành','A11'))
+        fact('DELIVERY_SCHEDULE_NOT_FIXED_LEAD_ONLY','BLOCKER','E4',
+            'Weekday delivery schedules are explicit. Existing lead-days-only arrivals cannot silently ignore them; supply effective dated arrivals/semantics or implement an authorized policy.',
+            cell('stock_vendor','Vendor rules','G4'),cell('stock_vendor','Vendor rules','I4'))
+        fact('RECIPE_LOSS_NOT_USAGE_WASTE','BLOCKER','E4',
+            'Recipe yield is explicit; process_loss_rate and historical revision availability are not. Usage Hao hụt is not a recipe loss rate.',
+            cell('recipes_rules','Định lượng món','E4'),cell('recipes_rules','Định lượng món','G4'),cell('recipes_rules','Định lượng món','H4'),cell('usage','NL_thực_dùng','E3'))
+        constraint_rows=by_kind['constraints']['rows']
+        safety=[r for r in constraint_rows if r[0].raw=='safety_stock']
+        if safety:
+            fact('SAFETY_STOCK_UNSUPPORTED','BLOCKER','E4','Captured safety constraints remain unsupported by host; declarations cannot turn them into supported policy or discard them.',
+                *(v for r in safety for v in (r[0],r[1],r[2],r[3],r[6])))
+        fact('BUDGET_CAPACITY_REQUIREMENT_SEMANTICS_REQUIRED','BLOCKER','E4',
+            'Weekly budget is not automatically a one-order limit; aggregate storage volume is not independent Ingredient capacities; service_level_target does not specify paths/per-Product/horizon overrides. Unit aliases remain proposals.',
+            *(cell('recipes_rules','Điều kiện vận hành',a) for a in ('A4','C4','G4','A5','C5','D5','G5','A9','C9','D9','A12','C12','G12')))
+        missing_expiry=[r[4] for r in inventory if r[4].raw in (None,'')]
+        if missing_expiry:
+            fact('EXPIRY_TRACKING_DECLARATION_REQUIRED','BLOCKER','E4','Expiry-tracking flags are absent; unknown lot expiry cannot be made untracked without a declaration.',*missing_expiry)
+        fact('PURCHASE_HISTORY_NOT_CURRENT_STOCK_OR_INBOUND','CURRENT_FACT','E4','Purchase rows remain history; do not add them to snapshot balances or scheduled inbound.',cell('stock_vendor','PNK tháng 7','A2'))
+        fact('LOT_RECEIPT_DATE_UNKNOWN','CURRENT_FACT','E4','Count date is not lot receipt date; do not parse receipt dates from batch codes. Unknown receipt remains optional-warning/null under ADR-010.',
+            cell('stock_vendor','KiemKe_27-07','A3'),cell('stock_vendor','KiemKe_27-07','F4'))
+    else:
+        fact('OPERATIONAL_INPUTS_MISSING','BLOCKER','E4',
+             'Operational roles are absent; this does not block host forecast arms.')
     window_reports=[]
     holdout_dates={t.origin+timedelta(days=h) for t in tasks if t.partition=='holdout' for h in range(1,8)}
     for t in tasks:
@@ -212,11 +230,16 @@ def assess(data,books,declarations,normalization_issues,protocol):
             'A_BASELINE_AND_B_MIN_HISTORY_MET' if min(counts)>=28 and min(supervised)>=14 else 'INSUFFICIENT_HOST_HISTORY',target_masks=dict(masks),
             native_minimum_distinct_training_dates=protocol['arm_configuration'][ARMS[2]]['forecast_config']['walk_forward_minimum_train_days'],
             native_training_calendar_dates=sum(first<=d<=t.train_end for d in calendar),
+            native_eligible_training_dates_upper_bound=max(0,(t.train_end-first).days-27),
             native_calendar_missing_prefix_dates=sum(first+timedelta(days=i) not in calendar for i in range((t.origin-first).days+8)),
             point_known_false_dates_upper_bound=len({r.sales_date for r in data.sales if t.point_start<=r.sales_date<=t.point_end and r.quantity is not None and r.is_stockout is False}),
             point_task_population=postprocess_population(observed,data.products,t.point_start,t.point_end,t.train_end,holdout_dates),
             cqr_task_population=postprocess_population(observed,data.products,t.calibration_start,t.calibration_end,t.point_end,holdout_dates),
             cqr_known_false_dates_upper_bound=len({r.sales_date for r in data.sales if t.calibration_start<=r.sales_date<=t.calibration_end and r.sales_date not in holdout_dates and r.quantity is not None and r.is_stockout is False})))
+    for window in window_reports:
+        if window['native_eligible_training_dates_upper_bound']<window['native_minimum_distinct_training_dates']:
+            fact('NATIVE_TRAINING_DATES_INSUFFICIENT','BLOCKER','FORECAST_C',
+                 'Origin '+str(window['windows'].origin)+': even the uncensored upper bound after the 28-day prefix is below the unchanged native minimum.')
     projection,plan=forecast_projection(data,declarations,findings,tasks)
     data_blocked=any(f.classification=='BLOCKER' and f.area in ('DATA','IDENTITY') for f in findings)
     declarations_needed=[dict(id='forecast_timezone',required_for='A/B retrospective input',
@@ -225,23 +248,13 @@ def assess(data,books,declarations,normalization_issues,protocol):
              sources=tuple(v for p in data.products for v in p.sources)),
         dict(id='retrospective_observation_availability',required_for='A/B retrospective input',
              declaration='Historical revision availability evidence, or explicit acceptance of next-run dates as a DEMO-only retrospective assumption.',
-             sources=(cell('pos','POS_T7_2026','A2'),)),
-        dict(id='vendor_price_moq_arrivals',required_for='Future E4; insufficient by itself',
-             declaration='Price denominator/currency, MOQ basis and dated delivery/lead/schedule semantics per offer.',
-             sources=tuple(v for row in by_kind['vendor_terms']['rows'] for v in row)),
-        dict(id='fees_shelf_life_effectivity',required_for='Future E4; insufficient by itself',
-             declaration='Complete payable fees including explicit none if true, purchased-lot shelf life, expiry-tracking flags, additional supplier limits/completeness and term effective/known-at times.',
-             sources=tuple(missing_expiry)),
-        dict(id='recipe_loss_known_at',required_for='Future E4; insufficient by itself',
-             declaration='Process loss rate per recipe and version known-at; preserve sourced yield/effectivity, do not infer from usage waste.',
-             sources=(cell('recipes_rules','Định lượng món','E4'),cell('recipes_rules','Định lượng món','G4'),cell('recipes_rules','Định lượng món','H4'))),
-        dict(id='operational_basis_and_requirements',required_for='Future E4; insufficient by itself',
-             declaration='Historical operational snapshots or explicitly counterfactual stock basis; inventory completeness/committed inbound/no additional orders, one-order/weekly budget meaning, unit aliases, capacity units/checkpoints and customer paths/per-Product requirements. Unsupported constraints remain blocking.',
-             sources=tuple(v for row in constraint_rows for v in row))]
+             sources=(cell('pos','POS_T7_2026','A2'),))]
+    declarations_needed += [dict(id=f.code,required_for='E4',declaration=f.detail,sources=f.sources)
+                            for f in findings if f.classification=='BLOCKER' and f.area=='E4']
     resolved={'forecast_timezone':bool(declarations.timezone),'benchmark_scope':declarations.accept_five_single_item_scope,
               'retrospective_observation_availability':declarations.observation_availability!='UNDECLARED'}
     declarations_needed=[d for d in declarations_needed if not resolved.get(d['id'],False)]
-    manifest=dict(schema_version=1,evidence_class=data.evidence_class,normalization='BLOCKED' if data_blocked else 'READY',
+    manifest=dict(schema_version=2,evidence_class=data.evidence_class,normalization='BLOCKED' if data_blocked else 'READY',
         forecast_AB='BLOCKED_DATA' if data_blocked else 'BLOCKED_INSUFFICIENT_HOST_HISTORY' if any(w['host_data_readiness_under_declared_availability']=='INSUFFICIENT_HOST_HISTORY' for w in window_reports)
             else 'READY_DEMO_EXPLORATORY_INPUT' if projection else 'PARTIAL_DECLARATIONS_REQUIRED',
         forecast_C='BLOCKED',paired_ABC='BLOCKED',E4='BLOCKED',real_unseen='NOT_ESTABLISHED_DEMO_EXPOSED',production='LOCKED',

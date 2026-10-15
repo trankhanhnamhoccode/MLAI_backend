@@ -44,7 +44,7 @@ class DemoCalendar(Contract):
 
 class DemoDataset(Contract):
     schema_version: Literal[1] = 1
-    evidence_class: Literal['DEMO_GENERATED_EXPOSED'] = 'DEMO_GENERATED_EXPOSED'
+    evidence_class: Literal['DEMO_EXPOSED_POS_GENERATION_UNVERIFIED'] = 'DEMO_EXPOSED_POS_GENERATION_UNVERIFIED'
     identity_kind: Literal['BENCHMARK_SURROGATE_NOT_CANONICAL_DB'] = 'BENCHMARK_SURROGATE_NOT_CANONICAL_DB'
     scope_status: Literal['PROPOSED_FIVE_SINGLE_ITEMS_MENU_UNCHANGED'] = 'PROPOSED_FIVE_SINGLE_ITEMS_MENU_UNCHANGED'
     source_revision: Digest
@@ -62,6 +62,7 @@ class AdmissionDeclarations(Contract):
     timezone: str | None = None
     accept_five_single_item_scope: StrictBool = False
     observation_availability: Literal['UNDECLARED', 'RETROSPECTIVE_NEXT_RUN_ASSUMPTION'] = 'UNDECLARED'
+    source_revision: Digest | None = None
 
     @model_validator(mode='after')
     def known_zone(self):

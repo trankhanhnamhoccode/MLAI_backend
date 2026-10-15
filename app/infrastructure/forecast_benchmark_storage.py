@@ -48,6 +48,22 @@ def training_source_identity() -> str:
     return challenger_digest('training-source', [(p,hashlib.sha256((root/p).read_bytes()).hexdigest()) for p in paths])
 
 
+def host_source_identity() -> str:
+    """v2 identities include merged host code; old v1 cache identities are untouched."""
+    root=Path(__file__).resolve().parents[2]
+    paths=('app/infrastructure/forecast_model.py','app/domain/forecasting/baseline.py',
+           'app/domain/forecasting/features.py','app/domain/forecasting/stockout.py',
+           'app/application/forecast_demand.py','app/application/forecast_serialization.py',
+           'app/application/use_cases/forecast_baseline.py',
+           'app/application/use_cases/forecast_benchmark.py',
+           'app/application/forecast_benchmark_reporting.py',
+           'app/domain/forecasting/benchmark_metrics.py',
+           'app/infrastructure/forecast_benchmark_replay.py',
+           'app/infrastructure/forecast_benchmark_storage.py')
+    return challenger_digest('benchmark-v2-host-source',
+        {p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in paths})
+
+
 class BenchmarkStorage:
     def __init__(self, root: Path):
         self.root = root.resolve()

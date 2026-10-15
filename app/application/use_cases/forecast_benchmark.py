@@ -14,7 +14,7 @@ from app.application.forecast_challenger_serialization import challenger_digest
 from app.application.use_cases.forecast_challenger import ForecastChallenger
 from app.infrastructure.forecast_challenger_runtime import current_runtime
 from app.infrastructure.storage.forecast_challenger import ChallengerStorage
-from app.infrastructure.forecast_benchmark_storage import BenchmarkStorage, FitBudget, BudgetExceeded, training_source_identity
+from app.infrastructure.forecast_benchmark_storage import BenchmarkStorage, FitBudget, BudgetExceeded, training_source_identity, host_source_identity
 from app.infrastructure.forecast_benchmark_training import fit_arm, fit_identity
 
 
@@ -38,7 +38,10 @@ class ForecastBenchmark:
         admit_plan(data,plan)
         protocol=load_protocol(self.root)
         runtime=current_runtime()
-        identity=challenger_digest('experiment',{'plan':plan,'runtime':runtime,'training_source':training_source_identity()})
+        if plan.harness_version=='causal_benchmark/2':
+            runtime_identity=dict(runtime=runtime,host_source=host_source_identity())
+        else: runtime_identity=runtime
+        identity=challenger_digest('experiment',{'plan':plan,'runtime':runtime_identity,'training_source':training_source_identity()})
         directory=self.storage.path('experiments',identity)
         host_paths=['app/infrastructure/forecast_model.py','app/domain/forecasting/baseline.py',
                     'app/domain/forecasting/features.py','app/domain/forecasting/stockout.py',
@@ -53,7 +56,7 @@ class ForecastBenchmark:
         self.storage.retain(directory,'host-source.json',host_hashes)
         if any(directory.glob('execution-source-*.json')):
             for task in plan.tasks:
-                for arm in ARMS:
+                for arm in plan.configuration_ids:
                     key=fit_identity(data,plan,task,arm,protocol['arm_configuration'][arm])
                     fit_directory=self.storage.path('fits',key)
                     if self.storage.load(fit_directory,'checkpoint.json') is not None:
@@ -62,7 +65,8 @@ class ForecastBenchmark:
         self.storage.retain(directory,'plan.json',plan)
         self.storage.retain(directory,'environment.json',{'runtime':runtime,'training_source':training_source_identity(),
             'protocol_digest':plan.protocol_digest,'dataset_digest':plan.dataset_digest,
-            'origin_count':4,'configurations_per_arm':1,'maximum_booster_fits':24,'maximum_postprocess_fits':8,
+            'origin_count':len(plan.tasks),'configuration_ids':plan.configuration_ids,'configurations_per_arm':1,
+            'maximum_booster_fits':plan.budget.maximum_booster_fits,'maximum_postprocess_fits':plan.budget.maximum_postprocess_fits,
             'wall_budget_seconds':plan.budget.wall_seconds})
         return identity,directory,protocol
 
@@ -78,7 +82,7 @@ class ForecastBenchmark:
         completed=[]
         spent=0;booster_count=0;post_count=0
         for task in plan.tasks:
-            for arm in ARMS:
+            for arm in plan.configuration_ids:
                 key=fit_identity(data,plan,task,arm,protocol['arm_configuration'][arm])
                 old=self.storage.load(self.storage.path('fits',key),'checkpoint.json')
                 if old is not None:
@@ -95,7 +99,7 @@ class ForecastBenchmark:
         tasks=plan.tasks[:1] if smoke else plan.tasks
         budget_exceeded=False
         for task in tasks:
-            for arm in ARMS:
+            for arm in plan.configuration_ids:
                 try:
                     guard.check()
                     checkpoint,reused=fit_arm(data,plan,task,arm,protocol['arm_configuration'][arm],
@@ -132,9 +136,9 @@ class ForecastBenchmark:
                     break
             if budget_exceeded:
                 break
-        complete=len(completed)==12 and all(c.status=='COMPLETED' for c in completed)
+        complete=len(completed)==len(plan.tasks)*len(plan.configuration_ids) and all(c.status=='COMPLETED' for c in completed)
         report=summary(data,plan,tuple(completed),complete=complete)
-        if smoke and len(completed)==3 and all(c.status=='COMPLETED' for c in completed):
+        if smoke and len(completed)==len(plan.configuration_ids) and all(c.status=='COMPLETED' for c in completed):
             report['status']='SMOKE_VERIFIED'
         report.update(experiment_identity=identity,protocol_digest=plan.protocol_digest,dataset_digest=plan.dataset_digest,
                       booster_fits_spent=guard.boosters,postprocess_fits_spent=guard.postprocess,smoke_only=smoke)
@@ -166,11 +170,11 @@ class ForecastBenchmark:
             raise ValueError('BENCHMARK_SOURCE_OR_RUNTIME_CHANGED')
         checkpoints=[]
         for task in plan.tasks:
-            for arm in ARMS:
+            for arm in plan.configuration_ids:
                 row=self.storage.load(directory,f'{task.origin}-{arm}.json')
                 if row is not None:
                     checkpoints.append(ArmCheckpoint.model_validate(row))
-        complete=len(checkpoints)==12 and all(c.status=='COMPLETED' for c in checkpoints)
+        complete=len(checkpoints)==len(plan.tasks)*len(plan.configuration_ids) and all(c.status=='COMPLETED' for c in checkpoints)
         report=summary(data,plan,tuple(checkpoints),complete=complete)
         report.update(experiment_identity=experiment,protocol_digest=plan.protocol_digest,dataset_digest=plan.dataset_digest,
                       rescore_without_training=True)
@@ -187,7 +191,7 @@ class ForecastBenchmark:
             raise ValueError('BENCHMARK_SOURCE_OR_RUNTIME_CHANGED')
         identities=[]
         for task in plan.tasks:
-            for arm in ARMS:
+            for arm in plan.configuration_ids:
                 row=self.storage.load(directory,f'{task.origin}-{arm}.json')
                 if row is None:
                     continue
@@ -198,7 +202,7 @@ class ForecastBenchmark:
         if not identities:
             raise ValueError('NO_NATIVE_REPLAY_EVIDENCE')
         source=self._source_record(directory)
-        report={'status':'PAIRED_REPLAY_VERIFIED','replayed_arms':len(identities),'native_artifacts':len(identities)//3,'identities':identities,
+        report={'status':'PAIRED_REPLAY_VERIFIED','replayed_arms':len(identities),'native_artifacts':sum(1 for t in plan.tasks if self.storage.load(directory,f'{t.origin}-{ARMS[2]}.json') is not None),'identities':identities,
                 'experiment_identity':experiment}
         self.storage.retain(directory,f'native-replay-{source}.json',report)
         return report

@@ -114,19 +114,19 @@ def normalize_demo(books,timezone=None):
             seen[key]=sources;sales.append(record)
         except ValueError as error:
             issues.append(AdmissionFinding(code='INVALID_POS_ROW',classification='BLOCKER',area='DATA',detail=str(error),sources=sources))
-    calendar=Table(by_role['calendar'],'Calendar + Weather',CALENDAR_HEADERS)
     dates=[];seen_days={}
-    for row in calendar.rows():
+    calendar=Table(by_role['calendar'],'Calendar + Weather',CALENDAR_HEADERS) if 'calendar' in by_role else None
+    for row in calendar.rows() if calendar else ():
         sources=tuple(calendar.evidence(row,c) for c in (0,2,3))
         try:
             record=DemoCalendar(day=day(calendar.literal(row,0),calendar.book.parsed.excel_date_system),
                 closed=boolean(calendar.literal(row,3)),holiday=boolean(calendar.literal(row,2)),sources=sources)
             if record.day in seen_days:
-                issues.append(AdmissionFinding(code='DUPLICATE_CALENDAR_DATE',classification='BLOCKER',area='DATA',
+                issues.append(AdmissionFinding(code='DUPLICATE_CALENDAR_DATE',classification='BLOCKER',area='FORECAST_C',
                     detail='Calendar dates cannot be merged silently.',sources=seen_days[record.day]+sources))
             seen_days[record.day]=sources;dates.append(record)
         except ValueError as error:
-            issues.append(AdmissionFinding(code='INVALID_CALENDAR_ROW',classification='BLOCKER',area='DATA',detail=str(error),sources=sources))
+            issues.append(AdmissionFinding(code='INVALID_CALENDAR_ROW',classification='BLOCKER',area='FORECAST_C',detail=str(error),sources=sources))
     revision=challenger_digest('demo-raw-bundle',{b.role:b.sha256 for b in books})
     dataset=DemoDataset(source_revision=revision,store_id=uuid5(NAMESPACE,'benchmark-only-demo-store'),timezone=timezone,
         products=tuple(sorted(products,key=lambda p:p.source_key)),sales=tuple(sorted(sales,key=lambda r:(r.sales_date,r.product_id))),

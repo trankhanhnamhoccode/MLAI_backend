@@ -27,9 +27,19 @@ real unseen được phép, historical vintages và sourced operating calendar �
 E4 PARTIAL / COUNTERFACTUAL_SYNTHETIC: detached harness dùng host BOM/procurement/2/
 serving/FEFO/comparison/selector, tách forecast design paths khỏi fixed-basket observed
 realized evaluation. Bounded manifest INCOMPLETE do wall budget; giữ checkpoints,
-không kéo dài hoặc thay fixtures. Real impact REAL_IMPACT_BLOCKED; E4 giữ WIP,
-dừng sau E4. E5 activation chưa thực hiện. Canonical Forecast integration sở hữu
+không kéo dài hoặc thay fixtures. Real impact REAL_IMPACT_BLOCKED; E4/admission đã
+checkpoint local `eaf40b9`, giữ nguyên trạng thái INCOMPLETE. E5 activation chưa thực hiện. Canonical Forecast integration sở hữu
 commands/limits; không thay public API/schema/permissions hay DB.
+
+CURRENT FACT — challenger đã merge main readiness `869eaec` tại `1c48162`.
+Manifest `causal_benchmark/2` chạy riêng A/B trên baseline demo đến08/07, với ba
+declarations được người dùng chấp thuận và pin raw-bundle hash. A/B offline outputs
+và fresh-process replay8 checkpoints VERIFIED; kết quả EXPLORATORY, không phải real
+accuracy/C evidence. C BLOCKED bởi historical calendar vintages và native training
+minimum tại origin đầu; E4 trên bộ mới BLOCKED bởi operational facts/constraints.
+Canonical [admission/results](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab)
+sở hữu exact selection, origins, metrics và limits; [runbook](runbooks/FULL_TEST_FLOW.md#challenger-demo-ab)
+sở hữu commands. Code/docs sau checkpoint/merge giữ WIP để review; không promote.
 
 ## CURRENT FACT — Data Readiness D1–D5 tích hợp main local
 

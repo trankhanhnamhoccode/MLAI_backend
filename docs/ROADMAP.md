@@ -7,7 +7,8 @@ forecast engine mới qua adapter riêng, không LLM/OpenRouter trong E1–E5. E
 compatibility/protocol; E2 COMPLETE internal typed opt-in adapter với pinned installed
 forecast-only source/dependencies, native fixed inference và private retained replay.
 Tiny synthetic correctness VERIFIED; không production integration/accuracy/promotion.
-Main/demo/customer DB và serving artifacts giữ nguyên; E1–E3 commit local, E4 WIP.
+Main/demo/customer DB và serving artifacts giữ nguyên; E1–E4/admission checkpoint local
+`eaf40b9`, merge main readiness tại `1c48162`; thay đổi tiếp theo giữ WIP để review.
 
 [FORECAST_ENGINE_INTEGRATION](features/FORECAST_ENGINE_INTEGRATION.md) là canonical
 owner của matrix, data/artifact inventory, replay/availability/reconstruction/CQR
@@ -19,7 +20,12 @@ bounded execution INCOMPLETE khi chạm wall budget, checkpoints giữ nguyên, 
 thay fixtures/search resources để tìm kết quả đẹp. Real impact REAL_IMPACT_BLOCKED.
 E5 acceptance/promotion NOT_STARTED. Thiếu authorized unseen demand/vintages/calendar
 và historical operational snapshots chặn real quality/impact claims. Đã dừng sau E4;
-bước kế tiếp cần authorization, không tự mở E5 hay serving activation.
+bước E5/serving activation vẫn chưa được mở. CURRENT FACT: A/B demo hồi cứu manifest/2
+đã chạy và replay8 checkpoints VERIFIED trên baseline đến08/07, với declarations
+được duyệt theo dataset hash. Đây là EXPLORATORY A/B, không phải bằng chứng C.
+C vẫn BLOCKED (calendar vintages/native train minimum), E4 bộ mới BLOCKED
+(operational facts/unsupported constraints); không có POS tuần09–15/07 để score.
+Exact selection/metrics tại [canonical integration](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab).
 
 ## CURRENT FACT / PROPOSAL — data readiness D1–D5
 
@@ -43,12 +49,10 @@ runtime/config/DB/artifacts và mọi challenger WIP được bảo toàn.
 CURRENT FACT — source integration giữ73 operations/66 paths/head0027; final focused
 gate chạy riêng PostgreSQL5437 (limited integration role), không đổi demo8103.
 
-PROPOSAL — benchmark tiếp theo chỉ sau checkpoint E4/dataset-admission WIP riêng,
-merge main readiness mới vào challenger và reconcile eligibility/protocol/warnings.
-Không sửa frozen E3/E4/admission rules ngầm; semantics đổi cần manifest/protocol
-version mới. Hai arms cần cùng observations/origins/masks/declarations/resources;
-thiếu facts có thể BLOCKED, không fill giả. Benchmark không cần promote challenger
-vào main. Nhiệm vụ tích hợp này không sửa/merge challenger hoặc Decision Assistant.
+CURRENT FACT — checkpoint E4/admission và merge main readiness vào challenger đã
+hoàn tất trong nhiệm vụ riêng; manifest/2 A/B và kết quả được mô tả tại canonical
+integration phía trên. Không sửa frozen E3/E4 hoặc gộp các protocol. C/E4 trên bộ
+mới vẫn BLOCKED; E5/promotion và Decision Assistant không thuộc execution này.
 
 D5 không bao gồm FE/browser E2E hoặc real accuracy/savings. Các hạng mục đó chưa
 nghiệm thu, không là blocker cho backend-only acceptance. D3 deadline instability

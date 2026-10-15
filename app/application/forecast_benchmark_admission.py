@@ -36,7 +36,8 @@ def admit_dataset(data: BenchmarkDataset) -> None:
 
 def admit_plan(data: BenchmarkDataset, plan: BenchmarkPlan) -> None:
     admit_dataset(data)
-    require(plan.protocol_digest == PROTOCOL_DIGEST and plan.configuration_ids == ARMS,
+    arms=ARMS if plan.harness_version=='causal_benchmark/1' else ARMS[:2]
+    require(plan.protocol_digest == PROTOCOL_DIGEST and plan.configuration_ids == arms,
             'FROZEN_PROTOCOL_OR_ARMS_CHANGED')
     require(plan.dataset_digest == challenger_digest('dataset', data), 'DATASET_DIGEST_MISMATCH')
     require(len(plan.tasks) == 4 and [t.partition for t in plan.tasks] == ['validation']*2+['holdout']*2,

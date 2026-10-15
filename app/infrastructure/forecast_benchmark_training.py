@@ -14,7 +14,7 @@ from app.application.use_cases.forecast_challenger import ForecastChallenger
 from app.infrastructure.forecast_challenger_runtime import current_runtime
 from app.infrastructure.storage.forecast_challenger import ChallengerStorage
 from app.infrastructure.forecast_benchmark_features import prepared_at, host_rows, native_frame, native_training_table, postprocess_tasks
-from app.infrastructure.forecast_benchmark_storage import BenchmarkStorage, FitBudget, training_source_identity
+from app.infrastructure.forecast_benchmark_storage import BenchmarkStorage, FitBudget, training_source_identity, host_source_identity
 
 
 def fit_identity(data: BenchmarkDataset, plan: BenchmarkPlan, task: BenchmarkOrigin, arm: str, config) -> str:
@@ -24,6 +24,9 @@ def fit_identity(data: BenchmarkDataset, plan: BenchmarkPlan, task: BenchmarkOri
     from datetime import timedelta
     prefix['calendar'] = tuple(c for c in data.calendar if c.day <= task.origin+timedelta(days=7) and
                                c.available_at <= next_run(task.origin,data.timezone))
+    if plan.harness_version=='causal_benchmark/2':
+        prefix['host_source']=host_source_identity()
+        prefix['harness_version']=plan.harness_version
     return challenger_digest('fit', {'prefix':prefix, 'task':task, 'arm':arm,'configuration':config,
         'holdout_fit_labels':sorted(holdout_dates(plan)), 'training_source':training_source_identity(),
         'runtime':current_runtime()})

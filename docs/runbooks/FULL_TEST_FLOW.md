@@ -1,5 +1,70 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="challenger-demo-ab"></a>
+## CURRENT FACT — offline challenger A/B demo verification
+
+Use the challenger worktree/private pinned venv. This path never starts the server,
+DB, provider, email, workers or Planning. [Canonical integration](../features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab)
+owns exact files, admission matrix, dates/results and remaining declarations.
+The user approved Asia/Ho_Chi_Minh, benchmark-only t1–t5 and retrospective next-run
+POS availability for this raw-bundle hash only. Keep those declarations under ignored
+runtime; do not copy them to another bundle or reinterpret them as historical vintages.
+
+```powershell
+.venv/Scripts/python.exe -m scripts.prepare_demo_benchmark --uploads runtime/uploads --inventory-only
+.venv/Scripts/python.exe -m scripts.prepare_demo_benchmark --uploads runtime/uploads --declarations runtime/challenger/dataset-admission/approved-baseline-declarations.json
+$demoAdmission = 'runtime/challenger/dataset-admission/datasets/571fb650d4a867e7e8e51e485fc83b960dc5c1dd4aa52ab260d9a924c67ad21d/admission.json'
+# Existing completed batch: replay, never train again merely to verify.
+.venv/Scripts/python.exe -m scripts.run_demo_benchmark --mode replay --admission $demoAdmission
+# A first execution in a fresh owned runtime only:
+.venv/Scripts/python.exe -m scripts.run_demo_benchmark --admission $demoAdmission
+```
+
+Preparation writes hash envelopes `sources/selection/normalized/operational-evidence/
+config/admission/dataset/plan.json`; read them through BenchmarkStorage, not directly
+as raw dataset DTOs. Printed IDs may change if admission code changes. The original
+batch used admission7fda37d4; the current calendar-consumer fix produces571fb650
+with identical dataset/plan bytes. It reuses the same experiment, not a new run.
+The old admission correctly refuses execution against changed admission source.
+
+The parent enforces300s wall for the single forecast batch (120s for replay), including
+startup, kills/waits on timeout, and the child guard forbids grandchildren after
+Windows standard-library platform metadata preflight. No extra trials/repeats or
+planning solves. A retained `bounded-batch-start.json` refuses another run; do not
+delete it or the resource receipts to reset the budget. Deadline/failure leaves
+PARTIAL/INCOMPLETE retained cases; inspect rather than silently restart. Existing
+run replay expects `PAIRED_REPLAY_VERIFIED`,8 checkpoints,0 native C artifacts,
+and zero DB/provider/network/process attempts. Run remains EXPLORATORY A/B only.
+
+Focused regression commands (coverage overlaps, do not add totals):
+
+```powershell
+.venv/Scripts/python.exe -m pytest tests/unit/test_demo_benchmark_v2.py tests/unit/test_demo_workbook_admission.py tests/unit/test_forecast_benchmark.py tests/unit/test_planning_impact.py -q
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_eligibility.py tests/unit/test_contextual_readiness.py tests/unit/test_offer_admission.py tests/unit/test_forecast_engine_protocol.py tests/unit/test_forecast_challenger.py tests/unit/test_forecast_benchmark.py -q
+```
+
+Coverage includes action-scoped optional inputs, hash-bound declarations, distinct
+v1/v2/source identities, paired primary masks/validation-only selection, holdout
+quarantine, native strict guards, retained/offer policy and synthetic E4 hand oracles.
+Offline guard tests deny SQLAlchemy import, sockets and subprocess launches in
+separate processes. No new PostgreSQL persistence claim is made; D2–D5 integration
+DB evidence remains inherited, not rerun here. No full-suite/browser/real-quality gate.
+The original E4 manifest remains incomplete and was not resumed on supplied files.
+
+The pinned forecast venv lacks httpx/argon2 for app/OpenAPI tests. Read-only use of
+the existing complete backend interpreter, with bytecode/cache writes disabled,
+verified the challenger source's3 configuration/OpenAPI cases:
+
+```powershell
+../backend/.venv/Scripts/python.exe -B -m pytest tests/api/test_planning_configuration_openapi.py -q -p no:cacheprovider
+```
+
+OpenAPI matches current main source exactly (73 operations/66 paths); handoff JSON
+differs only by its intentional `x-shelfcash-provenance` annotation. No new public
+API delta. Workbook and535 pre-batch artifact/experiment file hashes are checked
+without altering originals. Private verification outputs live under
+`runtime/verification/challenger-main-readiness`; do not commit private runtime data.
+
 <a id="data-readiness-d5"></a>
 ## CURRENT FACT — D5 backend acceptance VERIFIED
 

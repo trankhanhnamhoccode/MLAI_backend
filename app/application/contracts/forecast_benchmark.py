@@ -56,7 +56,7 @@ class BenchmarkBudget(Contract):
 
 class BenchmarkPlan(Contract):
     schema_version: Version = 1
-    harness_version: Literal['causal_benchmark/1'] = 'causal_benchmark/1'
+    harness_version: Literal['causal_benchmark/1', 'causal_benchmark/2'] = 'causal_benchmark/1'
     protocol_digest: Digest = PROTOCOL_DIGEST
     dataset_digest: Digest
     configuration_ids: tuple[str, ...] = ARMS
