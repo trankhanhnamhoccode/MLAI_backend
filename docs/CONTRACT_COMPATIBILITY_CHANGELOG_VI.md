@@ -1,5 +1,21 @@
 # Compatibility API — các thay đổi sau baseline10/10
 
+## CURRENT FACT — D4 contextual readiness extension
+
+R01/C01 thêm optional planning_request query (URL-encoded strict C02 request JSON).
+Absent query giữ default-only scope; supplied request chọn context explicit.
+Known missing default chuyển unknown→blocked cho đúng default flow; boolean vẫn
+false. Full custom/saved không còn bị unused default chặn khi đánh giá chính request.
+R01 thêm planning_assessment/forecast_assessment; C01 readiness thêm assessment/
+forecast; typed ReadinessIssueDetails giữ source field/impact/offer reference/version.
+C03/C08 PlanningNotificationDetails thêm optional source_reference/source_version
+từ retained evidence, absent elide. Không endpoint, migration hoặc historical rewrite.
+Retained Import CompletionReadinessIssue/details OpenAPI giữ nguyên. Current DTOs
+và [canonical R01](IMPORT_MAPPING_API_CONTRACT_VI.md#readiness-v1)/
+[C01](PROCUREMENT_API_CONTRACT_VI.md#planning-context) sở hữu semantics; FE cần dùng
+assessment.input_scope và render warnings, không hiểu can_generate là winner promise.
+GET không infer/solve/train hoặc pin cho Run; C02/execution vẫn revalidate.
+
 ## Original baseline provenance — immutable test input
 
 - Fixture: [openapi_20261010.json](../tests/fixtures/openapi_20261010.json).

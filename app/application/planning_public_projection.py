@@ -49,6 +49,7 @@ def capture_warning(record,problem):
         message='Offer excluded from this Run; results and proofs cover only captured eligible offers.',
         details=dto.PlanningNotificationDetails(field='supplier_term',entity='supplier_term',entity_id=omitted.term_id,
             ingredient_ids=(omitted.ingredient_id,),classification=omitted.reason,proof_scope=admission.proof_scope,
+            source_reference=omitted.source_reference,source_version=omitted.version,
             suggested_action='Provide the missing offer facts or finite bound through the existing reviewed source workflow, then create a new Run.'))
 
 

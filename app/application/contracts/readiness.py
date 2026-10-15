@@ -2,7 +2,7 @@
 from datetime import date
 from typing import Literal
 from uuid import UUID
-from pydantic import AwareDatetime,Field,ConfigDict
+from pydantic import AwareDatetime,Field,ConfigDict,model_serializer
 from app.application.contracts.auth import DTO
 from app.application.contracts.planning_setup import Version
 
@@ -11,6 +11,21 @@ Action=Literal['import','menu','inventory','forecast','planning']
 
 class CompletionReadinessDetails(DTO):
     pass
+
+
+class ReadinessIssueDetails(DTO):
+    field: str | None=None
+    impact: str | None=None
+    entity_id: UUID | None=None
+    reference: str | None=None
+    version: int | None=None
+    classification: str | None=None
+    proof_scope: str | None=None
+    suggested_action: str | None=None
+
+    @model_serializer(mode='wrap')
+    def present(self,handler):
+        return {k:v for k,v in handler(self).items() if v is not None}
 
 
 class CompletionReadinessIssue(DTO):
@@ -22,8 +37,11 @@ class CompletionReadinessIssue(DTO):
     details: CompletionReadinessDetails
 
 
-IssueDetails=CompletionReadinessDetails
-Issue=CompletionReadinessIssue
+IssueDetails=ReadinessIssueDetails
+
+
+class Issue(CompletionReadinessIssue):
+    details: ReadinessIssueDetails
 
 
 class ActionReadiness(DTO):
@@ -62,6 +80,23 @@ class ScopeEstimate(DTO):
     excluded_products: tuple[Exclusion,...]
 
 
+class ForecastAssessment(DTO):
+    requested_mode: Literal['BASELINE','TRAINED']
+    actual_model_type: str | None
+    actual_model_version: str | None
+    selection_reason: str | None
+    quality_status: Literal['not_evaluated']='not_evaluated'
+
+
+class PlanningAssessment(DTO):
+    semantics_version: Literal['planning_readiness/1']='planning_readiness/1'
+    input_scope: Literal['DEFAULT_CONFIGURATION','SUPPLIED_REQUEST']
+    requirements_mode: Literal['default','custom','saved']
+    configuration_status: Literal['RESOLVED','INVALID','UNKNOWN']
+    blockers: tuple[Issue,...]
+    warnings: tuple[Issue,...]
+
+
 class Readiness(DTO):
     store_id: UUID
     as_of_date: date
@@ -73,3 +108,5 @@ class Readiness(DTO):
     source_versions: SourceVersions
     scope_estimate: ScopeEstimate | None
     history_watermark: date | None
+    planning_assessment: PlanningAssessment | None=None
+    forecast_assessment: ForecastAssessment | None=None

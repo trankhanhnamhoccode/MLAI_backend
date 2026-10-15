@@ -10,12 +10,13 @@ cho phép phương pháp eligible với warning; thiếu làm phép tính/ràng 
 định phải block đúng action/scope hoặc yêu cầu xác nhận có provenance.
 
 HISTORICAL INFORMATION — D1 là audit source/design tại checkpoint local
-`c930dfe66cfda5de5896164e16fcf8f4c7acaefe`, không đổi runtime/API. D2 có
-implementation WIP trong nhánh D, chưa merge/main runtime; xem mục D2 bên dưới.
+`c930dfe66cfda5de5896164e16fcf8f4c7acaefe`, không đổi runtime/API. D2/D3 đã
+checkpoint trong nhánh D, D4 COMPLETE local WIP, chưa merge/main runtime.
 Main được audit tại
 `052cddee075e165af2c0cea42ebc2e616c396760`. Worktree D1 `backend-data-readiness`,
 branch `feat/data-readiness`, xuất phát đúng main này. D2 checkpoint local
-`9f720caf01fdf0a8f586c049660a2fcc9447ade3`; D3 source/tests/docs WIP, chưa merge/main.
+`9f720caf01fdf0a8f586c049660a2fcc9447ade3`; D3 checkpoint local
+`d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 WIP, chưa merge/main.
 Không nhập E1–E4.
 Đối chiếu read-only challenger tại `c2544c1025815bd0ccef9acb524f6f265dd03c45`
 cộng E4/dataset-admission WIP; các findings này không phải khả năng của main.
@@ -90,7 +91,7 @@ Invalid/conflicting không được xem như merely missing để fallback bỏ 
 | Source declaration/approved mapping/conversion/immutable version/current actor authority → I1 | Import theo selected schema/scope; approved interpretation khác batch facts | B khi ambiguous/conflict/unsupported/current authority thiếu; proof hợp lệ được reuse, không Owner reapprove mỗi file | `RECIPE_SOURCE_SCOPE_AMBIGUOUS`, `RECIPE_BASIS_REVIEW_REQUIRED`, schema-specific Notice. M04 source → compatible profile → row validation → preview/confirm → commit; không bypass atomic batch guards. |
 | Historical actuals/known-at/holdout/use authority → evaluation | Benchmark metrics; Product/day/task/origin | Missing targets không zero; unsupported/censored/unknown masks tách primary known-false. Không labels/holdout thì quality not evaluated | Main evaluation đủ origins/paired validation mới chọn trained; challenger E3 `REAL_BENCHMARK_BLOCKED` là research status. Bổ sung authorized unseen dataset/vintages; không ép product intake theo research gate. |
 
-## CURRENT FACT / TECHNICAL DEBT — lệch scope và khả năng đã đáp ứng
+## HISTORICAL INFORMATION — D1 findings và technical debt tại baseline
 
 1. **Đã có fallback**: `_choose` kiểm baseline readiness, chỉ catch
    `ArtifactMissingError`, verify compatibility trước history/selection fallback;
@@ -257,8 +258,8 @@ Public C03/result, Ingredient inspection và explanation reuse PlanningNotificat
 OFFER_OMITTED với existing details.entity_id/ingredient_ids/classification/proof_scope/
 suggested_action; không endpoint/DTO field mới. FE generic warning renderer có thể
 đọc existing fields, không có FE source change. Tổng thể readiness/warning UX thuộc
-D4. R01/C01 vẫn conservative với old offer-bound checks và default-mode estimate;
-D3 không âm thầm đổi can_generate theo selected mode.
+D4. Tại checkpoint D3, R01/C01 còn conservative với old offer-bound checks và
+default-mode estimate; D4 refinement được mô tả riêng bên dưới.
 
 Coverage mới tại [unit admission](../../tests/unit/test_offer_admission.py) và
 [HTTP/PG](../../tests/integration/test_planning_offer_admission.py); Import source
@@ -266,7 +267,59 @@ proof nối [supplier acceptance](../../tests/integration/test_import_supplier_b
 Commands/expected cases ở [runbook D3](../runbooks/FULL_TEST_FLOW.md#data-readiness-d3).
 Synthetic correctness không là forecast accuracy hay research benchmark evidence.
 
-## Warning/blocker/assumption public extension — PROPOSAL D4
+## CURRENT FACT — D4 contextual readiness và public warnings
+
+D3 checkpoint local `d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 COMPLETE local WIP,
+chưa commit/push/merge/deploy. Existing R01/C01 routes thêm optional URL-encoded
+`planning_request` (strict C02 PlanningRequest JSON). Không query đánh giá default
+ngày Store hôm nay; có query đánh giá đúng request, không suy hypothetical custom.
+R01 forecast_start_date nếu đồng thời có phải khớp ngày request. Malformed/null,
+duplicate keys hoặc query ngoài planning action trả422; config rejection trả200
+blocked assessment. Không endpoint, migration hoặc computation trong GET.
+
+| Field | Scope/current behavior D4 |
+| --- | --- |
+| R01 planning.can_execute / availability | Action planning với default hoặc supplied request tại snapshot; true chỉ admission/preflight available, không chứng minh winner/requirements satisfied. Unknown prerequisites giữ unknown/false; known missing default trong default flow blocked/false. |
+| C01 readiness.can_generate / status | Chính R01 planning assessment; assessment.input_scope xác định DEFAULT_CONFIGURATION/SUPPLIED_REQUEST, requirements_mode và configuration_status; có blockers/warnings typed, version planning_readiness/1. |
+| C01 requirements_modes[].availability | Discovery của setup/resolver/saved reader hiện có, không khả năng execution của mọi request thuộc mode; không dùng thay contextual assessment. |
+| C01 capabilities | Public flow wired flags, không data readiness hoặc quyền được cấp; acceptance vẫn current-authorized. |
+| Today readiness sections | Cùng shared evaluation, default scope tại ngày Store; không hypothetical request. Source/counter masking và section authorization giữ nguyên. |
+| R01 forecast_assessment / C01 readiness.forecast | D2 requested/actual method/version/selection reason, null khi chưa xác định; quality_status=not_evaluated, không claim accuracy hoặc probability. |
+
+Configuration preflight gọi đúng C02 resolve_planning_setup; full custom explicit
+thresholds/overrides và stored saved không cần default. Custom inheritance vẫn cần
+same-path default/version, null scalar invalid, [] explicit thay list. Budget0 giữ0;
+omitted/null late-bind current cap, unknown ceiling không bypass. Saved active dùng
+current stored version, missing/archived/cross-Store và inactive overrides giữ resolver
+guards. GET không pin version cho Run; C02/execution revalidate và retain riêng.
+
+Detached planning_admission.planning_declarations chứa chính computation D3 được
+chuyển khỏi DB adapter, wrapper execution giữ legacy policy marker behavior. Contextual
+bounds dùng effective resolved budget; remaining fee binding/shared unknown giữ như
+execution. Corrupt/conflict/unknown graph và safety0 vẫn blockers; no eligible offers
+không tự block Product, winner chỉ được engine xác định sau đó.
+
+Current R01 issues có optional typed details field/impact/entity_id/reference/version/
+classification/proof_scope/suggested_action. D2 forecast warnings enrich existing
+same-code/Product issues thay vì thêm duplicate; dates/scope giữ nguyên và ordering
+deterministic. Exclusions/history watermark/current-date assumptions tiếp tục công khai.
+C03/C08 OFFER_OMITTED thêm optional source_reference/source_version từ retained
+D3 evidence; không actor/time giả hoặc live reclassification. Legacy optional fields
+elide khi absent; old storage/digests/queued policy không rewrite. I06 retained
+Issue/details schema giữ riêng, không tự thêm Planning assessment vào completion.
+
+Documented drift ở D1 về sales watermark được reconcile với CURRENT FACT của
+baseline/C02: missing watermark là HISTORY_NOT_AVAILABLE_THROUGH_CUTOFF warning,
+không missing-day0 hoặc completeness gate mới. Model eligibility/serving không đổi.
+GET vẫn estimate, chưa chạy forecast/solver/numeric validation toàn engine, không SLA
+hoặc browser/full-suite claim. D3 overall deadline failure chưa có root cause; D4 giữ
+deadline180s/proof/search policy và targeted regression, timing instability còn mở.
+
+Canonical [R01](../IMPORT_MAPPING_API_CONTRACT_VI.md#readiness-v1) và
+[C01](../PROCUREMENT_API_CONTRACT_VI.md#planning-context) sở hữu API/FE delta;
+[runbook D4](../runbooks/FULL_TEST_FLOW.md#data-readiness-d4) có commands/expected cases.
+
+### Existing warning contracts và remaining proposals
 
 ACCEPTED DECISION — warning vẫn cho chạy; blocker chặn đúng action/scope; irrelevant
 missing không có issue. Existing retained Runs không bị update/reclassify theo policy
@@ -278,7 +331,7 @@ CURRENT FACT — tái sử dụng các contracts hiện có:
 
 | Boundary | Shape hiện có | Giới hạn / extension PROPOSAL |
 | --- | --- | --- |
-| R01/Import completion readiness | Issue `{code,source,scope,entity_id,affected_dates,details}`; severity theo vị trí blockers/warnings; details hiện empty strict DTO | Add optional typed `message`, `impact`, `remediation`, `field`, `assumption_references`; thêm typed details khi cần offer/Run reference, không nhét arbitrary keys vào empty details. Giữ old fields/nullability/arrays. |
+| R01 current / Import retained completion | Issue `{code,source,scope,entity_id,affected_dates,details}`; severity theo vị trí blockers/warnings; R01 details typed D4, retained completion vẫn empty strict DTO | Generic assumption references/actor lifecycle còn PROPOSAL; không generic dictionary/default service. |
 | Import preview/completion/meta | Notice `{code,severity:WARNING\|ERROR,message,field?,entity?,impact?,source_location?}` | Dùng Notice, chỉ thêm optional remediation/reference nếu cần; missing/conflict ERROR không downgrade. |
 | Forecast execution | ForecastWarning `{code,severity,field,entity,impact,product_id?}` và ExecutionDetails selection/candidate | Không tạo taxonomy song song; optional typed remediation/assumption refs, giữ identity/serialization cũ. |
 | Decision/BOM | `DecisionIssue.kind=INFO\|WARNING\|DATA_BLOCKER\|HARD_VIOLATION`, affected refs, impact, suggested_action | Giữ kind và mapping public hiện có; không đổi HARD_VIOLATION thành warning. |
@@ -298,8 +351,8 @@ warnings và giữ completion/audit với preview reference/digest và warning c
 Không coi count là full warning messages được copy vào completion; consumer cần
 retained preview/detail để đọc nguyên issues. I06 `completion_in_transaction` chỉ evaluate các action
 đủ quyền trong import/menu/inventory; không đánh giá forecast/planning và không
-chứng nhận Store-wide READY. R01 có action warnings, C01 hiện mất phần projection
-warnings như đã nêu. Forecast metadata giữ warnings, Planning capture giữ forecast
+chứng nhận Store-wide READY. R01 có action warnings, C01 D4 giữ chúng trong
+readiness.assessment. Forecast metadata giữ warnings, Planning capture giữ forecast
 view/identity/source versions/operational source evidence và result giữ warnings.
 
 PROPOSAL — retain đúng warnings áp dụng ở acceptance/capture/result của Run mới,
@@ -413,15 +466,15 @@ identity; freeze trước execution. Báo model-C eligibility, selected product 
 research benchmark admissibility riêng. Giữ old protocol/digests/results để so sánh;
 không đổi C thành baseline trong old paired cohort hoặc nới gate để pass.
 
-## Dependency/API impact và thứ tự triển khai — PROPOSAL
+## Dependency/API impact và thứ tự triển khai — CURRENT FACT / PROPOSAL D5
 
 | Slice | Phạm vi, phụ thuộc và boundary thay đổi | Gate trước khi kết thúc |
 | --- | --- | --- |
 | D1 | Audit/policy này, CURRENT_STATE/ROADMAP; không runtime/API/schema delta | Source/test trace, JSON examples, local links, UTF-8/whitespace; dừng chưa commit/push/merge |
-| D2 | CURRENT FACT implementation WIP: shared choice + typed internal assessment, scoped history blockers và dependency/runtime classification; public shapes/replay giữ nguyên | Focused forecast/HTTP/PostgreSQL regressions, linked all-censored fail→fix, fresh-session retained evidence; không challenger activation |
-| D3 | CURRENT FACT COMPLETE, local WIP chưa commit: accepted versioned offer admission, existing confirmed facts/source proof, scoped omission và retained eligible domain; /1/legacy giữ nguyên | Focused alternatives/fee/capacity/safety/unknown graph/stock/stale/permissions/Import/replay, fresh-session PG và OpenAPI equality |
-| D4 | Public contextual readiness/warnings; reuse R01/C01/I06/C02/C03, existing fields/extensions; không endpoint chỉ để warnings/config facts | OpenAPI diff và additive DTO/FE adapters, current authorization/no leak, GET no solver/business mutation, retained/new policy separation |
-| D5 | Acceptance/benchmark; protocol mới chỉ khi cần fallback/assumptions; không sửa E1–E4 | Deterministic end-to-end cases, fresh-session persistence, authorized dataset/protocol masks, reproducible manual flow; full suite ở integration milestone nếu thay đổi rộng |
+| D2 | CURRENT FACT COMPLETE, checkpoint9f720caf: shared choice + typed internal assessment, scoped history blockers và dependency/runtime classification; public shapes/replay giữ nguyên | Focused forecast/HTTP/PostgreSQL regressions, linked all-censored fail→fix, fresh-session retained evidence; không challenger activation |
+| D3 | CURRENT FACT COMPLETE, local checkpoint d0f3716c261f6634d5fcd5ae886c00cf3014276c: versioned offer admission/source proof; /1/legacy giữ nguyên | Focused alternatives/fee/capacity/safety/unknown graph/stock/stale/permissions/Import/replay và OpenAPI equality |
+| D4 | CURRENT FACT COMPLETE local WIP: contextual request/resolver/admission và shared warnings; I06 retained schema giữ nguyên | Focused modes/budgets/scope/retained/security/OpenAPI delta; không FE/browser hoặc full-suite claim |
+| D5 | PROPOSAL: FE/browser integration cho D4 extension, optional consumer-specific workbook acceptance, timing investigation khi authorized | Không lặp backend acceptance đã xong; không sửa/chạy E1–E4 hoặc accuracy benchmark ngầm |
 
 BE phụ thuộc eligibility/classification/capture/projection hiện có; domain vẫn plain
 Python, không service registry/agent framework/new infrastructure. FE cần render
@@ -431,13 +484,11 @@ ML/Data cần giữ policy/schema/artifact/fit/availability identity, không nâ
 từ history-only inputs. Demo/manual flow cần sales-only và complementary uploads,
 không bắt buộc training/provider. D1 không sửa FE hoặc main runtime.
 
-PROPOSAL — additive fields đủ cho issue presentation/method eligibility. Thay nghĩa
-`can_generate` từ default-mode estimate sang selected custom/saved request là semantic
-delta: phải review Planning/Import canonical contract và FE behavior, ghi supersession
-hoặc versioned assessment, không âm thầm reuse boolean cũ với nghĩa mới. Không thêm
-readiness endpoint song song; ưu tiên extension existing action/mode workflow.
-Không thay `/1`, schema-1 replay hoặc retained old Run policy. No OpenAPI diff cần
-chạy trong D1 vì source/public API không đổi; D4 bắt buộc diff khi implement.
+CURRENT FACT D4 — additive versioned assessment/input_scope phân biệt default-mode
+estimate với supplied request. Planning/Import canonical contracts và compatibility
+changelog sở hữu semantic delta/FE behavior. Không endpoint song song, không thay
+`/1`, schema1 replay hoặc retained old Run policy. OpenAPI diff D3→D4 đã đối chiếu;
+original baseline provenance giữ nguyên. FE/browser integration còn chưa thực hiện.
 
 Phân loại sản phẩm đã chốt, không còn câu hỏi “có cần đủ files?”. Các quyết định
 nghiệp vụ thật sự cần trước capability mới là semantics/enforcement của mandatory
@@ -445,15 +496,16 @@ safety stock nếu muốn hỗ trợ, và nguồn/phạm vi/effectivity của m�
 declaration mới nếu existing workflows chưa biểu diễn được. Không cần hỏi lại Owner
 cho immutable proof hợp lệ. CQR/calendar changes hoặc research promotion có review
 riêng, không là điều kiện để dùng baseline hiện có. D2 được authorized riêng;
-D3 được authorized riêng; D4–D5 chưa được mở.
+D3/D4 được authorized riêng; D5 chưa được mở.
 
-## Acceptance cases — D2 coverage và PROPOSAL D3–D5
+## Acceptance cases — D2–D4 coverage và PROPOSAL D5
 
 CURRENT FACT D2: forecast/stockout/eligibility/GET/replay cases được cover bởi
 [unit eligibility](../../tests/unit/test_forecast_eligibility.py),
 [linked HTTP/PG](../../tests/integration/test_forecast_readiness.py) và regressions
-F1–F3/R1. D3 facts/offer cases có coverage riêng nêu trên; public extensions D4/D5
-vẫn là PROPOSAL, không suy từ passing forecast/Planning cases rằng đã triển khai.
+F1–F3/R1. D3 facts/offer và D4 public context/warnings có focused coverage riêng tại
+runbook. D5 FE/browser/consumer-specific acceptance còn PROPOSAL, không suy từ
+passing backend cases rằng đã browser verified.
 
 | Case | Outcome cần giữ/chứng minh | Coverage / slice |
 | --- | --- | --- |

@@ -20,13 +20,27 @@ class ReadinessReads:
             s.commit()
             return summary,permissions
 
-    def read(self,token,store,actions=('import','menu','inventory'),start=None,*,context=False):
+    def read(self,token,store,actions=('import','menu','inventory'),start=None,*,context=False,planning_request=None):
         if context:
             actions=('planning',)
         if not actions or len(set(actions))!=len(actions) or any(a not in ACTION_READS for a in actions) or (start is not None and not {'forecast','planning'}&set(actions)):
             raise AuthError('INVALID_FILTER',422)
         required=tuple(sorted({p for a in actions for p in ACTION_READS[a]}))
         summary,permissions=self._authorize(token,store,required)
+        requested=None
+        if planning_request is not None:
+            if 'planning' not in actions:raise AuthError('INVALID_FILTER',422)
+            from app.application.contracts.planning_setup import PlanningRequest
+            from pydantic import ValidationError
+            from app.application.use_cases.planning_setup import _json_object
+            import json
+            try:
+                if len(planning_request.encode('utf-8'))>65536:raise ValueError()
+                requested=PlanningRequest.model_validate(json.loads(planning_request,object_pairs_hook=_json_object))
+            except (ValidationError,ValueError,UnicodeError):
+                raise AuthError('INVALID_FILTER',422) from None
+            if start is not None and start!=requested.forecast_start_date:raise AuthError('INVALID_FILTER',422)
+            start=requested.forecast_start_date
         with self.engine.connect().execution_options(isolation_level='REPEATABLE READ',postgresql_readonly=True) as connection:
             with auth_session(connection) as s:
                 facts=load_readiness(s,store)
@@ -63,7 +77,7 @@ class ReadinessReads:
                 assessment=self.forecast.assess(prepared,facts.serving)
         available=self.planning_available()
         result=evaluate(facts,store,now,evaluated_start,actions,permissions,forecast_assessment=assessment,
-            forecast_available=self.forecast is not None,planning_available=available)
+            forecast_available=self.forecast is not None,planning_available=available,planning_request=requested)
         current,_=self._authorize(token,store,required)
         if current.authorization_version!=summary.authorization_version:
             raise AuthError('SNAPSHOT_NOT_AVAILABLE',409)

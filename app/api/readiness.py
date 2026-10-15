@@ -19,16 +19,17 @@ def service(request:Request):
 
 @router.get('/stores/{store_id}/readiness',operation_id='R01',response_model=Envelope[Readiness])
 async def readiness(store_id:ResourceId,request:Request,actions:Annotated[str,Query(max_length=128)]='import,menu,inventory',
-    forecast_start_date:Annotated[BusinessDate | None,Query()]=None,svc=Depends(service),token=Depends(session_token)):
-    await read_query(request,('actions','forecast_start_date'))
+    forecast_start_date:Annotated[BusinessDate | None,Query()]=None,
+    planning_request:Annotated[str | None,Query(max_length=65536)]=None,svc=Depends(service),token=Depends(session_token)):
+    await read_query(request,('actions','forecast_start_date','planning_request'))
     from starlette.concurrency import run_in_threadpool
-    result=await run_in_threadpool(svc.read,token,store_id,tuple(actions.split(',')),forecast_start_date)
+    result=await run_in_threadpool(svc.read,token,store_id,tuple(actions.split(',')),forecast_start_date,planning_request=planning_request)
     return dict(data=result,meta=Meta(request_id=request.state.request_id),error=None)
 
 
 @router.get('/stores/{store_id}/planning-context',operation_id='C01',response_model=Envelope[Context])
-async def context(store_id:ResourceId,request:Request,svc=Depends(service),token=Depends(session_token)):
-    await read_query(request)
+async def context(store_id:ResourceId,request:Request,planning_request:Annotated[str | None,Query(max_length=65536)]=None,svc=Depends(service),token=Depends(session_token)):
+    await read_query(request,('planning_request',))
     from starlette.concurrency import run_in_threadpool
-    result=await run_in_threadpool(svc.read,token,store_id,context=True)
+    result=await run_in_threadpool(svc.read,token,store_id,context=True,planning_request=planning_request)
     return dict(data=result,meta=Meta(request_id=request.state.request_id),error=None)

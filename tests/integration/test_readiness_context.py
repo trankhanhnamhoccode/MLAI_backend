@@ -144,9 +144,18 @@ def test_whole_response_permissions_and_action_not_granted_after_sensitive_reads
     login(c[0],'staff@example.test')
     denied=read(c,'menu,planning');assert denied.status_code==403 and denied.json()['data'] is None
     assert c[0][5].get(base(c)+'/planning-context').status_code==403
+    import json
+    from tests.integration.test_contextual_readiness import custom
+    assert c[0][5].get(base(c)+'/planning-context',params={'planning_request':json.dumps(custom())}).status_code==403
     with Session(c[0][1]) as s:s.add(MembershipGrant(membership_id=mid,permission='procurement.cost.read'));s.commit()
     value=read(c).json()['data'];assert any(i['code']=='ACTION_NOT_GRANTED' for i in value['actions'][0]['blockers'])
-    assert 'quantity' not in str(value) and 'pack_cost' not in str(value)
+    # D4 adds sourced impact wording (which may say "quantity"); prohibit raw
+    # value fields throughout the payload rather than matching prose words.
+    def keys(node):
+        if isinstance(node,dict):return set(node).union(*(keys(v) for v in node.values()))
+        if isinstance(node,list):return set().union(*(keys(v) for v in node))
+        return set()
+    assert not {'quantity','pack_cost','on_hand_quantity','unit_cost'} & keys(value)
 
 
 def test_context_all_saved_invalid_active_and_archived_removed(readiness):

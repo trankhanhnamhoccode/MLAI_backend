@@ -1859,6 +1859,11 @@ requirements/forecast policy trong [Planning mục7](PROCUREMENT_API_CONTRACT_VI
 R01 GET /stores/{store_id}/readiness; query actions comma-separated
 import|menu|inventory|forecast|planning, defaultimport,menu,inventory; optional
 forecast_start_date:date chỉ khi requestforecast/planning, defaultStoretoday.
+CURRENT FACT D4: optional `planning_request` URL-encoded strict C02 PlanningRequest
+JSON, UTF-8≤64KiB, chỉ khi actions chứa planning. Nếu đồng thời forecast_start_date
+phải bằng ngày trong request; mismatch/invalid JSON/null/duplicate keys trả422
+INVALID_FILTER, không silently evaluate default. Không query thì chỉ đánh giá
+DEFAULT_CONFIGURATION; không suy hypothetical custom/saved readiness.
 Permissions selectedactions: import→import.read; menu→menu.read; inventory→
 inventory.read+ingredient.read; forecast→planning.context.read+sales.read;
 planning→planning.context.read+budget.read+procurement.cost.read. Storecurrentchecks
@@ -1892,6 +1897,27 @@ Knownblocker takes precedence blocked; unknown prerequisite givesunknown when
 no blocker đã xác định. Validdata/unavailableworker yieldsblocked, not dữ liệu invalid.
 GET only load/validate typedmetadata/facts/digests/declarations; no solver/train/
 LLM/forecast execution, no thay đổi canonical or jobenqueue.
+
+CURRENT FACT D4 — additive `planning_assessment` và `forecast_assessment` nullable
+trên R01 data; C01 readiness.assessment/forecast là projections cùng evaluation.
+PlanningAssessment={semantics_version:"planning_readiness/1",
+input_scope:"DEFAULT_CONFIGURATION"|"SUPPLIED_REQUEST",
+requirements_mode:"default"|"custom"|"saved",
+configuration_status:"RESOLVED"|"INVALID"|"UNKNOWN",blockers:ReadinessIssue[],warnings:ReadinessIssue[]}.
+Boolean hiện có đánh giá action+inputs/snapshot đó, không proof có winner hoặc đủ
+requirements. Default thiếu là known blocker; full custom/saved không phụ thuộc
+default thì không nhận blocker đó. Unknown model configuration vẫn unknown;
+known worker/dependency unavailable vẫn blocked với execution_status unavailable.
+ForecastAssessment theo [C01](PROCUREMENT_API_CONTRACT_VI.md#planning-context).
+Issue.details dùng optional typed field/impact/entity_id/reference/version/
+classification/proof_scope/suggested_action; absent fields elide. OFFER_OMITTED có
+scope Ingredient, details.entity_id là term, reference/version từ D3 source;
+proof chỉ CAPTURED_ELIGIBLE_OFFERS_ONLY. Remaining offers/fees/bounds dùng chính
+admission của execution, shared unknown/corrupt/safety không thành warnings.
+Forecast warnings reuse D2 assessment, giữ impact và computed exclusions/dates;
+dedup stable theo exact issue/ref, không mất Product. NONCURRENT_PLANNING_CURRENT_FACTS
+chỉ current captured facts cho ngày khác, không historical stock reconstruction.
+I06 retained Issue/details schemas và semantics giữ nguyên; không backfill warnings.
 
 ### 14.2. Evaluation matrix, exclusions và orchestration
 
@@ -1967,7 +1993,7 @@ CAPTURED_FINITE_DOMAIN_ONLY, không gọi tối ưu toàn miền vô hạn.
 
 ### 14.3. C01 và I06 adapters
 
-C01 readiness giữ shape cũ: status=ready khi planningavailabilityready; not_ready
+C01 readiness giữ các fields cũ và thêm assessment/forecast nêu trên: status=ready khi planningavailabilityready; not_ready
 khi blocked; unknown khiunknown; can_generate=can_execute; reason_codes lấy distinct
 blockingcodes, evaluated_forecast_start_date/scope_estimate/history_watermark cùng
 evaluation. Context_version cover source_versions + resolver cấu hình versions, không

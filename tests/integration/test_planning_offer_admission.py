@@ -16,6 +16,8 @@ def test_unbounded_zero_cost_offer_does_not_block_finite_alternative(flow):
     c, ingredient, _, worker = flow
     omitted = demand_and_offer(flow, cost='0', system='omitted-source')
     eligible = demand_and_offer(flow, cost='2', system='eligible-source')
+    from tests.integration.test_contextual_readiness import contextual
+    assert contextual(flow)['readiness']['can_generate']
     accepted = submit(c)
     assert accepted.status_code == 202, accepted.text
     record = worker.run_one()
@@ -30,6 +32,8 @@ def test_unbounded_zero_cost_offer_does_not_block_finite_alternative(flow):
     assert warning['details']['entity_id']==str(omitted)
     assert warning['details']['classification']=='OFFER_BOUND_UNKNOWN'
     assert warning['details']['proof_scope']=='CAPTURED_ELIGIBLE_OFFERS_ONLY'
+    assert warning['details']['source_reference']==f'SupplierTerm/{omitted}/version/1'
+    assert warning['details']['source_version']==1
     assert warning['details']['suggested_action']
     detail=c[0][5].get(accepted.headers['Location']+'/ingredients/'+str(ingredient))
     assert detail.status_code==200,detail.text
@@ -52,6 +56,7 @@ def test_unbounded_zero_cost_offer_does_not_block_finite_alternative(flow):
         fresh.get(SupplierTerm,omitted).pack_cost=99
         fresh.commit()
     assert c[0][5].get(accepted.headers['Location']).json()==response.json()
+    assert c[0][5].get(accepted.headers['Location']+'/explanation').json()['data']==explanation.json()['data']
     with Session(c[0][1]) as fresh:
         assert fresh.scalar(select(PlanningRun)).record_json==before
 
@@ -75,6 +80,8 @@ def test_no_eligible_offer_does_not_prove_no_service_or_market_infeasibility(flo
     c,_,_,worker=flow
     term=demand_and_offer(flow,cost='0')
     lot=physical_stock(flow,stock)
+    from tests.integration.test_contextual_readiness import contextual
+    assert contextual(flow)['readiness']['can_generate']  # Execution admissible, winner unassessed.
     accepted=submit(c);record=worker.run_one()
     assert record.status=='completed' and record.outcome==expected,record.error_code
     assert record.capture.computed_product_ids==(c[2],)
@@ -109,6 +116,9 @@ def test_omission_does_not_hide_shared_fee_unknown_or_conflict(flow,kind):
             covered_source_supplier_keys=(),evidence_reference='explicit scoped fee evidence',reason='synthetic D3')
         OperationalConfiguration(s,c[1].store_id).fee(fee,uuid4(),'synthetic',{}, {})
         s.commit()
+    from tests.integration.test_contextual_readiness import contextual
+    current=contextual(flow)['readiness']
+    assert not current['can_generate'] and 'PAYABLE_FEE_COVERAGE_UNKNOWN' in current['reason_codes']
     assert submit(c).status_code==202
     record=worker.run_one()
     assert record.outcome=='computation_blocked'

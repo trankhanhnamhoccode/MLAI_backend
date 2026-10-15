@@ -27,6 +27,8 @@ class PlanningNotificationDetails(DTO):
     classification: str | None=None
     proof_scope: str | None=None
     suggested_action: str | None=None
+    source_reference: str | None=None
+    source_version: int | None=None
 
     @model_serializer(mode='wrap')
     def present(self,handler):

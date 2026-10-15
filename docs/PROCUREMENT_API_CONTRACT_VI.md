@@ -143,7 +143,13 @@ Percent→ratio dịch Decimal exponent−2 exact, independent ambient context.
 <a id="planning-context"></a>
 ## 4. C01 — response đọc setup
 
-Không body/query. GET không tạo forecast/model/Run/solver/saved. DB facts dùng cùng
+Không body. Optional query `planning_request` là JSON URL-encoded của chính
+PlanningRequest C02 (UTF-8≤64KiB, strict fields/presence/duplicate-key checks).
+Omit query đánh giá default với ngày Store hôm nay/version hiện tại; không suy
+khả năng của hypothetical custom/saved. Có query đánh giá đúng request/ngày đó,
+không pin hoặc ghi cấu hình. Malformed request/null trả422 INVALID_FILTER;
+request hợp lệ nhưng cấu hình không resolve được trả200 với assessment blocked.
+GET không tạo forecast/model/Run/solver/saved. DB facts dùng cùng
 read-only snapshot, detached preflight; không giữ transaction khi verify artifact FS.
 Capability true chỉ khi PUBLIC flow đã wired/enforce quyền/lưu đọc outcome; pure
 selector có không tự làm public capability true.
@@ -204,13 +210,47 @@ không xác minh được validity:unknown/SAVED_VALIDATION_UNKNOWN.
 
 Readiness={status:ready/not_ready/unknown,can_generate:boolean,reason_codes:string[],
 evaluated_forecast_start_date:date/null,scope_estimate:ScopeEstimate/null,
-history_watermark:date/null}. ready iff can_generate=true;unknown cũng false.
+history_watermark:date/null,assessment:PlanningAssessment/null,
+forecast:ForecastAssessment/null}. ready iff can_generate=true;unknown cũng false.
+CURRENT FACT D4 — `assessment.semantics_version="planning_readiness/1"`,
+input_scope DEFAULT_CONFIGURATION|SUPPLIED_REQUEST, requirements_mode default|custom|saved,
+configuration_status RESOLVED|INVALID|UNKNOWN và blockers/warnings theo canonical
+[R01](IMPORT_MAPPING_API_CONTRACT_VI.md#readiness-v1). Absent request chỉ scope default;
+explicit query chọn scope mới, không đổi boolean thành cam kết feasibility/winner.
+Full custom với thresholds/overrides explicit và saved đã resolve không cần default.
+Custom omit scalar/overrides vẫn cần same-path default/version; null không phải omit,
+overrides=[] không kế thừa. Budget omitted/null dùng current ceiling, "0" là zero;
+ceiling unknown vẫn block cả custom0. Saved active lấy current stored version theo
+contract C02; archived/missing/cross-Store không fallback. Không có saved-version
+request field mới. Current grants và sensitive whole-denial giữ nguyên.
+ForecastAssessment={requested_mode,actual_model_type,actual_model_version,
+selection_reason,quality_status:"not_evaluated"}; method null khi chưa xác định,
+không confidence/probability/accuracy claim. These are current-snapshot assessments;
+acceptance/execution vẫn revalidate và giữ snapshot riêng.
+
+Ví dụ query value trước URL encoding (cùng schema C02, không phải GET body):
+
+```json
+{"requirements_mode":"custom","forecast_start_date":"2026-10-10","requirements":{"paths":[{"path":"BASE","min_fill_rate_percent":"95","product_overrides":[]}],"budget_limit":"0"}}
+```
+
+Readiness fragment khi request đã resolve và toàn bộ prerequisites còn lại available
+(minh họa conditional, không dữ liệu Store thực):
+
+```json
+{"status":"ready","can_generate":true,"reason_codes":[],"assessment":{"semantics_version":"planning_readiness/1","input_scope":"SUPPLIED_REQUEST","requirements_mode":"custom","configuration_status":"RESOLVED","blockers":[],"warnings":[]}}
+```
+
+No-query fragment input_scope=DEFAULT_CONFIGURATION; không dùng readiness của
+default bị blocked để kết luận full custom cũng blocked. C03/C08 D4 chỉ bổ sung
+optional details.source_reference/source_version cho OFFER_OMITTED, lấy từ retained
+D3 term revision; không suy source confirmer hay reclassify bằng live facts.
 Suggestion start=ngày Store hôm nay,D=hôm qua. Không lấy latest sales làm cutoff rồi
 tự nhảy ngày che thiếu data. Thiếu timezone/ngày không biểu diễn được:suggestion=null.
 GET không chạy forecast/solver để xác minh readiness.
 
-Cần public flow wired,authorized Store,known budget/default/resolver và sales availability
-đến D được xác nhận;≥1 món đủ recipe/horizon và baseline-ready; required inventory/
+Cần public flow wired,authorized Store,known budget và resolver cho inputs đang xét;
+≥1 món đủ recipe/horizon và baseline-ready; required inventory/
 fees/constraints của computed scope known, không global blocker. Watermark là completeness
 declaration có provenance từ loader hiện hành, không max sales day. Unknown
 không gán missing days0. Latest observation cũ có thể warning, không tự tăng ngưỡng
