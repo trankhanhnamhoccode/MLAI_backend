@@ -6,7 +6,7 @@ from pydantic import AwareDatetime
 from app.application.contracts.auth import DTO
 from app.application.contracts.planning_setup import StoredRequirements,Version
 from app.application.contracts.planning_configuration import BudgetCeiling,Validation,Notification
-from app.application.contracts.readiness import ScopeEstimate,Readiness
+from app.application.contracts.readiness import ScopeEstimate,Readiness,PlanningAssessment,ForecastAssessment
 
 
 class Defaults(DTO):
@@ -71,6 +71,8 @@ class PlanningReadiness(DTO):
     evaluated_forecast_start_date: date | None
     scope_estimate: ScopeEstimate | None
     history_watermark: date | None
+    assessment: PlanningAssessment | None=None
+    forecast: ForecastAssessment | None=None
 
 
 class Context(DTO):

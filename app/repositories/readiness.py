@@ -1,8 +1,10 @@
 """Detached canonical facts for IMP14; caller owns the read snapshot/commit."""
 from dataclasses import dataclass
+from uuid import UUID
 from sqlalchemy import select,text
 from app.models import BusinessConstraint
 from app.models.model_serving import ModelServingConfiguration
+from app.models.planning_configuration import SavedRequirement
 from app.repositories.import_staging import read_set_in_session,json_value
 from app.repositories.planning_configuration import configuration_rows,default_record,active_saved
 from app.application.planning_configuration_values import detail
@@ -25,6 +27,7 @@ class ReadinessFacts:
     cap: BudgetCeilingRecord | None
     serving: ServingRecord | None
     saved: tuple[SavedDetail,...]
+    archived_saved_ids: tuple[UUID,...]=()
 
 
 def load_readiness(s,store):
@@ -38,4 +41,5 @@ def load_readiness(s,store):
     row=s.get(ModelServingConfiguration,store)
     serving=ServingRecord(version=row.version,policy=row.configuration_json) if row else None
     saved=tuple(detail(row,default,cap,products) for row in active_saved(s,store))
-    return ReadinessFacts(snapshot=snapshot,defaults=default,cap=budget,serving=serving,saved=saved)
+    archived=tuple(s.scalars(select(SavedRequirement.id).where(SavedRequirement.store_id==store,SavedRequirement.state=='archived')))
+    return ReadinessFacts(snapshot=snapshot,defaults=default,cap=budget,serving=serving,saved=saved,archived_saved_ids=archived)

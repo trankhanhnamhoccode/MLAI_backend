@@ -107,7 +107,7 @@ def test_real_baseline_worker_stock_and_retained_poll(flow):
     assert worker.run_one() is None
 
 
-def demand_and_offer(flow,*,cost='2',maximum=None,system='synthetic'):
+def demand_and_offer(flow,*,cost='2',maximum=None,system='synthetic',shelf=None):
     from datetime import date
     from app.models import SalesDaily
     from app.application.contracts import import_domains as d
@@ -119,7 +119,7 @@ def demand_and_offer(flow,*,cost='2',maximum=None,system='synthetic'):
         writer=OperationalConfiguration(s,c[1].store_id)
         writer.supplier(d.SupplierSource(source_supplier_key='supplier',name='Synthetic supplier',active=True),supplier,system,{},create=True)
         writer.term(d.TermSource(source_term_key='offer',supplier_id=supplier,ingredient_id=ingredient,effective_from=date(2026,10,1),effective_to=None,
-            unit='ml',pack_size_base_quantity='5',pack_cost=cost,currency='VND',minimum_order_packs=1,lead_time_days=0,shelf_life_days=None,
+            unit='ml',pack_size_base_quantity='5',pack_cost=cost,currency='VND',minimum_order_packs=1,lead_time_days=0,shelf_life_days=shelf,
             active=True,maximum_order_base_quantity=maximum),term,system,{})
         # Supplier creation invalidates previous procurement-context dependency.
         declaration(s,c[1].store_id,d.ProcurementDeclaration(kind='PROCUREMENT_CONTEXT',effective_from=date(2026,10,10),effective_to=None,
@@ -155,7 +155,7 @@ def test_real_purchase_and_budget_modes(flow,mode,budget,outcome):
         assert all(s['proof']=='UNPROVEN' and s['customer_feasibility']=='UNKNOWN' for s in value['result']['strategies'])
 
 
-@pytest.mark.parametrize('maximum,expected',[(None,'computation_blocked'),('100','recommendation_available')])
+@pytest.mark.parametrize('maximum,expected',[(None,'no_eligible_candidate'),('100','recommendation_available')])
 def test_zero_cost_bounds_are_explicit(flow,maximum,expected):
     c,_,_,worker=flow;demand_and_offer(flow,cost='0',maximum=maximum)
     response=submit(c);assert response.status_code==202,response.text
@@ -163,8 +163,11 @@ def test_zero_cost_bounds_are_explicit(flow,maximum,expected):
     assert record.outcome==expected,[(p.code,p.detail) for p in record.capture.problems]
     read=c[0][5].get(response.headers['Location']);assert read.status_code==200,read.text
     if maximum is None:
-        assert 'OFFER_BOUND_UNKNOWN' in {x['code'] for x in read.json()['data']['errors']}
-        assert read.json()['data']['result']['strategies']==[]
+        assert record.declarations.offer_admission.omissions[0].reason=='OFFER_BOUND_UNKNOWN'
+        assert record.declarations.offers==()
+        assert 'OFFER_OMITTED' in {x['code'] for x in read.json()['data']['result']['warnings']}
+        assert read.json()['data']['result']['winner_option_id'] is None
+        assert read.json()['data']['result']['strategies']
     else:
         assert record.declarations.offers[0].bound.source=='TECHNICAL_SEARCH_LIMIT'
         assert record.declarations.supplier_limits==() # Source maximum is not a fabricated declaration.

@@ -21,11 +21,11 @@ from app.application.forecast_serialization import serialize_prepared, restore_p
 from app.application.forecast_demand import demand_warnings
 from app.application.errors import ApplicationError, ErrorCategory
 from app.application.use_cases.forecast import ForecastUseCases
-from app.application.use_cases.forecast_baseline import assess_baseline_readiness, run_historical_quantile_baseline
+from app.application.use_cases.forecast_baseline import require_baseline_readiness, run_historical_quantile_baseline
 from app.application.use_cases.forecast_execution import ForecastExecutionUseCases, ForecastExecutionError, _commit, _now
-from app.domain.forecasting.baseline import BASELINE_MODEL_TYPE, BASELINE_MODEL_VERSION, BaselineNotReadyError
+from app.domain.forecasting.baseline import BASELINE_MODEL_TYPE, BASELINE_MODEL_VERSION
 from app.infrastructure.database.forecast_execution_session import _execution_session, _note_secondary
-from app.infrastructure.forecast_model import predict_quantiles, inference_readiness, require_compatible
+from app.infrastructure.forecast_model import predict_quantiles, training_rows, require_compatible
 from app.infrastructure.storage.forecast_artifacts import ForecastArtifactStore, LoadedArtifact, ArtifactMissingError
 from app.models import ForecastRun, ForecastRunInput, ForecastPrediction, ForecastExecutionMetadata
 from app.repositories.forecast import ForecastRepository
@@ -102,9 +102,7 @@ class TrainedForecastExecutionUseCases(ForecastExecutionUseCases):
         return prepared
 
     def _choose(self, prepared: PreparedForecastInput, candidate: str | None) -> ExecutionChoice:
-        readiness = assess_baseline_readiness(prepared)
-        if any(r.status == 'NOT_READY_NO_HISTORY' for r in readiness):
-            raise BaselineNotReadyError(readiness)
+        require_baseline_readiness(prepared)
         if candidate is None:
             return ExecutionChoice(None,_fallback_details('NO_ARTIFACT',None))
         try:
@@ -113,10 +111,13 @@ class TrainedForecastExecutionUseCases(ForecastExecutionUseCases):
             return ExecutionChoice(None,_fallback_details('ARTIFACT_MISSING',candidate))
         # Even a baseline-selected artifact must be valid/compatible; never hide corruption.
         require_compatible(artifact.model,prepared)
-        if any(r.status != 'READY' for r in inference_readiness(prepared)):
+        readiness = training_rows(prepared).readiness
+        if any(r.status == 'NOT_READY_HISTORY' for r in readiness):
             return ExecutionChoice(None,_fallback_details('NOT_READY_HISTORY',candidate))
         if artifact.manifest.evaluation.selected_family != MODEL_TYPE:
             return ExecutionChoice(None,_fallback_details('BASELINE_SELECTED',candidate))
+        if any(r.status != 'READY' for r in readiness):
+            return ExecutionChoice(None,_fallback_details('NOT_READY_HISTORY',candidate))
         return ExecutionChoice(artifact,ExecutionDetails(selection_reason='TRAINED_SELECTED',
                                                         candidate_artifact_identity=candidate))
 

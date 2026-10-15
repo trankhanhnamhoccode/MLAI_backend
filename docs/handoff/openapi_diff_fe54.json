@@ -93,17 +93,21 @@
   },
   "removed_operations": [],
   "changed_operations": [
+    "C01",
     "H01",
     "H02",
     "I04",
     "M01",
     "M02",
     "N5",
-    "N9"
+    "N9",
+    "R01"
   ],
   "structural_json_pointers": [
     "/components/schemas/AcceptInvitation/properties/accept/const",
     "/components/schemas/AcceptedDelivery",
+    "/components/schemas/ActionReadiness/properties/blockers/items/$ref",
+    "/components/schemas/ActionReadiness/properties/warnings/items/$ref",
     "/components/schemas/ActionResult",
     "/components/schemas/ActualReceiptValue",
     "/components/schemas/Approve/properties/expected_submission_version",
@@ -145,6 +149,7 @@
     "/components/schemas/ExportSummary",
     "/components/schemas/FieldOptions/properties/schema/anyOf/0/enum",
     "/components/schemas/FieldProvenance",
+    "/components/schemas/ForecastAssessment",
     "/components/schemas/GrantsRequest/properties/grants/maxItems",
     "/components/schemas/HistoryCorrectionConfirmation",
     "/components/schemas/HistoryEffect",
@@ -160,6 +165,7 @@
     "/components/schemas/InvitationOffer/properties/declined_at",
     "/components/schemas/InvitationOffer/properties/status/enum",
     "/components/schemas/InvitationOffer/required",
+    "/components/schemas/Issue",
     "/components/schemas/LatestRun",
     "/components/schemas/MappingCounterScope",
     "/components/schemas/MappingCounters",
@@ -207,6 +213,11 @@
     "/components/schemas/PermissionEvent/properties/source/enum",
     "/components/schemas/PermissionEvent/required",
     "/components/schemas/PermissionRequest",
+    "/components/schemas/PlanningAssessment",
+    "/components/schemas/PlanningNotificationDetails/properties/source_reference",
+    "/components/schemas/PlanningNotificationDetails/properties/source_version",
+    "/components/schemas/PlanningReadiness/properties/assessment",
+    "/components/schemas/PlanningReadiness/properties/forecast",
     "/components/schemas/PreviewActionGroupCount",
     "/components/schemas/PreviewAggregates",
     "/components/schemas/PreviewGroup/properties/canonical_domain/enum",
@@ -252,6 +263,9 @@
     "/components/schemas/RawSourceRowCount",
     "/components/schemas/ReadRequest",
     "/components/schemas/ReadState",
+    "/components/schemas/Readiness/properties/forecast_assessment",
+    "/components/schemas/Readiness/properties/planning_assessment",
+    "/components/schemas/ReadinessIssueDetails",
     "/components/schemas/ReceiptCommitReference",
     "/components/schemas/ReceiptEffect",
     "/components/schemas/ReceiptPlannedEffect",
@@ -355,43 +369,45 @@
     "/paths/~1api~1v1~1stores~1{store_id}~1permission-requests",
     "/paths/~1api~1v1~1stores~1{store_id}~1permission-requests~1{request_id}",
     "/paths/~1api~1v1~1stores~1{store_id}~1permission-requests~1{request_id}~1actions",
+    "/paths/~1api~1v1~1stores~1{store_id}~1planning-context/get/parameters",
     "/paths/~1api~1v1~1stores~1{store_id}~1procurement-plans/get/parameters",
+    "/paths/~1api~1v1~1stores~1{store_id}~1readiness/get/parameters",
     "/paths/~1api~1v1~1stores~1{store_id}~1suppliers",
-    "/paths/~1api~1v1~1stores~1{store_id}~1today",
-    "/x-shelfcash-provenance"
+    "/paths/~1api~1v1~1stores~1{store_id}~1today"
   ],
   "previous_delivered_be": {
-    "sha256": "57d032f2bae09d15846279a5232f302f36735c342742f86d86eadcd95db346eb",
+    "git_ref": "052cddee075e165af2c0cea42ebc2e616c396760",
+    "sha256": "9cf5b8f4abf3ffc7d776290a159658356f7cad5c72b26678d08d98e02f34c696",
     "baseline": {
-      "operations": 72,
+      "operations": 73,
       "paths": 66
     },
     "current": {
       "operations": 73,
       "paths": 66
     },
-    "added_operations": {
-      "T03": {
-        "method": "POST",
-        "path": "/api/v1/stores"
-      }
-    },
+    "added_operations": {},
     "removed_operations": [],
-    "changed_operations": [],
+    "changed_operations": [
+      "C01",
+      "R01"
+    ],
     "structural_json_pointers": [
-      "/components/schemas/Envelope_StoreSummary_",
-      "/components/schemas/StoreCreateRequest",
-      "/paths/~1api~1v1~1stores/post",
-      "/x-shelfcash-provenance/generated_at",
-      "/x-shelfcash-provenance/migration_head",
-      "/x-shelfcash-provenance/operations",
-      "/x-shelfcash-provenance/previous_be_artifact/git_ref",
-      "/x-shelfcash-provenance/previous_be_artifact/operations",
-      "/x-shelfcash-provenance/previous_be_artifact/paths",
-      "/x-shelfcash-provenance/previous_be_artifact/sha256",
-      "/x-shelfcash-provenance/source_checkpoint",
-      "/x-shelfcash-provenance/source_manifest_sha256",
-      "/x-shelfcash-provenance/source_working_tree"
-    ]
+      "/components/schemas/ActionReadiness/properties/blockers/items/$ref",
+      "/components/schemas/ActionReadiness/properties/warnings/items/$ref",
+      "/components/schemas/ForecastAssessment",
+      "/components/schemas/Issue",
+      "/components/schemas/PlanningAssessment",
+      "/components/schemas/PlanningNotificationDetails/properties/source_reference",
+      "/components/schemas/PlanningNotificationDetails/properties/source_version",
+      "/components/schemas/PlanningReadiness/properties/assessment",
+      "/components/schemas/PlanningReadiness/properties/forecast",
+      "/components/schemas/Readiness/properties/forecast_assessment",
+      "/components/schemas/Readiness/properties/planning_assessment",
+      "/components/schemas/ReadinessIssueDetails",
+      "/paths/~1api~1v1~1stores~1{store_id}~1planning-context/get/parameters",
+      "/paths/~1api~1v1~1stores~1{store_id}~1readiness/get/parameters"
+    ],
+    "hash_basis": "Git blob bytes at git_ref/path"
   }
 }

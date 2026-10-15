@@ -2,7 +2,8 @@
 from datetime import date
 from typing import Literal
 from uuid import UUID
-from pydantic import AwareDatetime, Field, model_validator
+from pydantic import AwareDatetime, Field, model_validator, model_serializer
+from app.application.contracts.offer_admission import OfferAdmission
 from typing import Annotated
 from app.application.contracts.common import Contract, Nonblank, Name, Unit
 from app.application.contracts.decision_capture import (
@@ -27,6 +28,13 @@ class ExplicitProcurementConfigurationV2(ExplicitProcurementConfiguration):
     budget_version: Nonblank
     payable_fee_coverage: Literal['COMPLETE', 'UNKNOWN']
     payable_fee_coverage_provenance: Nonblank
+    offer_admission: OfferAdmission | None = None
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy(self,handler):
+        result=handler(self)
+        if result.get('offer_admission') is None:result.pop('offer_admission',None)
+        return result
 
 
 class OperationalDecisionInputV2(Contract):
@@ -65,6 +73,13 @@ class SupplierTermIdentity(Contract):
     term_id: UUID
     ingredient_id: UUID
     supplier_id: UUID
+    version: int | None = Field(default=None,gt=0,strict=True)
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy(self,handler):
+        result=handler(self)
+        if result.get('version') is None:result.pop('version',None)
+        return result
 
 
 class OperationalFactsV2(Contract):

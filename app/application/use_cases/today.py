@@ -104,14 +104,14 @@ class TodayReads:
     def readiness_section(self,s,store,now,today,permissions):
         actions=tuple(a for a,required in ACTION_READS.items() if set(required)<=set(permissions))
         if not actions:return denied()
-        facts=load_readiness(s,store);model_issue=None
+        facts=load_readiness(s,store);assessment=None
         forecast=self.readiness.forecast
         if forecast is not None and facts.serving and {'forecast','planning'}&set(actions):
             try:prepared=prepare_observations(facts,store,today)
             except AuthError as error:
                 if error.code!='NO_COMPUTABLE_PRODUCTS':raise
-            else:model_issue=forecast.assess(prepared,facts.serving)
-        value=evaluate(facts,store,now,today,actions,permissions,model_issue=model_issue,
+            else:assessment=forecast.assess(prepared,facts.serving)
+        value=evaluate(facts,store,now,today,actions,permissions,forecast_assessment=assessment,
             forecast_available=forecast is not None,planning_available=self.readiness.planning_available())
         # Section versions/counters are also sensitive; omit facts the actor cannot read.
         permitted={

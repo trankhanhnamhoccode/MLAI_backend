@@ -33,3 +33,18 @@ def test_fe_can_send_create_only_header_and_read_location():
             'Access-Control-Request-Headers':'If-None-Match,Idempotency-Key,X-CSRF-Token'})
         assert response.status_code==200
         assert 'if-none-match' in response.headers['access-control-allow-headers'].lower()
+
+
+def test_d4_context_query_and_additive_assessment_keep_completion_boundary():
+    schema=create_app(Settings(_env_file=None)).openapi()
+    for suffix in ('/readiness','/planning-context'):
+        operation=schema['paths']['/api/v1/stores/{store_id}'+suffix]['get']
+        query=next(p for p in operation['parameters'] if p['name']=='planning_request')
+        assert query['in']=='query' and query['required'] is False
+        assert query['schema']['anyOf'][0]['maxLength']==65536
+    models=schema['components']['schemas']
+    assert {'planning_assessment','forecast_assessment'}<=models['Readiness']['properties'].keys()
+    assert {'assessment','forecast'}<=models['PlanningReadiness']['properties'].keys()
+    assert models['PlanningAssessment']['properties']['semantics_version']['const']=='planning_readiness/1'
+    assert models['CompletionReadinessDetails']['properties']=={}
+    assert not {'source_reference','source_version'} & set(models['PlanningNotificationDetails'].get('required',()))

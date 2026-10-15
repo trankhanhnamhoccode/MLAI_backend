@@ -1724,6 +1724,16 @@ không “mặc định không có” trong code. Typed discriminated variants:
 All declarations retain actor/source/profileversion/expectedreadset/digest. Import
 profile normalizations may bind sourcecolumns but not manufacture absencefacts.
 
+CURRENT FACT D3 trên nhánh data-readiness: Planning new-policy capture reuse các
+immutable declarations/term/fee sources này, giữ versions/effectivity và typed
+source confirmation references. Actor/time/audit chỉ known nếu có unique exact
+Import canonical audit match; absent/ambiguous proof giữ null, không dùng Run actor
+thay source confirmer. Không đổi Import required fields, approval/reuse/current
+rights/stale-preview hoặc IMPORT_VALUE/batch semantics; không promote incomplete
+term thành canonical. Planning offer omission là consumer admission riêng, không
+workflow ghi assumptions/defaults mới. [Policy](features/DATA_READINESS_POLICY.md)
+sở hữu admission rules; public readiness/warning extensions còn D4.
+
 Rights: source/read fullscope including supplier.read+procurement.cost.read for
 term/fee prices; importactions/mappingkeys + domainactions supplier.create fornew,
 supplier.terms.create, supplier.terms.correct for amendment, supplier.fees.manage
@@ -1849,6 +1859,11 @@ requirements/forecast policy trong [Planning mục7](PROCUREMENT_API_CONTRACT_VI
 R01 GET /stores/{store_id}/readiness; query actions comma-separated
 import|menu|inventory|forecast|planning, defaultimport,menu,inventory; optional
 forecast_start_date:date chỉ khi requestforecast/planning, defaultStoretoday.
+CURRENT FACT D4: optional `planning_request` URL-encoded strict C02 PlanningRequest
+JSON, UTF-8≤64KiB, chỉ khi actions chứa planning. Nếu đồng thời forecast_start_date
+phải bằng ngày trong request; mismatch/invalid JSON/null/duplicate keys trả422
+INVALID_FILTER, không silently evaluate default. Không query thì chỉ đánh giá
+DEFAULT_CONFIGURATION; không suy hypothetical custom/saved readiness.
 Permissions selectedactions: import→import.read; menu→menu.read; inventory→
 inventory.read+ingredient.read; forecast→planning.context.read+sales.read;
 planning→planning.context.read+budget.read+procurement.cost.read. Storecurrentchecks
@@ -1883,6 +1898,27 @@ no blocker đã xác định. Validdata/unavailableworker yieldsblocked, not d�
 GET only load/validate typedmetadata/facts/digests/declarations; no solver/train/
 LLM/forecast execution, no thay đổi canonical or jobenqueue.
 
+CURRENT FACT D4 — additive `planning_assessment` và `forecast_assessment` nullable
+trên R01 data; C01 readiness.assessment/forecast là projections cùng evaluation.
+PlanningAssessment={semantics_version:"planning_readiness/1",
+input_scope:"DEFAULT_CONFIGURATION"|"SUPPLIED_REQUEST",
+requirements_mode:"default"|"custom"|"saved",
+configuration_status:"RESOLVED"|"INVALID"|"UNKNOWN",blockers:ReadinessIssue[],warnings:ReadinessIssue[]}.
+Boolean hiện có đánh giá action+inputs/snapshot đó, không proof có winner hoặc đủ
+requirements. Default thiếu là known blocker; full custom/saved không phụ thuộc
+default thì không nhận blocker đó. Unknown model configuration vẫn unknown;
+known worker/dependency unavailable vẫn blocked với execution_status unavailable.
+ForecastAssessment theo [C01](PROCUREMENT_API_CONTRACT_VI.md#planning-context).
+Issue.details dùng optional typed field/impact/entity_id/reference/version/
+classification/proof_scope/suggested_action; absent fields elide. OFFER_OMITTED có
+scope Ingredient, details.entity_id là term, reference/version từ D3 source;
+proof chỉ CAPTURED_ELIGIBLE_OFFERS_ONLY. Remaining offers/fees/bounds dùng chính
+admission của execution, shared unknown/corrupt/safety không thành warnings.
+Forecast warnings reuse D2 assessment, giữ impact và computed exclusions/dates;
+dedup stable theo exact issue/ref, không mất Product. NONCURRENT_PLANNING_CURRENT_FACTS
+chỉ current captured facts cho ngày khác, không historical stock reconstruction.
+I06 retained Issue/details schemas và semantics giữ nguyên; không backfill warnings.
+
 ### 14.2. Evaluation matrix, exclusions và orchestration
 
 | Action | ready nghĩa gì / blockers |
@@ -1892,6 +1928,18 @@ LLM/forecast execution, no thay đổi canonical or jobenqueue.
 | inventory | Warehouse readeravailable; đã biết không có lô vẫn readable ready với warning STOCK_COMPLETENESS_UNKNOWN, không claim procurementready. |
 | forecast | Stable menu/sales/modelconfig, ≥1 tính được baseline Product có observations thực tế≤cutoff, preparation/execution adapteravailable; local missing history exclude affectedProduct. Empty/no computables blocked NO_COMPUTABLE_PRODUCTS; corrupt/incompatibleartifact blocker, not default fallback. |
 | planning | Current readable/resolvable config+knownStorecap+requirements, ≥1 computedProduct, inventorydeclarations/datedrecipes/terms/fees/constraints in scope đã biết and valid, snapshot/preparation/forecast+planning worker compositionavailable, planning.run. Feecoverage/globalconstraintunknown blocks, not localpermission exclusion. |
+
+CURRENT FACT D2 trong nhánh data-readiness: forecast eligibility assessment dùng
+cùng choice với execution. All-censored/no usable baseline history trả existing
+Product-scoped CENSORED_HISTORY_NOT_USABLE blocker (missing observations dùng
+PRODUCT_HISTORY_MISSING); R01 trả assessment200 thay lỗi SERVICE_UNAVAILABLE503.
+Artifact corrupt/incompatible giữ MODEL_ARTIFACT_INVALID/data invalid; recognized
+dependency mismatch hoặc wrapped storage unavailable dùng EXECUTION_UNAVAILABLE/
+execution unavailable, không reclassify thành history missing. Không success-fallback
+cho các lỗi đó. DTO/routes giữ nguyên; internal selected method/reason/warnings
+chưa thêm thành public fields. [Policy D2](features/DATA_READINESS_POLICY.md) sở hữu
+chi tiết classification và [runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d2)
+sở hữu commands/expected responses. Không đổi contextual Planning readiness trong D2.
 
 công thức Product validity từng7 ngày horizon, units/loss/yield theoCatalog; localize
 recipe/history/requiredinventory errors→estimated exclusions đúng Planning mục7,
@@ -1945,7 +1993,7 @@ CAPTURED_FINITE_DOMAIN_ONLY, không gọi tối ưu toàn miền vô hạn.
 
 ### 14.3. C01 và I06 adapters
 
-C01 readiness giữ shape cũ: status=ready khi planningavailabilityready; not_ready
+C01 readiness giữ các fields cũ và thêm assessment/forecast nêu trên: status=ready khi planningavailabilityready; not_ready
 khi blocked; unknown khiunknown; can_generate=can_execute; reason_codes lấy distinct
 blockingcodes, evaluated_forecast_start_date/scope_estimate/history_watermark cùng
 evaluation. Context_version cover source_versions + resolver cấu hình versions, không

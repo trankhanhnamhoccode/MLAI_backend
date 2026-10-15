@@ -1,5 +1,61 @@
 # Current state
 
+## CURRENT FACT — Data Readiness D1–D5 tích hợp main local
+
+Isolated `backend-data-readiness` / `feat/data-readiness` từ main052cddee, D1 committed
+local `c930dfe66cfda5de5896164e16fcf8f4c7acaefe`; D2 local checkpoint
+`9f720caf01fdf0a8f586c049660a2fcc9447ade3`. D3 committed local
+`d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 committed local
+`72415332e2a5224ab9909d54606d7e7e374bdd18`. D5 backend acceptance VERIFIED qua final
+focused unit/API/PostgreSQL invocation; D5 committed local
+`11ef320a5873fc4dc314fdad63878db5f8a8b38c`. D1–D5 được merge giữ ancestry vào main local;
+không push/deploy. Gate tích hợp dùng worktree riêng, PostgreSQL5437 riêng/limited
+role/head0027, source imports từ bản tích hợp; không dùng DB5435 của nhánh D.
+Runtime8103 manifest vẫn source `052cddee075e165af2c0cea42ebc2e616c396760`,
+không restart/migrate; merge không phải deployment. OpenAPI/handoff source73/66
+được đồng bộ; delta so main trước merge chỉ D4 đã duyệt.
+Không production source/API/migration delta D5. Shared forecast
+choice và typed internal assessment giữ actual method/candidate/reason/warnings,
+scoped history blockers, recognized-only whole-scope fallback và exact retained
+replay. R01/C01 all-censored TRAINED trước trả503, nay trả200 blocked assessment;
+Today caller cùng fix. Dependency/runtime unavailable tách artifact invalid;
+invalid/programming errors không success-fallback. D2 giữ OpenAPI/DTO/routes nguyên.
+
+[Canonical policy/matrix](features/DATA_READINESS_POLICY.md) tách main/D1 audit,
+current D2–D5 và các proposals còn mở. Sales-only/sparse0/stockout/retained/schema1 replay,
+HTTP/PG/current-rights/Store isolation có focused acceptance, không full-suite hay
+real-accuracy claim. HISTORICAL INFORMATION — acceptance nhánh D dùng own venv/test-only PostgreSQL5435, shelfcash_readiness_test /
+shelfcash_readiness_tester, head0027; provider/email/workers OFF. Commands/expected
+responses tại [D2 runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d2) và
+[D3 acceptance](runbooks/FULL_TEST_FLOW.md#data-readiness-d3).
+D3 pin offer_eligibility/1 tại new acceptance; known local missing facts/finite bound
+được omit với retained ID/version/reason/proof, remaining offers/fees/constraints được
+kiểm lại. No offers vẫn xét zero purchase; không market-infeasibility claim. Missing
+shared fees/budget/context, invalid/conflicting/unknown graph và applicable safety
+vẫn block. Existing declarations/proofs được reuse; audit actor/time chỉ retain khi
+exact unique source proof, unknown giữ null. Old queued/retained /1 và /2 không marker
+giữ semantics/digests cũ, không migration/rewrites. C03/Ingredient/explanation dùng
+existing warning details OFFER_OMITTED; D3 giữ OpenAPI/DTO/routes nguyên.
+R01/C01 optional planning_request query dùng strict C02 request/resolver; absent
+chỉ đánh giá default. Full custom/saved không bị unused default chặn; partial
+inheritance/budget0/null/omitted vẫn resolver hiện hành. R01 planning_assessment/
+forecast_assessment và C01 readiness.assessment/forecast giữ scope/version,
+blockers/warnings, actual method/selection reason, quality not_evaluated. Today cùng
+default scope, can_generate/can_execute không là winner/feasibility promise.
+Shared detached D3 admission dùng effective resolved budget. C03/C08 thêm optional
+source_reference/source_version từ retained evidence. OpenAPI additive fields/query,
+không endpoint/migration/FE source change; I06 retained issue schema giữ nguyên.
+Commands/limits tại [D4 runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d4).
+D3 deadline overrun chưa rõ root cause, không đổi180s hoặc retry/proof/search policy.
+D5 authorized backend-only: public Import/Owner declarations → full custom readiness
+→ C02 → actual workers → C03/C08/fresh Session. Oracle nhỏ độc lập, idempotency/current
+ceiling revalidation, retained facts sau stock/fee/config mutation; không cần FE.
+Matrix/commands/recovery tại [D5 runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d5).
+Workbook smoke/browser E2E chưa chạy; không đánh giá forecast accuracy/real impact.
+Integrity/unknown-fee/safety guards giữ nguyên. Main8103/local DB/config/
+artifacts, challenger E4/dataset WIP và sáu baseline workbooks ngoài Git được giữ
+nguyên; không chạy E3/E4 benchmark hoặc training bằng workbook.
+
 ## CURRENT FACT — self-service Store/customer local
 
 Canonical checkout `backend` trên main, own .venv/TLS/runtime/local profile. WIP9

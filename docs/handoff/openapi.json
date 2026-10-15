@@ -12472,6 +12472,23 @@
               ],
               "title": "Forecast Start Date"
             }
+          },
+          {
+            "in": "query",
+            "name": "planning_request",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 65536,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Planning Request"
+            }
           }
         ],
         "responses": {
@@ -12579,6 +12596,23 @@
               "type": "string",
               "format": "uuid",
               "title": "Store Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "planning_request",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 65536,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Planning Request"
             }
           }
         ],
@@ -14632,14 +14666,14 @@
           },
           "blockers": {
             "items": {
-              "$ref": "#/components/schemas/CompletionReadinessIssue"
+              "$ref": "#/components/schemas/Issue"
             },
             "type": "array",
             "title": "Blockers"
           },
           "warnings": {
             "items": {
-              "$ref": "#/components/schemas/CompletionReadinessIssue"
+              "$ref": "#/components/schemas/Issue"
             },
             "type": "array",
             "title": "Warnings"
@@ -28245,6 +28279,28 @@
               }
             ],
             "title": "Suggested Action"
+          },
+          "source_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Reference"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
           }
         },
         "additionalProperties": false,
@@ -28331,6 +28387,26 @@
               }
             ],
             "title": "History Watermark"
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanningAssessment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "forecast": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ForecastAssessment"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -31166,6 +31242,26 @@
               }
             ],
             "title": "History Watermark"
+          },
+          "forecast_assessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ForecastAssessment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "planning_assessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanningAssessment"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -38622,6 +38718,290 @@
           "recipes"
         ],
         "title": "UpdatedResources"
+      },
+      "ForecastAssessment": {
+        "additionalProperties": false,
+        "properties": {
+          "actual_model_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Model Type"
+          },
+          "actual_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Model Version"
+          },
+          "quality_status": {
+            "const": "not_evaluated",
+            "default": "not_evaluated",
+            "title": "Quality Status",
+            "type": "string"
+          },
+          "requested_mode": {
+            "enum": [
+              "BASELINE",
+              "TRAINED"
+            ],
+            "title": "Requested Mode",
+            "type": "string"
+          },
+          "selection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection Reason"
+          }
+        },
+        "required": [
+          "requested_mode",
+          "actual_model_type",
+          "actual_model_version",
+          "selection_reason"
+        ],
+        "title": "ForecastAssessment",
+        "type": "object"
+      },
+      "Issue": {
+        "additionalProperties": false,
+        "properties": {
+          "affected_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "title": "Affected Dates",
+            "type": "array"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "$ref": "#/components/schemas/ReadinessIssueDetails"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "scope": {
+            "enum": [
+              "STORE",
+              "PRODUCT",
+              "INGREDIENT"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "authorization",
+              "catalog",
+              "recipe",
+              "sales",
+              "inventory",
+              "supplier",
+              "fees",
+              "constraints",
+              "forecast",
+              "configuration",
+              "runtime"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "source",
+          "scope",
+          "entity_id",
+          "affected_dates",
+          "details"
+        ],
+        "title": "Issue",
+        "type": "object"
+      },
+      "PlanningAssessment": {
+        "additionalProperties": false,
+        "properties": {
+          "blockers": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "configuration_status": {
+            "enum": [
+              "RESOLVED",
+              "INVALID",
+              "UNKNOWN"
+            ],
+            "title": "Configuration Status",
+            "type": "string"
+          },
+          "input_scope": {
+            "enum": [
+              "DEFAULT_CONFIGURATION",
+              "SUPPLIED_REQUEST"
+            ],
+            "title": "Input Scope",
+            "type": "string"
+          },
+          "requirements_mode": {
+            "enum": [
+              "default",
+              "custom",
+              "saved"
+            ],
+            "title": "Requirements Mode",
+            "type": "string"
+          },
+          "semantics_version": {
+            "const": "planning_readiness/1",
+            "default": "planning_readiness/1",
+            "title": "Semantics Version",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "input_scope",
+          "requirements_mode",
+          "configuration_status",
+          "blockers",
+          "warnings"
+        ],
+        "title": "PlanningAssessment",
+        "type": "object"
+      },
+      "ReadinessIssueDetails": {
+        "additionalProperties": false,
+        "properties": {
+          "classification": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classification"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
+          },
+          "proof_scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proof Scope"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "suggested_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Action"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "title": "ReadinessIssueDetails",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -38633,23 +39013,27 @@
     }
   },
   "x-shelfcash-provenance": {
-    "source_checkpoint": "86fcc6795957baea9b2d7f343a8079bed44c1559",
-    "source_manifest_sha256": "ae3fe492de11d9bd940e5a6b167ed8f45d89713ba55bc7cb2d538298ea4740dc",
-    "manifest_algorithm": "sorted path NUL SHA256(LF-normalized app/alembic Python bytes)",
+    "source_manifest_sha256": "1e367f61dfa86df461cd1bf986dad0c85c8ff8d415c42a131c315015127d3a01",
+    "manifest_algorithm": "sorted app/alembic Python path NUL SHA256(LF bytes) LF",
     "migration_head": "0027_self_service_stores",
-    "generated_at": "2026-10-14T10:38:53.111295+00:00",
-    "source_working_tree": false,
+    "generated_at": "2026-10-15T09:51:10.258552+00:00",
     "source_only": true,
     "database_access": false,
     "workers": false,
     "operations": 73,
     "paths": 66,
     "previous_be_artifact": {
-      "git_ref": "8ed5a80a3655a1637218d44e9c91d2386bca6198",
+      "git_ref": "052cddee075e165af2c0cea42ebc2e616c396760",
       "path": "docs/handoff/openapi.json",
-      "sha256": "57d032f2bae09d15846279a5232f302f36735c342742f86d86eadcd95db346eb",
-      "operations": 72,
-      "paths": 66
-    }
+      "sha256": "9cf5b8f4abf3ffc7d776290a159658356f7cad5c72b26678d08d98e02f34c696",
+      "operations": 73,
+      "paths": 66,
+      "hash_basis": "Git blob bytes at git_ref/path"
+    },
+    "source_inputs": {
+      "main_before_integration": "052cddee075e165af2c0cea42ebc2e616c396760",
+      "readiness_d5": "11ef320a5873fc4dc314fdad63878db5f8a8b38c"
+    },
+    "scope": "Enclosing merge commit owns integrated source; no deployment claim"
   }
 }

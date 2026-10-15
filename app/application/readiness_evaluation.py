@@ -3,12 +3,11 @@ from datetime import date,timedelta
 from decimal import Decimal
 from uuid import UUID
 from zoneinfo import ZoneInfo
-from pydantic import ValidationError
 from app.application.contracts import readiness as dto
 from app.application.contracts import import_domains as domains
+from app.application.contracts.forecast_eligibility import ForecastEligibility
 from app.application.import_identity import content_digest
-from app.application.operational_import_facts import declaration_dependency,current_fees,inventory_matches
-from app.application.planning_fee_bindings import fee_bindings
+from app.application.operational_import_facts import declaration_dependency,inventory_matches
 from app.domain.forecasting.stockout import Observation, reconstruct
 
 ACTION_READS={
@@ -94,7 +93,7 @@ def watermark(snapshot,declarations,ids,cutoff):
     return max(result,default=None)
 
 
-def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,forecast_available=True,planning_available=False):
+def evaluate(facts,store,now,start,actions,permissions,*,forecast_assessment: ForecastEligibility | None=None,forecast_available=True,planning_available=False,planning_request=None):
     snapshot=facts.snapshot
     today=now.astimezone(ZoneInfo(snapshot['stores'][0]['timezone'])).date()
     cutoff=start-timedelta(days=1)
@@ -136,6 +135,14 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
     scope=dto.ScopeEstimate(menu_product_count=len(menu),estimated_computable_product_count=len(ids),
         excluded_products=tuple(planning_exclusions if 'planning' in actions else forecast_exclusions)) if {'forecast','planning'}&set(actions) else None
     history_watermark=watermark(snapshot,declarations,ids,cutoff) if ids and scope else None
+    resolution=None;configuration_issues=();configuration_status='UNKNOWN'
+    if 'planning' in actions:
+        from app.application.contracts.planning_setup import PlanningRequest
+        from app.application.contextual_planning import resolve_context
+        request=planning_request or PlanningRequest(requirements_mode='default',forecast_start_date=start,
+            default_requirements_version=facts.defaults.version if facts.defaults else 'unconfigured')
+        resolution,configuration_issues=resolve_context(facts,store,now,request)
+        configuration_status='RESOLVED' if resolution else 'INVALID'
     results=[]
     for action in actions:
         blockers=[];warnings=[];unknown=[];data='valid';execution='available'
@@ -163,8 +170,12 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
                 blockers.append(issue('RESOURCE_LIMIT_EXCEEDED','catalog'));data='invalid'
             if facts.serving is None:
                 unknown.append(issue('MODEL_CONFIGURATION_UNKNOWN','configuration'))
-            if model_issue:
-                blockers.append(issue(model_issue,'forecast'));data='invalid'
+            if forecast_assessment and forecast_assessment.blockers:
+                blockers.extend(forecast_assessment.blockers)
+                if forecast_assessment.failure_kind in ('DEPENDENCY_UNAVAILABLE','RUNTIME_UNAVAILABLE'):
+                    execution='unavailable'
+                else:
+                    data='incomplete' if forecast_assessment.failure_kind=='HISTORY_UNUSABLE' else 'invalid'
             if current_ids and history_watermark is None:
                 warnings.append(issue('HISTORY_NOT_AVAILABLE_THROUGH_CUTOFF','sales'))
             for pid in current_ids:
@@ -176,6 +187,15 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
                     dates = tuple(r.day for r in demand if r.method == method)
                     if dates:
                         warnings.append(issue(code, 'sales', pid, dates))
+            if forecast_assessment:
+                for warning in forecast_assessment.warnings:
+                    details=dto.IssueDetails(field=warning.field,impact=warning.impact)
+                    matching=[i for i in warnings if (i.code,i.entity_id)==(warning.code,warning.product_id)]
+                    if matching:
+                        warnings=[i.model_copy(update={'details':details}) if i in matching else i for i in warnings]
+                    else:
+                        warnings.append(dto.Issue(code=warning.code,source='forecast',scope='PRODUCT' if warning.product_id else 'STORE',
+                            entity_id=warning.product_id,affected_dates=(),details=details))
             if not forecast_available:
                 execution='unavailable';blockers.append(issue('EXECUTION_UNAVAILABLE','runtime'))
             if action=='planning':
@@ -186,11 +206,12 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
                     blockers.append(issue('PLANNING_WORKFLOW_UNAVAILABLE','runtime'))
                 if facts.cap is None:
                     blockers.append(issue('BUDGET_CEILING_UNKNOWN','configuration'));data='incomplete'
-                if facts.defaults is None:
-                    unknown.append(issue('DEFAULT_CONFIGURATION_UNAVAILABLE','configuration'))
-                elif (len(facts.defaults.requirements.paths)!=1 or facts.defaults.requirements.paths[0].path!='BASE' or
-                    Decimal(facts.defaults.requirements.paths[0].min_fill_rate_percent)!=95 or facts.defaults.requirements.paths[0].product_overrides or facts.defaults.requirements.budget_limit is not None):
-                    blockers.append(issue('REQUIREMENTS_INVALID','configuration'));data='invalid'
+                if configuration_issues:
+                    blockers.extend(configuration_issues);data='incomplete'
+                if resolution:
+                    warnings.extend(issue(w.code,'configuration') for w in resolution.warnings)
+                if start!=today:
+                    warnings.append(issue('NONCURRENT_PLANNING_CURRENT_FACTS','inventory'))
                 if graph_unknown:
                     blockers.append(issue('SOURCE_FAILURE_SCOPE_UNKNOWN','recipe'));data='invalid'
                 required={i for p in planning_scope for i in dependencies[p]}
@@ -210,30 +231,36 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
                         if condition:blockers.append(issue(code,'constraints'));data='incomplete'
                     if any(c.unit!=next((r['base_unit'] for r in snapshot['ingredients'] if r['id']==str(c.ingredient_id)),None) for c in (*d.capacities,*d.supplier_limits)):
                         blockers.append(issue('UNIT_MISMATCH','constraints'));data='invalid'
-                active_suppliers={r['id'] for r in snapshot['suppliers'] if r['active']}
-                terms=[r for r in snapshot['supplier_terms'] if r['ingredient_id'] in required and r['active'] and r['supplier_id'] in active_suppliers and contains(r,start)]
-                if len(terms)>100:blockers.append(issue('RESOURCE_LIMIT_EXCEEDED','supplier'));data='invalid'
-                for ingredient in sorted(required):
-                    if not any(r['ingredient_id']==ingredient for r in terms):
-                        warnings.append(issue('SUPPLIER_TERM_MISSING','supplier',ingredient,scope='INGREDIENT'))
-                fee_rows=[r for r in current_fees(snapshot) if contains(r['payload'],start)]
-                fee=None
-                if len(fee_rows)==1:
-                    try:fee=domains.FeeSource.model_validate(fee_rows[0]['payload'])
-                    except ValidationError:blockers.append(issue('UNSUPPORTED_FEE_RULE','fees'));data='invalid'
-                if fee is None or fee.coverage!='COMPLETE' or fee.currency!=snapshot['stores'][0]['currency'] or (fee.effective_to is not None and fee.effective_to<days[-1]):
-                    blockers.append(issue('PAYABLE_FEE_COVERAGE_UNKNOWN','fees'));data='incomplete' if data=='valid' else data
-                elif fee.mode!='NONE':
-                    bindings=fee_bindings(snapshot['term_source_records'],snapshot['supplier_source_records'],fee_rows[0]['source_system_key'])
-                    if not bindings.covers(fee,terms):
-                        blockers.append(issue('PAYABLE_FEE_COVERAGE_UNKNOWN','fees'));data='incomplete'
-                for term in terms:
-                    if Decimal(term['pack_cost'])==0:
-                        bounded=bool(contexts and any(str(l.ingredient_id)==term['ingredient_id'] and str(l.supplier_id)==term['supplier_id'] for l in contexts[0][1].supplier_limits))
-                        source=next((r for r in snapshot['term_source_records'] if r['id']==term['id']),None)
-                        bounded=bounded or bool(source and source['payload'].get('maximum_order_base_quantity') is not None)
-                        if not bounded:blockers.append(issue('OFFER_BOUND_UNKNOWN','supplier'));data='incomplete'
+                    if len({c.ingredient_id for c in d.capacities})!=len(d.capacities) or len({(c.supplier_id,c.ingredient_id) for c in d.supplier_limits})!=len(d.supplier_limits):
+                        blockers.append(issue('DUPLICATE_CONFIGURATION_IDENTITY','constraints'));data='invalid'
+                    scoped_terms=[r for r in snapshot['supplier_terms'] if r['active'] and contains(r,start)
+                        and any(s['id']==r['supplier_id'] and s['active'] for s in snapshot['suppliers'])]
+                    if any(not any((r['supplier_id'],r['ingredient_id'])==(str(c.supplier_id),str(c.ingredient_id)) for r in scoped_terms) for c in d.supplier_limits):
+                        blockers.append(issue('DECLARED_CONSTRAINT_SCOPE_INVALID','constraints'));data='invalid'
+                if resolution:
+                    from app.application.planning_admission import planning_declarations
+                    from uuid import uuid5,NAMESPACE_URL
+                    admission,extra,_=planning_declarations(resolution,facts,None,now,
+                        run_id=uuid5(NAMESPACE_URL,str(store)),offer_policy='offer_eligibility/1')
+                    blockers.extend(issue(p.code,'supplier' if p.field in ('offers','supplier_term') else 'constraints',
+                        p.entity_id if p.entity=='ingredient' else None,scope='INGREDIENT' if p.entity=='ingredient' else 'STORE') for p in extra)
+                    if extra:data='invalid'
+                    if admission.payable_fee_coverage!='COMPLETE':
+                        blockers.append(issue('PAYABLE_FEE_COVERAGE_UNKNOWN','fees'));data='incomplete' if data=='valid' else data
+                    offered={str(o.term_id) for o in admission.offers}
+                    terms=[r for r in snapshot['supplier_terms'] if r['id'] in offered]
+                    for ingredient in sorted(required):
+                        if not any(r['ingredient_id']==ingredient for r in terms):
+                            warnings.append(issue('SUPPLIER_TERM_MISSING','supplier',ingredient,scope='INGREDIENT'))
+                    for omitted in admission.offer_admission.omissions:
+                        warnings.append(dto.Issue(code='OFFER_OMITTED',source='supplier',scope='INGREDIENT',
+                            entity_id=omitted.ingredient_id,affected_dates=(),details=dto.IssueDetails(
+                                field='supplier_term',entity_id=omitted.term_id,reference=omitted.source_reference,
+                                version=omitted.version,classification=omitted.reason,proof_scope=admission.offer_admission.proof_scope,
+                                suggested_action='Provide missing offer facts or a finite bound through the reviewed source workflow.')))
                 constraints=[r for r in snapshot['business_constraints'] if r['active'] and r['scope_type']=='STORE' and any(contains(r,day) for day in days)]
+                if len([r for r in constraints if r['constraint_type']=='BUDGET_LIMIT'])>1:
+                    blockers.append(issue('BUDGET_OVERLAP','constraints'));data='invalid'
                 if any(r['active'] and r['constraint_type']=='MIN_SAFETY_STOCK'
                     and r['scope_id'] in required and any(contains(r,day) for day in days)
                     for r in snapshot['business_constraints']):
@@ -243,10 +270,26 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
         if unknown and data=='valid':data='unknown'
         availability='blocked' if blockers else 'unknown' if unknown else 'ready'
         results.append(dto.ActionReadiness(action=action,availability=availability,can_execute=availability=='ready',
-            data_status=data,execution_status=execution,blockers=tuple({i.code:i for i in blockers+unknown}.values()),warnings=tuple(warnings)))
+            data_status=data,execution_status=execution,blockers=tuple({(i.code,i.source,i.scope,i.entity_id,i.affected_dates):i for i in blockers+unknown}.values()),warnings=ordered_issues(warnings),result_assessment='NOT_ASSESSED'))
     source_versions=versions(facts)
+    planning_action=next((a for a in results if a.action=='planning'),None)
+    planning_assessment=dto.PlanningAssessment(input_scope='SUPPLIED_REQUEST' if planning_request else 'DEFAULT_CONFIGURATION',
+        requirements_mode=request.requirements_mode,configuration_status=configuration_status,
+        blockers=planning_action.blockers,warnings=planning_action.warnings) if planning_action else None
+    forecast_view=dto.ForecastAssessment(requested_mode=forecast_assessment.requested_mode,
+        actual_model_type=forecast_assessment.actual_model_type,actual_model_version=forecast_assessment.actual_model_version,
+        selection_reason=forecast_assessment.execution.selection_reason if forecast_assessment.execution else None) if forecast_assessment else None
     return dto.Readiness(store_id=store,as_of_date=today,evaluated_at=now,
         data_version=content_digest(dict(versions=source_versions.model_dump(mode='json'),start=str(start),actions=actions,
-            permissions=sorted(permissions),runtime=[forecast_available,planning_available])),
+            permissions=sorted(permissions),runtime=[forecast_available,planning_available],
+            request=planning_request.model_dump(mode="json") if planning_request else None,
+            assessed_actions=[a.model_dump(mode='json') for a in results],
+            forecast=forecast_view.model_dump(mode='json') if forecast_view else None)),
         evaluated_forecast_start_date=start,cutoff_date=cutoff,actions=tuple(results),source_versions=source_versions,
-        scope_estimate=scope,history_watermark=history_watermark)
+        scope_estimate=scope,history_watermark=history_watermark,
+        planning_assessment=planning_assessment,forecast_assessment=forecast_view)
+
+
+def ordered_issues(issues):
+    """Stable public identity, including exact references; never collapse Product scopes."""
+    return tuple({i.model_dump_json():i for i in sorted(issues,key=lambda i:i.model_dump_json())}.values())

@@ -40,4 +40,5 @@ def project_context(facts,readiness,*,planning_available=False):
         capabilities=dto.Capabilities(winner_selection=planning_available,saved_requirements=True),
         readiness=dto.PlanningReadiness(status={'ready':'ready','blocked':'not_ready','unknown':'unknown'}[action.availability],
             can_generate=action.can_execute,reason_codes=reason_codes,evaluated_forecast_start_date=readiness.evaluated_forecast_start_date,
-            scope_estimate=readiness.scope_estimate,history_watermark=readiness.history_watermark))
+            scope_estimate=readiness.scope_estimate,history_watermark=readiness.history_watermark,
+            assessment=readiness.planning_assessment,forecast=readiness.forecast_assessment))

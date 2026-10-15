@@ -1407,7 +1407,7 @@ class UpdatedResources(DTO):
     declarations: ConfigurationImpact = Field(default_factory=ConfigurationImpact)
 
 
-from app.application.contracts.readiness import Issue as CompletionReadinessIssue, IssueDetails as CompletionReadinessDetails
+from app.application.contracts.readiness import CompletionReadinessIssue,CompletionReadinessDetails
 from app.application.contracts.readiness import ActionReadiness
 
 

@@ -265,6 +265,9 @@ def test_public_import_to_planning_capture_and_retained_price(flow, unknown_fees
     assert record.outcome == "recommendation_available", record.error_code
     retained = c[0][5].get(response.headers["Location"]).json()["data"]
     captured = record.public_capture.operational_evidence.terms[0]
+    proof=next(p for p in record.public_capture.operational_evidence.confirmations
+        if p.entity=='supplier_term' and p.entity_id==captured.term_id)
+    assert proof.actor_id==c[1].user_id and proof.audit_id is not None and proof.confirmed_at is not None
     assert captured.payload.pack_cost == "2" and captured.payload.unit == "ml"
     term_id = UUID(done["canonical_references"][0]["canonical_id"])
     # Existing reviewed future-only amendment contract; retained Run must stay fixed.

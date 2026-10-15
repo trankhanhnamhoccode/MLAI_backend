@@ -2,7 +2,8 @@
 from datetime import datetime
 from typing import Annotated, Callable, Literal
 from uuid import UUID
-from pydantic import Field
+from pydantic import Field, model_serializer
+from app.application.contracts.offer_admission import OfferAdmission
 
 from app.application.contracts.common import Contract, Nonblank
 from app.application.contracts.planning_setup import ResolvedPlanningSetup
@@ -35,6 +36,13 @@ class PlanningPipelineDeclarations(Contract):
     provenance: Nonblank
     payable_fee_coverage: Literal['COMPLETE', 'UNKNOWN']
     payable_fee_coverage_provenance: Nonblank
+    offer_admission: OfferAdmission | None = None
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy(self,handler):
+        result=handler(self)
+        if result.get('offer_admission') is None:result.pop('offer_admission',None)
+        return result
 
 
 def prepare_planning_pipeline(resolution: ResolvedPlanningSetup,

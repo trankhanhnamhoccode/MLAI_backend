@@ -1,5 +1,354 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="data-readiness-d5"></a>
+## CURRENT FACT — D5 backend acceptance VERIFIED
+
+D4 checkpoint local `72415332e2a5224ab9909d54606d7e7e374bdd18`; D5 authorized,
+committed11ef320a5873fc4dc314fdad63878db5f8a8b38c, đã tích hợp main local.
+Scope là backend HTTP → application workers → PostgreSQL;
+FE/browser không thuộc gate. Dùng [D2 target/limited-role/flags guard](#data-readiness-d2)
+và head0027 trước integration, một pytest/reset process tại một thời điểm.
+Final focused invocation verified, không full-suite; D5 chỉ tests/docs, OpenAPI
+JSON-equal checkpoint D4. Per-invocation results/fail→fixture-fix ở conversation;
+không cộng overlap thành unique tests.
+
+Matrix trước execution, reuse D2–D4; chỉ bổ sung linked invariants còn thiếu:
+
+| Group | Existing coverage reused | D5 bổ sung / oracle |
+| --- | --- | --- |
+| A modes/context/budgets | test_contextual_readiness + test_planning_setup: default, full/partial custom, active/invalid/archived saved, omitted/null/0/[], stale versions | Public Import setup → supplied full custom → C02 cùng request; default-only GET không chặn custom; cap đổi sau assessment → new acceptance reject, same-key retained acceptance không resolve lại |
+| B forecast/scope | test_forecast_readiness + test_forecast_eligibility: sparse/zero/all-censored, dependency vs artifact invalid; mixed scope | Linked fallback assessment → worker → retained method/reason/warnings + exclusions/override NOT_EVALUATED; không infer accuracy hoặc zero-fill |
+| C offer/stock/shared facts | test_planning_offer_admission: omit + alternative, no eligible offers stock đủ/thiếu, fee conflicts; safety/unknown graph tests | Portable public setup reuse test_import_setup_stock: explicit missing receipt date, zero-cost unbounded offer + finite alternative; oracle14 litres demand/stock12/pack4/cost10 →1 pack/outlay10. Public count20 + fresh scope →zero purchases. Unknown fee import →current blocked/Run computation_blocked |
+| D retained/security/concurrency | test_planning_public_security, test_import_readiness_snapshot, legacy offer policy/digest tests; concurrent acceptance/two workers | Fresh Sessions giữ accepted request/config/input/result digests; live stock/fees/budget đổi không rewrite C03/C08, idempotent key không duplicate Run/effects; current rights/foreign Store regressions |
+| Timing | D3 group deadline failure, isolated pass6.21s; D4 group pass6.45s | Một bounded run case đó với existing stage/engine timing evidence; phân biệt real deadline assertion với clock-injection test. Không tăng180s, retry hoặc đổi proof/search policy; chưa root cause thì giữ limitation |
+
+Workbooks không bắt buộc; portable facts là explicit synthetic declarations,
+không import historical uploads làm current stock. Không provider/SMTP/training/
+E3/E4, không demo/development/other-worktree DB access. Failed test chỉ rerun affected
+groups sau fix. Recovery: assertion failure giữ output dưới ignored runtime nếu cần,
+kiểm DB guard/status; supported fixture reset chỉ DB readiness. Không purge runtime
+hoặc operational/audit evidence. Không retry business effects để làm xanh deadline.
+
+Focused integration milestone gate, một invocation; chọn explicit no-training nodes
+thay vì artifact fixtures có training. Không full-suite claim. Các concurrency checks
+chỉ chạy business transactions song song trong cùng fixture, không parallel reset.
+
+```powershell
+$readinessCases = @(
+ 'tests/unit/test_contextual_readiness.py',
+ 'tests/unit/test_offer_admission.py',
+ 'tests/unit/test_planning_setup.py',
+ 'tests/unit/test_stockout_readiness.py',
+ 'tests/unit/test_import_inventory_completeness.py',
+ 'tests/unit/test_forecast_serialization.py',
+ 'tests/unit/test_forecast_eligibility.py::test_recognized_absence_uses_same_choice_and_truthful_metadata',
+ 'tests/unit/test_forecast_eligibility.py::test_every_unusable_product_blocks_choice_with_scoped_assessment',
+ 'tests/unit/test_forecast_eligibility.py::test_stockout_projection_preserves_observations_and_causal_support',
+ 'tests/unit/test_forecast_eligibility.py::test_unexpected_failures_are_not_classified_as_missing_history',
+ 'tests/unit/test_forecast_eligibility.py::test_invalid_capture_rejected_before_choice_not_sanitized_as_data_missing',
+ 'tests/unit/test_application_contracts.py::test_application_has_no_http_or_direct_queries',
+ 'tests/api/test_planning_configuration_openapi.py',
+ 'tests/api/test_planning_public_openapi.py',
+ 'tests/api/test_import_openapi.py',
+ 'tests/integration/test_data_readiness_acceptance.py',
+ 'tests/integration/test_contextual_readiness.py',
+ 'tests/integration/test_forecast_readiness.py',
+ 'tests/integration/test_planning_offer_admission.py',
+ 'tests/integration/test_import_readiness_snapshot.py',
+ 'tests/integration/test_readiness_context.py::test_whole_response_permissions_and_action_not_granted_after_sensitive_reads',
+ 'tests/integration/test_readiness_context.py::test_current_membership_revoked_during_detached_preflight_denies_snapshot',
+ 'tests/integration/test_readiness_context.py::test_declaration_stale_coverage_watermark_exact_and_global_unsupported',
+ 'tests/integration/test_planning_public.py::test_concurrent_acceptance_and_two_workers_one_publication',
+ 'tests/integration/test_planning_public_security.py::test_current_revoke_at_every_boundary',
+ 'tests/integration/test_planning_public_security.py::test_store_membership_read_is_not_creator_only_and_foreign_hidden',
+ 'tests/integration/test_planning_public_security.py::test_retained_digest_and_typed_evidence_corruption_fails_closed',
+ 'tests/integration/test_planning_public_security.py::test_config_values_fixed_when_source_changes_after_acceptance',
+ 'tests/integration/test_planning_public_security.py::test_overall_deadline_records_actual_engine_elapsed_without_false_cancel',
+ 'tests/integration/test_forecast_execution_flow.py::test_replay_retained_not_operational_and_new_uuid',
+ 'tests/integration/test_forecast_execution_flow.py::test_s1_missing_retention_and_persisted_replay_missing_product'
+)
+& $readinessPython -m pytest @readinessCases -q --tb=short --show-capture=no --durations=5 --junitxml=runtime/verification/d5/final-focused.xml
+& $readinessPython -m scripts.dev status --test-database
+git diff --check
+```
+
+### CURRENT FACT — kiểm bản tích hợp main local
+
+Từ `backend-integrate-readiness`, dùng read-only interpreter
+`../backend-data-readiness/.venv/Scripts/python.exe`; imports/settings phải thuộc
+worktree tích hợp. `.env` riêng (ignored): DATABASE_URL=TEST_DATABASE_URL,
+ENVIRONMENT=test; đúng DB `shelfcash_integration_test`, limited role
+`shelfcash_integration_tester`, loopback127.0.0.1:5437. PostgreSQL17 Compose project
+`shelfcash-readiness-integration`, named volume `shelfcash_readiness_integration_data`
+và container riêng; không dùng integration S4.11 cũ5433 hoặc nhánh D5435.
+Uploads/models dùng runtime/readiness-integration/app riêng. Provider/email và mọi
+background worker OFF. Không copy secrets từ runtime demo.
+
+Trước reset/tests: `scripts.dev.validate_reset_target(Settings())`, assert exact
+host/port/DB/role; connect chỉ target này để assert current_database/current_user,
+pg_roles không superuser/CREATEDB/CREATEROLE/REPLICATION. Dùng supported
+`python -m scripts.dev reset --test-database` chỉ lần bootstrap DB riêng; expected
+head0027_self_service_stores/72 tables/zero business rows. Sau đó một pytest process,
+không reset song song. Không dùng scripts.integration (target S4.11 cũ).
+
+```powershell
+$integrationPython = '../backend-data-readiness/.venv/Scripts/python.exe'
+# $readinessCases là đúng array31 selectors phía trên; thêm affected regressions:
+$integrationCases = $readinessCases + @(
+ 'tests/unit/test_database_config.py',
+ 'tests/integration/test_planning_public.py::test_real_purchase_and_budget_modes',
+ 'tests/integration/test_planning_public.py::test_exact_reuse_fresh_operational_capture_and_model_freeze'
+)
+& $integrationPython -m pytest @integrationCases -q --tb=short --show-capture=no --durations=5 --junitxml=runtime/readiness-integration/final-focused.xml
+& $integrationPython -m scripts.dev status --test-database
+```
+
+Final gate chạy source tích hợp, không rerun trên source D. Một legacy test ghi
+C03 failure JSON từng phụ thuộc runtime/s49 do case khác tạo; nay tự tạo parent
+output để focused selection chạy độc lập ở fresh worktree. Không sửa deadline,
+clock injection hoặc assertion business. Sau sửa chỉ rerun case đó:
+
+```powershell
+& $integrationPython -m pytest tests/integration/test_planning_public_security.py::test_overall_deadline_records_actual_engine_elapsed_without_false_cancel -q --tb=short --show-capture=no --junitxml=runtime/readiness-integration/deadline-output-rerun.xml
+```
+
+Per-invocation results ở conversation; không full-suite/browser/accuracy claim. Offline OpenAPI capture
+với psycopg.connect bị chặn: so clean main052cddee trước merge, chỉ R01/C01 query
+và additive D4 schemas,73/66 không endpoint mới; I06 completion schemas unchanged.
+[Handoff](../handoff/010_BE_CAPABILITY_RESPONSE_VI.md) sở hữu examples FE; original
+FE54 baseline/hash và original API fixture giữ nguyên. Runtime8103 manifest vẫn
+052cddee075e165af2c0cea42ebc2e616c396760; không restart/migrate demo.
+
+Development invocations (kết quả riêng ở conversation, không cộng overlap):
+
+```powershell
+& $readinessPython -m pytest tests/integration/test_data_readiness_acceptance.py -q --tb=short --show-capture=no --durations=3 --junitxml=runtime/verification/d5/public-first.xml
+& $readinessPython -m pytest tests/integration/test_data_readiness_acceptance.py tests/integration/test_import_setup_stock.py::test_fresh_multifile_setup_readiness_custom_planning_and_retained_run[False] -q --tb=short --show-capture=no --durations=3 --junitxml=runtime/verification/d5/linked.xml
+& $readinessPython -m pytest tests/integration/test_data_readiness_acceptance.py::test_public_setup_custom_oracle_omission_stock_fees_and_revalidation -q --tb=short --show-capture=no --durations=1 --junitxml=runtime/verification/d5/public-rerun.xml
+& $readinessPython -m pytest tests/integration/test_data_readiness_acceptance.py::test_public_setup_custom_oracle_omission_stock_fees_and_revalidation tests/integration/test_data_readiness_acceptance.py::test_mandatory_safety_is_blocking_only_for_computed_dependencies -q --tb=short --show-capture=no --durations=2 --junitxml=runtime/verification/d5/affected.xml
+```
+
+Expected linked evidence: new acceptance202/queued; completed same-key replay200/
+poll0, same run_id/accepted_at/captured config; new key after cap reduction422.
+Stock12 + pack4/cost10 →1 pack/outlay10, stock20 →0 packs/outlay0. Current unknown
+future fee →readiness blocked, accepted Run completed/computation_blocked, no winner.
+No eligible offers/insufficient stock chỉ captured eligible domain proof, không
+market impossibility. Forecast fallback NO_ARTIFACT giữ actual baseline/quality
+not_evaluated, mixed Product scope giữ override NOT_EVALUATED.
+
+Public future fee changes phải Owner-review period amendment và supplier_changes
+confirmation, không sửa fee effective today; Import coverage NONE phải explicit
+phủ cả offer/supplier khi declared COMPLETE. Đây là fixture facts, không defaults.
+Recovery client: đọc C03 trước; terminal retry trả current status, không khởi động
+worker lại. Muốn rerun sau sửa facts là explicit new key/Run, không overwrite old.
+Source JSON/capture/digests, stock movements và exact Import audit được kiểm qua
+fresh Session; HTTP2xx không được coi riêng là persistence evidence.
+
+OpenAPI capture/check: checkpoint D4 source đã được capture tại ignored
+runtime/verification/d5/openapi-d4.json; create_app(Settings(_env_file=None)).openapi()
+với psycopg.connect bị chặn phải JSON-equal snapshot đó. Original baseline fixture
+không bị thay. JSON examples/local links/UTF-8/whitespace/secrets được kiểm riêng.
+Workbook smoke NOT RUN (hash-preserved only); browser E2E NOT RUN; accuracy/real
+impact NOT EVALUATED. Không cần các gates đó để hoàn thành backend-only D5.
+
+Timing interpretation: case phí assert business outcome recommendation_available,
+không assertion latency6.45s. Worker dùng monotonic perf_counter/overall180s, check
+trước preparation/sau capture/sau engine; không hard cancellation. Actual bounded
+case D5 pass, stage/engine/overrun lấy retained PublicPlanningExecution và recorded
+JUnit properties. Clock-injection case181s vẫn failed/EXECUTION_DEADLINE_EXCEEDED,
+giữ actual engine timing và không fabricated result. Không có historical OS/resource
+telemetry để kết luận contention/race/root cause của D3; one passing run không đóng
+issue. Ảnh hưởng còn thật: Run có thể failed deadline khi overall stage vượt180s,
+client đọc C03 và explicit new Run nếu muốn thử lại, không retry/persist ngầm.
+
+<a id="data-readiness-d4"></a>
+## CURRENT FACT — D4 contextual readiness/public warnings, isolated acceptance
+
+D3 checkpoint `d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 checkpoint local
+`72415332e2a5224ab9909d54606d7e7e374bdd18`, chưa push/merge/deploy.
+Dùng đúng own interpreter/DB5435/limited role/flags guard tại
+[D2 setup](#data-readiness-d2), kiểm connected DB/role/head0027 trước integration.
+Các pytest/reset chạy tuần tự, không query/migrate main hoặc DB nhánh khác.
+Provider/email/background workers OFF; worker.run_one trong tests đồng bộ.
+
+Focused commands (không full-suite), từ worktree D:
+
+```powershell
+& $readinessPython -m pytest tests/unit/test_contextual_readiness.py tests/unit/test_offer_admission.py tests/unit/test_planning_setup.py tests/unit/test_stockout_readiness.py tests/unit/test_application_contracts.py::test_application_has_no_http_or_direct_queries tests/api/test_planning_configuration_openapi.py tests/api/test_planning_public_openapi.py tests/api/test_import_openapi.py -q --tb=short --show-capture=no
+& $readinessPython -m pytest tests/integration/test_contextual_readiness.py::test_same_snapshot_r01_c01_today_and_get_never_executes tests/integration/test_contextual_readiness.py::test_invalid_context_is_not_a_hypothetical_default tests/integration/test_planning_offer_admission.py tests/integration/test_readiness_context.py tests/integration/test_discovery_c4.py -q --tb=short --show-capture=no --durations=3
+& $readinessPython -m pytest tests/integration/test_contextual_readiness.py tests/integration/test_readiness_context.py::test_whole_response_permissions_and_action_not_granted_after_sensitive_reads tests/integration/test_import_readiness_snapshot.py tests/integration/test_planning_public_security.py::test_retained_digest_and_typed_evidence_corruption_fails_closed tests/integration/test_planning_public_security.py::test_current_revoke_at_every_boundary tests/integration/test_planning_public_security.py::test_store_membership_read_is_not_creator_only_and_foreign_hidden -q --tb=short --show-capture=no --durations=3
+& $readinessPython -m pytest tests/api/test_planning_configuration_openapi.py::test_d4_context_query_and_additive_assessment_keep_completion_boundary tests/integration/test_contextual_readiness.py::test_context_query_scope_conflict_foreign_store_and_known_budget_absence tests/integration/test_contextual_readiness.py::test_same_snapshot_r01_c01_today_and_get_never_executes -q --tb=short --show-capture=no
+& $readinessPython -m scripts.dev status --test-database
+git diff --check
+```
+
+Manual expectations từ portable synthetic fixtures:
+
+- C01 không planning_request: assessment.input_scope DEFAULT_CONFIGURATION, không
+  kết luận hypothetical custom/saved. Missing default blocked; full custom explicit
+  với budget0 qua query có thể ready dù default missing/invalid. Partial inheritance
+  vẫn thiếu/stale version hoặc HIGH không default đúng resolver errors. Null scalar
+  invalid, [] explicit, omitted/null budget late-bind ceiling; unknown ceiling block0.
+- Saved active dùng current version và không phụ thuộc default; archived/missing,
+  cap giảm hoặc inactive Product giữ C02 resolver rejection. GET không tạo Run.
+- R01 actions=planning và C01 cùng request/date/snapshot trả assessment tương ứng;
+  Today đánh giá default ngày Store. Context query ngoài planning hoặc ngày mâu
+  thuẫn422, thiếu sensitive read403 whole response, foreign Store404 và current
+  revoke vẫn deny. No raw quantities/costs trong readiness issue fields.
+- Actual baseline/fallback method/selection reason kèm quality not_evaluated;
+  Product thiếu history vẫn trong exclusions/computed coverage. Warnings dedup,
+  omitted term giữ version/reference/reason/proof eligible-domain; shared fees,
+  scope integrity và safety0 không downgrade. No offers vẫn được tính zero purchase,
+  can_generate không cam kết winner. C03/C08 giữ retained warnings sau live mutation.
+
+OpenAPI D3/D4 được capture không DB connect tại ignored runtime/verification/d4;
+diff direct operations chỉ R01/C01 optional query, additive schema fields; retained
+Import Issue/details giống D3. Không ghi đè original API baseline provenance.
+Validate current DTO JSON examples/local links/UTF-8/AST/whitespace/secret scan.
+D3 fee-case deadline failure evidence nằm conversation; chưa root cause. D4 gọi lại
+đúng case qua affected regression, không tăng180s/thêm retry/đổi search/proof policy;
+passing một lượt không đóng timing instability. Không training/E3/E4/workbook mutation.
+
+API/FE delta và examples tại [C01](../PROCUREMENT_API_CONTRACT_VI.md#planning-context)
+và [R01](../IMPORT_MAPPING_API_CONTRACT_VI.md#readiness-v1); FE/browser integration
+còn D5 nếu được authorized. Commands/results thực chạy thuộc conversation.
+
+<a id="data-readiness-d3"></a>
+## CURRENT FACT — D3 offer admission/confirmed facts, isolated acceptance
+
+Worktree/branch/test-only DB/role/interpreter như [D2 setup](#data-readiness-d2).
+D2 checkpoint local `9f720caf01fdf0a8f586c049660a2fcc9447ade3`; D3 checkpoint local
+`d0f3716c261f6634d5fcd5ae886c00cf3014276c`, chưa push/merge.
+Chạy D2 target/current_database/current_user/limited-role/flags guard
+trước tests/reset/migration; chỉ shelfcash_readiness_test/shelfcash_readiness_tester
+tại loopback5435, không main local DB hoặc DB test nhánh khác. Không background
+workers/provider/email/training/benchmark; Planning worker trong tests được gọi
+`run_one()` đồng bộ. Fixtures portable synthetic, không đọc/sửa raw workbook.
+
+Focused commands từ worktree D, chạy tuần tự, với `$readinessPython` ở setup D2:
+
+```powershell
+& $readinessPython -m pytest tests/unit/test_offer_admission.py tests/unit/test_import_inventory_completeness.py tests/unit/test_planning_run.py tests/unit/test_application_contracts.py::test_application_has_no_http_or_direct_queries -q --tb=short
+& $readinessPython -m pytest tests/integration/test_planning_offer_admission.py tests/integration/test_planning_public.py tests/integration/test_planning_public_sources.py tests/integration/test_planning_inspection.py -q --tb=short
+& $readinessPython -m pytest tests/integration/test_planning_public_security.py::test_current_revoke_at_every_boundary tests/integration/test_planning_public_security.py::test_store_membership_read_is_not_creator_only_and_foreign_hidden tests/integration/test_planning_public_security.py::test_retained_digest_and_typed_evidence_corruption_fails_closed tests/integration/test_import_supplier_basis.py::test_public_import_to_planning_capture_and_retained_price tests/integration/test_import_supplier_basis.py::test_shared_basis_reuse_never_reuses_commercial_values tests/integration/test_import_supplier_basis.py::test_fee_dependency_change_invalidates_preview tests/integration/test_import_setup_stock.py::test_fresh_multifile_setup_readiness_custom_planning_and_retained_run -q --tb=short
+& $readinessPython -m scripts.dev status --test-database
+git diff --check
+```
+
+Legacy internal /2 regression gate khi thay capture/contracts:
+`python -m pytest tests/unit/test_decision_pipeline_v2.py tests/unit/test_decision_snapshot_adapter_v2.py tests/unit/test_planning_run.py tests/unit/test_planning_setup.py -q --tb=short`.
+Không tự lặp lại broad gate sau chỉ documentation/presentation change nếu affected
+checks đủ. All suites/fixtures trên dùng supported reset/migration test helper;
+head0027 giữ nguyên, không có D3 migration hoặc operational seed.
+
+Manual cases/expected evidence:
+
+- Zero-cost offer không bound + alternative đầy đủ → recommendation trên remaining
+  domain; capture giữ omitted ID/version/reason, public OFFER_OMITTED warning có
+  existing classification/proof_scope/suggested_action. Ingredient detail/explanation
+  cũng giữ issue; fresh Session chứng minh raw term/stock không bị Planning sửa.
+- Không eligible offer + stock đủ → zero-purchase winner; thiếu stock → no eligible
+  candidate với proof captured finite domain/UNPROVEN, không market impossibility.
+- Expiry-tracked Ingredient với nullable shelf-life của một offer → omit offer đó,
+  dùng alternative có shelf-life nếu đủ facts. No tracking không đòi shelf-life.
+- Missing fee coverage/currency/horizon/binding/multiple current fee facts vẫn block;
+  explicit COMPLETE NONE khác unknown. Remaining offer fees được tính từ đúng keys.
+- Inventory proof stale sau mutation hoặc nonunique → dependent Product exclusion;
+  CONFIRMED_EMPTY khác missing stock. Unknown graph vẫn block capture; mandatory
+  safety constraint0 vẫn block trước solver. Không đổi standalone BOM all-or-error.
+- New acceptance pin offer_eligibility/1; existing queued/retained Run không marker
+  giữ old semantics. New Runs retain source values/versions/effectivity và exact
+  Import audit actor/time khi unique proof; unknown source actor giữ null. Current
+  revoked rights/foreign Store vẫn deny, immutable mapping reuse không reapprove
+  khi spec còn hợp lệ; stale preview và batch commercial values giữ guards cũ.
+
+OpenAPI compare với checkpoint D2 dùng archived tracked source trong ignored
+runtime/verification/d3 và own interpreter, block DB connect; DTO/routes không đổi.
+New warning meanings dùng existing fields; không thay R01/C01 can_generate/default/
+custom/saved estimate. [Policy D3](../features/DATA_READINESS_POLICY.md) sở hữu
+admission/proof/version rules và remaining D4/D5 scope. Commands/results thực thi
+thuộc conversation; không claim full-suite, FE E2E, accuracy hoặc E3/E4 evidence.
+
+<a id="data-readiness-d2"></a>
+## CURRENT FACT — D2 forecast readiness trên test target riêng
+
+Worktree `backend-data-readiness`, branch `feat/data-readiness`, D1 checkpoint
+`c930dfe66cfda5de5896164e16fcf8f4c7acaefe`. D2 source/tests còn WIP, không deploy
+main8103 hoặc nhập challenger. Feature/remaining proposals ở
+[DATA_READINESS_POLICY](../features/DATA_READINESS_POLICY.md#current-fact--d2-forecast-eligibility-và-linked-readiness).
+Own `.venv` và ignored `.env`/`runtime/readiness-test`; provider/email/worker flags
+OFF. Six baseline workbooks trong ignored `runtime/uploads` giữ nguyên hashes;
+portable automated cases không đọc paths đó hoặc train benchmark bằng workbook.
+
+Test-only PostgreSQL17 riêng tại `127.0.0.1:5435`, container
+`shelfcash-readiness-postgres`, named volume `shelfcash_readiness_data`;
+DB `shelfcash_readiness_test`, role `shelfcash_readiness_tester` sở hữu schema/test
+DB nhưng không SUPERUSER/CREATEDB/CREATEROLE/REPLICATION. Private credentials giữ
+ngoài Git, không dùng/đọc config hoặc query main local DB hay test DB nhánh khác.
+Đây là test setup, không thêm process/database cho serving application. Khi setup
+máy khác, provision đúng test DB/limited role trước; `.env` DATABASE_URL và
+TEST_DATABASE_URL đều phải trỏ đúng target này; không copy credentials vào docs.
+
+Chạy tuần tự từ đúng worktree, kiểm target/role/flags trước reset/migration:
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-data-readiness
+$readinessPython = Join-Path $PWD '.venv/Scripts/python.exe'
+@'
+from app.config import Settings
+from app.infrastructure.database.engine import create_database_engine
+from scripts.dev import validate_reset_target
+from sqlalchemy import text
+from sqlalchemy.engine import make_url
+s = Settings()
+u = make_url(s.test_database_url)
+assert s.database_url == s.test_database_url
+assert (u.database,u.username,u.host,u.port) == ('shelfcash_readiness_test','shelfcash_readiness_tester','127.0.0.1',5435)
+validate_reset_target(s)
+assert not any((s.import_llm_suggestions_enabled,s.auth_email_delivery_enabled,s.import_worker_enabled,s.planning_worker_enabled,s.pdf_export_worker_enabled,s.notification_worker_enabled))
+e = create_database_engine(s)
+with e.connect() as c:
+    assert c.execute(text('select current_database(),current_user')).one() == ('shelfcash_readiness_test','shelfcash_readiness_tester')
+    assert c.execute(text('select rolsuper,rolcreatedb,rolcreaterole,rolreplication from pg_roles where rolname=current_user')).one() == (False,False,False,False)
+e.dispose()
+print('D2 target/role/flags OK; no credentials printed')
+'@ | & $readinessPython -
+if ($LASTEXITCODE -ne 0) { throw 'D2 guard failed; do not reset/migrate/test' }
+& $readinessPython -m scripts.dev status --test-database --allow-unmigrated
+& $readinessPython -m scripts.dev reset --test-database
+```
+
+Reset dùng supported explicit allowlist/role guard, Alembic head0027, no seed.
+Pytest `database_settings` reset/migrate chính DB này từng case, không chạy concurrent
+DB tests. Reuse `.venv` local sau `python -m venv .venv` và `pip install -e '.[dev]'`
+nếu setup lần đầu; không sửa/reuse interpreter environment của worktree khác.
+
+Focused gate commands (synthetic model mechanics, không real-accuracy claim):
+
+```powershell
+& $readinessPython -m pytest tests/unit/test_forecast_eligibility.py tests/unit/test_forecast_baseline.py tests/unit/test_forecast_execution.py tests/unit/test_forecast_stockout.py tests/unit/test_stockout_readiness.py tests/unit/test_forecast_trained.py tests/unit/test_forecast_artifacts.py tests/unit/test_forecast_serialization.py tests/unit/test_forecast_model_contracts.py tests/unit/test_database_config.py -q --tb=short
+& $readinessPython -m pytest tests/integration/test_forecast_readiness.py tests/integration/test_forecast_serving.py tests/integration/test_readiness_context.py tests/integration/test_forecast_trained_execution.py tests/integration/test_forecast_stockout_a1.py tests/integration/test_forecast_execution_flow.py tests/integration/test_discovery_c4.py -q --tb=short
+& $readinessPython -m scripts.dev status --test-database
+git diff --check
+```
+
+Manual inspection từ synthetic linked cases: sales-only explicit BASELINE, hai sales
+rows khác ngày gồm observed0 → R01 forecast ready với STOCKOUT_UNKNOWN nếu null,
+không recipe/inventory/supplier/context file prerequisite, no missing-day filling.
+All-censored TRAINED → R01 HTTP200 blocked với Product refs/dates;
+C01 can_generate=false/reason CENSORED_HISTORY_NOT_USABLE; Today readiness section
+available chứa blocked forecast. Không forecast0/Run từ GET. Trước D2 R01/C01 case
+này trả503 SERVICE_UNAVAILABLE, handler log BaselineNotReadyError.
+Dependency mismatch → execution unavailable/data valid nếu dữ liệu khác hợp lệ;
+artifact corrupt → MODEL_ARTIFACT_INVALID/data invalid; không success-fallback.
+Run metadata/replay assertions dùng fresh Session và captured facts, không chỉ2xx.
+
+Public DTO/routes/OpenAPI giữ nguyên; có behavior fix trong existing reasons/status.
+Default/custom/saved contextual readiness, offer omission và public method/warning
+extensions còn D3/D4. Không tự chạy E3/E4 hoặc activate challenger để verify D2.
+Exact commands/results của lượt thực thi thuộc conversation; không gọi focused gate
+là full suite hoặc synthetic mechanics là accuracy.
+
 <a id="customer-self-service"></a>
 ## CURRENT FACT — setup khách hàng từ số0
 

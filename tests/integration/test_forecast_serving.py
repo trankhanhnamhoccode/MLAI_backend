@@ -89,7 +89,9 @@ def test_recognized_absent_artifact_fallback_and_corrupt_artifact_failure(readin
     served=svc.serve(internal)
     assert served.run.model_type=='historical_quantile_baseline' and served.identity.candidate_artifact_identity==candidate
     directory=tmp_path/candidate;directory.mkdir();(directory/'manifest.json').write_text('{bad')
-    assert svc.assess(internal.prepared,internal.serving)=='MODEL_ARTIFACT_INVALID'
+    assessment=svc.assess(internal.prepared,internal.serving)
+    assert assessment.failure_kind=='ARTIFACT_INVALID'
+    assert assessment.blockers[0].code=='MODEL_ARTIFACT_INVALID'
     with pytest.raises(ArtifactError):svc.serve(internal)
 
 

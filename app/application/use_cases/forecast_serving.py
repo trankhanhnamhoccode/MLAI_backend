@@ -7,19 +7,23 @@ from app.application.contracts.auth import AuthError
 from app.application.contracts.common import RunReferenceInput
 from app.application.contracts.forecast_execution import ForecastEngineResult,validate_engine_result,PreparedForecastInput
 from app.application.contracts.forecast_model import ExecutionDetails
+from app.application.contracts.forecast_eligibility import ForecastEligibility
+from app.application.contracts.readiness import Issue, IssueDetails
 from app.application.contracts.model_serving import ForecastIdentity,ServingRecord
 from app.application.forecast_serialization import serialize_prepared,RetainedInputError
 from app.application.forecast_preparation import prepare_observations
+from app.application.forecast_demand import demand_warnings
+from app.application.use_cases.forecast_baseline import require_baseline_readiness
 from app.application.import_identity import content_digest
 from app.application.use_cases.forecast_trained_execution import TrainedForecastExecutionUseCases,ExecutionChoice
 from app.application.use_cases.forecast import ForecastUseCases
 from app.infrastructure.database.auth_session import auth_session
 from app.infrastructure.storage.forecast_artifacts import ArtifactError
-from app.infrastructure.forecast_model import ModelBoundaryError,training_rows
+from app.infrastructure.forecast_model import ModelBoundaryError,ModelDependencyError
 from app.repositories.readiness import load_readiness
 from app.repositories.model_serving import reuse_candidates
 from app.models.model_serving import ForecastServingIdentity
-from app.domain.forecasting.baseline import BASELINE_MODEL_TYPE,BASELINE_MODEL_VERSION
+from app.domain.forecasting.baseline import BASELINE_MODEL_TYPE,BASELINE_MODEL_VERSION,BaselineNotReadyError
 from app.application.contracts.forecast import ForecastRunResult
 from app.repositories.readiness import ReadinessFacts
 
@@ -72,20 +76,46 @@ class ForecastServing:
     def choice(self,prepared,serving):
         policy=serving.policy
         if policy.mode=='BASELINE':
+            require_baseline_readiness(prepared)
             import platform
             if dict(policy.dependency_versions)!={'baseline':'1','serialization':'1','python':platform.python_version()}:
-                raise ModelBoundaryError('SERVING_DEPENDENCY_INCOMPATIBLE')
+                raise ModelDependencyError('SERVING_DEPENDENCY_INCOMPATIBLE')
             return ExecutionChoice(None,ExecutionDetails(selection_reason='BASELINE_SELECTED'))
-        choice=self.execution._choose(prepared,policy.artifact_identity)
-        if choice.artifact is not None and any(r.status!='READY' for r in training_rows(prepared).readiness):
-            from app.application.use_cases.forecast_trained_execution import _fallback_details
-            return ExecutionChoice(None,_fallback_details('NOT_READY_HISTORY',policy.artifact_identity))
-        return choice
+        return self.execution._choose(prepared,policy.artifact_identity)
 
-    def assess(self,prepared,serving):
-        try:self.choice(prepared,serving)
-        except (ArtifactError,ModelBoundaryError):return 'MODEL_ARTIFACT_INVALID'
-        return None
+    def assess(self,prepared: PreparedForecastInput,serving: ServingRecord) -> ForecastEligibility:
+        """Use execution's exact choice without computing/persisting predictions.
+
+        Only known eligibility failures become blockers. Invalid captures and
+        programming/I/O errors keep their original typed error, never fallback.
+        """
+        blockers=();failure=None;choice=None
+        try:
+            choice=self.choice(prepared,serving)
+        except BaselineNotReadyError as error:
+            failure='HISTORY_UNUSABLE'
+            blockers=tuple(Issue(code='CENSORED_HISTORY_NOT_USABLE' if any(
+                o.product_id==pid for o in prepared.observations) else 'PRODUCT_HISTORY_MISSING',
+                source='sales',scope='PRODUCT',entity_id=pid,
+                affected_dates=tuple(o.sales_date for o in prepared.observations if o.product_id==pid),
+                details=IssueDetails()) for pid in error.product_ids)
+        except (ArtifactError,ModelBoundaryError) as error:
+            dependency=isinstance(error,ModelDependencyError) or isinstance(error.__cause__,ModelDependencyError)
+            unavailable=dependency or isinstance(error.__cause__,OSError)
+            failure='DEPENDENCY_UNAVAILABLE' if dependency else 'RUNTIME_UNAVAILABLE' if unavailable else 'ARTIFACT_INVALID'
+            blockers=(Issue(code='EXECUTION_UNAVAILABLE' if unavailable else 'MODEL_ARTIFACT_INVALID',
+                source='runtime' if unavailable else 'forecast',scope='STORE',entity_id=None,
+                affected_dates=(),details=IssueDetails()),)
+        warnings=demand_warnings(prepared)
+        details=choice.details if choice else None
+        if details:
+            warnings=details.warnings+warnings
+        return ForecastEligibility(requested_mode=serving.policy.mode,
+            candidate_artifact_identity=serving.policy.artifact_identity,
+            actual_model_type=(choice.artifact.manifest.model_type if choice.artifact else BASELINE_MODEL_TYPE) if choice else None,
+            actual_model_version=(choice.artifact.manifest.model_version if choice.artifact else BASELINE_MODEL_VERSION) if choice else None,
+            artifact_identity=choice.artifact.identity if choice and choice.artifact else None,
+            execution=details,warnings=warnings,blockers=blockers,failure_kind=failure)
 
     @staticmethod
     def identity(preparation,choice):
