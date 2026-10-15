@@ -121,6 +121,10 @@ denies the whole summary, including cached/durable results; no new grant/catalog
 key. Optional summary/chat providers never receive unauthorized retained facts.
 AS03 checks Origin/CSRF and reauthorizes before projection/acceptance, immediately
 before completion after preflight, at publication/delivery and on immutable replay.
+L3.1 repeats that same authority fence before the optional second semantic
+completion; repair feedback contains only previously authorized selected facts
+and safe failure codes. Client conversation context/candidate IDs are scoped
+identity hints, never grants or a source of business facts.
 Revocation during provider work discards final output; permission failures are not
 converted into successful fallback. No extra grant or membership inference.
 N10/J01 PDF/N11 also require planning.export, checked against current authority.

@@ -1506,7 +1506,7 @@ AS01/AS02 dùng SummaryEnvelope §18.5. AS03 giữ envelope
 result_digest:Version|null,option_id:OptionId|null,ingredient_id:UUID|null,
 locale,kind:"answer"|"clarification",source:"model"|"deterministic_fallback"|
 "deterministic_clarification",answer:string,claims:Claim[],references:Reference[],
-clarification:Clarification|null,diagnostics:Diagnostics}`.
+clarification:Clarification|null,diagnostics:Diagnostics,context?:ChatContext}`.
 
 Claim = `{text:string,evidence_ids:string[]}`; mọi business assertion phải được
 kiểm nghĩa/negation/quantity/unit/role/proof trên đúng scoped evidence. Reference
@@ -1519,7 +1519,8 @@ không tự chứng minh claim chỉ vì nhắc đúng entity hoặc một số 
 
 Clarification = `{code:"ENTITY_AMBIGUOUS"|"ENTITY_CONTEXT_MISMATCH"|
 "QUERY_UNSUPPORTED",question:string,candidates:[{ingredient_id:UUID,name:string}],
-original_question:string,option_candidates?:[{option_id,source_strategies}]}`.
+original_question:string,option_candidates?:[{option_id,source_strategies}],
+product_candidates?:[{product_id,name}]}`.
 Ingredient candidates chỉ từ retained computed scope có label;
 không có label thì yêu cầu chọn canonical ID qua C04, không đặt tên giả. Khi kind
 clarification: claims/references có thể rỗng, không gọi model chỉ để resolve
@@ -1529,8 +1530,8 @@ Option ambiguity uses retained option_candidates from the same Run; supply an
 explicit option context and pair IDs from C03. Missing labels never create aliases.
 
 Diagnostics L3 has reason, prompt_version, validator_version, model, resolved_model,
-provider, attempts0..1, input/output_tokens, cost_usd, latency_ms, finish_reason,
-disposition ACCEPTED/FALLBACK/CLARIFICATION and prompt/schema/evidence hashes.
+provider, attempts0..2, input/output_tokens, cost_usd, latency_ms, finish_reason,
+disposition ACCEPTED/REPAIRED/TRIMMED/REGENERATED/FALLBACK/CLARIFICATION and prompt/schema/evidence hashes, plus safe failure_trace codes.
 OpenAPI/ChatDiagnostics owns exact nullable structure and reason enum. Reasons
 distinguish disabled/insufficient/wording unsupported, preflight/provider/schema/
 grounding/coverage/input failures; NONE with source=model means validated wording,
@@ -1601,35 +1602,47 @@ Every replay reauthorizes and verifies Run/receipt/generation hashes and pinned
 final assertions/refs against retained evidence. History is bounded request context,
 not a conversation authority or alternative source of facts.
 
-L3 uses independent CHAT_LLM_ENABLED, model/providers/input/output/deadline/price
-profile, default OFF; summary/import enablement and key presence never activate it.
-Unsupported/overpriced parameters/endpoints reject before a paid call. One attempt,
-no provider/model substitution or retry. Finite vocabulary chọn read intent cho
-outcome, cost/budget/pairwise, requirements, scope, proof, limitations, summary hoặc
-Ingredient stock/purchases/daily simulated balances. Unknown/unsupported wording,
-what-if/orders/mutations trả QUERY_UNSUPPORTED clarification. Không claim tổng quát
-khả năng hiểu paraphrase. Full retained names/UUID nhận entity; tên trùng/mơ hồ hoặc
-explicit ID trái câu hỏi clarify, không đổi entity. Short follow-up có thể dùng
-last user history message để nhận1 Ingredient; assistant history không cung cấp facts.
-Không có captured label thì yêu cầu ID qua C04, không đặt tên. Raw question/history
-không được gửi cho summary provider. Facts are server-owned; chat prose must
-validate each assertion against the same projection, with no repair/removal.
-Current rights kiểm trước projection,
-receipt/publication và delivery. GET C03/C08/AS02 không lazy model/job.
+CURRENT FACT L3.1 uses independent CHAT_LLM_ENABLED/model/routes and input/output/
+deadline/price limits. Model OFF remains default. CHAT_COMPLETION_LIMIT defaults2
+(max2) and CHAT_MAX_REQUEST_COST_USD defaults0.10; both attempts share the request
+deadline/cost reservation. Metadata support/prices are preflighted before each
+completion, with no model/provider substitution. Only known schema-valid semantic
+failures may regenerate once; unknown transport billing is never blindly retried.
+Summary AS01/AS02 remain constrained presentation; Import is unchanged.
 
-Model writes actual statement prose with sealed fact IDs, not presentation choices.
-Backend verifies COMPLETE clauses, typed role/availability, exact values/units,
-entity/path, polarity and required coverage. Every clause and required fact must
-match; citations alone do not suffice. Unknown wording/material additions/omitted
-main facts reject the whole generation to the same topic fallback. No numeric
-repair/sentence removal/salvage/model judge. Backend safety qualifiers always state
-retained/simulated/proposal/proof scope; they do not turn a wrong assertion into
-a repaired success. Grammar is deliberately bounded: legitimate paraphrases may
-fall back, and this is not proof of general language entailment. Larger evidence
-cannot silently truncate to fit; INPUT_LIMIT returns the complete backend fallback.
-Stock/expiry/daily detail and broad summary families outside conversational grammar
-use the richer deterministic renderer (WORDING_UNSUPPORTED), not a quantity-only
-answer to the wrong question. Summary AS01/AS02 remain presentation mode.
+Optional ChatRequest.context and response.context carry bounded Run/evidence,
+option/pair, Ingredient/Product IDs, pending original question/candidate IDs and
+Ingredient topic. IDs/version are verified against retained scope after current
+rights. Explicit new context wins over old context. Partial retained-label matches
+can yield multiple named candidates; selecting one resumes the pending original
+question. Pronouns require one antecedent; ambiguous/foreign-version context
+clarifies. Missing labels remain missing. Captured Product labels/IDs support structured candidates, pending-question
+resumption and explicit service follow-ups; arbitrary semantic aliases are not
+resolved. History/context never supply facts,
+permissions, catalogue updates or instructions. Existing body/history limits apply.
+
+New work pins prompt/3, validator chat_assertions/3, assertion schema/2 and
+selection plan/3. Implicit plan/2 and deterministic renderer/3 keep their old
+obligations; new deterministic work uses renderer/4. Each
+model assertion proposes exact typed slots and actual prose; BE independently
+checks material predicates, value/unit/entity/path/role/polarity and unsupported
+extra text. Main answer obligations are distinct from optional support; every
+retrieved fact need not appear once. Independent redundant/invalid optional units
+may be trimmed. One unambiguous numeric-slot error can be replaced from its sealed
+fact only with exact identity/unit/role and complete final revalidation. Other
+material/main-coverage failures regenerate once or use topic-specific fallback.
+No nearest-number/unit repair, generic nonanswer acceptance or sole model judge.
+Finite complex/proof grammar remains a supported subset; deterministic checking
+is not proof of general language entailment. Reviewer production is OFF/absent.
+
+Stock/daily questions use retained per-lot/date/path facts where present; no engine
+or live catalogue. Proof includes viewed-option eligibility and retained requirement target/status/
+shortfall assessments with units; no new computation. No-winner includes known gaps/reasons/blockers, otherwise explicit
+missing-detail facts. Pairwise deltas retain direction and individual units without
+causal/global-ranking claims. Contextual scope/proof/proposal qualifiers replace
+blanket disclaimers. Main facts above16, selected facts above24 or serialized byte
+bounds cause full topic fallback, not silent truncation. Old receipt/plan/validator
+versions remain pinned and readable; no original response or live artifact rewrite.
 
 L3–L4 nếu cho phép free prose phải kiểm: sau salvage còn trả lời ý chính; repair không sinh
 “đồng đồng”; negation tiếng Việt/English và positive controls; “đủ điều kiện”/

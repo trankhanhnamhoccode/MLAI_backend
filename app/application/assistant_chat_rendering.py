@@ -23,6 +23,7 @@ class ChatScope:
     option_id: str | None = None
     comparison_pair: tuple[str,str] | None = None
     option_candidates: tuple = ()
+    product_candidates: tuple = ()
 
 
 # Deliberately finite vocabulary. Unsupported/compound actions clarify, never execute.

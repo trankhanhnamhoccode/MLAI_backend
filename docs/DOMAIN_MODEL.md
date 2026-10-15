@@ -14,9 +14,11 @@ from a prior user message for an explicit follow-up, never supply stock/cost/win
 facts. Ambiguous/conflicting entities clarify; unsupported operations do not run.
 Message receipts preserve request/context/version and final answer. Optional chat
 model writes prose from backend-selected sealed facts; complete clauses, roles,
-values/units/entity/path, polarity and required coverage must validate before final
-publication. Unknown grammar or missing material content yields the topic fallback,
-never guessed facts/number repair. Model prose is presentation, not domain truth.
+values/units/entity/path, polarity and main-answer coverage validate before final
+publication. L3.1 structured context is only an identity hint. Independent optional
+assertions may be trimmed; one exact uniquely bound numeric slot may be repaired
+and fully rechecked. Material/missing-main failures regenerate once or fall back.
+No nearest-number repair, scope/unit conversion or new business calculation. Model prose is presentation, not domain truth.
 Summary provider enablement does not enable conversational generation. What-if
 questions disclose that no new simulation exists and direct creation of a new Run;
 chat never creates that Run or mutates inputs implicitly.

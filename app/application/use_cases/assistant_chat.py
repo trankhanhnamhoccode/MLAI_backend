@@ -32,8 +32,10 @@ class AssistantChat:
     def _answer(self, token, run_id, request, conversational=False):
         if conversational:
             from app.application.use_cases.conversational_chat import ConversationalChat
-            _,plan=ConversationalChat(self).prepare(token,run_id,request)
-            diagnostics=plan.fallback.diagnostics.model_copy(update={'validator_version':'decision_chat_renderer/2'})
+            _,plan=ConversationalChat(self).prepare(token,run_id,request,
+                'chat_assertion_grammar/2' if conversational==2 else 'chat_assertions/3',
+                'chat_evidence/2' if conversational in (2,3) else 'chat_evidence/3')
+            diagnostics=plan.fallback.diagnostics.model_copy(update={'validator_version':f'decision_chat_renderer/{conversational}'})
             return plan.fallback.model_copy(update={'diagnostics':diagnostics})
         record,view=self.planning.read_record(token,run_id,evidence_only=True)
         if view.response_version!=request.expected_evidence_version:
@@ -96,7 +98,8 @@ class AssistantChat:
             return ConversationalChat(self).create(token,run_id,request,key,csrf)
         # New model-OFF work uses the same resolver/evidence-family fallback.
         # Retained /1 renderer receipts keep their original interpretation.
-        use_new_renderer=prior is None or prior.record_json.get('response',{}).get('diagnostics',{}).get('validator_version')=='decision_chat_renderer/2'
+        renderer=prior.record_json.get('response',{}).get('diagnostics',{}).get('validator_version') if prior else None
+        use_new_renderer=4 if prior is None or renderer=='decision_chat_renderer/4' else 3 if renderer=='decision_chat_renderer/3' else 2 if renderer=='decision_chat_renderer/2' else False
         answer=self._answer(token,run_id,request,use_new_renderer)
         with auth_session(self.engine) as session:
             current_actor,current_store=self._authority(session,token,run_id,csrf)

@@ -138,7 +138,7 @@ constrained presentation only, not arbitrary prose grounding or L4 evaluation.
 
 ## Scoped chat implementation
 
-CURRENT FACT acceptance limit: progressive synthetic conversational smoke consumed
+HISTORICAL INFORMATION original L3 acceptance: progressive synthetic smoke consumed
 10 completion attempts, with0 original model-accepted finals. One transport has
 unknown usage/cost, fully reserved; known replies resolved google/gemini-2.5-flash /
 Google and returned schema-valid prose. False rejects on legitimate wording/ellipsis
@@ -146,53 +146,73 @@ were corrected through scoped regressions and offline AS03 replay. Original live
 finals remain immutable fallback. No fresh paid call after the final fixes fits
 the exhausted attempt cap; this is not conversational live acceptance or L4.
 
-CURRENT FACT AS03 uses `AssistantChat`, `assistant_chat_rendering` and typed
-ChatRequest/AssistantResponse. Finite read intents cover outcome, cost/budget/
-pairwise, requirements, computed scope, proof, limitations, summary and Ingredient
-stock/proposed purchases/daily simulated shortages/ending. Exact retained dates,
-units/path and known/zero/unavailable remain distinct; no stock/fee/cost calculation
-or live lookup. Unknown wording/operations clarify, not guess. Vocabulary matching
-is a deliberately limited deterministic resolver, not a general semantic model.
+CURRENT FACT L3.1 live acceptance remains PENDING. The separate30-completion/
+USD1.00 ledger consumed6 attempts:3 accepted development cost/proof/Ingredient
+responses, one rejected tradeoff, its unknown timeout regeneration, then HTTP429
+on the next frozen evaluation. No further paid calls/model/provider change. Known
+cost USD0.0065817;2 unknown costs retain USD0.0281184 reservation. Final-source
+context/pair and proof eligibility/requirements fixes pass offline AS03 fake-provider replay, not a fresh full live
+subset. Every request/fact/prompt/schema/preflight/raw/final/version and replay
+count stays ignored in runtime/assistant-test/conversational-l31-live. Source
+fingerprints distinguish WIP iterations; current source is not historical source
+for every attempt. The14-case hand-labelled wording probe reports0 false accepts
+and1 legitimate unsupported paraphrase. This is a finite limitation, not a change
+to the valid label or proof of general quality. L4 remains pending.
 
-Full retained names/canonical UUIDs identify entities; duplicate/absent names or
-conflicting explicit context require clarification. No invented aliases. A short
-explicit follow-up can use the last user history message to identify one retained
-Ingredient. Assistant history assertions never become facts; arbitrary history
-does not authorize system/tool messages or operations. Without captured labels,
-candidates omit names and ask for canonical ID via C04. No auto context mutation.
+CURRENT FACT L3.1 (uncommitted): AS03 keeps its route and authority/lifecycle.
+`chat_context` resolves bounded structured context: Run/evidence version, viewed
+option/pair, Ingredient/Product identity and pending original question/candidates.
+Retained partial-name matches are candidates: "milk" can match two captured milk
+labels, requiring structured clarification. A candidate selection resumes the
+original question; explicit new entity/option replaces old context. Pronouns need
+one antecedent; multiple or foreign-version context clarifies. IDs are revalidated
+against this Run; no live catalogue, business facts or rights come from context.
+Ingredient topic (purchase/captured stock/daily shortage/ending) can carry across
+an explicit entity switch. Product labels/IDs also produce scoped candidates and can resume pending
+questions or explicit service follow-ups. General semantic alias resolution
+remains limited to captured names, not live catalogue synonyms.
 
-Chat has independent CHAT_LLM_ENABLED/model/providers/bounds/price caps, default
-OFF; SUMMARY_LLM_ENABLED and Import flags never activate it. The OpenRouter adapter
-preflights endpoint support and price before one non-retried completion; strict
-JSON output has actual model-written statement text and fact_ids, not template/
-ordering/tone choices. No hidden reasoning is requested/returned. Network uses
-NoRedirect, request/response bytes, tokens, timeout/deadline and no provider/model
-fallback. Question/history and selected typed facts/context alone are sent, never
-whole Run/package/auth/session/email or another Store's retained data. Live opt-in
-uses only synthetic graphs; ordinary pytest does not enable paid work.
+`conversational_evidence` selects question-specific main obligations separately
+from optional supporting facts. Cost need not repeat budget/fees unless asked;
+Ingredient stock uses captured lot quantities, daily questions use retained date/
+path balances, not recalculation. Proof includes retained viewed-option eligibility and per-Product/path requirement
+assessments (target/status/shortfall with units), alongside selector/proof scope.
+No-winner includes retained rejection reasons,
+nonzero customer gaps and blockers, or explicit missing-detail facts. Pairwise
+facts preserve exact to-minus-from direction and individual Product/path units.
+No whole-package prompt or silently dropped main facts. More than16 main facts,
+24 selected facts or the serialized input cap gives complete topic fallback.
+Warnings are contextual: no blanket summary disclaimer or "0 warnings" footer.
 
-`chat_resolution` handles natural cost/selection/trade-off/follow-up questions and
-what-if clarification (create a new Run; no new simulation/implicit mutation).
-`chat_evidence_selection` selects sealed typed assertions with exact displays,
-units, Product/path, availability, requested/fulfilled/lost/service fields and refs.
-Unknown stays distinct from zero, no-winner from blocked/technical failure and
-failed retained winners from available recommendations. Multiple possible pairs
-clarify instead of selecting the first; pairwise changes retain to-minus-from
-direction and do not imply global ranking, probability or causal procurement.
+Chat has independent CHAT_* flags/model/routes/bounds, default OFF. New work pins
+prompt/3, chat_assertions/3 and conversational_assertions/2. The provider writes
+real prose plus typed assertion proposals (fact/role/entity/path/value/unit/
+polarity). Proposals are reconciled to sealed facts; citations/slots alone do not
+validate prose. `chat_assertions` separately checks material predicates, exact
+numeric/unit binding, polarity/scope/identity and residual unsupported words.
+Non-authoritative connective phrasing can vary; the legacy grammar is retained
+only for supported complex/proof subsets. This is bounded deterministic checking,
+not general semantic entailment. Reviewer models are not used/enabled.
 
-`chat_grounding` is a deliberately conservative compositional assertion grammar:
-each COMPLETE clause must parse to an issued fact with exact values, role, unit,
-entity/path and polarity. Multi-clause output must account for every clause and
-every required fact exactly once. Merely existing citations are insufficient.
-Unknown additions, positive selection on no-winner, wrong units/numbers/path,
-certification/global/causal/actual/probability claims, generic nonanswers or missing
-main content reject the WHOLE generation into a topic-specific factual fallback.
-It is not general natural-language entailment: legitimate paraphrases outside the
-grammar can fall back. No model judge, nearest-number repair, sentence removal or
-salvage is used. Required backend safety qualifiers are composed for both model
-and fallback outputs, including proposal/viewed-option scope for colloquial purchase
-wording. They are not post-hoc repairs. Stored model text/claims plus qualifiers
-are revalidated on replay against pinned evidence and the same final contract.
+Each independent assertion is a repair/removal boundary. Exact numeric replacement
+requires one unambiguous sealed fact with matching role/entity/path/unit and a
+single amount, then full revalidation. No nearest-number or unit repair. Invalid
+optional assertions or redundant assertions may be trimmed as whole units; missing
+main obligations or unverified material main text require regeneration/fallback.
+A maximum of2 completions (first plus one semantic regeneration) share a request
+deadline and worst-case cost reservation. Feedback contains failure codes and only
+original permitted facts/wording, never new authority from output. Unknown transport
+outcomes, schema/refusal/provider failures are not automatically retried. Final
+coverage and grounding are rechecked. Dispositions distinguish ACCEPTED, REPAIRED,
+TRIMMED, REGENERATED and FALLBACK, with safe original failure traces. Model OFF uses
+the same scoped deterministic facts. Summary/import behavior remains independent.
+
+Replay dispatches by pinned renderer/validator version: old /1-/2 receipts and
+old generation plans use their pinned renderer/selector/grammar. New selection
+plan/3 and deterministic renderer/4 add proof obligations; implicit plan/2 and
+renderer/3 retain the earlier obligations, including L3.1 development receipts. New context
+and empty diagnostic fields are elided in old canonical shapes. No original
+live finals are rewritten. No new migration/table/service/endpoint is required.
 
 Legacy assistant_message/1 deterministic receipts remain immutable/readable.
 Additive0030 chat_generations owns accepted/running/completed/failed claims, pinned

@@ -25,7 +25,7 @@ def select_chat_evidence(evidence,request,scope):
             paths+=('/overview/recommendation_available','/overview/explanation','/option/option_id')
         ids=refs(*paths)
         key='f-'+digest('chat-fact/1',[evidence.identity,kind,display,unit,entity,path,ids])[:20]
-        cards.append(FactCard(fact_id=key,kind=kind,meaning=meaning,display=display,unit=unit,
+        cards.append(FactCard(fact_id=key,kind=kind,meaning=meaning,display=str(display) if display is not None else None,unit=unit,
             entity_id=entity,path=path,evidence_ids=ids,requested=requested,lost_sales=lost_sales,service_percent=service_percent,option_role=role))
     o=evidence.overview;option=evidence.option
     if not scope.clarification and not backend_only:

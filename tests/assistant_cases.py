@@ -74,3 +74,11 @@ def row_for(record):
     return SimpleNamespace(record_json=exact_json(record),record_digest=digest('aggregate',record),revision=1,
         id=record.run_id,actor_id=record.actor_id,store_id=record.store_id,operation=record.operation,
         key_digest=record.key_digest,request_digest=record.request_digest,status=record.status,accepted_at=record.accepted_at)
+
+
+def realistic_record(*,actor_id=UUID(int=6001)):
+    """Already-frozen two-option milk case; no engine/solver in test or chat reads."""
+    raw=frozen_case('conversational_realistic')
+    raw['actor_id']=str(actor_id)
+    for row in raw['public_audit']:row['actor_id']=str(actor_id)
+    return PlanningRunRecord.model_validate(raw,context={'retained_consistency':True})

@@ -10,15 +10,20 @@ engine/provider network. Cold misses no longer require cached verification. See
 [implementation/limits](features/DECISION_ASSISTANT.md) and
 [summary / conversational chat contract](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
 
-- L3 WIP implemented: AS03 optional conversational prose, sealed scoped facts,
+- L3.1 WIP (after local L3 checkpoint f9dba875): structured context/pending
+  clarification, question obligations, typed assertions/prose checks and bounded
+  repair/one regeneration. Existing L3 implemented: AS03 optional conversational prose, sealed scoped facts,
   bounded user-history context, clarification, independently configured provider,
   deterministic assertion grammar/coverage checks and durable provider lifecycle.
   No what-if/ordering/config/inventory writes. Finite resolution and conservative
   grammar may reject legitimate paraphrases; general language entailment/quality
   remains unverified. Summary presentation and import behavior remain separate.
   Live acceptance remains NOT PASSED:10 progressive attempts retained original
-  fallback finals; final wording fixes have offline AS03 acceptance only. A fresh
-  fixed-version corpus with separate authorization is still required, not started.
+  fallback finals; final wording fixes have offline AS03 acceptance only. The separately authorized L3.1 synthetic batch uses a new ledger;
+  final-source live acceptance remains PENDING after6 calls (3 development
+  accepted; tradeoff false reject/unknown timeout then freeze2 HTTP429). No paid
+  retry/model change. Final context/pair fixes are offline-only; current limits
+  and cost are in the feature/runbook, separate from original NOT_PASSED.
 - L4 pending: separately approved frozen-evidence live evaluation, cost/attempt
   caps, raw/final diagnostics and legacy regression corpus/paraphrase coverage.
   Narrow separately authorized synthetic summary/chat smokes retain every attempt,

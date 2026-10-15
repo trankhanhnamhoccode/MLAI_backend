@@ -13,6 +13,8 @@ from app.application.use_cases.assistant_chat import AssistantChat
 from app.application.contracts.chat_generation import ChatProfile,ConversationalOutput,ModelStatement,FactCard
 from app.application.contracts.assistant_chat import ChatRequest,ChatDiagnostics
 from app.application.chat_grounding import canonical_clause
+from app.application.chat_assertions import proposal
+from app.application.contracts.chat_generation import SemanticOutput
 from app.infrastructure.conversational_provider import ChatProviderResult
 from app.models import ChatGenerationRow,AssistantMessage,StoreMembership,PlanningRun
 from app.models.auth import MembershipGrant
@@ -24,15 +26,15 @@ class Valid:
     def generate(self,payload,profile,*,before_completion=None):
         if before_completion:before_completion()
         self.calls+=1
-        cards=[FactCard(**f) for f in payload['facts']]
+        cards=[FactCard(**{k:v for k,v in f.items() if k!='wording'}) for f in payload['facts']]
         statements=[]
         for card in cards:
             text=canonical_clause(card,payload['language'])+'.'
             if card.kind=='total':text=f'Phương án này có tổng chi phí là {card.display} {card.unit}.'
-            statements.append(ModelStatement(text=text,fact_ids=(card.fact_id,)))
-        return ChatProviderResult(ConversationalOutput(statements=tuple(statements)),ChatDiagnostics(reason='NONE',
+            statements.append(proposal(card,text))
+        return ChatProviderResult(SemanticOutput(assertions=tuple(statements)),ChatDiagnostics(reason='NONE',
             disposition='ACCEPTED',model=profile.model,resolved_model=profile.model,provider='Synthetic',attempts=1,
-            prompt_version='conversational_chat_prompt/2',validator_version='chat_assertion_grammar/2'))
+            prompt_version='conversational_chat_prompt/3',validator_version='chat_assertions/3'))
 
 
 @pytest.fixture
@@ -52,7 +54,7 @@ def test_actual_as03_free_prose_durable_replay_profile_change_and_no_get_generat
         assert fresh.scalar(select(func.count()).select_from(ChatGenerationRow))==1
         generation=fresh.scalar(select(ChatGenerationRow));assert generation.status=='completed'
         assert generation.record_json['profile']['model']=='synthetic-gemini'
-        assert generation.record_json['output']['statements']
+        assert generation.record_json['output']['assertions']
         assert fresh.scalar(select(AssistantMessage)).record_json['response']==answer
         assert fresh.get(PlanningRun,record.run_id).record_digest==body['expected_evidence_version']
     service.profile=ChatProfile(enabled=False,model='different-config')
@@ -94,8 +96,8 @@ def test_rejection_fallback_keeps_topic_coverage_and_replay(conversation,failure
     class Bad(Valid):
         def generate(self,*args,**kwargs):
             if failure=='timeout':self.calls+=1;raise TimeoutError()
-            result=super().generate(*args,**kwargs);statements=result.output.statements
-            output=result.output.model_copy(update={'statements':statements[:-1] if failure=='missing' else
+            result=super().generate(*args,**kwargs);statements=result.output.assertions
+            output=result.output.model_copy(update={'assertions':tuple(a for a in statements if a.fact_id not in args[0]['required']) if failure=='missing' else
                 (statements[0].model_copy(update={'text':'Tổng chi là 9000 kg vì nhu cầu tăng.'}),*statements[1:])})
             return ChatProviderResult(output,result.diagnostics)
     provider=Bad();service.provider=provider
@@ -103,7 +105,7 @@ def test_rejection_fallback_keeps_topic_coverage_and_replay(conversation,failure
     assert response.status_code==200,response.text
     result=response.json()['data']
     assert result['source']=='deterministic_fallback' and result['diagnostics']['reason']==reason
-    assert 'Tổng chi' in result['answer'] and 'Ngân sách' in result['answer']
+    assert 'Tổng chi' in result['answer'] and result['claims']
     assert state[5].post(path,headers=headers,json=body).json()['data']==result
     assert provider.calls==1
 
@@ -250,7 +252,7 @@ def test_model_off_natural_question_uses_same_factual_family_and_preserves_recei
     assert response.status_code==200,response.text
     result=response.json()['data']
     assert result['source']=='deterministic_fallback' and 'Tổng chi' in result['answer']
-    assert result['diagnostics']['validator_version']=='decision_chat_renderer/2'
+    assert result['diagnostics']['validator_version']=='decision_chat_renderer/4'
     service.profile=ChatProfile(enabled=True,model='synthetic-gemini')
     assert state[5].post(path,headers=headers,json=body).json()['data']==result
     assert service.provider.calls==0
@@ -266,9 +268,8 @@ def test_elliptical_purchase_form_is_accepted_offline_through_as03(conversation)
     class Ellipsis(Valid):
         def generate(self,payload,profile,*,before_completion=None):
             result=super().generate(payload,profile,before_completion=before_completion)
-            card=FactCard(**payload['facts'][0])
-            output=ConversationalOutput(statements=(ModelStatement(
-                text=f'Phương án được khuyến nghị là mua {card.display} {card.unit}.',fact_ids=(card.fact_id,)),))
+            card=FactCard(**{k:v for k,v in payload['facts'][0].items() if k!='wording'})
+            output=SemanticOutput(assertions=(proposal(card,f'Phương án được khuyến nghị là mua {card.display} {card.unit}.'),))
             return ChatProviderResult(output,result.diagnostics)
     provider=Ellipsis();service.provider=provider
     body={**body,'expected_evidence_version':row.record_digest,'question':'Còn nó cần mua bao nhiêu?',
@@ -278,9 +279,9 @@ def test_elliptical_purchase_form_is_accepted_offline_through_as03(conversation)
     assert response.status_code==200,response.text
     result=response.json()['data']
     assert result['source']=='model' and result['ingredient_id']==str(UUID(int=200))
-    assert '20 g' in result['answer'] and 'chỉ là đề xuất' in result['answer']
+    assert '20 g' in result['answer'] and 'đề xuất' in result['answer']
     assert state[5].post(path,headers=headers,json=body).json()['data']==result and provider.calls==1
-    target=Path('runtime/assistant-test/offline-ellipsis-replay.json');target.parent.mkdir(parents=True,exist_ok=True)
+    target=Path('runtime/assistant-test/l31/offline-ellipsis-replay.json');target.parent.mkdir(parents=True,exist_ok=True)
     target.write_text(json.dumps(dict(mode='OFFLINE_FAKE_PROVIDER',
         note='Regression for the wording form observed in live attempt10; new synthetic evidence IDs, not a new live completion.',
         request=body,response=result),ensure_ascii=False,indent=2),encoding='utf8')

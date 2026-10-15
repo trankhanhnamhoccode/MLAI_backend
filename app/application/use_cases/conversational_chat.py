@@ -1,6 +1,8 @@
-"""AS03 acceptance/one attempt/publication, explicit replay without paid recovery."""
+"""AS03 bounded generation/publication, explicit replay without paid recovery."""
 from datetime import datetime,timezone
 from uuid import uuid4
+import time
+from decimal import Decimal
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from app.application.contracts.auth import AuthError
@@ -41,17 +43,25 @@ class ConversationalChat:
         self.owner=assistant;self.engine=assistant.engine
         self.clock=lambda:datetime.now(timezone.utc)
 
-    def prepare(self,token,run,request):
+    def prepare(self,token,run,request,version='chat_assertions/3',selection_version='chat_evidence/3'):
         record,view=self.owner.planning.read_record(token,run,evidence_only=True)
         if view.response_version!=request.expected_evidence_version:raise ConfigurationError('EVIDENCE_VERSION_CONFLICT',409)
         winner=view.result.winner_option_id if view.result else None
         evidence=project_evidence(record,view,option_id=request.option_id or winner,include_comparisons=True)
-        scope=resolve_question(request,evidence)
+        context=None
+        if version=='chat_assertions/3':
+            from app.application.chat_context import resolve_context
+            request,scope,context=resolve_context(request,evidence)
+        else:scope=resolve_question(request,evidence)
         option=request.option_id or scope.option_id
         if scope.option_id and not scope.clarification:
             evidence=project_evidence(record,view,option_id=option,include_comparisons=True)
         if scope.ingredient_id is not None and not scope.clarification:
             evidence=project_evidence(record,view,option_id=option,ingredient_id=scope.ingredient_id,include_comparisons=True)
+        if version=='chat_assertions/3':
+            from app.application.conversational_evidence import select_evidence
+            if context:context=context.model_copy(update={'option_id':evidence.option.option_id if evidence.option else None})
+            return evidence,select_evidence(evidence,request,scope,context,selection_version)
         return evidence,select_chat_evidence(evidence,request,scope)
 
     def publish(self,claimed,answer=None,output=None,error=None,*,token=None,csrf=None):
@@ -100,16 +110,21 @@ class ConversationalChat:
             session.commit()
         if record.status=='running':raise ConfigurationError('GENERATION_IN_PROGRESS',409)
         if record.status=='failed':raise ConfigurationError('GENERATION_FAILED',409)
-        evidence,plan=self.prepare(token,run,record.request)
+        evidence,plan=self.prepare(token,run,record.request,record.validator_version,record.selection_version)
         if digest('chat-evidence',evidence)!=record.evidence_digest or digest('chat-plan',plan)!=record.plan_digest:
             raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
         result=record.result;diag=result.diagnostics
         if diag.attempts and diag.prompt_version!=record.prompt_version:raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
+        if diag.attempts and diag.validator_version!=record.validator_version:raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
         if result.source=='model':
-            if not record.profile.enabled or diag.reason!='NONE' or diag.disposition!='ACCEPTED' or \
-                diag.model!=record.profile.model or diag.resolved_model!=record.profile.model or diag.attempts!=1 or record.output is None:
+            if not record.profile.enabled or diag.reason!='NONE' or diag.disposition not in ('ACCEPTED','REPAIRED','TRIMMED','REGENERATED') or \
+                diag.model!=record.profile.model or diag.resolved_model!=record.profile.model or not 1<=diag.attempts<=record.profile.completion_limit or record.output is None:
                 raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
-            try:expected=model_answer(record.output,plan,diag)
+            try:
+                if record.validator_version=='chat_assertions/3':
+                    from app.application.chat_assertions import semantic_answer
+                    expected=semantic_answer(record.output,plan,diag)
+                else:expected=model_answer(record.output,plan,diag)
             except (ValueError,ValidationError) as error:raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503) from error
         else:
             if record.output is not None or diag.reason=='NONE':raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
@@ -140,7 +155,9 @@ class ConversationalChat:
                     claimed=ChatGeneration(generation_id=uuid4(),actor_id=actor,store_id=store,run_id=run,key_digest=kd,
                         request_digest=fingerprint,request=request,profile=self.owner.profile,
                         evidence_digest=digest('chat-evidence',evidence),plan_digest=digest('chat-plan',plan),
-                        process=current_process(),claim_token=uuid4(),created_at=self.clock())
+                        process=current_process(),claim_token=uuid4(),created_at=self.clock(),prompt_version='conversational_chat_prompt/3',
+                        validator_version='chat_assertions/3',schema_version='conversational_assertions/2')
+                    claimed=claimed.model_copy(update={'selection_version':'chat_evidence/3'})
                     repo.accept(claimed);inserted=True
                 session.info['chat_accept']=inserted
                 session.commit()
@@ -162,26 +179,10 @@ class ConversationalChat:
             if plan.fallback.kind=='answer' and not plan.facts:
                 answer=plan.fallback.model_copy(update={'diagnostics':ChatDiagnostics(reason='WORDING_UNSUPPORTED',model=claimed.profile.model)})
             if plan.fallback.kind=='answer' and plan.facts:
-                if len(plan.facts)>8:
+                if len(plan.required)>16 or len(plan.facts)>24:
                     answer=plan.fallback.model_copy(update={'diagnostics':ChatDiagnostics(reason='INPUT_LIMIT',model=claimed.profile.model)})
                 else:
-                    # All sessions and acceptance locks have closed before preflight/provider.
-                    try:
-                        presented=self.owner.provider.generate(payload_for(plan,request),claimed.profile,
-                            before_completion=lambda:self.before_completion(token,claimed,csrf))
-                    except (TimeoutError,OSError):
-                        from app.infrastructure.conversational_provider import ChatProviderResult
-                        presented=ChatProviderResult(None,ChatDiagnostics(reason='PROVIDER_UNAVAILABLE',model=claimed.profile.model,attempts=1,
-                            prompt_version=claimed.prompt_version,validator_version=claimed.validator_version))
-                    diag=ChatDiagnostics.model_validate(presented.diagnostics.model_dump())
-                    compatible=diag.model==claimed.profile.model and diag.resolved_model==claimed.profile.model and diag.provider and diag.attempts==1
-                    if diag.disposition=='ACCEPTED' and not compatible:
-                        diag=diag.model_copy(update={'model':claimed.profile.model,'reason':'GROUNDING_REJECTED','disposition':'FALLBACK'})
-                    if presented.output is not None and diag.reason=='NONE' and diag.disposition=='ACCEPTED':
-                        try:answer=model_answer(presented.output,plan,diag);output=presented.output
-                        except GroundingFailure as error:
-                            answer=plan.fallback.model_copy(update={'diagnostics':diag.model_copy(update={'reason':error.reason,'disposition':'FALLBACK'})})
-                    else:answer=plan.fallback.model_copy(update={'diagnostics':diag})
+                    answer,output=self.generate(claimed,plan,request,token,csrf)
             self.publish(claimed,answer,output,token=token,csrf=csrf)
         except AuthError as error:
             try:self.publish(claimed,error='AUTHORITY_CHANGED')
@@ -201,3 +202,56 @@ class ConversationalChat:
                 if isinstance(error,SQLAlchemyError):raise AuthError('SERVICE_UNAVAILABLE',503) from error
                 raise
         return self.read(token,run,request,key,csrf)
+
+    def generate(self,claimed,plan,request,token,csrf):
+        from app.application.chat_assertions import inspect_output,semantic_answer
+        from app.application.contracts.chat_generation import SemanticOutput
+        from app.infrastructure.conversational_provider import ChatProviderResult
+        from pydantic import ValidationError
+        started=time.monotonic();payload=payload_for(plan,request);trace=[];attempts=0;cost=Decimal(0);unknown_cost=False
+        inputs=outputs=0;reserved=Decimal(0);last=None
+        # The complete serialized request is byte-bounded; byte count plus1024
+        # conservatively bounds text tokens, including protocol overhead.
+        bound=(Decimal(claimed.profile.input_bytes+1024)*Decimal(claimed.profile.max_prompt_price)+
+            Decimal(claimed.profile.max_tokens)*Decimal(claimed.profile.max_completion_price))/1000000
+        for iteration in range(claimed.profile.completion_limit):
+            remaining=claimed.profile.deadline_seconds-(time.monotonic()-started)
+            if remaining<=0 or reserved+bound>Decimal(claimed.profile.max_request_cost_usd):
+                trace.append('SHARED_DEADLINE_OR_COST_BOUND');break
+            profile=claimed.profile.model_copy(update={'deadline_seconds':remaining})
+            try:
+                presented=self.owner.provider.generate(payload,profile,before_completion=lambda:self.before_completion(token,claimed,csrf))
+            except (TimeoutError,OSError):
+                presented=ChatProviderResult(None,ChatDiagnostics(reason='PROVIDER_UNAVAILABLE',model=claimed.profile.model,attempts=1,
+                    prompt_version=claimed.prompt_version,validator_version=claimed.validator_version))
+            diag=presented.diagnostics;last=diag
+            attempts+=diag.attempts
+            if diag.attempts:
+                reserved+=bound
+                if diag.cost_usd is None:unknown_cost=True
+                else:cost+=Decimal(diag.cost_usd)
+            inputs+=diag.input_tokens or 0;outputs+=diag.output_tokens or 0
+            updates=dict(attempts=attempts,input_tokens=inputs or None,output_tokens=outputs or None,
+                cost_usd=None if unknown_cost else str(cost),latency_ms=int((time.monotonic()-started)*1000),failure_trace=tuple(trace))
+            diag=diag.model_copy(update=updates)
+            compatible=diag.model==claimed.profile.model and diag.resolved_model==claimed.profile.model and diag.provider and presented.diagnostics.attempts==1
+            if presented.output is None or diag.reason!='NONE' or diag.disposition!='ACCEPTED' or not compatible:
+                # Transport/schema/refusal/unknown billing outcomes are terminal:
+                # regeneration is only for a known schema-valid semantic result.
+                return plan.fallback.model_copy(update={'diagnostics':diag.model_copy(update={'reason':diag.reason if diag.reason!='NONE' else 'GROUNDING_REJECTED','disposition':'FALLBACK'})}),None
+            try:checked=inspect_output(SemanticOutput.model_validate(presented.output),plan,request.locale)
+            except ValidationError:
+                return plan.fallback.model_copy(update={'diagnostics':diag.model_copy(update={'reason':'SCHEMA_REJECTED','disposition':'FALLBACK'})}),None
+            trace.extend(checked.failures)
+            if checked.output is not None:
+                diag=diag.model_copy(update={'disposition':'REGENERATED' if iteration else checked.disposition,'failure_trace':tuple(trace)})
+                return semantic_answer(checked.output,plan,diag),checked.output
+            payload={**payload,'feedback':{'failures':list(checked.failures),
+                'permitted_wording':[{k:f[k] for k in ('fact_id','wording')} for f in payload['facts']],
+                'instruction':'Use only the original sealed facts. Use permitted wording for unsupported material prose; cover required facts.'}}
+        if last is None:last=ChatDiagnostics(reason='PREFLIGHT_REJECTED',model=claimed.profile.model,prompt_version=claimed.prompt_version,validator_version=claimed.validator_version)
+        reason='COVERAGE_REJECTED' if any('MISSING_MAIN' in t for t in trace) else 'GROUNDING_REJECTED'
+        diag=last.model_copy(update={'reason':reason,'disposition':'FALLBACK','failure_trace':tuple(trace),'attempts':attempts,
+            'input_tokens':inputs or None,'output_tokens':outputs or None,'cost_usd':None if unknown_cost else str(cost),
+            'latency_ms':int((time.monotonic()-started)*1000)})
+        return plan.fallback.model_copy(update={'diagnostics':diag}),None

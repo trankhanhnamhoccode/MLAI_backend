@@ -140,6 +140,53 @@ pytest PASS alone is not a model quality result; evolving WIP versions are not a
 accuracy benchmark. Independent summary live artifacts/results remain unchanged.
 
 <a id="customer-self-service"></a>
+### L3.1 synthetic conversational verification (separate batch)
+
+CURRENT FACT: original conversational-live remains immutable/exhausted. New batch
+conversational-l31-live owns distinct durable attempt-N reservations, freeze files,
+full provider request/preflight/facts/prompt/schema, raw responses and AS03 request/
+final/replay/failure traces. No session/Authorization headers are exported. Model
+is configured Gemini2.5Flash, default OpenRouter routing without fallback; current
+metadata support/prices are checked before every POST. Up to30 completions including
+regeneration, aggregate USD1.00. Input<=24000 bytes, conservative36864 input tokens,
+output<=1200 at capped USD0.3/2.5 per million reserves USD0.0140592/completion,
+USD0.421776 for all30. Unknown costs keep their reservation. No ledger reset.
+
+```powershell
+# Offline and isolated assistant SQL only; no paid calls by ordinary pytest.
+& $assistantPython -B -m pytest tests/unit/test_chat_l31.py tests/unit/test_chat_l31_corpus.py tests/unit/test_chat_l31_budget.py tests/live/test_chat_l31_live.py -q -p no:cacheprovider
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_chat_l31.py tests/integration/test_conversational_chat.py tests/integration/test_assistant_summary.py -q -p no:cacheprovider
+# Paid only for the explicitly authorized L3.1 batch; not an automatic retry.
+& $assistantPython -B -m scripts.conversational_l31_live --allow-paid-synthetic-max-30-usd-1.00 --case all
+```
+
+Freeze app/fixture hash before evaluation. If source changes, previous calls become
+development evidence and only a fresh fixed-version subset is acceptance; all
+attempts/costs remain in the same batch. Stop on systemic failure, fix offline,
+run affected tests before another paid call. Review facts, main-answer completeness
+and naturalness separately; HTTP200/source=model are not a quality oracle.
+
+CURRENT FACT batch outcome:6 completions; known cost USD0.0065817, unknown
+attempts5/6 reserve USD0.0281184, known+unknown upper USD0.0347001 (all6 full
+reservations USD0.0843552). Attempts1-5 are development:3 accepted cost/proof/
+Ingredient, tradeoff wording false reject and timeout during semantic regeneration.
+Freeze2 budget returned HTTP429, so final live acceptance is PENDING; no paid call
+after429. Final identity-conflict/proof-assessment fixes are offline-only; new selection
+plan/3 and renderer/4 preserve prior implicit plan/2 and renderer/3 obligations. Do not retry
+an unknown completion or call this a complete7-case final-version live PASS.
+Review runtime/assistant-test/conversational-l31-live/index.json and each attempt/
+raw/final; offline-pair-replay.json in runtime/assistant-test/l31 explicitly uses
+FAKE provider/new scoped IDs, not a rewritten live result.
+
+Static realistic fixture has captured two milk labels, distinct5/10VND baskets,
+50/100 percent Product service and exact per-Product/path deltas. It was authored
+once with explicitly fixed baskets/exact serving, not search/solver/forecast;
+read/replay tests never execute engines. Wording corpus labels are hand-authored:
+14 cases, zero false accepts and one documented legitimate unsupported paraphrase
+in the small probe; this does not prove general NLP correctness. Context, repair,
+regeneration and old pinned receipt compatibility have separate SQL tests. L2
+summary remains ordering/tone presentation; no production reviewer is enabled.
+
 ## CURRENT FACT — setup khách hàng từ số0
 
 Checkout chính: `D:\hocc_bk\ai\proj\projectMLAI\backend`, main, `.venv` riêng.

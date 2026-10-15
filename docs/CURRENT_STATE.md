@@ -1,6 +1,6 @@
 # Current state
 
-## CURRENT FACT — Decision Assistant L3 retained chat / L2 summary
+## CURRENT FACT - Decision Assistant L3.1 retained chat / L2 summary
 
 AS03 POST assistant/messages now supports optional model-generated conversational
 prose over sealed retained facts, conservative assertion/coverage validation and
@@ -9,13 +9,19 @@ default OFF; summary/import flags/key presence never enable chat. Migration0030
 adds a fenced provider generation after0029 immutable receipts;76 operations/69
 paths,76 tables including Alembic. Only owned assistant test DB migrated. Existing
 0029 receipts remain readable; no conversation platform/worker/engine execution or
-business state mutation. Foundation checkpoint a3b83799 includes L2/deterministic
-chat only; conversational additions remain WIP. Current implementation/coverage
+business state mutation. Foundation a3b83799 includes L2/deterministic chat; local L3 checkpoint
+f9dba875a663d833fcbc4657dfda3ddbdb719774 records original live NOT_PASSED.
+L3.1 WIP adds bounded structured context, question obligations, typed assertions,
+independent prose checks and bounded repair/one regeneration. No new migration.
+Old pinned replay remains readable; summary/import stay separate. Current implementation/coverage
 limits and synthetic live evidence are owned by the feature document/runbook.
-Conversational live acceptance is NOT PASSED: progressive10 attempts all retained
-original fallback finals; final wording fixes pass offline AS03 replay, with no
-paid call after the exhausted cap. Keep this distinct from the accepted summary
-presentation smoke and from a future fixed-version L4 evaluation.
+Original L3 live remains NOT_PASSED (10 immutable fallback finals). L3.1 final
+live acceptance is PENDING:6 new completions,3 development accepted responses,
+tradeoff wording false rejection then unknown regeneration timeout, followed by
+HTTP429 on freeze2 budget. Paid work stopped; no blind retry/model change. Known
+cost USD0.0065817 plus unknown-call reservation USD0.0281184 gives USD0.0347001
+upper bound. Final context/semantic and proof-assessment fixes (plan/3, renderer/4) have offline evidence, not a fresh full
+live subset. Original artifacts remain byte-identical. See feature/runbook.
 Explicit synthetic Gemini smoke exercised actual AS01/AS02: first routing guard
 fallback corrected, second accepted;2 calls,$0.0003932 total API-reported cost.
 This verifies constrained presentation, not unrestricted prose or customer data.

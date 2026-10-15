@@ -26,8 +26,11 @@ test tooling, not normal startup or a product permission.
 ## CURRENT FACT ? dependency direction
 
 Assistant L3 AS03 wires AssistantChat to PublicPlanning retained consistency reads,
-finite resolution, typed evidence selection, optional task-specific conversational
-provider and deterministic assertion grammar/fallback. No solver/worker/live catalog
+bounded structured context, question-specific obligations, typed assertion proposals,
+independent deterministic surface/slot checks and optional conversational provider.
+One semantic regeneration shares deadline/cost bounds; independent optional trimming
+and unique exact numeric-slot repair require final revalidation. Legacy grammar
+remains pinned for old receipts and a supported complex-assertion subset. No solver/worker/live catalog
 dependency. Existing deterministic receipts remain immutable/readable; additive
 chat_generations owns accepted/running/completed/failed claim fencing and pins
 request/profile/evidence/selection/prompt/schema/validator. Current authority repeats

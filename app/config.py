@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     chat_deadline_seconds: float = Field(default=30,gt=0,le=60)
     chat_max_prompt_price: str = '0.3'
     chat_max_completion_price: str = '2.5'
+    chat_completion_limit: int = Field(default=2,ge=1,le=2)
+    chat_max_request_cost_usd: str = '0.10'
     summary_llm_enabled: bool = False
     summary_model: str | None = None
     summary_providers: tuple[str,...] = ()

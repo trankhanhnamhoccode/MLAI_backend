@@ -2,6 +2,15 @@
 
 ## CURRENT FACT — isolated assistant L2 schema
 
+CURRENT FACT L3.1 keeps head0030 and the existing tables/triggers. New JSON
+generation records pin prompt/3, chat_assertions/3 and assertions/2, structured
+request context, per-request completion/cost limits and final safe failure traces.
+New JSON selection_version pins plan/3; absent means legacy plan/2 and is elided
+on canonical serialization. Existing L3.1 proof receipts do not acquire new
+eligibility obligations during replay. No migration is needed for this JSON field.
+Old records use their pinned selector/renderer/grammar on read; serializers elide
+new absent fields to preserve original canonical hashes. No data rewrite/backfill.
+
 L3 conversational head0030_conversational_chat depends only on0029. All sibling
 revision directories were inspected before choosing the unused revision; no head
 merge or applied-migration edits. Additive chat_generations brings this worktree

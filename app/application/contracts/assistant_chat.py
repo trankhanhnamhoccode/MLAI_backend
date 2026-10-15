@@ -1,7 +1,7 @@
 """L3 bounded question/history and server-owned evidence answer."""
 from typing import Literal
 from uuid import UUID
-from pydantic import Field, model_validator
+from pydantic import Field, model_validator, model_serializer
 from app.application.contracts.auth import DTO
 from app.application.contracts.plan_summary import SummaryRequest, SummaryMeta
 from app.application.contracts.decision_evidence import EvidenceReference
@@ -12,10 +12,40 @@ class HistoryMessage(DTO):
     content: str = Field(min_length=1,max_length=2000)
 
 
+class PendingQuestion(DTO):
+    original_question: str = Field(min_length=1,max_length=2000)
+    candidate_ids: tuple[UUID,...] = Field(max_length=30)
+    entity_kind: Literal['ingredient','product'] = 'ingredient'
+
+    @model_serializer(mode='wrap')
+    def retained_shape(self,handler):
+        data=handler(self)
+        if self.entity_kind=='ingredient':data.pop('entity_kind',None)
+        return data
+
+
+class ChatContext(DTO):
+    run_id: UUID
+    evidence_version: str
+    option_id: str | None = None
+    comparison_pair: tuple[str,str] | None = None
+    ingredient_id: UUID | None = None
+    product_id: UUID | None = None
+    pending: PendingQuestion | None = None
+    topic: Literal['purchase','stock','daily_shortage','daily_ending'] | None = None
+
+
 class ChatRequest(SummaryRequest):
     question: str = Field(min_length=1,max_length=2000)
     ingredient_id: UUID | None
     history: tuple[HistoryMessage,...] = Field(max_length=6)
+    context: ChatContext | None = None
+
+    @model_serializer(mode='wrap')
+    def retained_shape(self,handler):
+        data=handler(self)
+        if self.context is None:data.pop('context',None)
+        return data
 
     @model_validator(mode='after')
     def bounded(self):
@@ -39,12 +69,24 @@ class OptionCandidate(DTO):
     source_strategies: tuple[Literal['lean','balanced','protected'],...]
 
 
+class ProductCandidate(DTO):
+    product_id: UUID
+    name: str
+
+
 class Clarification(DTO):
     code: Literal['ENTITY_AMBIGUOUS','ENTITY_CONTEXT_MISMATCH','QUERY_UNSUPPORTED']
     question: str
     candidates: tuple[IngredientCandidate,...]
     original_question: str
     option_candidates: tuple[OptionCandidate,...] = ()
+    product_candidates: tuple[ProductCandidate,...] = ()
+
+    @model_serializer(mode='wrap')
+    def retained_shape(self,handler):
+        data=handler(self)
+        if not self.product_candidates:data.pop('product_candidates',None)
+        return data
 
 
 class ChatDiagnostics(DTO):
@@ -55,16 +97,23 @@ class ChatDiagnostics(DTO):
     model: str | None = None
     resolved_model: str | None = None
     provider: str | None = None
-    attempts: int = Field(default=0,ge=0,le=1)
+    attempts: int = Field(default=0,ge=0,le=2)
     input_tokens: int | None = Field(default=None,ge=0)
     output_tokens: int | None = Field(default=None,ge=0)
     cost_usd: str | None = None
     latency_ms: int | None = Field(default=None,ge=0)
     finish_reason: str | None = None
-    disposition: Literal['ACCEPTED','FALLBACK','CLARIFICATION'] = 'FALLBACK'
+    disposition: Literal['ACCEPTED','REPAIRED','TRIMMED','REGENERATED','FALLBACK','CLARIFICATION'] = 'FALLBACK'
     prompt_hash: str | None = None
     schema_hash: str | None = None
     evidence_hash: str | None = None
+    failure_trace: tuple[str,...] = ()
+
+    @model_serializer(mode='wrap')
+    def retained_shape(self,handler):
+        data=handler(self)
+        if not self.failure_trace:data.pop('failure_trace',None)
+        return data
 
 
 class AssistantResponse(DTO):
@@ -82,6 +131,13 @@ class AssistantResponse(DTO):
     references: tuple[EvidenceReference,...]
     clarification: Clarification | None
     diagnostics: ChatDiagnostics
+    context: ChatContext | None = None
+
+    @model_serializer(mode='wrap')
+    def retained_shape(self,handler):
+        data=handler(self)
+        if self.context is None:data.pop('context',None)
+        return data
 
     @model_validator(mode='after')
     def consistent(self):

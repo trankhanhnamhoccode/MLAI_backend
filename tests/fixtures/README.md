@@ -29,3 +29,11 @@ new accuracy/Planning evidence. They preserve old /2 semantics and original numb
 the legacy ZIP is not a runtime dependency.
 Integration seed tools create deterministic examples through approved commands;
 they never imply a production seed or permission to reseed an existing DB.
+
+The `decision_assistant/conversational_realistic.json` fixture is a static interned
+PlanningRun: two captured milk labels, fixed1/1 versus2/2 pack baskets,5/10VND and
+50/100 percent service. A one-time exact evaluator authored fixed baskets without
+search/solver/forecast; consumption only decodes/consistency-checks the graph.
+`l31_wording_corpus.json` has hand-authored expected facts/main-answer labels;
+saved-live wording forms are development regression, not unseen evidence. Probe
+false rejections are reported without changing their valid labels.
