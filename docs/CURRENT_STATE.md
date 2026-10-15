@@ -1,5 +1,18 @@
 # Current state
 
+## CURRENT FACT — D1 data readiness audit/design
+
+Isolated `backend-data-readiness` / `feat/data-readiness` from main
+`052cddee075e165af2c0cea42ebc2e616c396760`: documentation-only D1, chưa runtime/API
+implementation. [Canonical policy/matrix](features/DATA_READINESS_POLICY.md) tách
+facts theo action/scope, current behavior, gaps và PROPOSAL D2–D5. Main đã có sparse
+baseline, recognized trained fallback, stockout warnings, partial Planning scope và
+confirmed declarations. Readiness default-mode restriction, offer-level blockers và
+warning projections còn cần refinement; không bỏ integrity/unknown-fee/safety guards.
+Challenger-only E3 real benchmark blocked, E4 counterfactual synthetic incomplete/WIP
+không nhập main. Main HTTPS8103/shelfcash_local và challenger WIP không được sửa;
+D1 không DB/server/training/provider/business tests, chưa commit/push/merge.
+
 ## CURRENT FACT — self-service Store/customer local
 
 Canonical checkout `backend` trên main, own .venv/TLS/runtime/local profile. WIP9

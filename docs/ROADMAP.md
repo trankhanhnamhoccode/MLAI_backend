@@ -1,5 +1,24 @@
 # Remaining work and acceptance gates
 
+## CURRENT FACT / PROPOSAL — data readiness D1–D5
+
+ACCEPTED DECISION: readiness theo facts/semantics của action/scope, không yêu cầu
+đủ sáu files. [Canonical policy](features/DATA_READINESS_POLICY.md) sở hữu source
+matrix, current gaps, issue/assumption proposal, API impact và acceptance cases.
+
+| Slice | Status và gate |
+| --- | --- |
+| D1 audit/policy | Documentation-only trong worktree riêng từ main052cddee; không runtime/guards/API delta; chỉ examples/links/UTF-8/whitespace checks. Dừng chưa commit/push/merge. |
+| D2 forecast eligibility/fallback | PROPOSAL; reuse baseline/trained/stockout/replay, phân loại ineligible/integrity/unavailable; targeted tests gồm all-censored GET. Chưa authorized. |
+| D3 confirmed facts/partial scope | PROPOSAL; reuse declarations/config/provenance, scoped exclusions và sound alternative offers; giữ unknown khác zero. Chưa authorized. |
+| D4 public readiness/warnings | PROPOSAL; additive existing R01/C01/I06/Planning projections, mode semantics review/FE delta/OpenAPI diff; no GET computation. Chưa authorized. |
+| D5 acceptance/benchmark | PROPOSAL; deterministic linked acceptance và protocol mới nếu thử fallback/assumptions; E1–E4 evidence giữ nguyên. Chưa authorized. |
+
+Main đã có baseline và recognized fallback; không mở lại từ đầu hoặc dùng research
+calendar gate chặn product baseline. E3 real accuracy blocked/E4 synthetic incomplete
+thuộc challenger branch/WIP, không tích hợp hoặc đổi kết quả trong D1. Main local
+runtime/config/DB/artifacts và mọi challenger WIP được bảo toàn.
+
 ## CURRENT FACT
 
 Self-service Store/customer local IMPLEMENTED: T03 additive,73/66/head0027/72 tables;
