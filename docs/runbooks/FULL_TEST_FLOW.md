@@ -1,11 +1,75 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="forecast-f3"></a>
+## CURRENT FACT — F3 counterfactual Planning verification
+
+[Canonical F3](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3) owns operational
+admission, synthetic assumptions, frozen arms/limits and interpretation. F2 checkpoint
+is `fcb33abb9c2316d41d564d5653233f6dc4e80a5e`; F3 remains uncommitted WIP.
+Source-faithful remains BLOCKED; these fixtures are explicitly F3_SYNTHETIC and do
+not use08/07 balances as historical June stock. Primary B_COMMON vs C0_COMMON;
+C1_COMMON sensitivity is not selected by forecast or impact evaluation.
+
+```powershell
+$f3Identity = 'e7aa4b531b6f7ed3fb355856fa5145bac0c7472d2df3da6bce7b7fa00afa9586'
+# Read-only admission check, no procurement or training.
+.venv/Scripts/python.exe -m scripts.planning_f3 --enable freeze
+# Fresh process, at most120s: exact fixed-basket evaluation, never re-optimize.
+.venv/Scripts/python.exe -m scripts.verify_planning_f3 --identity $f3Identity
+# Hand/finite oracles, identity/date/unit/mask/fee/mass/no-winner/tamper/budget checks.
+.venv/Scripts/python.exe -m pytest tests/unit/test_planning_f3.py -q
+git diff --check
+```
+
+The historical single batch command is
+`python -m scripts.planning_f3 --enable run --identity <f3Identity>`.
+Do not repeat it or remove/reset `runtime/challenger/f3/bounded-batch-start.json`,
+`execution-claim.json`, resource/progress or case receipts. Source changes/new
+identities are not a new authorization or budget. On timeout retain PARTIAL and
+all completed case files; missing cases are reported, never silently dropped or
+resumed. Freeze drafts without an execution claim were not run.
+
+Frozen population: two latest F2 origins24/06 and01/07, four fixtures/origin,
+three arms,24 runs; one hard300s parent/child batch,≤144 native solves,≤2 solves/
+strategy, cooperative host4s including strategy allocation/validation. Exact
+validation may overrun4s; report actual overrun rather than claiming a hard run SLA.
+Certification only for captured domains≤9 and disabled for tight budget. No cache/
+candidate carries across arms. Arm ordering rotates deterministically by case;
+one repetition only, no score-driven fixture changes/search or seed tuning.
+
+Outputs are hash envelopes in `runtime/challenger/f3/experiments/<f3Identity>/`:
+`setup.json` pins complete common snapshots, forecast-only bindings,102 upstream
+input hashes, host/F2/F3 source and runtime. Per-case JSON retains the full graph,
+strategy proof/search/gaps, actual timings, selected basket or null and separate
+realized result. Realized complete-primary truth is available only for24/06;
+01/07 has one censored outcome, so no complete realized ledger or filled0.
+No winner is not a zero-basket recommendation. The batch hit its hard deadline at
+parent300.016s:19 completed cases,50 native solve attempts,5 missing cases, no retry.
+It was killed before final `metrics.json`/`reconciliation.json` publication. Original
+per-case/oracle/resource/progress and PARTIAL run receipts remain authoritative.
+Read-only verified projection and replay receipt are in
+`runtime/challenger/f3/verifications/88b89d8dd839b44927156335658e54bc1203ae28e2b243029f9173c889108199/`
+(`metrics.json`, `replay.json`). Expected F3_COMPLETED_CASES_SEMANTIC_REPLAY_VERIFIED:
+19 cases,9 complete-primary realized ledgers,5 missing,0 noncomplete retained cases,
+0 procurement solves/fits/forbidden IO/original writes; actual53.5s. Semantic checks
+re-evaluate retained candidate/journal and winning baskets, comparison/selector and
+eligible truth; no new basket generation. Verifier source hash is separate from
+frozen execution source, both checked. It never claims the24-case manifest complete.
+The generic F3 replay path also revalidates fixed baskets but reconstructs nested
+graphs repeatedly; the dedicated verifier above is the verified120s path.
+
+15 F3 focused tests passed/58.73s. They use explicit hand/toy truth and a fault-injected
+no-incumbent generator for independent finite enumeration; these are not additional
+real-forecast benchmark trials or production proof. F2 checkpoint verification16
+passed/0.68s. No full suite, DB, provider/network/SMTP, app/runtime8103, forecast fit,
+external engine repository change, main/FE integration or F4 scope is authorized.
+
 <a id="forecast-f2"></a>
 ## CURRENT FACT — F2 retained-array closure/endpoint verification
 
 [Canonical F2 design/results](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f2)
 owns method, selection rule, fit dependencies and limits. F1 is locally committed
-at `6a50d815ba983f511a92388b2ade18d6fd6b4b93`; F2 remains WIP. No server, DB,
+at `6a50d815ba983f511a92388b2ade18d6fd6b4b93`; F2 checkpoint is `fcb33ab`. No server, DB,
 provider/network/SMTP, Planning, external engine repo or other worktree is involved.
 The six raw files still provide POS through08/07 only; no fresh09–15/07 labels.
 All validation/evaluation is EXPOSED development evidence.

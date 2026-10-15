@@ -757,7 +757,8 @@ The scope is VERIFIED offline computation/replay, EXPLORATORY exposed demo evalu
 Real source vintages/unseen independent demand, more origins/diverse operational
 periods and later operational acceptance remain missing. Production/promotion LOCKED,
 E5 NOT_STARTED; /3 checkpoint is `a863fb5`; F1 is checkpointed at
-`6a50d815ba983f511a92388b2ade18d6fd6b4b93`. F2 changes remain uncommitted for review.
+`6a50d815ba983f511a92388b2ade18d6fd6b4b93`. F2 checkpoint is
+`fcb33abb9c2316d41d564d5653233f6dc4e80a5e`; F3 changes remain uncommitted for review.
 Commands/recovery: [runbook](../runbooks/FULL_TEST_FLOW.md#challenger-demo-abc).
 
 <a id="forecast-f2"></a>
@@ -909,13 +910,200 @@ and independent verification receipts. Source/config/input hashes bind this exac
 execution; source drift rejects replay. A changed source cannot reopen the consumed
 global marker. See [F2 commands](../runbooks/FULL_TEST_FLOW.md#forecast-f2).
 
-PROPOSAL — F3 remains unauthorized/NOT_STARTED. Before a real Planning impact study,
-freeze a separately approved forecast choice, causal demand evaluation scope and
-compatible operational snapshots (BOM/recipes/loss, stock/lot/expiry/receipts,
-supplier packs/prices/lead times/fees and constraints). Verify fresh label provenance
-and calendar availability for any generalization claim. Current exposed forecast
-metrics and the08/07 snapshot cannot establish realized savings or inventory impact.
-Production/promotion stays LOCKED; no F3 solve, source-engine change or main integration.
+The user subsequently authorized the separate [F3 counterfactual benchmark](#forecast-f3)
+below. A real Planning impact claim still requires independently appropriate demand
+and operational snapshots; the08/07 snapshot is not historical June stock. F2 stays
+exploratory and cannot select C1 by later impact scores. Production/promotion LOCKED.
+
+<a id="forecast-f3"></a>
+## CURRENT FACT — F3 counterfactual host Planning impact
+
+F2 was reviewed and locally committed as
+`fcb33abb9c2316d41d564d5653233f6dc4e80a5e` (11 source/tests/docs files,16 focused
+F2 tests passing). F3 is explicitly authorized offline computation only, no serving,
+public API/persistence, main integration or F4 acceptance. ADR-019/020/021,
+procurement/2 and existing exact BOM/serving/FEFO/comparison/selector remain authority.
+
+Protocol `planning_f3/1`, identity
+`e7aa4b531b6f7ed3fb355856fa5145bac0c7472d2df3da6bce7b7fa00afa9586`, pins the exact
+F2 experiment, its implementation/input/artifact hashes and its retained B_common,
+C0 and C1 forecast arrays. Primary comparison is B_COMMON vs C0_COMMON; C1_COMMON
+is exploratory sensitivity, not validation-selected and never selected by impact.
+Quantiles are copied exactly, with scored actual/stockout/mask fields removed before
+host planning. CQR never replaces LOW/HIGH; closure is not applied again. C1 binding
+retains the original base artifact plus its separate endpoint-parameter SHA-256.
+
+### Operational admission and synthetic fixture scope
+
+Runtime inventory still contains the six pinned workbooks. Original operational
+admission/evidence remains BLOCKED: unknown unit aliases/serving/batch/yield/loss
+semantics and effective historical recipe/stock/fee/supplier/constraint facts are
+not repaired by F3. Mandatory safety-stock/aggregate rules remain unsupported for a
+source-faithful case. No price denominator is inferred, unknown fee/loss/stock is
+not zero, purchase history is not stock/receipts, and POS+recipe-derived usage is not
+independent truth. The08/07 stock snapshot is not used as historical June inventory.
+
+The frozen setup retains separate source-supported Product identities/units and
+forecast/declaration provenance, existing user hash-bound POS/calendar assumptions,
+source-faithful blockers, and F3_SYNTHETIC operational values. No new real Store fact
+declaration is made. Fixtures are defined only from origin/Product scope/timezone/
+Store and a fixture identifier, never forecast or future actual quantities. Synthetic
+Ingredient identities g/ml are distinct from workbook Ingredient identities.
+
+Two latest available F2 origins are selected chronologically before impact scores:
+24/06 and01/07/2026. There are four fixtures per origin and three arms,24 runs.
+All five Products retain their own `ly` identities. Common synthetic policy is
+BASE95% EACH Product; LOW/BASE/HIGH100% construction remains unchanged. The base
+recipe uses one g and one ml per serving, yield1/process loss0, with effectivity
+and complete fictional lot/offer/fee/constraint coverage explicit in the snapshots.
+
+| Fixture | Explicit F3_SYNTHETIC facts | Technical domain / certification |
+|---|---|---|
+| stock_only | 100000 g and100000 ml initially; expiry O+10; no offers; budget500 VND | 1 vector / exact≤9 |
+| scarce_purchase | g0, ml100000; one400g pack at20 VND, MOQ1, upper4, lead0/shelf10; supplier fee3; budget500 | 5 vectors / exact≤9 |
+| dated_shared | Shared initial500g expires O+2,500ml expires O+3; two800-unit packs at40/25 VND, upper2 each, fees3/2; g lead2/shelf4, ml lead0/shelf7; budget500 | 9 vectors / exact≤9 |
+| tight_budget | Same physical setup/offers as scarce_purchase; explicit budget23 VND | 5 vectors / certification DISABLED |
+
+Dated_shared uses dated recipes: through O+3 yield1/loss.1, from O+4 yield2 with
+two g/two ml per batch and loss0. Each Ingredient has explicit gross capacity200000
+in its own unit; supplier/Ingredient order limits2000 are separate from technical
+pack bounds. All prices are synthetic VND/pack, not interpreted workbook prices.
+Synthetic policy has no safety-stock rule and does not claim to implement all
+workbook constraints. Exact rational quantities and money are never rounded to packs
+or merged across g/ml. No fixture was changed after impact scores were inspected.
+
+### Resource and evaluation contract
+
+One global F3 batch hard300s; maximum144 native solves, maximum2 per strategy,
+host cooperative invocation4s with unchanged equal-remaining-strategy deadline allocation.
+Indivisible exact validation may overrun that cooperative budget; actual host
+elapsed/deadline-overrun fields are retained. Only the overall300s subprocess cap
+is a hard process deadline, not a per-run latency guarantee.
+Domain/certification policy is identical across arms within each fixture. The host
+SciPy/HiGHS default options are unchanged; there is no exposed seed parameter to
+invent or tune. No search candidate/cache is carried between arms. Deterministic
+origin/fixture order rotates the first arm by `(origin_index+fixture_index)%3` to
+interleave B/C0/C1; single-run cold/warm/deadline effects remain diagnostic limits.
+Parent preflight time is deducted from the subprocess timeout. Global consumed
+marker and exclusive child claim prevent resume/retry or source-change budget reset.
+Per-case outputs/resource receipts remain available after PARTIAL/timeouts.
+
+Existing E4 `planning_request`, `plan_forecast`, `ImpactBudget`, `finite_oracle` and
+`realized_evaluation` are reused; no second procurement engine or simulator exists.
+The graph is forecast → dated BOM → host procurement/2 → exact serving/FEFO →
+comparison/2 → selector/1. Finite enumeration proof is only CAPTURED_FINITE_DOMAIN_ONLY;
+UNPROVEN/UNKNOWN, incomplete search, blocked input, technical failure and no-winner
+remain separate. References never become available recommendations.
+
+Planned results retain every strategy/options, purchase+generic payable fees,
+Ingredient/unit pack quantities, Product/path requested/served/lost/service,
+Ingredient/path expiry/ending stock, gaps/coverage and solver/proof/domain/timing.
+Realized counterfactuals retain the winning basket, arrivals and starting fixture,
+replace demand only with a complete known-false observed horizon, then run exact
+serving/FEFO without procurement. On24/06 all35 outcomes are eligible; on01/07 only
+34/35 are known-false, so its realized ledgers are NOT_EVALUATED with incomplete-primary
+reason. No winner also means no realized recommendation ledger; no zero basket is
+substituted. No cross-unit total waste or invented economic score is reported.
+
+Hand tests verify ample-stock zero purchase,500-serving purchase requiring two400g
+packs,40+3=43 VND, finite exhaustive ranking, dated recipe/loss/arrivals, exact cost/
+mass balance and mask/no-winner handling. Oracle proof does not upgrade native or
+production proof. Fresh replay semantically re-evaluates retained fixed baskets,
+comparison/selector and eligible realized serving with all fitting/procurement-solve
+entrypoints forbidden; it reports missing/noncomplete cases separately within120s.
+
+Canonical output is `runtime/challenger/f3/experiments/<identity>/`: frozen
+`setup.json`, per-case retained graph and small oracles/resource/progress/run receipts;
+final aggregate publication is conditional on reaching the end of the batch.
+Source/runtime/input drift rejects;
+old E4/F2 artifacts/manifests/budget receipts are not overwritten. Commands:
+[F3 runbook](../runbooks/FULL_TEST_FLOW.md#forecast-f3).
+
+### Retained results — PARTIAL, not a completed benchmark population
+
+The one batch hit its hard deadline at parent300.016s (termination/collection overhead
+included), retaining19/24 COMPLETED cases and resource evidence for50 native solve
+attempts (47 solver-evidence records belong to completed retained cases;3 attempts
+have only budget/in-flight evidence). It was not resumed. Missing:01/07 dated_shared C0/C1 and all three01/07
+tight_budget arms. The in-flight case has no completed output and cannot enter paired
+impact. Six origin/fixture groups are fully paired, five have paired winners and
+only three24/06 groups have paired complete realized ledgers. Three retained24/06
+tight-budget cases have null winner, not a recommended zero basket.
+
+| Origin / fixture | B_COMMON winner outlay | C0_COMMON | C1_COMMON | Fixed-basket realized status |
+|---|---:|---:|---:|---|
+| 24/06 stock_only | 0 | 0 | 0 | Complete, identical across arms |
+| 24/06 scarce_purchase | 63 (60 purchase+3 fee),3×400g | same | same | Complete, identical across arms |
+| 24/06 dated_shared | 70 (65 purchase+5 fees),800g+800ml | same | same | Complete, identical across arms |
+| 24/06 tight_budget | no winner | no winner | no winner | NOT_EVALUATED: no recommendation |
+| 01/07 stock_only | 0 | 0 | 0 | NOT_EVALUATED: incomplete primary truth |
+| 01/07 scarce_purchase | 63,3×400g | 83,4×400g | 83,4×400g | NOT_EVALUATED: incomplete primary truth |
+| 01/07 dated_shared | 135,1600g+1600ml | missing | missing | Unpaired; incomplete primary truth |
+| 01/07 tight_budget | missing | missing | missing | Not executed to completion |
+
+All outlays are fictional VND, not Store spending. On24/06 dated_shared, the same
+basket produces different planned BASE service: B100% for every Product, C0/C1
+97.8317–98.0232% on their respective forecast paths. Yet on the common observed
+truth the exact basket/arrivals yield identical Product service across arms:
+
+| Product | Realized service24/06 dated_shared | Lost servings, exact ly |
+|---|---:|---:|
+| t3 Cà phê sữa | 99.1148% | 3569/1575 |
+| t1 Sinh tố chuối | 99.1679% | 332/175 |
+| t4 Nước cam | 99.1579% | 2573/1575 |
+| t5 Matcha latte | 99.1734% | 664/525 |
+| t2 Trà sữa trân châu | 99.2869% | 3403/1575 |
+
+Realized dated_shared expires110g and ends with110ml (g ending0, ml expired0),
+reported separately by unit. Realized scarce_purchase fulfills every Product100%,
+g ending66g, ml ending98866ml, no expiry; stock_only fulfills100%, ends98866g and
+98866ml separately, no expiry. These are hypothetical fixture ledgers, not independently
+observed store consumption/waste. No cross-unit total or savings score is formed.
+
+On01/07 scarce_purchase, B spends20 VND less but its own planned BASE Product service
+is95.5700–95.6857%, versus C0/C1 100%; B's planned g ending0 versus C0/C1 207.3677g.
+The demand paths differ, so this does not prove worse actual service or economically
+better overstock. That origin has no complete truth ledger. Among completed paired
+winner cases, no different-basket/equal-spend example was observed. C1's wider
+endpoints do not change winner baskets/outlays versus C0 in the completed pairs;
+they provide no demonstrated additional realized benefit or expiry penalty here.
+No fixture was added/retuned to produce a preferred effect.
+
+Host execution is FINISHED for6 ample-stock cases and INCOMPLETE for13 others;
+INCOMPLETE retained exact-valid/customer-pass incumbents can still win under the
+existing selector. Across57 strategy records,18 have COMPLETE_EXACT_ENUMERATION
+(domain1 ample-stock) and39 are UNPROVEN. Tight-budget feasibility is UNKNOWN,
+not a market/global infeasibility certificate. Both independent oracle checks
+passed captured domains1 and5 without upgrading any native proof. Native solver
+seconds, cooperative deadline overruns, run order and per-case elapsed time remain
+in the cases;50 solve attempts and the hard stop constrain comparison. Metrics do
+not establish that C should replace B; they also do not certify B as a production winner.
+
+Fresh-process dedicated verifier `scripts.verify_planning_f3` follows the existing
+E4 verification pattern to avoid repeated graph reconstruction: full schema validators
+re-evaluate retained candidate/journal baskets, then comparison/selector and fixed
+winning-basket actual serving are checked. No weakened schema/model construction or
+new vector search is used. It verifies all19 retained cases,9 realized ledgers and
+explicitly lists5 missing cases in53.5s under its separate hard120s limit,0 solves/
+fits/forbidden IO/original writes. Its SHA-256 is recorded separately from the
+unchanged frozen F3 execution source. This is semantic re-evaluation, not “no calculation”.
+
+Because the batch was killed before final aggregate publication, its canonical
+per-case/resource/oracle files and PARTIAL run receipt remain authoritative.
+Verified read-only metrics and replay receipt are separately retained under
+`runtime/challenger/f3/verifications/88b89d8dd839b44927156335658e54bc1203ae28e2b243029f9173c889108199/`
+(`metrics.json`, `replay.json`), not fabricated as a completed batch report or
+written over original cases.15 focused F3 tests passed; all1261 pre-F3 runtime/artifact/
+source-snapshot/workbook files,85 frozen computation-source files and102 upstream
+input pins retain SHA-256. No full-suite, DB/browser, independent unseen
+accuracy, real impact or production acceptance claim is added.
+
+PROPOSAL — F4 remains NOT_STARTED/unauthorized. Any acceptance/integration requires
+explicit forecast/source/policy review, appropriate unseen/vintage and operational
+completeness, current-rights capture, retained persistence/restart/replay/error/rollback
+acceptance and explicit promotion selection. Completing missing F3 cases needs a
+separately authorized experiment/budget, not reset/resume of this batch. No F4,
+main/FE/Assistant/runtime8103 change or promotion was performed.
 
 <a id="demo-baseline-ab"></a>
 ## CURRENT FACT — baseline demo A/B after main readiness merge

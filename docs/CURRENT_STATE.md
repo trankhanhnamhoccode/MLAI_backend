@@ -67,7 +67,23 @@ sở hữu method, overlap calibration/CQR, regressions, budget và limits;
 [runbook F2](runbooks/FULL_TEST_FLOW.md#forecast-f2) sở hữu commands/evidence.
 Canonical [original A/B evidence](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab)
 sở hữu exact selection, origins, metrics và limits; [runbook](runbooks/FULL_TEST_FLOW.md#challenger-demo-ab)
-sở hữu commands. F2 sau checkpoint `6a50d81` giữ WIP để review; F3 chưa mở, không promote.
+sở hữu commands. F2 đã checkpoint local `fcb33abb9c2316d41d564d5653233f6dc4e80a5e`.
+CURRENT FACT F3: user-authorized `planning_f3/1` dùng đúng retained F2 B_COMMON/
+C0_COMMON và C1_COMMON exploratory sensitivity, common F3_SYNTHETIC operational
+fixtures tại hai origins cuối24/06,01/07; source-faithful vẫn BLOCKED, không dùng
+snapshot08/07 làm historical stock. Host BOM/procurement/2/serving/FEFO/selector
+giữ nguyên. Một hard300s batch dừng PARTIAL,19/24 cases giữ lại,5 cases không chạy
+tiếp;≤144 native-solve budget,50 attempted solves có resource receipt. 24/06 các
+case có winner giữ cùng baskets/realized metrics giữa arms. 01/07 scarce_purchase:
+B3 packs/63 VND, C0/C1 4 packs/83 VND; realized NOT_EVALUATED vì censored truth.
+Ba tight-budget cases24/06 không winner; không thay bằng zero recommendation.
+Finite oracles stock/scarce pass trên domain1/5, không nâng native proof.
+Dedicated fresh-process replay đã verify toàn bộ19 retained cases/9 realized
+ledgers trong53.5s,0 solves/fits, báo rõ5 missing; read-only metrics ở namespace
+F3 verifications, không giả final report của batch bị timeout.
+[Canonical F3](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3) sở hữu setup,
+limits/proof/partial results; [runbook](runbooks/FULL_TEST_FLOW.md#forecast-f3) sở hữu
+commands/evidence. F3 giữ WIP chưa commit; F4 chưa mở, promotion LOCKED.
 
 ## CURRENT FACT — Data Readiness D1–D5 tích hợp main local
 

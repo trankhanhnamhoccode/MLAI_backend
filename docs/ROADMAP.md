@@ -44,12 +44,24 @@ search or fresh data found/assumed; all evaluation remains exposed development.
 C1 improves aggregate endpoints/coverage while preserving P50/CQR but fails frozen
 validation subgroup guard; retain C0 endpoints. Common-policy B has lower exposed
 evaluation point error; no serving winner is selected. No-fit replay, independent
-1540-group score audit and original-file preservation verified. F2 stays WIP.
+1540-group score audit and original-file preservation verified. F2 checkpoint is
+`fcb33abb9c2316d41d564d5653233f6dc4e80a5e`.
 Details and limits: [canonical F2](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f2).
-PROPOSAL F3 impact remains NOT_STARTED/unauthorized: needs explicit frozen forecast/
-operational scope, causal BOM/stock/lot/expiry/receipt/vendor/constraint snapshots
-and appropriate evaluation provenance. Forecast metrics do not certify savings,
-inventory impact, calibration or production promotion. No main/FE/DB integration.
+CURRENT FACT F3: authorized counterfactual host Planning on retained F2 B/C0/C1,
+two chronological origins/four explicit synthetic fixtures/three arms; main
+comparison B_COMMON vs C0_COMMON, C1 not selected. Source-faithful real impact is
+still BLOCKED. Single300s hard-capped batch PARTIAL with19/24 retained cases,
+5 missing, no resumed batch.50 native solve attempts recorded, no forecast fits.
+Both finite-oracle cases pass without upgrading native proof. Common baskets on
+24/06 yield identical fixed-basket observed service; on01/07 scarce_purchase B
+buys3 packs/63 VND vs C0/C1 4 packs/83 VND, but censored truth blocks realized
+evaluation. No empirical production winner, savings or inventory-impact claim.
+F3 stays WIP; [canonical F3](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3)
+owns assumptions, resources, proof/partial results and replay limits.
+PROPOSAL F4 acceptance/integration remains NOT_STARTED/unauthorized: requires
+reviewed forecast choice, provenance/availability and operational completeness,
+public authorization/persistence/restart/replay/rollback acceptance before explicit
+promotion. No main/FE/DB integration or automatic deployment.
 
 ## CURRENT FACT / PROPOSAL — data readiness D1–D5
 
