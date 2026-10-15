@@ -1,6 +1,6 @@
 # Current state
 
-## CURRENT FACT — forecast challenger E1/E2/E3 (isolated branch)
+## CURRENT FACT — forecast challenger E1–E4 (isolated branch)
 
 E1 compatibility/protocol và E2 internal adapter COMPLETE trong worktree riêng
 `backend-forecast-engine-challenger`, branch `feat/forecast-engine-challenger`, từ
@@ -17,14 +17,19 @@ giữ BOM/loss/Product serving/FEFO/procurement/requirements/winner/retained Pla
 E1–E5 không LLM/OpenRouter. Production serving/API/schema/permissions, FE, engine
 source và runtime/DB người dùng không đổi. E2 production mode bị khóa, CLI OFF mặc
 định, không operational DB caller. E2 checkpoint local
-`b92d2c43cbf82e8308043f60630c9f83f65abefb`; E3 giữ WIP để review, dừng sau E3.
+`b92d2c43cbf82e8308043f60630c9f83f65abefb`; E3 harness checkpoint local
+`c2544c1025815bd0ccef9acb524f6f265dd03c45`.
 E3 PARTIAL: causal A/B/C harness, bounded native residual/point/CQR fits,
 paired scoring và fresh-process replay VERIFIED trên synthetic corpus riêng.
 Không dùng nhãn holdout để fit; weather excluded; production LOCKED.
 Real accuracy `REAL_BENCHMARK_BLOCKED` / `INSUFFICIENT_EVIDENCE`: chưa có dữ liệu
 real unseen được phép, historical vintages và sourced operating calendar đủ điều kiện.
-E4 Planning impact/E5 activation chưa thực hiện. Command và giới hạn do canonical
-Forecast integration sở hữu; không thay public API/schema/permissions hay DB.
+E4 PARTIAL / COUNTERFACTUAL_SYNTHETIC: detached harness dùng host BOM/procurement/2/
+serving/FEFO/comparison/selector, tách forecast design paths khỏi fixed-basket observed
+realized evaluation. Bounded manifest INCOMPLETE do wall budget; giữ checkpoints,
+không kéo dài hoặc thay fixtures. Real impact REAL_IMPACT_BLOCKED; E4 giữ WIP,
+dừng sau E4. E5 activation chưa thực hiện. Canonical Forecast integration sở hữu
+commands/limits; không thay public API/schema/permissions hay DB.
 
 ## CURRENT FACT — self-service Store/customer local
 

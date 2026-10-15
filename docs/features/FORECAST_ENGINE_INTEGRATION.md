@@ -17,7 +17,7 @@ residual/point/CQR artifacts and all three arms replay exactly in a fresh proces
 on synthetic correctness data. E3 is PARTIAL / REAL_BENCHMARK_BLOCKED, not real
 accuracy VERIFIED. Operational DB/public serving wiring and promotion have not run.
 No public API, schema, permission, accepted ADR or production configuration changes.
-E4–E5 remain NOT_STARTED.
+E4 adds an offline counterfactual host Planning benchmark; E5 remains NOT_STARTED.
 
 Authority: [ADR-012](../adr/ADR-012-observed-sales-forecast-execution-contract.md),
 [ADR-014](../adr/ADR-014-retained-baseline-execution.md),
@@ -484,14 +484,106 @@ A/B/C forecasts without fitting and audits train/point/CQR target dates/availabi
 and holdout quarantine; native C also compares E2 exact stage evidence in a fresh
 process. Source/hash mismatch or missing bytes fails closed, with no family fallback.
 
-PROPOSAL / E4 inputs already available: explicitly pinned per-origin C artifacts and
+CURRENT FACT / inputs supplied to E4: explicitly pinned per-origin C artifacts and
 E2 captured inputs/forecast/quantile/CQR/diagnostic evidence, matching retained A/B
 forecasts, the dataset/plan/environment/source digests and target masks. These can
-support a separately authorized synthetic counterfactual comparison. They contain
+support the explicitly authorized synthetic counterfactual comparison. E3 contains
 no operational recipe/BOM/loss, inventory/lot/expiry/receipts, supplier/pack/price/fee,
-budget/constraint/policy or search-resource capture. E4 must separately freeze the
-same host operational context for all arms; no historical impact/savings evidence
-exists from E3. E4/E5 are not executed here.
+budget/constraint/policy or search-resource capture. E4 separately freezes the same
+synthetic host operational context for all arms. No historical impact/savings evidence
+exists from E3 or the E4 counterfactual fixtures. E5 is not executed here.
+
+## E4 counterfactual Planning impact
+
+ACCEPTED DECISION (explicit E4 task): preserve dated BOM/reciprocal loss, exact
+progressive Product serving/FEFO, procurement/2 construction/customer requirements,
+fallback/winner and resource/proof semantics. E4 composes existing `expand_bom`,
+`execute_procurement_v2`, comparison/2 and selector/1 from a typed detached snapshot.
+This is the host computation boundary, not public operational capture/persistence
+acceptance. No new-engine optimizer, training, LLM, FE or production activation.
+
+CURRENT FACT: `tests/fixtures/forecast_engine/planning_impact_setup.py` defines fixed
+synthetic facts from scope/origin only. No actual or forecast quantity enters stock,
+recipes, budget, requirements, capacity, supplier limits or search-bound generation.
+Sixteen templates cover four E3 origins and four fixtures: ample stock/no purchase,
+shared Ingredient purchases, dated recipe/loss plus arrivals/expiry, and a36-vector
+bounded domain with certification disabled. Two Products retain cup/piece; Ingredients
+retain g/ml. Known-at provenance is an explicit fictional declaration at the captured
+next-run decision instant, not recovered historical inventory. E3 native artifacts
+were actually fitted/published later; this remains a post-hoc counterfactual study.
+
+The shared frozen policy explicitly requests BASE95% each Product, LOW/BASE/HIGH100%
+construction, integer packs/MOQ, generic per-supplier payable fees, capacities,
+one-order supplier limits and budgets25 (14 for bounded_unproven), all synthetic.
+Search resources are identical across A/B/C within every fixture:2 seconds per host
+invocation,4 solves per strategy, optional exact certification limited to16 vectors.
+Three tiny fixtures have domains1/6/6; the36-vector fixture remains UNPROVEN.
+The complete manifest declares48 runs, maximum576 native solves and300 seconds
+cooperative cumulative computation budget, one fixed A→B→C repetition per origin/
+fixture. Actual overruns at an indivisible host/validation boundary are retained;
+there is no hard process deadline or latency guarantee. Smoke runs one fixture on
+the first origin; full execution reuses its exact checkpoints. Budget is not reset
+on resume. No tuning or extra repetition is performed to improve observed results.
+
+Input admission loads actual E3 dataset/plan/checkpoint envelopes, verifies experiment/
+runtime/source identities, retained fit checkpoints and native artifact byte hashes,
+and replays E3 outputs before initial freeze. Model labels/artifact/output identities
+remain A/B/C. E4 snapshot, planning input, computation source and forecast-only output
+digests own planning cache identity. Actual targets never enter that input/digest.
+Canonical aware instants compare as typed values, including equivalent timezone
+representations. Private immutable checkpoints retain exact candidates, customer/
+construction gaps, winner/null, reference-only candidates, costs, raw native evidence,
+termination, proof scope and timings. No-winner is not a zero-basket recommendation.
+
+Planning requirement pass means pass on that arm's forecast design paths only.
+Realized evaluation is separate: keep the selected basket/arrivals and operational
+facts fixed, put eligible observed truth into a new evaluation input and run only
+host exact serving/FEFO. It never calls procurement or changes budget/recipes. A full
+primary observed ledger requires every Product/day to be present and known-false;
+unknown/censored/missing cannot become zero. Otherwise retain target/mask identity and
+mark realized unavailable, even when a forecast-path winner exists. Null winner also
+makes realized recommendation evaluation unavailable. Separate hand-oracle complete
+truth is test-only, explicitly identified, and never fills E3 observed-target gaps.
+
+Metrics preserve per-Product/unit requested/served/lost sales and exact service,
+per-Ingredient/unit consumed/expired/ending stock, and purchase+payable fee outlay.
+No mixed-unit service/waste totals, profit/savings or confidence intervals treating
+overlapping forecast tasks as independent. Reports retain every attempted arm,
+paired completed/winner/realized availability and exclusions; they never condition
+comparison on C having a winner. Lower spend without service context is not success.
+
+Verification uses literal hand arithmetic for zero-purchase, integer packs/MOQ/fees,
+budget/no-winner, shared bottlenecks, dated yield/reciprocal loss, arrivals/expiry,
+underbuy/overbuy and incomplete actuals. On the first origin's tiny domains, a separate
+exhaustive fixed-basket oracle checks feasibility and host ranking without native
+solves. That proof belongs only to the captured finite domain, not to MILP. Native
+search and exact validation remain unchanged; timing/search-limit noise and a single
+run order constrain generalization. Real impact remains REAL_IMPACT_BLOCKED.
+
+Commands in the isolated venv (no database/server/provider/worker startup):
+
+```powershell
+.venv/Scripts/python.exe -m scripts.planning_impact --enable freeze --e3-experiment 1bd73d0fbceca55fd5285924cdc8626e1ffe7b9a39052df663c97865b77a5727
+.venv/Scripts/python.exe -m scripts.planning_impact --enable smoke --experiment <printed-E4-identity>
+.venv/Scripts/python.exe -m scripts.planning_impact --enable run --experiment <printed-E4-identity>
+.venv/Scripts/python.exe -m scripts.verify_planning_impact --experiment <printed-E4-identity>
+.venv/Scripts/python.exe -m pytest tests/unit/test_planning_impact.py -q
+```
+
+Owned ignored `runtime/challenger/planning-impact` contains the frozen plan, imported
+dataset, source/environment hashes, resource receipts, planning-only checkpoints,
+separate realized ledgers and reports. `verify_planning_impact` starts a fresh process,
+recomputes fixed baskets/comparison/selector and realized serving for every retained
+completed case with zero procurement solves and a120-second verification budget.
+It reports missing/noncomplete cases explicitly; successful replay of a subset is
+not completion of the manifest. Built-in `planning_impact replay` requires all48.
+No model/operational data, runtime result or private row is committed to Git.
+
+Real E3/E4 evidence still requires authorized unseen daily demand/stockout/calendar
+vintages plus historical recipe versions, balances/receipts/expiry, supplier terms,
+payable fees, customer requirements/budgets and resource/policy captures actually
+available at each decision. Synthetic operational definitions provide no such proof.
+E3 remains PARTIAL / REAL_BENCHMARK_BLOCKED; production LOCKED, E5 NOT_STARTED.
 
 ## Offline verification and lifecycle
 
@@ -524,11 +616,12 @@ conversation, not an accumulating report in this document.
 | E1 | COMPLETE compatibility/protocol scope: canonical specification + frozen synthetic config/fixtures/offline checks. Real-data/runtime integration remains unverified. |
 | E2 | COMPLETE internal opt-in adapter: strict typed capture/artifact admission, pinned installed native stages, separate quantile/CQR/provenance, private immutable evidence/cache and exact fresh-process replay. Local checkpoint b92d2c43cbf82e8308043f60630c9f83f65abefb; production wiring/activation disabled. |
 | E3 | PARTIAL: causal per-origin A/B/C training/point/CQR harness, paired metrics and fresh-process replay VERIFIED on synthetic correctness corpus. REAL_BENCHMARK_BLOCKED / INSUFFICIENT_EVIDENCE; real accuracy not verified. |
-| E4 | NOT_STARTED: common captured host operational context→forecast-only swap→Planning impact and search evidence, with historical vs counterfactual meaning explicit. |
+| E4 | PARTIAL / COUNTERFACTUAL_SYNTHETIC: common frozen operational fixtures, host forecast-only planning, separate fixed-basket observed realized evaluation, hand/finite oracles and retained checkpoints. Bounded manifest INCOMPLETE at wall budget; REAL_IMPACT_BLOCKED, no savings/promotion claim. |
 | E5 | NOT_STARTED: integration acceptance/current authorization and fresh-session persistence/restart/replay→review evidence→explicit user promotion/config selection and rollback; no automatic promotion. |
 
-Stop after E3; E1/E2 committed locally, E3 remains uncommitted WIP.
-Rollback E3 consists of its detached benchmark contracts/harness/tooling/fixtures and
+Stop after E4; E1–E3 committed locally, E4 remains uncommitted WIP.
+E3 checkpoint: `c2544c1025815bd0ccef9acb524f6f265dd03c45`.
+Rollback E4 consists of its detached impact contracts/harness/tooling/fixtures and
 current documentation changes; retain private artifacts/evidence and operational data.
 Later runtime rollback must select a retained compatible host serving identity,
 keep challenger captures/artifacts/audit and never rewrite completed Planning.

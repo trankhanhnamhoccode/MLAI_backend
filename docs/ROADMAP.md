@@ -7,16 +7,19 @@ forecast engine mới qua adapter riêng, không LLM/OpenRouter trong E1–E5. E
 compatibility/protocol; E2 COMPLETE internal typed opt-in adapter với pinned installed
 forecast-only source/dependencies, native fixed inference và private retained replay.
 Tiny synthetic correctness VERIFIED; không production integration/accuracy/promotion.
-Main/demo/customer DB và serving artifacts giữ nguyên; E1/E2 commit local, E3 WIP.
+Main/demo/customer DB và serving artifacts giữ nguyên; E1–E3 commit local, E4 WIP.
 
 [FORECAST_ENGINE_INTEGRATION](features/FORECAST_ENGINE_INTEGRATION.md) là canonical
 owner của matrix, data/artifact inventory, replay/availability/reconstruction/CQR
 boundaries, benchmark/promotion và các gates E1–E5. E2 native correctness VERIFIED;
 E3 PARTIAL: causal training/scoring harness và A/B/C native synthetic replay VERIFIED;
 real accuracy REAL_BENCHMARK_BLOCKED, promotion INSUFFICIENT_EVIDENCE.
-E4 host Planning impact và E5 acceptance/promotion NOT_STARTED. Thiếu authorized
-unseen data/vintage evidence và sourced operating calendar chặn real quality claims.
-Đã dừng sau E3; bước kế tiếp cần authorization, không tự mở E4 hay serving activation.
+E4 PARTIAL: counterfactual shared-facts host Planning + fixed-basket realized harness;
+bounded execution INCOMPLETE khi chạm wall budget, checkpoints giữ nguyên, không
+thay fixtures/search resources để tìm kết quả đẹp. Real impact REAL_IMPACT_BLOCKED.
+E5 acceptance/promotion NOT_STARTED. Thiếu authorized unseen demand/vintages/calendar
+và historical operational snapshots chặn real quality/impact claims. Đã dừng sau E4;
+bước kế tiếp cần authorization, không tự mở E5 hay serving activation.
 
 ## CURRENT FACT
 

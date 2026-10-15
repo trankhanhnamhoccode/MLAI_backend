@@ -62,3 +62,4 @@ forecast accuracy claim từ targeted synthetic tests.
 - [FE handoff/OpenAPI](docs/handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
 - [Forecast challenger offline — isolated opt-in setup, inference và replay](docs/features/FORECAST_ENGINE_INTEGRATION.md#e2-runtime).
 - [Forecast benchmark E3 — causal synthetic checks, freeze/run/rescore/replay và real-data requirements](docs/features/FORECAST_ENGINE_INTEGRATION.md#e3-offline-benchmark).
+- [Planning impact E4 — shared synthetic facts, fixed-basket realized serving, bounded run và replay](docs/features/FORECAST_ENGINE_INTEGRATION.md#e4-counterfactual-planning-impact).
