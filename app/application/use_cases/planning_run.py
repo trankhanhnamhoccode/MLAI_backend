@@ -26,13 +26,29 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 
-def decode_row(row):
+def decode_row(row, *, retained_consistency=False):
     if row is None:
         raise PlanningPersistenceError('NOT_FOUND')
     try:
         if row.record_digest != digest('aggregate',row.record_json):
             raise ValueError('Aggregate digest mismatch')
-        record = PlanningRunRecord.model_validate(row.record_json)
+        if retained_consistency:
+            raw=row.record_json
+            if not isinstance(raw,dict): raise ValueError('Retained aggregate must be an object')
+            versions=[(raw.get('storage_version'),'planning_storage/1'),(raw.get('package_schema_version'),1)]
+            for field,expected in (('capture','operational_capture/2'),('result','operational_pipeline/2')):
+                if raw.get(field) is not None:
+                    if not isinstance(raw[field],dict):raise ValueError('Retained phase must be an object')
+                    versions.append((raw[field].get('semantics_version'),expected))
+            result=raw.get('result') or {}
+            for field,expected in (('procurement','procurement/2'),('comparison','procurement_comparison/2'),('selection','procurement_selector/1')):
+                if isinstance(result.get(field),dict):versions.append((result[field].get('semantics_version'),expected))
+            if any(type(actual) is not type(expected) for actual,expected in versions):
+                raise ValueError('Missing or malformed retained version')
+            if any(actual!=expected for actual,expected in versions):
+                raise PlanningPersistenceError('UNSUPPORTED_RESULT_VERSION',row.id)
+        record = PlanningRunRecord.model_validate(row.record_json,
+            context={'retained_consistency':True} if retained_consistency else None)
         for column,field in [('id','run_id'),('actor_id','actor_id'),('store_id','store_id'),
                              ('operation','operation'),('key_digest','key_digest'),
                              ('request_digest','request_digest'),('status','status'),('accepted_at','accepted_at')]:

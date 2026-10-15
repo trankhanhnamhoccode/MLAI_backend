@@ -1435,26 +1435,30 @@ creator không email leak; locator recovery, grant revocation discovery/download
 missing/corrupt bytes, no implicit rendering, no retained fact rewrite.
 
 <a id="decision-assistant"></a>
-## 18. Decision Assistant — L1 internal foundation / PROPOSAL FE contract
+## 18. Decision Assistant — L2 summary / L3 deterministic chat
 
 CURRENT FACT: C08 §15.3 vẫn là structured retained explanation; GET không gọi
-model, tạo job hoặc phát sinh phí. L1 thêm internal `decision_evidence/1`, chưa
-đăng ký route/permission/persistence hoặc summary/chat generation. Runtime OpenAPI
-giữ nguyên. [Feature](features/DECISION_ASSISTANT.md) sở hữu implementation boundary
-và giới hạn cold verification; mục này sở hữu thiết kế FE, chưa là runtime promise.
+model, tạo job hoặc phát sinh phí. L2 thêm durable evidence access và AS01/AS02
+summary, synchronous explicit creation/retained read, deterministic renderer và
+optional bounded presentation adapter. Source OpenAPI75 operations/68 paths;
+L3 adds AS03 scoped deterministic chat: source76 operations/69 paths. Không deploy
+runtime8103. Model chat/free prose vẫn chưa có.
+[Feature](features/DECISION_ASSISTANT.md) sở hữu implementation boundary/limits;
+mục này sở hữu FE workflow, DTO nguồn/OpenAPI sở hữu exact wire.
 
 ### 18.1. Capabilities và authority
 
 | Capability | Status | Meaning |
 | --- | --- | --- |
 | C03/C04/C05/C08 retained facts | IMPLEMENTED | Quyền và semantics hiện hành, không LLM |
-| Internal scoped evidence | IMPLEMENTED | Overview, explicit option và Ingredient; chỉ aggregate đã verified trong process cache |
-| Summary / on-demand chat contracts dưới đây | DESIGN_READY | Proposal cho L2/L3, chưa callable HTTP |
-| Model wording/fallback generation, durable generation cache | UNAVAILABLE | L2/L3 implementation và acceptance chưa chạy |
+| Internal scoped evidence | IMPLEMENTED | Cold durable consistency checks; cache chỉ optimization; overview/option/Ingredient |
+| AS01/AS02 summary | IMPLEMENTED | PostgreSQL lifecycle/HTTP/deterministic fallback; fake-provider VERIFIED |
+| On-demand chat AS03 | IMPLEMENTED | Finite read intents, clarification/history, deterministic answer, immutable scoped replay |
+| Unrestricted model prose / live Qwen quality | UNAVAILABLE | L2 model chỉ chọn presentation theo schema hẹp; không live acceptance |
 | Live evaluation / FE integration | UNAVAILABLE | L4/L5 chưa thực hiện |
 | Chat what-if, ordering, config/inventory mutation | UNAVAILABLE | Không thuộc contract này |
 
-PROPOSAL action mapping: dùng lại `planning.result.read` + `budget.read` +
+CURRENT FACT summary/chat action mapping: dùng lại `planning.result.read` + `budget.read` +
 `procurement.cost.read`, current actor/session và owning Store của Run. Không thêm
 permission key, không auto-grant. Kiểm trước load/materialize/provider và kiểm
 lại lúc trả kết quả/cache/replay. Thu hồi một quyền chặn toàn response, không
@@ -1462,15 +1466,16 @@ redact nửa bài hoặc gửi facts bị chặn cho provider. POST giữ Origin
 như mutations hiện hành. Client không được gửi facts/winner/proof, Store/actor
 authority hoặc system-role messages. History chỉ giúp hiểu câu hỏi, không evidence.
 
-### 18.2. Hai responsibilities mới — PROPOSAL, chưa wire
+### 18.2. Routes — CURRENT FACT summary/chat
 
 Routes dưới `/api/v1/procurement-plans/{plan_id}`; không dùng POST explanation
 legacy vì C08 đang hứa một structured read khác responsibility.
 
 | Method/path | Request | Result |
 | --- | --- | --- |
-| POST `/assistant/summary` | SummaryRequest | Summary wording cho retained Run/option, không rerun |
-| POST `/assistant/messages` | ChatRequest | Một answer hoặc structured clarification cho câu hỏi hiện tại |
+| POST `/assistant/summary` AS01 | SummaryRequest | Create/replay durable summary,200 SummaryEnvelope; không rerun |
+| GET `/assistant/summary/{generation_id}` AS02 | No body/query |200 SummaryEnvelope retained; không provider/job |
+| POST `/assistant/messages` AS03 | ChatRequest | Một deterministic answer hoặc structured clarification;200 ChatEnvelope |
 
 SummaryRequest = `{expected_evidence_version:Version,option_id:OptionId|null,
 locale:"vi"|"en",detail_level:"simple"|"technical"}`; mọi field required.
@@ -1481,7 +1486,7 @@ Reject422 khi quá bounds, không truncate facts/history ngầm. Không system/t
 history hoặc attachment. Unknown fields reject422. Một option context/request;
 option phải thuộc Run. Ingredient phải thuộc computed scope; label/ambiguity chỉ
 dùng retained names/IDs, không live aliases/catalog fallback. Option null ở summary
-là overview; chat Ingredient context dùng winner nếu có, còn không thì
+dùng winner nếu có, còn không là overview; chat Ingredient context dùng winner nếu có, còn không thì
 `not_selected` và balances/purchases nullable theo C05. Explicit option là đang
 xem option đó, không có nghĩa option được chọn/khuyến nghị.
 
@@ -1492,12 +1497,13 @@ RESULT_NOT_READY. Whole-run missing scope vẫn giải thích retained failure/u
 Ingredient unavailable409 COMPUTED_SCOPE_NOT_AVAILABLE. Không tự chọn entity khi
 question/explicit ID mâu thuẫn; trả clarification với candidates scoped đã lưu.
 
-### 18.3. Response / clarification — PROPOSAL
+### 18.3. Response / clarification — CURRENT FACT chat
 
-Envelope giữ `{data,meta:{request_id},error:null}`. AssistantResponse:
+AS01/AS02 dùng SummaryEnvelope §18.5. AS03 giữ envelope
+`{data,meta:{request_id},error:null}` với AssistantResponse:
 `{schema_version:"decision_assistant/1",run_id:UUID,evidence_version:Version,
 result_digest:Version|null,option_id:OptionId|null,ingredient_id:UUID|null,
-locale,kind:"answer"|"clarification",source:"model"|"deterministic_fallback"|
+locale,kind:"answer"|"clarification",source:"deterministic_fallback"|
 "deterministic_clarification",answer:string,claims:Claim[],references:Reference[],
 clarification:Clarification|null,diagnostics:Diagnostics}`.
 
@@ -1518,9 +1524,8 @@ clarification: claims/references có thể rỗng, không gọi model chỉ đ�
 ambiguity; FE giữ câu hỏi và hiện candidates inline. Retry sau lựa chọn explicit
 giữ original_question và gửi ingredient_id. Không auto đổi Ingredient/option.
 
-Diagnostics = `{reason:"NONE"|"MODEL_DISABLED"|"PROVIDER_UNAVAILABLE"|
-"GROUNDING_REJECTED"|"EVIDENCE_INSUFFICIENT",prompt_version:string|null,
-validator_version:string,model:string|null}`. Không raw prompt/output, credentials,
+Diagnostics L3 = `{reason:"MODEL_DISABLED"|"EVIDENCE_INSUFFICIENT",prompt_version:null,
+validator_version:"decision_chat_renderer/1",model:null}`. Không raw prompt/output, credentials,
 provider stacktrace hoặc sensitive logs trong FE. 200 fallback không chứng minh
 provider thành công. Khi model disabled/provider failure/grounding rejection,
 L2/L3 phải trả deterministic answer từ cùng authorized evidence, kèm limitations
@@ -1538,7 +1543,7 @@ Ví dụ request summary (synthetic identifiers):
 Ví dụ response chat clarification (không model):
 
 ```json
-{"data":{"schema_version":"decision_assistant/1","run_id":"00000000-0000-0000-0000-000000000001","evidence_version":"aggregate-1","result_digest":null,"option_id":null,"ingredient_id":null,"locale":"vi","kind":"clarification","source":"deterministic_clarification","answer":"Bạn muốn hỏi nguyên liệu nào?","claims":[],"references":[],"clarification":{"code":"ENTITY_AMBIGUOUS","question":"Bạn muốn hỏi nguyên liệu nào?","candidates":[{"ingredient_id":"00000000-0000-0000-0000-000000000020","name":"Sữa tươi"},{"ingredient_id":"00000000-0000-0000-0000-000000000021","name":"Sữa đặc"}],"original_question":"Sữa có cần nhập không?"},"diagnostics":{"reason":"EVIDENCE_INSUFFICIENT","prompt_version":null,"validator_version":"decision_grounding/1","model":null}},"meta":{"request_id":"req-chat"},"error":null}
+{"data":{"schema_version":"decision_assistant/1","run_id":"00000000-0000-0000-0000-000000000001","evidence_version":"aggregate-1","result_digest":null,"option_id":null,"ingredient_id":null,"locale":"vi","kind":"clarification","source":"deterministic_clarification","answer":"Bạn muốn hỏi nguyên liệu nào?","claims":[],"references":[],"clarification":{"code":"ENTITY_AMBIGUOUS","question":"Bạn muốn hỏi nguyên liệu nào?","candidates":[{"ingredient_id":"00000000-0000-0000-0000-000000000020","name":"Sữa tươi"},{"ingredient_id":"00000000-0000-0000-0000-000000000021","name":"Sữa đặc"}],"original_question":"Sữa có cần nhập không?"},"diagnostics":{"reason":"EVIDENCE_INSUFFICIENT","prompt_version":null,"validator_version":"decision_chat_renderer/1","model":null}},"meta":{"request_id":"req-chat"},"error":null}
 ```
 
 Ví dụ no-winner fallback answer: `kind="answer"`,
@@ -1547,36 +1552,132 @@ claim phải dẫn reference `/overview/explanation` có winner.option_id=null c
 `/overview/outcome`. IDs thật do server phát hành, không dùng illustrative ID làm
 assertion authority. Không suy no-winner thành certified infeasible.
 
-### 18.4. Errors, replay/cache và gates — PROPOSAL
+### 18.4. Chat errors, replay/cache và limits — CURRENT FACT
 
 Standard error envelope §2/10. 401 UNAUTHENTICATED;403 PERMISSION_DENIED/
 CSRF_CHECK_FAILED;404 RESOURCE_NOT_FOUND/OPTION_NOT_FOUND/INGREDIENT_NOT_IN_RUN;
 409 RESULT_NOT_READY/COMPUTED_SCOPE_NOT_AVAILABLE/EVIDENCE_VERSION_CONFLICT/
-IDEMPOTENCY_KEY_REUSED;413 RESOURCE_LIMIT_EXCEEDED;422 VALIDATION_ERROR;
-429 GENERATION_LIMIT_EXCEEDED;503 RESULT_INTEGRITY_UNAVAILABLE/EVIDENCE_NOT_VERIFIED/
+IDEMPOTENCY_KEY_REUSED;413 RESOURCE_LIMIT_EXCEEDED;422 INVALID_PLANNING_CONFIGURATION;
+503 RESULT_INTEGRITY_UNAVAILABLE/UNSUPPORTED_RESULT_VERSION/
 SERVICE_UNAVAILABLE. Auth/integrity failures không biến thành fallback200.
 Handled clarification là200 có candidates; FE không reset conversation/retry loop.
 
-Idempotency-Key UUID required cho hai POST có khả năng billable. L2 phải triển
-khai durable acceptance/replay trước bật provider: scope actor+Store+Run+operation+
-key; hash toàn normalized request/context/version. Cùng key/body replay không gọi
-model lần nữa; khác body409. Ambiguous provider completion không tự retry billable.
-In-progress same key409 GENERATION_IN_PROGRESS (manual poll/retry cùng key), không
-GET tạo job. L1 chưa có storage đó; không hứa crash-safe replay từ memory cache.
-Không cần conversation persistence: history bounded được client gửi lại.
+Idempotency-Key UUID required ở AS03, scoped actor+Store+Run+AS03+key. Một immutable
+receipt lưu toàn bounded normalized request (cả history/context/evidence version)
+và response theo assistant_message/1; hash/canonical/identity được kiểm khi replay.
+Cùng key/body trả cùng data, request_id envelope mới; khác body409. Kết quả deterministic
+và receipt commit atomically, concurrent same-key chỉ1 row. Không pending/running
+job, GET message endpoint hoặc conversation graph. Lost/unapplied commit ACK trả503;
+explicit retry cùng key an toàn, không tự retry. Mọi replay vẫn đọc verified retained
+evidence, đối chiếu renderer/version và quyền hiện hành; không dùng receipt như quyền.
+History bounded được client gửi lại và nằm trong receipt, không tạo conversation.
 
-Generation/cache identity phải bind aggregate/input/result digests, evidence schema,
-projection scope, locale/detail, question/history, prompt/validator/render versions
-và actual model/provider profile. Current session/Store/grants được recheck cho mọi
-delivery kể cả replay; cache không là quyền. Publish chỉ khi authority/version còn
-hợp lệ; đổi version không relabel output cũ. GET C03/C08 chỉ đọc facts; các GET
-tương lai nếu được duyệt chỉ đọc generation đã có, tuyệt đối không lazy model/job.
-Provider mặc định OFF; không tái dùng mapping enable flag/key policy để tự bật chat.
-Token/attempt/cost/deadline caps và live-data approval cần freeze trước L4.
+L3 không gọi provider dù summary đã bật. Finite vocabulary chọn read intent cho
+outcome, cost/budget/pairwise, requirements, scope, proof, limitations, summary hoặc
+Ingredient stock/purchases/daily simulated balances. Unknown/unsupported wording,
+what-if/orders/mutations trả QUERY_UNSUPPORTED clarification. Không claim tổng quát
+khả năng hiểu paraphrase. Full retained names/UUID nhận entity; tên trùng/mơ hồ hoặc
+explicit ID trái câu hỏi clarify, không đổi entity. Short follow-up có thể dùng
+last user history message để nhận1 Ingredient; assistant history không cung cấp facts.
+Không có captured label thì yêu cầu ID qua C04, không đặt tên. Raw question/history
+không được gửi cho summary provider. Answer server-owned và mọi ref resolve cùng
+projection; không model claims/repair/removal. Current rights kiểm trước projection,
+receipt/publication và delivery. GET C03/C08/AS02 không lazy model/job.
 
-L2–L4 acceptance phải kiểm: sau salvage còn trả lời ý chính; repair không sinh
+PROPOSAL model chat: chỉ bật sau durable billable lifecycle, explicit separate flag,
+task/profile/versions và token/attempt/cost/deadline caps/live-data approval. Không
+tái dùng SUMMARY_LLM_ENABLED hay mapping key policy để tự bật. L3 receipt không
+phải provider work queue; không hứa recovery cho future ambiguous billable calls.
+
+L3–L4 nếu cho phép free prose phải kiểm: sau salvage còn trả lời ý chính; repair không sinh
 “đồng đồng”; negation tiếng Việt/English và positive controls; “đủ điều kiện”/
 paraphrase hợp lệ không bị false reject; no-winner reject “BALANCED đã được chọn”.
 Winner chỉ best evaluated candidates; UNPROVEN/INCOMPLETE không nâng thành certified,
-pairwise facts không tạo global ranking. L1 không implement prose repair, sentence
-removal, intent resolver hoặc regex grounding.
+pairwise facts không tạo global ranking. L2 không implement prose repair, sentence
+removal, chat intent resolver hoặc regex grounding; không báo REPAIRED/SENTENCE_REMOVED.
+
+### 18.5. AS01/AS02 — CURRENT FACT summary contract
+
+Request AS01 đúng SummaryRequest §18.2, unknown fields422. Idempotency-Key UUID,
+exact Origin/session/CSRF required; If-Match/If-None-Match rejected400. Body≤32KiB
+streaming; không history/question/system messages hoặc client business facts.
+`option_id=null` dùng winner nếu có, còn không trả global no-winner/blocked/failed
+facts, costs unavailable khác0. Explicit option phải thuộc Run; đang xem option
+khác winner không trở thành lựa chọn. `locale` và `detail_level` explicit, technical
+thêm schema provenance; không đoán từ question.
+
+SummaryEnvelope = `{data:SummaryView,meta:{request_id},error:null}`.
+SummaryView = `{generation_id:UUID,run_id:UUID,status:"running"|"completed"|"failed",
+created_at:Timestamp,finished_at:Timestamp|null,result:SummaryAnswer|null,
+error_code:string|null}`. AS01 thường trả200 completed sau execute; completed
+deterministic result có thể degraded qua source/diagnostics, không làm Run failed.
+Replay failed trả200 retained failure với result=null. AS02 chỉ đọc, hỗ trợ nhìn
+running/failed/completed và không recover/write job. Success có Cache-Control
+private,no-store; AS01 Location trỏ AS02. Không global search/conversation endpoint.
+
+Ví dụ AS02 đọc accepted work đang chạy (synthetic IDs, không gọi provider):
+
+```json
+{"data":{"generation_id":"00000000-0000-0000-0000-000000000011","run_id":"00000000-0000-0000-0000-000000000001","status":"running","created_at":"2026-10-15T02:00:00Z","finished_at":null,"result":null,"error_code":null},"meta":{"request_id":"req-summary"},"error":null}
+```
+
+SummaryAnswer nguồn tại `contracts/plan_summary.py`: schema_version=plan_summary/1,
+identity=EvidenceIdentity (Run/Store/request/input/result/aggregate versions/digests,
+temporal capture times), option_id nullable, locale/detail_level, source:
+deterministic_fallback|model_presentation, presentation:{ordering,tone}, answer,
+claims:[{family,text,evidence_ids}], references:EvidenceReference[], diagnostics,
+renderer_version. Sáu families required: outcome,cost,requirements,coverage,proof,
+limitations; outcome đứng đầu. Typed exact numbers/currency/units từ evidence được
+server render, assessments theo Product/path, không tổng cup/piece hay g/ml.
+Winner explanation chỉ trong evaluated candidates; finite certificate và UNPROVEN
+giữ nguyên scope. Khi có retained pairwise deltas, summary lấy một cặp liên quan
+option đang xem (hoặc cặp đầu ở overview), giữ chiều sau trừ trước, exact outlay
+và tối đa một Product/path service delta đáng chú ý; không nâng thành global ranking.
+Chưa có causal reasons, profit, actual outcomes hoặc zero-purchase baseline;
+không tự tạo các facts này.
+Failed partial Run có thể giữ winner của selector như diagnostic fact; khi đó
+recommendation_available=false, summary phải nói rõ không có khuyến nghị khả dụng,
+không xóa winner lịch sử hoặc nâng failed thành completed. Completed no-winner
+vẫn không được mang winner. Temporal hypothetical-current-capture được cảnh báo
+rõ, không relabel current balances thành tồn lịch sử.
+
+L2 optional model chỉ trả SummaryExpression `{ordering:family[6],tone:plain|brief}`,
+đủ mỗi family đúng một lần; không free text/claims/numbers/citations. Server chọn
+variant đã kiểm và render facts/refs. Đây là constrained presentation, không claim
+free-form Qwen summary quality. Raw assertions dù có đúng số/entity/citation cũng
+reject schema; không dùng numeric matching làm grounding. Mọi final result được
+đối chiếu lại renderer + pinned evidence khi fresh read, kể cả cache/replay.
+
+Diagnostics có disposition=ACCEPTED|FALLBACK, reason=NONE|MODEL_DISABLED|
+PROVIDER_UNAVAILABLE|SCHEMA_REJECTED|GROUNDING_REJECTED|INPUT_LIMIT|
+PROCESS_INTERRUPTED; requested/resolved model/provider nullable, attempts/input/
+output tokens khi biết, prompt/validator versions. Model OFF không gọi provider;
+schema failure, route/model substitution, timeout hoặc vượt bounds trả deterministic
+answer đủ sáu families, không repair/removal. Không raw payload/secrets/provider
+stacktrace trong response/log mặc định. Đã verify fake transport, chưa live Qwen.
+
+Một generation pin actor/Store/Run + request + evidence digest + profile/schema/
+renderer/prompt/validator. Same generation identity running/completed được reuse,
+distinct keys có immutable receipts; cùng key đổi request409 IDEMPOTENCY_KEY_REUSED.
+In-progress409 GENERATION_IN_PROGRESS, client chỉ retry cùng key theo thao tác
+explicit; không tự tạo key mới vì timeout. Lost acceptance/terminal ACK chỉ reconcile
+sau transport-uncertain commit và fresh scoped exact retained match. Không commit
+thì không fabricated success. Tối đa20 running generations/Store; quota không
+chặn replay generation đã có. Failed generation không phải permanent negative
+cache: cùng key vẫn failure cũ, key mới explicit có thể retry với generation ID mới.
+
+Không worker/thread/queue mới: acceptance + running claim cùng transaction ngắn,
+provider ngoài Session; publication transaction mới kiểm current rights/Run digest
+và claim, terminal rows/receipts immutable. GET không recovery/call. Sau restart,
+POST cùng key chỉ fail running work khi OS chứng minh owner process đã chết:
+PROCESS_INTERRUPTED, không phát lại ambiguous provider attempt. Alive/UNKNOWN
+owner vẫn409; không TTL guess. Thu hồi quyền khi provider đang chạy bỏ output,
+mark failed AUTHORITY_CHANGED; current auth tiếp tục chặn mọi read/replay.
+
+Errors theo §10:401/403/404,400 INVALID_REQUEST,409 RESULT_NOT_READY/
+COMPUTED_SCOPE_NOT_AVAILABLE/EVIDENCE_VERSION_CONFLICT/IDEMPOTENCY_KEY_REUSED/
+GENERATION_IN_PROGRESS/STALE_SUMMARY_CLAIM,413 RESOURCE_LIMIT_EXCEEDED,
+422 VALIDATION_ERROR,429 GENERATION_LIMIT_EXCEEDED,503 RESULT_INTEGRITY_UNAVAILABLE/
+UNSUPPORTED_RESULT_VERSION/SERVICE_UNAVAILABLE. Missing phase evidence trên failed
+Run là nullable business availability, khác corrupt schema/hash hay technical DB
+failure; không blanket fallback200 cho auth/integrity/technical failure.

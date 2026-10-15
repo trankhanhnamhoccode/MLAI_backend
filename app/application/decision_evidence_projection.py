@@ -4,6 +4,7 @@ from uuid import UUID
 from app.application.contracts.decision_evidence import (
     DecisionEvidence, EvidenceIdentity, EvidenceOverview, IngredientIdentity,
     OptionIdentity, references_for,
+    PairwiseEvidence,
 )
 from app.application.contracts.planning_public import RunView
 from app.application.contracts.planning_run import PlanningRunRecord
@@ -11,7 +12,7 @@ from app.application.planning_inspection_projection import terminal, select, exp
 
 
 def project_evidence(record: PlanningRunRecord, view: RunView, *, option_id: str | None = None,
-                     ingredient_id: UUID | None = None) -> DecisionEvidence:
+                     ingredient_id: UUID | None = None, include_comparisons: bool = False) -> DecisionEvidence:
     """Trusted verified-reader input only; never accept records from HTTP clients.
 
     Overview excludes option payloads. Ingredient/detail is requested explicitly;
@@ -44,6 +45,12 @@ def project_evidence(record: PlanningRunRecord, view: RunView, *, option_id: str
         options=tuple(OptionIdentity(option_id=o.option_id, source_strategies=o.source_strategies,
             eligible=o.eligible) for o in result.options) if result else (),
         explanation=explanation(record, view, None), assumptions=prepared.assumptions if prepared else (),
+        comparisons=tuple(PairwiseEvidence(from_option_id=d.from_token,to_option_id=d.to_token,currency=d.currency,
+            total_outlay_delta=d.total_outlay,products=d.products) for d in record.result.comparison.deltas
+            if selected is None or selected.option_id in (d.from_token,d.to_token))
+            if include_comparisons and record.result and record.result.comparison else None,
+        comparison_availability='not_requested' if not include_comparisons else
+            'known' if record.result and record.result.comparison else 'unavailable',
         omissions=('ZERO_PURCHASE_BASELINE_NOT_PROJECTED', 'ACTUAL_OUTCOMES_NOT_CAPTURED',
                    'PROBABILITIES_PROFIT_CAUSALITY_NOT_CAPTURED',
                    *(("COMPUTED_SCOPE_NOT_AVAILABLE",) if prepared is None else ()),

@@ -25,6 +25,13 @@ test tooling, not normal startup or a product permission.
 
 ## CURRENT FACT ? dependency direction
 
+Assistant L3 AS03 wires AssistantChat to PublicPlanning retained consistency reads,
+finite intent/renderer and concrete immutable MessageRepository. No model, solver,
+worker or live catalog dependency. Request/history/evidence version pin one atomic
+receipt; current authority repeats before projection/publication/delivery/replay.
+The L2 optional summary provider remains separate; its configured empty route now
+means explicitly permitted default OpenRouter routing with fallback disabled.
+
 ```text
 API / Pydantic DTO boundary
   -> application use cases and typed captured values
@@ -78,8 +85,13 @@ lifespan thread in the same backend process. Default flags are OFF.
 - Durable claims fence publication. Only uncertain commit with verified fresh
   retained aggregate may reconcile as success. Only OS-proven dead owner process
   incarnations recover as failed; no elapsed-time guess or automatic recompute.
-- Retained reads verify snapshots/digests/current rights without engine/provider
-  calls. PDF has its own durable export aggregate, local private bytes, verified
+- Assistant evidence reads verify snapshots/digests/current rights using retained
+  equation/relationship checks without engine/provider calls. Existing default
+  C03/PDF cold validators still replay exact BOM/serving/selector checks: explicit
+  technical debt, not a no-recomputation guarantee for those old callers.
+  Summary uses synchronous durable acceptance/claim, closes Sessions before
+  optional bounded provider presentation, then rechecks rights/versions and fences
+  immutable publication; GET reads do no generation/recovery. PDF has its own durable export aggregate, local private bytes, verified
   SHA/size and rights at acceptance/materialization/publication/download.
 
 ## ACCEPTED DECISION ? historical and hypothetical meaning

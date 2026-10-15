@@ -1,5 +1,39 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
+## CURRENT FACT — isolated assistant L2 schema
+
+L3 additive head0029_assistant_messages (parent0028) adds assistant_messages,
+bringing this worktree to75 tables with Alembic. All sibling revision directories
+were checked; no0029 collision observed at creation. Composite PK actor/Store/Run/
+key digest owns AS03 idempotency. RESTRICT FKs, normalized request digest and typed
+assistant_message/1 JSONB request/response plus record SHA-256; no provider secret.
+All UPDATE/DELETE rejected by trigger; downgrade refuses retained rows. Replay
+checks current rights, exact request, raw hash and current pinned deterministic
+renderer/evidence before delivery. No conversation graph, job or mutable lifecycle:
+deterministic result and receipt commit atomically. Lost ACK returns503; explicit
+same-key retry safely reads or recreates one receipt. Only owned assistant test DB
+is migrated; no other worktree/runtime DB is touched.
+
+`0028_assistant_summaries` depends only on0027_self_service_stores. All registered
+worktree migration directories were inspected before choosing the unused revision;
+no other head/dependency is merged or edited. Additive2 tables,74 including Alembic;
+only the owned assistant test DB is migrated, not main/demo/readiness/challenger.
+
+plan_summary_generations retains id, actor/Store/PlanningRun RESTRICT FKs,
+identity/record SHA-256, status, created_at and typed canonical summary_generation/1
+JSONB containing pinned request/profile/evidence digest/process/claim and result.
+Partial unique(actor,Store,Run,identity_digest) applies to running/completed rows;
+explicit new-key retry after failure can create a new generation. Receipts retain
+actor/Store/Run/key digest PK, request digest and generation FK. They do not store
+raw keys, credentials or mutate PlanningRun/operational rows.
+
+DB triggers refuse receipt updates/deletes and all terminal generation updates/
+deletes; running→terminal retains acceptance/claim identity and permits only
+status/finished_at/result/error changes. Application additionally verifies exact
+hash/canonical/column identity, renderer facts/refs and current rights. Downgrade
+refuses retained generation rows; no purge/backfill or migration of another DB.
+Lifecycle semantics belong to [Planning §18](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
+
 CURRENT FACT self-service: head0027_self_service_stores,71 application tables/72 tổng.
 Additive store_creation_receipts: composite PK(actor_id,key_digest), request_digest,
 Store RESTRICT FK/unique, immutable typed result JSONB và created_at. T03 Store,

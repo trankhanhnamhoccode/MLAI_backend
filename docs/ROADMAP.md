@@ -1,27 +1,31 @@
 # Remaining work and acceptance gates
 
-## CURRENT FACT — Decision Assistant L1 / remaining L2–L5
+## CURRENT FACT — Decision Assistant L3 / remaining L4–L5
 
-L1 internal evidence/projections, typed scoped refs and current-sensitive-rights
-application boundary implemented; focused unit/cache/auth-order and unchanged C03/
-C08 OpenAPI checks, no DB/live acceptance. Cold evidence reads require an existing
-verified same-process cache entry; no hidden business re-evaluation. See
+L1 checkpoint is local; L2 WIP implements cold durable consistency evidence reads,
+typed summary renderer/fallback, constrained model presentation and AS01/AS02
+durable receipt/claim/publication lifecycle. Focused unit/API and owned PostgreSQL
+tests exercise fresh-process/revocation/concurrency/ACK/restart behavior with no
+engine/provider network. Cold misses no longer require cached verification. See
 [implementation/limits](features/DECISION_ASSISTANT.md) and
-[DESIGN_READY FE contract proposal](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
+[IMPLEMENTED summary / DESIGN_READY chat](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
 
-- L2 pending: resolve cold availability without hidden business recomputation;
-  summary/fallback generation, grounding/coverage, durable idempotency/versioned
-  cache and bounded opt-in provider. No generation implemented in L1.
-- L3 pending: chat intents, scoped clarification and bounded history; no what-if,
-  ordering or config/inventory writes.
+- L3 implemented: deterministic on-demand chat intents, scoped Ingredient
+  clarification, bounded user-history entity context and immutable durable replay.
+  No what-if/ordering/config/inventory writes or model chat. Finite vocabulary
+  clarifies unsupported questions; general natural-language intent/wording quality
+  remains unverified. Free prose still requires semantic/negation/coverage guards.
 - L4 pending: separately approved frozen-evidence live evaluation, cost/attempt
   caps, raw/final diagnostics and legacy regression corpus/paraphrase coverage.
-- L5 pending: HTTP/FE integration, guarded dedicated-DB security/revocation,
-  fresh retained reads after live mutations and process/restart acceptance.
+  A narrow explicitly authorized synthetic Gemini summary smoke used2 calls with
+  price/token/attempt guards; this does not complete the broader L4 gate.
+- L5 pending: FE/browser/runtime integration and broader operational acceptance.
+  Summary HTTP/owned-DB revocation/fresh retained reads/restart are L2 acceptance,
+  not a claim that chat/whole FE or production deployment is verified.
 
 No readiness/challenger merge is required to explain existing verified Runs;
 data admission and model quality do not become proven by wording/projection tests.
-No automatic next slice follows L1; runtime8103/main/FE/other WIP remain outside it.
+No automatic next slice follows L2; runtime8103/main/FE/other WIP remain outside it.
 
 ## CURRENT FACT
 

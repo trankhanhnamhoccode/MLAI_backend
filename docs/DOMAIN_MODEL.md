@@ -1,5 +1,20 @@
 # Domain model and business meaning
 
+CURRENT FACT assistant L2: summary is retained presentation of PlanningRun evidence,
+not a new Decision, purchase order or inventory fact. Six material claim families
+are server-rendered with exact retained values/provenance; optional model chooses
+bounded presentation only. Failed/unknown/no-winner/partial and proof scope remain
+distinct. Generation state is separate from PlanningRun status; provider failure
+can yield a deterministic completed summary without changing Run outcome. Workflow:
+[Planning §18](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
+
+CURRENT FACT L3: a chat message is a scoped explanation of the same retained Run,
+not a new decision or conversation authority. History can identify an Ingredient
+from a prior user message for an explicit follow-up, never supply stock/cost/winner
+facts. Ambiguous/conflicting entities clarify; unsupported operations do not run.
+Deterministic message receipts preserve request/context/version and answer; summary
+provider enablement does not enable chat generation or free-form model assertions.
+
 CURRENT FACT self-service Store: authenticated active verified credential-ready
 holder tự tạo Store với name/timezone/currency explicit và trở thành Owner đúng
 Store mới. Signup/verify không tự tạo Store; Store không đồng nghĩa business READY.

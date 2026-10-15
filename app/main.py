@@ -112,6 +112,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.readiness = ReadinessReads(application.state.auth,application.state.forecast_serving,
         planning_available=lambda:application.state.planning_worker is not None and application.state.planning_worker.available)
     application.state.planning_public = PublicPlanning(application.state.auth,application.state.forecast_serving)
+    from app.application.use_cases.plan_summary import PlanSummaries
+    from app.infrastructure.plan_summary_provider import OpenRouterSummaryProvider, profile_from_settings
+    application.state.plan_summaries = PlanSummaries(application.state.planning_public,
+        profile_from_settings(configuration),OpenRouterSummaryProvider(configuration.openrouter_api_key))
+    from app.application.use_cases.assistant_chat import AssistantChat
+    application.state.assistant_chat = AssistantChat(application.state.planning_public)
     from app.application.use_cases.planning_exports import PlanningExports
     from app.infrastructure.storage.planning_pdf import PlanningPDFStore
     from app.infrastructure.planning_pdf_renderer import PlanningPDFRenderer
@@ -135,6 +141,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(planning_configuration_router)
     application.include_router(readiness_router)
     application.include_router(planning_public_router)
+    from app.api.plan_summary import router as summary_router
+    application.include_router(summary_router)
+    from app.api.assistant_chat import router as chat_router
+    application.include_router(chat_router)
     from app.api.history import router as history_router
     application.include_router(history_router)
     from app.api.planning_exports import router as pdf_router

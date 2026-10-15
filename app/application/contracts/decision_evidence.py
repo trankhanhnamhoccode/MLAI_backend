@@ -13,6 +13,7 @@ from app.application.contracts.planning_public import (
 )
 from app.application.contracts.planning_inspection import Explanation, IngredientDetail
 from app.application.contracts.planning_setup import PlanningRequest
+from app.application.contracts.procurement_comparison import SignedQuantity, ProductDelta
 from app.application.planning_serialization import digest
 
 
@@ -46,6 +47,14 @@ class OptionIdentity(DTO):
     eligible: bool
 
 
+class PairwiseEvidence(DTO):
+    from_option_id: str
+    to_option_id: str
+    currency: str
+    total_outlay_delta: SignedQuantity
+    products: tuple[ProductDelta,...]
+
+
 class EvidenceOverview(DTO):
     status: Literal['completed', 'failed']
     outcome: str | None
@@ -64,13 +73,20 @@ class EvidenceOverview(DTO):
     explanation: Explanation
     assumptions: tuple[str, ...]
     omissions: tuple[str, ...]
+    comparisons: tuple[PairwiseEvidence,...] | None = None
+    comparison_availability: Literal['not_requested','unavailable','known'] = 'not_requested'
 
     @model_validator(mode='after')
     def recommendation(self):
         winner = self.explanation.winner.option_id
         available = self.status == 'completed' and self.outcome == 'recommendation_available'
-        if self.recommendation_available != available or available != (winner is not None):
+        if self.recommendation_available != available or (available and winner is None):
             raise ValueError('Recommendation outcome and winner must agree')
+        # The pipeline can fail after retaining exact candidates/selector output.
+        # Preserve that historical identity without promoting it to an actionable
+        # recommendation. Completed no-winner outcomes cannot carry a winner.
+        if winner is not None and not available and self.status!='failed':
+            raise ValueError('Completed no-recommendation outcome cannot carry a winner')
         if winner is not None and not any(o.option_id == winner and o.eligible for o in self.options):
             raise ValueError('Winner must be an eligible retained option')
         if (winner is not None) != (self.explanation.winner.reason_code == 'WINNER_FOUND'):
@@ -81,13 +97,27 @@ class EvidenceOverview(DTO):
             raise ValueError('C03 and C08 option identities disagree')
         if len({o.option_id for o in self.options}) != len(self.options):
             raise ValueError('Duplicate option identity')
+        ids={o.option_id for o in self.options}
+        units={p.product_id:p.selling_unit for p in self.scope.menu_products} if self.scope else {}
+        computed=set(self.scope.computed_product_ids) if self.scope else set()
+        if (self.comparison_availability=='known') != (self.comparisons is not None):
+            raise ValueError('Comparison availability and retained facts disagree')
+        for comparison in self.comparisons or ():
+            if not {comparison.from_option_id,comparison.to_option_id} <= ids or comparison.from_option_id==comparison.to_option_id:
+                raise ValueError('Pairwise comparison is outside this Run')
+            if comparison.currency!=self.configuration.budget.currency:
+                raise ValueError('Pairwise currency differs from retained budget')
+            if len({(p.product_id,p.path) for p in comparison.products})!=len(comparison.products):
+                raise ValueError('Duplicate pairwise Product/path')
+            if any(p.product_id not in computed or units.get(p.product_id)!=p.unit for p in comparison.products):
+                raise ValueError('Pairwise Product/unit differs from computed scope')
         return self
 
 
 class EvidenceReference(DTO):
     evidence_id: str
     pointer: str
-    source: Literal['retained_C03', 'retained_C08', 'retained_C05', 'retained_capture']
+    source: Literal['retained_C03', 'retained_C08', 'retained_C05', 'retained_capture', 'retained_comparison']
 
 
 class DecisionEvidence(DTO):
@@ -160,6 +190,8 @@ def references_for(identity: EvidenceIdentity, overview: EvidenceOverview,
         'status', 'outcome', 'recommendation_available', 'request', 'configuration',
         'temporal_basis', 'scope', 'forecast', 'execution', 'strategies', 'options')]
     paths += [('/overview/explanation', 'retained_C08'),
+              ('/overview/comparisons', 'retained_comparison'),
+              ('/overview/comparison_availability', 'retained_comparison'),
               ('/overview/selection_proof', 'retained_capture'),
               ('/overview/source_references', 'retained_capture'),
               ('/overview/ingredients', 'retained_capture'),
@@ -169,7 +201,7 @@ def references_for(identity: EvidenceIdentity, overview: EvidenceOverview,
         paths += [('/option/' + field, 'retained_C03') for field in type(option).model_fields]
     if ingredient is not None:
         paths += [('/ingredient/' + field, 'retained_C05') for field in type(ingredient).model_fields]
-    context = (identity.model_dump(mode='json'), option.option_id if option else None,
+    context = (identity.model_dump(mode='json'), overview.comparison_availability, option.option_id if option else None,
                str(ingredient.ingredient_id) if ingredient else None)
     return tuple(EvidenceReference(evidence_id='ev-' + digest('decision_evidence/1', [context, path]),
                                    pointer=path, source=source) for path, source in paths)

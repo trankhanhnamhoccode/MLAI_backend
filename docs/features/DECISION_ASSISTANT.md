@@ -1,9 +1,12 @@
 # Decision Assistant evidence foundation
 
-CURRENT FACT L1: immutable internal `decision_evidence/1` and pure projections
-exist; no HTTP summary/chat route, model call, generation, persistence or new grant.
+CURRENT FACT L2/L3: immutable `decision_evidence/1`, durable cold consistency reads,
+typed deterministic summary, optional bounded model presentation and AS01/AS02
+durable PostgreSQL lifecycle and AS03 deterministic scoped chat are implemented.
+Focused offline/owned-DB verification and an explicitly authorized synthetic Gemini
+summary smoke are separate evidence. No new grant or deployment.
 The [Planning contract §18](../PROCUREMENT_API_CONTRACT_VI.md#decision-assistant)
-owns the proposed FE requests/responses/errors/lifecycle. Existing C08 remains the
+owns current summary/chat requests/responses/errors/lifecycle. Existing C08 remains the
 structured explanation in §15.3. ADR-001/004/011/020–022 govern retained authority.
 
 ## Internal boundary
@@ -13,7 +16,8 @@ reuses `read_record`: resolve owning Store, current actor/session/Store membersh
 and all READ_PERMISSIONS **before** loading aggregate content. Whole denial applies
 to missing budget/cost rights. Every call repeats authorization, including cache
 hits; the caller cannot submit authoritative facts/winner/proof. No route/composition
-change exposes this internal method. Existing3MiB inspection bound still applies.
+change exposes raw evidence input. AS01/AS02 call this trusted boundary, never
+accept client facts. Existing3MiB inspection bound still applies.
 
 `project_evidence` consumes only a trusted already-verified record/C03 view pair.
 It is not an untrusted JSON decoder or authenticity verifier. Frozen nested DTOs,
@@ -32,6 +36,15 @@ per-Product/path service and assessments. Ingredient detail reuses C05 projectio
 keeping captured stock separate from simulated daily balances/shortage/ending.
 With no winner, an explicit reference option remains reference-only. Overview does
 not embed option purchases/service tables or daily Ingredient details.
+Summary explicitly requests a small pairwise projection from retained comparison
+facts (cost and Product deltas, no Ingredient table); ordinary overview does not.
+One relevant pair may be rendered with exact to-minus-from direction, not a global
+ranking or causal claim. Comparison availability participates in scoped ref IDs.
+Failed partial pipelines may retain a selector winner; evidence preserves that
+diagnostic identity while recommendation_available stays false. This corrects
+L1's over-strict rejection of that valid retained state, without changing engine
+facts or permitting a winner on completed no-winner outcomes. Summary states the
+failure explicitly and never promotes the diagnostic winner into a recommendation.
 
 Evidence refs bind schema, Run/Store, aggregate/input/result/request identities,
 versions and projection context. `resolve` accepts only issued IDs and resolves
@@ -40,45 +53,141 @@ or changed-version refs are rejected. A field citation alone is not prose ground
 Omissions explicitly exclude actual outcomes, probability/profit/causality and a
 zero-purchase baseline from this projection; no extra business calculation exists.
 
-## Cold verification limit and drift
+## Durable cold verification and compatibility
 
-CURRENT FACT / TECHNICAL DEBT: architecture prose describes retained reads as not
-calling the engine. Existing cold `decode_row` actually validates nested contracts
+HISTORICAL INFORMATION L1: cache-only reads returned EVIDENCE_NOT_VERIFIED after
+restart/eviction. Existing default cold `decode_row` validates nested contracts
 that call `expand_bom` and exact procurement `_evaluate`/serving and selector
 reconciliation. It does not run native candidate search, but it does recompute
-business checks. L1 preserves those existing callers and does not hide the drift
-by weakening historical validation or changing ADRs.
+business checks. This remains explicit technical debt for existing C03/PDF callers;
+their default validation and historical replay/digests are preserved.
 
-Assistant L1 uses `VerifiedPlanningReads.read(require_cached=True)`: hash the entire
-stored JSON and bind all identity/revision columns, then accept only a previously
-verified terminal entry in the **same** reader cache. Cold/mutated/evicted entry
-fails closed with503 EVIDENCE_NOT_VERIFIED (integrity mismatch has its own503).
-No cold decoder, BOM, forecast, serving, procurement or selector is invoked on
-this L1 path. Restart/entry eviction therefore removes evidence availability until
-existing authorized retained reading independently verifies the aggregate. L1
-does not trigger that reading as a hidden warm-up. Default cache has4 entries/16MiB;
-oversized records are never cached. Evidence delivery remains bounded, not a latency
-or capacity guarantee. L2 must explicitly resolve this availability limit before
-promising general generation across arbitrary retained runs/restarts.
+CURRENT FACT L2 uses `VerifiedPlanningReads.read(evidence=True)` and an explicit
+trusted Pydantic validation context for retained consistency. It verifies whole
+JSON hash, storage/phase versions, column identities, canonical round-trip,
+input/result digests, capture/configuration/provenance relationships and all typed
+boundaries. It checks BOM equations, serving conservation/coverage/FEFO, candidate
+packs/MOQ/budget/fees/arrivals/capacity/services, journal consistency/domain
+coverage, comparison projections and selector key inequalities. No engine
+entrypoint, solver, forecast, allocator, `_evaluate`, `expand_bom` or selector is
+executed. Validation arithmetic checks retained facts; it does not generate new
+business results. No `model_construct`, renamed fake verified object or persisted
+verification receipt bypasses semantics. Ordinary write/re-execution validation
+continues using its existing stronger replay checks.
+
+Journal vectors without retained serving rows cannot be independently simulated
+or re-ranked by this reader; their recorded classifications remain retained
+execution evidence. Full finite journal coverage/consistency and published
+candidate equations are checked, but this is not a new independent certificate
+of every rejected vector or historical optimizer correctness. Summary never
+upgrades retained proof/UNPROVEN/INCOMPLETE. Database hash is not source authenticity.
+
+Fresh Session/process or cache miss succeeds on supported retained graphs without
+warm-up. Unsupported version has distinct503 UNSUPPORTED_RESULT_VERSION; corruption
+is503 RESULT_INTEGRITY_UNAVAILABLE; absent phase facts remain nullable availability;
+technical DB/programming failures are not business fallback. Validation modes have
+separate cache keys so a consistency read cannot weaken a default C03/PDF deep read.
+Each hit still hashes raw JSON and binds identity/revision columns. Negative failures
+are not cached. Cache4 entries/16MiB is only an optimization; oversized records use
+the cold path. No latency/capacity SLA is inferred.
+
+## Summary implementation
+
+`plan_summary_rendering` owns facts, exact displays and six material claim families.
+Provider returns only typed ordering/tone, not prose/assertions/entities/numbers.
+Server-owned variants give bounded language choice and preserve the answer even on
+schema rejection. This intentionally narrow L2 presentation cannot demonstrate
+unrestricted model prose quality; numeric repair, sentence removal and NLP guards
+remain unimplemented. Every claim ref resolves; final stored answer is compared
+against renderer plus pinned evidence on reads. No raw workbook/source text/history
+is sent. A captured Product name may appear inside a server-rendered pairwise
+statement; it remains quoted data and cannot become provider instructions or
+authoritative model assertions.
+
+SummaryProfile is separate from Import config/flag; default OFF, explicit model
+required for network use. Empty providers explicitly permits default OpenRouter
+routing; explicit routes remain restricted. Key alone never enables it. Transport
+reuses only mapping's NoRedirect behavior, with task-specific strict schema, input/
+output byte caps, token cap, per-read timeout/cooperative deadline, one attempt and
+no route/model substitution or ambiguous billable retry. Diagnostics retain safe
+model/provider/prompt/validator/usage/failure information; no raw sensitive logs.
+
+`PlanSummaries` owns synchronous acceptance/running claim, provider outside Session,
+fresh authorized publication and retained read/replay. Concrete SummaryRepository
+owns queries. Two purpose-specific tables and partial unique identity index prevent
+concurrent duplicate running/completed generations; immutable key receipts and DB
+terminal-transition triggers fence publication. Failed identities allow explicit
+new-key retries, not automatic provider replay. OS-dead owner recovery occurs only
+on explicit POST replay; GET never calls a provider, starts work or performs recovery.
+Detailed statuses/idempotency/errors belong to the canonical contract, not this doc.
 
 ## Verification and remaining acceptance
 
-CURRENT FACT: focused no-DB tests use hand-authored retained-read contract fixtures,
-not generated PlanningRuns or real customer evidence. They exercise overview and
+CURRENT FACT live synthetic summary smoke: google/gemini-2.5-flash resolved Google;
+2 single-attempt completions, each422 prompt/28 completion tokens,1.875s measured
+transport latency; usage.cost total$0.0003932. First schema-valid raw response
+fell back at the application explicit-provider guard; guard fixed with unit/DB
+regressions, second response accepted. Raw ordering/tone becomes exact server-owned
+claims; final refs/schema/GET/replay and offline timeout fallback checked through
+AS01/AS02. Pricing/parameter metadata checked before each call; max_price0.3/2.5
+USD per million and conservative text-token reservation$0.0203008/call,≤3 calls and
+≤$0.10, no retry. Safe synthetic raw/final and write-ahead slots stay ignored under
+runtime/assistant-test/live-smoke. Regular pytest skips live tests; explicit command
+in runbook. No real Store facts or key/headers are retained. The check proves this
+constrained presentation only, not arbitrary prose grounding or L4 evaluation.
+
+## Scoped chat implementation
+
+CURRENT FACT AS03 uses `AssistantChat`, `assistant_chat_rendering` and typed
+ChatRequest/AssistantResponse. Finite read intents cover outcome, cost/budget/
+pairwise, requirements, computed scope, proof, limitations, summary and Ingredient
+stock/proposed purchases/daily simulated shortages/ending. Exact retained dates,
+units/path and known/zero/unavailable remain distinct; no stock/fee/cost calculation
+or live lookup. Unknown wording/operations clarify, not guess. Vocabulary matching
+is a deliberately limited deterministic resolver, not a general semantic model.
+
+Full retained names/canonical UUIDs identify entities; duplicate/absent names or
+conflicting explicit context require clarification. No invented aliases. A short
+explicit follow-up can use the last user history message to identify one retained
+Ingredient. Assistant history assertions never become facts; arbitrary history
+does not authorize system/tool messages or operations. Without captured labels,
+candidates omit names and ask for canonical ID via C04. No auto context mutation.
+
+Chat has no provider wiring/config; SUMMARY_LLM_ENABLED does not activate it. This
+choice follows the smoke's limited presentation evidence: free model assertions
+and general language/intent quality remain future acceptance. Output is fully
+server-owned, grounded and available with provider unavailable. No NLP repair or
+sentence removal is reported. One immutable AS03 receipt stores bounded request/
+history/context/version and deterministic response. Replays validate pinned evidence,
+renderer, hash and current rights; conflicting key/body409. Concurrent identical
+requests commit one row; technical/unknown commit failures503 and explicit same-key
+retry safely replay or create once. No pending work, worker or billable ambiguity.
+Migration0029 adds one purpose-specific table after0028 with immutable triggers and
+retention-aware downgrade. It was checked against sibling revisions and applied
+only on the owned assistant test DB. No conversation persistence or GET generation.
+
+CURRENT FACT: focused no-DB tests use hand-authored read contracts and interned static
+synthetic pipeline fixtures from existing s363 review artifacts, not newly generated
+PlanningRuns or customer evidence. Original file hashes are retained in fixtures;
+test-only interned JSON removes repeated subgraphs, not facts. They exercise overview and
 option/Ingredient projection, mixed units, exact fractions/display, cost components,
 null/zero, exclusions/assumptions/warnings, no-winner/failed/partial/UNPROVEN,
 foreign/dangling references, current-rights-before-materialization ordering and
 revoked-session/grant denial on repeated application reads. Cache tests verify
 misses avoid cold decoding and changed raw hashes cannot hit a verified entry.
-No solver/provider/socket/SMTP/DB setup or training is required. These are unit
-boundary oracles; mocked repository/auth collaborators are not PostgreSQL acceptance.
+No solver/provider network/SMTP or training is used. These unit boundary oracles
+are separate from the real PostgreSQL/HTTP acceptance below.
 
-No dedicated Decision Assistant DB is configured/allowlisted in current guarded
-tooling. L1 does not borrow/reset another worktree's DB or bypass those guards.
-Real session/Store/grant concurrency, PostgreSQL fresh reads after live config or
-catalog changes, and process/restart integration remain unverified. Existing C03
-security tests are historical coverage, not a new acceptance run here. Runtime
-OpenAPI comparison and related C03/C08 schema tests cover unchanged HTTP surfaces.
+Owned isolated container/database shelfcash_assistant_test at5436, limited tester
+shelfcash_assistant_tester, guarded reset/migration and private runtime credentials.
+Real auth/HTTP/fresh-session tests cover create/execute/read, same/new-key replay,
+concurrency, failed retries, current grants/Store isolation, revocation during mock,
+lost/unapplied ACKs, stale writer, immutable terminal records, schema round-trip/
+parity and Run preservation after live budget/catalog changes. A fresh process
+reads cold evidence and summary with engine entrypoints forbidden; a real child
+crash demonstrates explicit replay without automatically repeating provider work.
+No other DB/worktree/runtime was migrated. Commands and target ownership:
+[runbook](../runbooks/FULL_TEST_FLOW.md#assistant-l2).
 
 ## Legacy review and future slices
 
@@ -99,11 +208,17 @@ mapping prompt/schema and mapping enable flag are task-specific. L1 does not ext
 a generic gateway or alter mapping behavior. A future wording task must own its
 profile, scoped allowlisted evidence and authorization before transport.
 
-PROPOSAL next slices (separate authorization): L2 deterministic summary/fallback,
-generation validation, idempotency/cache and bounded optional provider; L3 on-demand
-chat/clarification/history; L4 approved fixed-evidence live evaluation with explicit
+PROPOSAL next slices (separate authorization): L4 broader fixed-evidence live evaluation with explicit
 cost/attempt caps and raw/final diagnostics; L5 HTTP/FE/security/restart integration.
-Prose coverage, unit repair, Vietnamese/English negation/paraphrase and no-winner
-guards are acceptance requirements in the canonical contract, not implemented here.
+Free-prose coverage, unit repair and general Vietnamese/English negation/paraphrase
+guards remain acceptance requirements if free wording is introduced. L2 rejects
+all free provider assertions by schema, including legacy failures; deterministic
+no-winner/unknown wording and valid fixed variants preserve polarity without NLP.
 Explanation of existing verified Runs needs no merge from data-readiness/challenger;
 new data admission/forecast quality evidence remains separately scoped.
+
+Shared integration files with readiness/challenger: Planning contract, CURRENT_STATE,
+ROADMAP, app/main.py, app/config.py/.env.example, model registration, scripts/dev.py
+guards and runbook. Assistant also touches retained Planning validators/reader,
+planning_public and body limits. Reconcile these deliberately at integration;
+no manual copy of readiness WIP or dependency on challenger promotion.

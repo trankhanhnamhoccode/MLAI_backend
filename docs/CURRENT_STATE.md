@@ -1,19 +1,34 @@
 # Current state
 
-## CURRENT FACT — Decision Assistant L1 internal foundation
+## CURRENT FACT — Decision Assistant L3 retained chat / L2 summary
 
-Isolated source adds immutable `decision_evidence/1`, overview/option/Ingredient
-projection from verified retained PlanningRun/C03/C05/C08, scoped resolvable refs
-and current C03 authorization before materialization. No HTTP/model generation,
-provider, schema/permission or runtime change. Focused no-DB projection/security-
-ordering/cache and C03/C08 OpenAPI gates are exercised; not PostgreSQL/browser or
-live model acceptance. L1 application path requires a same-process verified cache
-entry; cold misses fail closed instead of invoking existing deep validators that
-re-evaluate BOM/serving/selection. This existing cold-read behavior is drift from
-the architecture's no-engine wording; existing readers are preserved.
+AS03 POST assistant/messages adds bounded read intents, Ingredient clarification,
+user-history entity context and deterministic grounded answers, immutable scoped
+idempotency receipts. Chat has no provider dependency; enabling summary does not
+enable model chat. Migration0029_assistant_messages adds1 table after0028; source
+76 operations/69 paths,75 tables including Alembic. Applied only on owned assistant
+test DB. No conversation/worker/engine execution or business state mutation.
+Explicit synthetic Gemini smoke exercised actual AS01/AS02: first routing guard
+fallback corrected, second accepted;2 calls,$0.0003932 total API-reported cost.
+This verifies constrained presentation, not unrestricted prose or customer data.
+
+Isolated assistant source adds durable cold consistency access for immutable
+decision_evidence/1, AS01 explicit summary creation and AS02 retained read, typed
+deterministic renderer and optional constrained model presentation. Current C03
+rights precede evidence/cache/materialization and repeat at publication/delivery.
+Cache miss/restart no longer needs warm-up or engine replay; old default C03/PDF
+deep replay validation remains separate and is explicit technical debt.
+Summary has durable identity/receipts/claim/terminal fences; provider outside DB,
+no new worker. L2 introduced migration0028_assistant_summaries (2 tables after0027),
+75 operations/68 paths,74 tables with Alembic; L3 totals are above. No grants/Run
+mutation/backfill.
+Owned assistant PostgreSQL5436/limited tester, fresh-process cold read/restart,
+HTTP lifecycle/revocation/concurrency/ACKs and mock-provider gates exercised; not
+full-suite/browser/live Qwen acceptance. Runtime8103/main/other WIP unchanged.
 Implementation/limits: [Decision Assistant](features/DECISION_ASSISTANT.md).
-FE summary/chat remain [PROPOSAL](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant);
-L2–L5 are pending. Existing Run explanation needs no data-readiness/challenger merge.
+[Summary presentation / deterministic chat IMPLEMENTED](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
+L4 broad evaluation/L5 FE remain pending; unrestricted model prose is unavailable. Existing Run
+explanation needs no data-readiness/challenger merge or model promotion.
 
 ## CURRENT FACT — self-service Store/customer local
 

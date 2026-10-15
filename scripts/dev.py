@@ -25,9 +25,9 @@ def migration_config() -> Config:
     return Config(str(ROOT / "alembic.ini"))
 
 
-TEST_DATABASE_NAMES = frozenset({"shelfcash_test", "shelfcash_import_test", "shelfcash_auth_test", "shelfcash_integration_test", "shelfcash_notifications_test", "shelfcash_local_test"})
+TEST_DATABASE_NAMES = frozenset({"shelfcash_test", "shelfcash_import_test", "shelfcash_auth_test", "shelfcash_integration_test", "shelfcash_notifications_test", "shelfcash_local_test", "shelfcash_assistant_test"})
 DEDICATED_TEST_ROLES = {"shelfcash_integration_test": "shelfcash_integration_tester",
-                        "shelfcash_notifications_test": "shelfcash_notifications_tester", "shelfcash_local_test": "shelfcash_local_tester"}
+                        "shelfcash_notifications_test": "shelfcash_notifications_tester", "shelfcash_local_test": "shelfcash_local_tester", "shelfcash_assistant_test": "shelfcash_assistant_tester"}
 
 
 def validate_reset_target(settings: Settings) -> None:

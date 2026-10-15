@@ -1,5 +1,93 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="assistant-l2"></a>
+## Decision Assistant L2/L3 — isolated verification
+
+CURRENT FACT source: AS01 explicit synchronous summary create/replay and AS02
+retained read, AS03 deterministic chat/clarification, no what-if/worker/deployment.
+Source76 operations/69 paths;0029 adds immutable chat receipts after0028;
+contract/limits at [Planning §18](../PROCUREMENT_API_CONTRACT_VI.md#decision-assistant)
+and [feature](../features/DECISION_ASSISTANT.md). C08 remains structured facts.
+
+Worktree backend-decision-assistant / feat/decision-assistant. Use its dependencies
+or the already installed sibling backend Python **without changing that checkout**.
+Do not copy a serving .env. Provisioner owns only labeled container
+shelfcash-assistant-test-postgres, volume shelfcash-assistant-test-pgdata,
+127.0.0.1:5436, database shelfcash_assistant_test and limited
+shelfcash_assistant_tester. No other instance is connected/migrated/reset.
+Tester has schema creation/DML only on this disposable DB, not superuser/CREATEDB/
+CREATEROLE/replication/BYPASSRLS. Private credentials/URL in ignored
+runtime/assistant-test/private; never print/copy them to Git. If container/volume/
+credentials disagree, reconcile ownership instead of deleting/resetting blindly.
+Provisioning does not reset. Tests use the existing guarded reset and cleanup;
+dedicated target/current_user checks run before migrations. No .env edits needed.
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-decision-assistant
+$assistantPython = '..\backend\.venv\Scripts\python.exe'
+& $assistantPython -B -m scripts.assistant_test_database
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_assistant_summary.py tests/integration/test_assistant_chat.py -q -p no:cacheprovider
+& $assistantPython -B -m pytest tests/unit/test_decision_evidence.py tests/unit/test_assistant_cold_reads.py tests/unit/test_plan_summary.py tests/unit/test_assistant_chat.py tests/unit/test_assistant_smoke_budget.py tests/api/test_plan_summary_openapi.py tests/live/test_assistant_smoke.py -q -p no:cacheprovider
+git diff --check
+```
+
+Expected: historical synthetic graphs read on cold cache/fresh Session/process with
+engine entrypoints forbidden; corrupt versions/hash/equations reject, no live facts
+rewrite history. AS01 completes deterministic response with model OFF; GET/replay
+returns retained result without provider. Mock generation calls outside transaction,
+concurrent same identity once, current grant/Store denial, late writer denial,
+transport-lost ACK reconciliation versus unapplied commit failure, explicit dead
+process recovery without repeating provider. Additive migration round-trip/parity
+and terminal immutability use this DB only. Fixture provenance and synthetic nature
+are recorded in tests/fixtures/decision_assistant, not customer/unseen evidence.
+
+The runner forces model/email/business worker flags OFF and removes provider key
+for its child test process; provider-enabled cases inject fake clients. Unit transport
+tests mock OpenRouter responses. No train, solver fixture generation, benchmark,
+SMTP/live Qwen or browser/full-suite acceptance. Read/create summary for a historical
+Run does not depend on readiness/challenger merge or model promotion. API manual flow
+after a separately authorized deployment: C03→pin response_version→AS01 with UUID
+key + Origin/CSRF→follow Location AS02; never auto-generate from a GET.
+
+L2 has no automatic worker/retry. A running generation owned by alive/unknown process
+stays409 on POST replay. Only OS-proven dead owner is failed on explicit replay;
+GET remains read-only. Same key retains failure, explicit new key may retry. Keep
+private test resources/evidence; do not purge runtime or delete the volume as cleanup.
+
+AS03 manual flow after separately authorized deployment: C03 response_version,
+POST `/api/v1/procurement-plans/{plan_id}/assistant/messages` with UUID key,
+Origin/CSRF, SummaryRequest fields plus question, ingredient_id:null or retained
+UUID, history:[] or bounded user/assistant messages. Clarification keeps original
+question and asks for retained ID; explicit new request/key after selection.
+Same key/body replays, changed question/history/context409. No GET message endpoint,
+provider or implicit computation; C05 links/details retain exact Ingredient scope.
+
+### Explicit synthetic live smoke (separate authorization only)
+
+Ordinary pytest skips `tests/live/test_assistant_smoke.py`; offline tests never
+enable it. The standalone command below deliberately enables a paid test and
+reads this worktree's private .env in memory. Never run against a real Store.
+It uses synthetic static fixtures and only the guarded assistant test DB. Before
+every completion it checks public endpoint metadata/support/pricing and sets
+provider.max_price prompt0.3/completion2.5 USD per million, no fallback/model swap.
+Text request≤16000 bytes/max_tokens≤256, conservative prompt bound65536 plus256
+output reserves$0.0203008 per attempt;3 reservations≤$0.0609024, under$0.10.
+No tools/search/modalities or per-request fees are allowed. Exclusive write-ahead
+attempt slots under ignored runtime/assistant-test/live-smoke survive timeouts/
+crashes and are never refunded. Do not delete/recycle slots or increase bounds.
+Normal tests mock all of this metadata/transport. No key/header dump or real data.
+
+```powershell
+& $assistantPython -B -m scripts.assistant_live_smoke --allow-paid-synthetic-max-3-usd-0.10
+```
+
+CURRENT FACT: authorization for this smoke was used for2 attempts (first application
+route guard fallback, then accepted after targeted fix), total usage.cost$0.0003932.
+Do not rerun merely to consume the remaining slot. Safe synthetic raw/final artifacts
+remain ignored. GET/replay made0 additional model calls; timeout fallback was offline.
+This verifies model presentation routing/schema through AS01/AS02, not free prose,
+model chat or a broader L4 evaluation. L3 chat always uses deterministic evidence.
+
 <a id="customer-self-service"></a>
 ## CURRENT FACT — setup khách hàng từ số0
 

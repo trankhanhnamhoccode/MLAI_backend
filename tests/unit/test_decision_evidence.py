@@ -262,8 +262,8 @@ def test_actual_application_auth_precedes_materialization_and_rechecks(monkeypat
         def get(self, store, run_id):
             events.append('materialize')
             return record
-    def read(row, *, require_cached):
-        assert require_cached
+    def read(row, *, evidence):
+        assert evidence
         return record, view
     record.public_acceptance = NS()
     service = public.PublicPlanning.__new__(public.PublicPlanning)

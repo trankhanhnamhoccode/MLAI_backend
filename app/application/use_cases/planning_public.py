@@ -31,6 +31,7 @@ def public_failure(error):
         cause=cause.__cause__
     if error.code=='NOT_FOUND':raise AuthError('RESOURCE_NOT_FOUND',404) from error
     if error.code=='EVIDENCE_NOT_VERIFIED':raise AuthError('EVIDENCE_NOT_VERIFIED',503) from error
+    if error.code=='UNSUPPORTED_RESULT_VERSION':raise AuthError('UNSUPPORTED_RESULT_VERSION',503) from error
     if error.code=='IDEMPOTENCY_KEY_REUSED':raise ConfigurationError(error.code,409) from error
     raise AuthError('RESULT_INTEGRITY_UNAVAILABLE' if error.code=='RESULT_INTEGRITY_UNAVAILABLE' else 'SERVICE_UNAVAILABLE',503) from error
 
@@ -114,7 +115,7 @@ class PublicPlanning:
         record,projected=self.read_record(token,run_id)
         return projected,record.public_acceptance.receipt_warnings
 
-    def read_record(self,token,run_id,*,with_authority=False,require_cached=False):
+    def read_record(self,token,run_id,*,with_authority=False,require_cached=False,evidence_only=False):
         # Resolve owning Store only; content is checked after current Store grants.
         with auth_session(self.engine) as s:
             store=PlanningRepository(s).owning_store(run_id)
@@ -124,16 +125,17 @@ class PublicPlanning:
             actor,authorization,_=self.auth.authorize_in_session(s,token,store,READ_PERMISSIONS)
             try:
                 row=PlanningRepository(s).get(store,run_id)
-                record,projected=(self.retained.read(row,require_cached=True) if require_cached else self.retained.read(row))
+                record,projected=(self.retained.read(row,evidence=True) if evidence_only else
+                    self.retained.read(row,require_cached=True) if require_cached else self.retained.read(row))
             except PlanningPersistenceError as error:public_failure(error)
             if record.public_acceptance is None:raise AuthError('RESOURCE_NOT_FOUND',404)
             s.commit()
             return (record,projected,actor,authorization) if with_authority else (record,projected)
 
     def assistant_evidence(self,token,run_id,*,option_id=None,ingredient_id=None):
-        """Internal L1 only. Recheck all C03 rights even on verified cache hits."""
+        """Durable retained consistency read; recheck C03 rights on every call."""
         from app.application.decision_evidence_projection import project_evidence
-        record,view=self.read_record(token,run_id,require_cached=True)
+        record,view=self.read_record(token,run_id,evidence_only=True)
         return bounded_inspection(project_evidence(record,view,option_id=option_id,ingredient_id=ingredient_id))
 
     def ingredients(self,token,run_id,request_id,option_id=None,limit=50,cursor=None,ingredient_ids=()):
