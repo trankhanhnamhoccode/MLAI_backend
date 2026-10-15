@@ -20,7 +20,7 @@ class VerifiedPlanningReads:
         self._bytes=0
         self._lock=RLock()
 
-    def read(self,row):
+    def read(self,row, *, require_cached=False):
         if row is None:raise PlanningPersistenceError('NOT_FOUND')
         try:
             size=len(canonical_bytes(row.record_json))
@@ -34,6 +34,11 @@ class VerifiedPlanningReads:
             if key in self._entries:
                 self._entries.move_to_end(key)
                 return self._entries[key][1:]
+            # Assistant L1 accepts only a previously verified aggregate. The
+            # existing cold semantic decoder re-evaluates exact business facts;
+            # do not silently run that work on the wording/evidence path.
+            if require_cached:
+                raise PlanningPersistenceError('EVIDENCE_NOT_VERIFIED', row.id)
             record=decode_row(row)
             view=project_run(record,response_version=actual)
             if record.status in ('completed','failed') and size<=self.max_canonical_bytes:

@@ -1433,3 +1433,150 @@ FE thêm creator/local-date filters, export list→resume J01→download N11 và
 artifact UI. Acceptance C4: Store time boundaries, filter cursor consistency,
 creator không email leak; locator recovery, grant revocation discovery/download,
 missing/corrupt bytes, no implicit rendering, no retained fact rewrite.
+
+<a id="decision-assistant"></a>
+## 18. Decision Assistant — L1 internal foundation / PROPOSAL FE contract
+
+CURRENT FACT: C08 §15.3 vẫn là structured retained explanation; GET không gọi
+model, tạo job hoặc phát sinh phí. L1 thêm internal `decision_evidence/1`, chưa
+đăng ký route/permission/persistence hoặc summary/chat generation. Runtime OpenAPI
+giữ nguyên. [Feature](features/DECISION_ASSISTANT.md) sở hữu implementation boundary
+và giới hạn cold verification; mục này sở hữu thiết kế FE, chưa là runtime promise.
+
+### 18.1. Capabilities và authority
+
+| Capability | Status | Meaning |
+| --- | --- | --- |
+| C03/C04/C05/C08 retained facts | IMPLEMENTED | Quyền và semantics hiện hành, không LLM |
+| Internal scoped evidence | IMPLEMENTED | Overview, explicit option và Ingredient; chỉ aggregate đã verified trong process cache |
+| Summary / on-demand chat contracts dưới đây | DESIGN_READY | Proposal cho L2/L3, chưa callable HTTP |
+| Model wording/fallback generation, durable generation cache | UNAVAILABLE | L2/L3 implementation và acceptance chưa chạy |
+| Live evaluation / FE integration | UNAVAILABLE | L4/L5 chưa thực hiện |
+| Chat what-if, ordering, config/inventory mutation | UNAVAILABLE | Không thuộc contract này |
+
+PROPOSAL action mapping: dùng lại `planning.result.read` + `budget.read` +
+`procurement.cost.read`, current actor/session và owning Store của Run. Không thêm
+permission key, không auto-grant. Kiểm trước load/materialize/provider và kiểm
+lại lúc trả kết quả/cache/replay. Thu hồi một quyền chặn toàn response, không
+redact nửa bài hoặc gửi facts bị chặn cho provider. POST giữ Origin/CSRF/cookie
+như mutations hiện hành. Client không được gửi facts/winner/proof, Store/actor
+authority hoặc system-role messages. History chỉ giúp hiểu câu hỏi, không evidence.
+
+### 18.2. Hai responsibilities mới — PROPOSAL, chưa wire
+
+Routes dưới `/api/v1/procurement-plans/{plan_id}`; không dùng POST explanation
+legacy vì C08 đang hứa một structured read khác responsibility.
+
+| Method/path | Request | Result |
+| --- | --- | --- |
+| POST `/assistant/summary` | SummaryRequest | Summary wording cho retained Run/option, không rerun |
+| POST `/assistant/messages` | ChatRequest | Một answer hoặc structured clarification cho câu hỏi hiện tại |
+
+SummaryRequest = `{expected_evidence_version:Version,option_id:OptionId|null,
+locale:"vi"|"en",detail_level:"simple"|"technical"}`; mọi field required.
+ChatRequest = SummaryRequest + `{question:string1..2000,ingredient_id:UUID|null,
+history:HistoryMessage[]}`. HistoryMessage = `{role:"user"|"assistant",content:
+string1..2000}`. Tối đa6 messages/4000 characters tổng history; body≤32KiB UTF-8.
+Reject422 khi quá bounds, không truncate facts/history ngầm. Không system/tool
+history hoặc attachment. Unknown fields reject422. Một option context/request;
+option phải thuộc Run. Ingredient phải thuộc computed scope; label/ambiguity chỉ
+dùng retained names/IDs, không live aliases/catalog fallback. Option null ở summary
+là overview; chat Ingredient context dùng winner nếu có, còn không thì
+`not_selected` và balances/purchases nullable theo C05. Explicit option là đang
+xem option đó, không có nghĩa option được chọn/khuyến nghị.
+
+`expected_evidence_version` là aggregate response_version của C03, required;
+mismatch409 EVIDENCE_VERSION_CONFLICT trước provider. Result digest null vẫn hợp
+lệ cho failed/capture-only evidence, không giả result. Queued/running409
+RESULT_NOT_READY. Whole-run missing scope vẫn giải thích retained failure/unknown;
+Ingredient unavailable409 COMPUTED_SCOPE_NOT_AVAILABLE. Không tự chọn entity khi
+question/explicit ID mâu thuẫn; trả clarification với candidates scoped đã lưu.
+
+### 18.3. Response / clarification — PROPOSAL
+
+Envelope giữ `{data,meta:{request_id},error:null}`. AssistantResponse:
+`{schema_version:"decision_assistant/1",run_id:UUID,evidence_version:Version,
+result_digest:Version|null,option_id:OptionId|null,ingredient_id:UUID|null,
+locale,kind:"answer"|"clarification",source:"model"|"deterministic_fallback"|
+"deterministic_clarification",answer:string,claims:Claim[],references:Reference[],
+clarification:Clarification|null,diagnostics:Diagnostics}`.
+
+Claim = `{text:string,evidence_ids:string[]}`; mọi business assertion phải được
+kiểm nghĩa/negation/quantity/unit/role/proof trên đúng scoped evidence. Reference
+là typed EvidenceReference của `decision_evidence/1`: `{evidence_id,pointer,source}`;
+IDs bind schema/Run/Store/digests/option/Ingredient, resolve được trên đúng evidence
+projection phía server. Pointer không là URL hoặc credential. L2 response chỉ trả
+refs thực dùng, mọi claim ref phải resolve; optional evidence detail dùng existing
+C03/C05/C08 theo context cùng digest, không thêm endpoint bypass quyền. Citation
+không tự chứng minh claim chỉ vì nhắc đúng entity hoặc một số trùng nhau.
+
+Clarification = `{code:"ENTITY_AMBIGUOUS"|"ENTITY_CONTEXT_MISMATCH"|
+"QUERY_UNSUPPORTED",question:string,candidates:[{ingredient_id:UUID,name:string}],
+original_question:string}`. Candidates chỉ từ retained computed scope có label;
+không có label thì yêu cầu chọn canonical ID qua C04, không đặt tên giả. Khi kind
+clarification: claims/references có thể rỗng, không gọi model chỉ để resolve
+ambiguity; FE giữ câu hỏi và hiện candidates inline. Retry sau lựa chọn explicit
+giữ original_question và gửi ingredient_id. Không auto đổi Ingredient/option.
+
+Diagnostics = `{reason:"NONE"|"MODEL_DISABLED"|"PROVIDER_UNAVAILABLE"|
+"GROUNDING_REJECTED"|"EVIDENCE_INSUFFICIENT",prompt_version:string|null,
+validator_version:string,model:string|null}`. Không raw prompt/output, credentials,
+provider stacktrace hoặc sensitive logs trong FE. 200 fallback không chứng minh
+provider thành công. Khi model disabled/provider failure/grounding rejection,
+L2/L3 phải trả deterministic answer từ cùng authorized evidence, kèm limitations
+và reason. Nếu thiếu facts trả lời thì nói rõ unknown/không có bằng chứng, không
+fabricate answer. No-winner không nhận positive selection assertion, dù model hay
+fallback. LOW/BASE/HIGH không probabilities; captured stock, simulated shortage/
+ending, baseline và actual tách riêng. Không có zero-purchase baseline trong L1.
+
+Ví dụ request summary (synthetic identifiers):
+
+```json
+{"expected_evidence_version":"aggregate-1","option_id":null,"locale":"vi","detail_level":"simple"}
+```
+
+Ví dụ response chat clarification (không model):
+
+```json
+{"data":{"schema_version":"decision_assistant/1","run_id":"00000000-0000-0000-0000-000000000001","evidence_version":"aggregate-1","result_digest":null,"option_id":null,"ingredient_id":null,"locale":"vi","kind":"clarification","source":"deterministic_clarification","answer":"Bạn muốn hỏi nguyên liệu nào?","claims":[],"references":[],"clarification":{"code":"ENTITY_AMBIGUOUS","question":"Bạn muốn hỏi nguyên liệu nào?","candidates":[{"ingredient_id":"00000000-0000-0000-0000-000000000020","name":"Sữa tươi"},{"ingredient_id":"00000000-0000-0000-0000-000000000021","name":"Sữa đặc"}],"original_question":"Sữa có cần nhập không?"},"diagnostics":{"reason":"EVIDENCE_INSUFFICIENT","prompt_version":null,"validator_version":"decision_grounding/1","model":null}},"meta":{"request_id":"req-chat"},"error":null}
+```
+
+Ví dụ no-winner fallback answer: `kind="answer"`,
+`source="deterministic_fallback"`, `answer="Run này chưa có phương án được chọn."`;
+claim phải dẫn reference `/overview/explanation` có winner.option_id=null cùng
+`/overview/outcome`. IDs thật do server phát hành, không dùng illustrative ID làm
+assertion authority. Không suy no-winner thành certified infeasible.
+
+### 18.4. Errors, replay/cache và gates — PROPOSAL
+
+Standard error envelope §2/10. 401 UNAUTHENTICATED;403 PERMISSION_DENIED/
+CSRF_CHECK_FAILED;404 RESOURCE_NOT_FOUND/OPTION_NOT_FOUND/INGREDIENT_NOT_IN_RUN;
+409 RESULT_NOT_READY/COMPUTED_SCOPE_NOT_AVAILABLE/EVIDENCE_VERSION_CONFLICT/
+IDEMPOTENCY_KEY_REUSED;413 RESOURCE_LIMIT_EXCEEDED;422 VALIDATION_ERROR;
+429 GENERATION_LIMIT_EXCEEDED;503 RESULT_INTEGRITY_UNAVAILABLE/EVIDENCE_NOT_VERIFIED/
+SERVICE_UNAVAILABLE. Auth/integrity failures không biến thành fallback200.
+Handled clarification là200 có candidates; FE không reset conversation/retry loop.
+
+Idempotency-Key UUID required cho hai POST có khả năng billable. L2 phải triển
+khai durable acceptance/replay trước bật provider: scope actor+Store+Run+operation+
+key; hash toàn normalized request/context/version. Cùng key/body replay không gọi
+model lần nữa; khác body409. Ambiguous provider completion không tự retry billable.
+In-progress same key409 GENERATION_IN_PROGRESS (manual poll/retry cùng key), không
+GET tạo job. L1 chưa có storage đó; không hứa crash-safe replay từ memory cache.
+Không cần conversation persistence: history bounded được client gửi lại.
+
+Generation/cache identity phải bind aggregate/input/result digests, evidence schema,
+projection scope, locale/detail, question/history, prompt/validator/render versions
+và actual model/provider profile. Current session/Store/grants được recheck cho mọi
+delivery kể cả replay; cache không là quyền. Publish chỉ khi authority/version còn
+hợp lệ; đổi version không relabel output cũ. GET C03/C08 chỉ đọc facts; các GET
+tương lai nếu được duyệt chỉ đọc generation đã có, tuyệt đối không lazy model/job.
+Provider mặc định OFF; không tái dùng mapping enable flag/key policy để tự bật chat.
+Token/attempt/cost/deadline caps và live-data approval cần freeze trước L4.
+
+L2–L4 acceptance phải kiểm: sau salvage còn trả lời ý chính; repair không sinh
+“đồng đồng”; negation tiếng Việt/English và positive controls; “đủ điều kiện”/
+paraphrase hợp lệ không bị false reject; no-winner reject “BALANCED đã được chọn”.
+Winner chỉ best evaluated candidates; UNPROVEN/INCOMPLETE không nâng thành certified,
+pairwise facts không tạo global ranking. L1 không implement prose repair, sentence
+removal, intent resolver hoặc regex grounding.

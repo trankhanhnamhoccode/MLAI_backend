@@ -1,5 +1,20 @@
 # Current state
 
+## CURRENT FACT — Decision Assistant L1 internal foundation
+
+Isolated source adds immutable `decision_evidence/1`, overview/option/Ingredient
+projection from verified retained PlanningRun/C03/C05/C08, scoped resolvable refs
+and current C03 authorization before materialization. No HTTP/model generation,
+provider, schema/permission or runtime change. Focused no-DB projection/security-
+ordering/cache and C03/C08 OpenAPI gates are exercised; not PostgreSQL/browser or
+live model acceptance. L1 application path requires a same-process verified cache
+entry; cold misses fail closed instead of invoking existing deep validators that
+re-evaluate BOM/serving/selection. This existing cold-read behavior is drift from
+the architecture's no-engine wording; existing readers are preserved.
+Implementation/limits: [Decision Assistant](features/DECISION_ASSISTANT.md).
+FE summary/chat remain [PROPOSAL](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant);
+L2–L5 are pending. Existing Run explanation needs no data-readiness/challenger merge.
+
 ## CURRENT FACT — self-service Store/customer local
 
 Canonical checkout `backend` trên main, own .venv/TLS/runtime/local profile. WIP9
