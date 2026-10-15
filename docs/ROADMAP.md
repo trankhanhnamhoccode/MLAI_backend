@@ -21,6 +21,39 @@ E5 acceptance/promotion NOT_STARTED. Thiếu authorized unseen demand/vintages/c
 và historical operational snapshots chặn real quality/impact claims. Đã dừng sau E4;
 bước kế tiếp cần authorization, không tự mở E5 hay serving activation.
 
+## CURRENT FACT / PROPOSAL — data readiness D1–D5
+
+ACCEPTED DECISION: readiness theo facts/semantics của action/scope, không yêu cầu
+đủ sáu files. [Canonical policy](features/DATA_READINESS_POLICY.md) sở hữu source
+matrix, current gaps, issue/assumption proposal, API impact và acceptance cases.
+
+| Slice | Status và gate |
+| --- | --- |
+| D1 audit/policy | COMPLETE, local checkpoint c930dfe66cfda5de5896164e16fcf8f4c7acaefe từ main052cddee; documentation-only, không runtime/API delta; đã tích hợp main local cùng D2–D5, chưa push/deploy. |
+| D2 forecast eligibility/fallback | COMPLETE, local checkpoint9f720caf01fdf0a8f586c049660a2fcc9447ade3. Shared choice + typed internal assessment, scoped all-censored R01/C01/Today fix, dependency/runtime-vs-integrity; focused forecast/HTTP/PG/replay gates, OpenAPI giữ nguyên. Không full-suite/accuracy claim. |
+| D3 confirmed facts/partial scope | COMPLETE, local checkpoint d0f3716c261f6634d5fcd5ae886c00cf3014276c: accepted offer_eligibility/1, scoped local omission/source proof, remaining eligible domain/zero purchase; shared unknown/invalid/safety vẫn block; old-policy queued/retained payloads giữ semantics/digests. |
+| D4 public readiness/warnings | COMPLETE, local checkpoint72415332e2a5224ab9909d54606d7e7e374bdd18: contextual R01/C01 query + scope/version/forecast metadata, shared resolver/admission và warnings; Today default consistent, retained C03/C08 source references. I06 retained schema unchanged. |
+| D5 backend linked acceptance | VERIFIED, committed11ef320a5873fc4dc314fdad63878db5f8a8b38c và tích hợp main local giữ ancestry: public setup/custom/omission/zero purchase/shared fee/retention, independent small oracle và final D2–D5 focused unit/API/PG gate. Không production source/contract delta. Không yêu cầu FE/workbook đủ facts; timing root cause còn mở; không E3/E4/training/accuracy benchmark. |
+
+Main đã có baseline và recognized fallback; không mở lại từ đầu hoặc dùng research
+calendar gate chặn product baseline. E3 real accuracy blocked/E4 synthetic incomplete
+thuộc challenger branch/WIP, không tích hợp hoặc đổi kết quả trong D1. Main local
+runtime/config/DB/artifacts và mọi challenger WIP được bảo toàn.
+
+CURRENT FACT — source integration giữ73 operations/66 paths/head0027; final focused
+gate chạy riêng PostgreSQL5437 (limited integration role), không đổi demo8103.
+
+PROPOSAL — benchmark tiếp theo chỉ sau checkpoint E4/dataset-admission WIP riêng,
+merge main readiness mới vào challenger và reconcile eligibility/protocol/warnings.
+Không sửa frozen E3/E4/admission rules ngầm; semantics đổi cần manifest/protocol
+version mới. Hai arms cần cùng observations/origins/masks/declarations/resources;
+thiếu facts có thể BLOCKED, không fill giả. Benchmark không cần promote challenger
+vào main. Nhiệm vụ tích hợp này không sửa/merge challenger hoặc Decision Assistant.
+
+D5 không bao gồm FE/browser E2E hoặc real accuracy/savings. Các hạng mục đó chưa
+nghiệm thu, không là blocker cho backend-only acceptance. D3 deadline instability
+chưa có root cause; bounded diagnostics không đóng issue bằng một lượt pass.
+
 ## CURRENT FACT
 
 Self-service Store/customer local IMPLEMENTED: T03 additive,73/66/head0027/72 tables;

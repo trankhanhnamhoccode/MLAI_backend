@@ -25,6 +25,8 @@ def project_capture_v2(request, wrapped):
     products={p.product_id:p for p in facts.products}; ingredients={i.ingredient_id:i for i in facts.ingredients}
     scoped_ingredients=set(wrapped.ingredient_scope_ids)
     term_scope={t.term_id:t for t in wrapped.supplier_term_scope}
+    admission=request.procurement.offer_admission
+    omitted={o.term_id:o for o in admission.omissions} if admission else {}
 
     def problem(code,entity,identifier,field,detail,day=None,kind='DATA_BLOCKER'):
         p=CaptureProblem(code=code,kind=kind,entity=entity,entity_id=identifier,field=field,detail=detail,day=day)
@@ -52,8 +54,31 @@ def project_capture_v2(request, wrapped):
         identity=term_scope.get(term.id)
         if identity is None or (identity.store_id,identity.ingredient_id,identity.supplier_id)!=(term.store_id,term.ingredient_id,term.supplier_id):
             block('TERM_SCOPE_UNKNOWN','Supplier term DTO/identity disagree')
+        elif admission and identity.version!=term.version:
+            block('TERM_SCOPE_UNKNOWN','Supplier term version differs from captured identity')
+    typed_terms={t.id:t for t in facts.supplier_terms}
+    for identifier,o in omitted.items():
+        identity=term_scope.get(identifier);term=typed_terms.get(identifier)
+        if (identity is None or o.store_id!=request.store_id or identity.version!=o.version
+                or (o.supplier_id,o.ingredient_id)!=(identity.supplier_id,identity.ingredient_id)
+                or not o.effective_from<=days[0] or (o.effective_to is not None and days[0]>o.effective_to)
+                or any(x.term_id==identifier for x in request.procurement.offers)):
+            block('OFFER_OMISSION_INVALID','Omission identity/version/effectivity conflicts with captured source or eligible offers')
+        elif o.reason=='OFFER_BOUND_UNKNOWN' and (term is None or term.pack_cost!=0
+                or (term.version,term.effective_from,term.effective_to)!=(o.version,o.effective_from,o.effective_to)
+                or any((l.supplier_id,l.ingredient_id)==(o.supplier_id,o.ingredient_id) for l in request.procurement.supplier_limits)):
+            block('OFFER_OMISSION_INVALID','Omitted unbounded offer has known finite facts or mismatched term')
+        elif o.reason=='SUPPLIER_TERM_FACT_UNAVAILABLE' and term is not None and not (
+                o.missing_fields==('shelf_life_days',) and term.shelf_life_days is None
+                and ingredients.get(o.ingredient_id) and ingredients[o.ingredient_id].expiry_tracking
+                and (term.version,term.effective_from,term.effective_to)==(o.version,o.effective_from,o.effective_to)):
+            block('OFFER_OMISSION_INVALID','Missing-fact omission contradicts captured typed term or consumer')
+        else:
+            problem('OFFER_OMITTED','supplier_term',identifier,'supplier_term',
+                f'{o.reason}; {o.source_reference}; eligible-domain proof only, not market infeasibility',kind='WARNING')
     for identifier in set(term_scope)-{t.id for t in facts.supplier_terms}:
-        problem('SUPPLIER_TERM_FACT_UNAVAILABLE','ingredient',term_scope[identifier].ingredient_id,'supplier_term','Scoped term identity exists but its numeric fact is unavailable')
+        if identifier not in omitted:
+            problem('SUPPLIER_TERM_FACT_UNAVAILABLE','ingredient',term_scope[identifier].ingredient_id,'supplier_term','Scoped term identity exists but its numeric fact is unavailable')
     for identifier in scoped_ingredients-set(ingredients):
         problem('INGREDIENT_FACT_UNAVAILABLE','ingredient',identifier,'ingredient','Scoped Ingredient identity exists but its typed fact is unavailable')
     if any(o.product_id not in menu_ids for p in request.requirements.paths for o in p.overrides):
@@ -132,11 +157,18 @@ def project_capture_v2(request, wrapped):
                 product_problem(p.product_id,'RECIPE_OVERLAP' if len(matches)>1 else 'MISSING_RECIPE','Need exactly one nonempty effective recipe',day)
             for r in matches:
                 for line in r.lines:
+                    if admission and line.ingredient_id not in scoped_ingredients:
+                        block('SOURCE_FAILURE_SCOPE_UNKNOWN','Recipe references Ingredient outside captured identity scope')
                     dependencies[p.product_id].add(line.ingredient_id)
                     i=ingredients.get(line.ingredient_id)
                     if i is None or i.unit!=line.unit:
                         product_problem(p.product_id,'RECIPE_INGREDIENT_UNIT_INVALID','Recipe Ingredient reference/unit invalid',day)
     if any(r.product_id not in menu_ids for r in facts.recipes):block('RECIPE_SCOPE_UNKNOWN','Recipe outside captured active menu')
+    if admission:
+        relevant=set().union(*dependencies.values()) if dependencies else set()
+        offered={o.term_id for o in request.procurement.offers}
+        if any(t.ingredient_id in relevant and t.id not in offered and t.id not in omitted for t in facts.supplier_terms):
+            block('OFFER_ADMISSION_INCOMPLETE','Scoped valid offer omitted without versioned admission evidence')
     declarations={d.ingredient_id:d for d in request.inventory_scope}
     for identifier in ingredients:
         d=declarations.get(identifier);lots=[l for l in facts.lots if l.ingredient_id==identifier]
@@ -214,7 +246,9 @@ def project_capture_v2(request, wrapped):
         needed=set().union(*(dependencies[p] for p in computed))
         kept_ingredients=tuple(i for i in facts.ingredients if i.ingredient_id in needed)
         kept_lots=tuple(l for l in facts.lots if l.ingredient_id in needed)
-        kept_terms=tuple(t for t in facts.supplier_terms if t.ingredient_id in needed)
+        eligible_ids={o.term_id for o in config.offers}
+        kept_terms=tuple(t for t in facts.supplier_terms if t.ingredient_id in needed
+            and (admission is None or (t.id in eligible_ids and t.id not in omitted)))
         kept_recipes=tuple(r for r in facts.recipes if r.product_id in computed)
         kept_constraints=tuple(c for c in facts.constraints if c.ingredient_id is None or c.ingredient_id in needed)
         ids={'store':{request.store_id},'product':set(computed),'ingredient':needed,
@@ -232,7 +266,7 @@ def project_capture_v2(request, wrapped):
             offers=tuple(o for o in config.offers if o.term_id in {t.id for t in kept_terms})
             # Reject foreign/stale declarations, including ones unrelated to the
             # projected scope. Dropping only locally excluded dependencies is explicit.
-            envelope=ProcurementInputV2(prepared=prepared,policy=config.policy,requirements=requirements,offers=offers,budget=config.budget,supplier_fees=tuple(f for f in config.supplier_fees if f.supplier_id in {t.supplier_id for t in kept_terms if t.id in {o.term_id for o in offers}}),capacities=tuple(c for c in config.capacities if c.ingredient_id in needed),supplier_limits=tuple(c for c in config.supplier_limits if c.ingredient_id in needed),arrivals=(),unsupported_configured_constraints=(),source_references=tuple(r for r in prepared.source_references if r.entity!='recipe'))
+            envelope=ProcurementInputV2(prepared=prepared,policy=config.policy,requirements=requirements,offers=offers,budget=config.budget,supplier_fees=tuple(f for f in config.supplier_fees if f.supplier_id in {t.supplier_id for t in kept_terms if t.id in {o.term_id for o in offers}}),capacities=tuple(c for c in config.capacities if c.ingredient_id in needed),supplier_limits=tuple(c for c in config.supplier_limits if c.ingredient_id in needed and (admission is None or any((t.supplier_id,t.ingredient_id)==(c.supplier_id,c.ingredient_id) for t in kept_terms))),arrivals=(),unsupported_configured_constraints=(),source_references=tuple(r for r in prepared.source_references if r.entity!='recipe'))
         except ValidationError as error:
             block('SNAPSHOT_CONFIGURATION_INVALID',str(error));prepared=envelope=None
     status='DATA_BLOCKED' if global_problems else ('CAPTURED' if computed else 'NO_COMPUTABLE_PRODUCTS')

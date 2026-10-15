@@ -16,6 +16,13 @@ class PublicPlanningAcceptance(Contract):
     serving: ServingRecord
     receipt_warnings: tuple[PlanningNotification,...]
     overall_stage_seconds: Literal[180]=180
+    offer_eligibility_policy: Literal['offer_eligibility/1'] | None=None
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy(self,handler):
+        result=handler(self)
+        if result.get('offer_eligibility_policy') is None:result.pop('offer_eligibility_policy',None)
+        return result
 
 
 class IngredientLabel(Contract):

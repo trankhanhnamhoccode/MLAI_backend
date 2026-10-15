@@ -1,4 +1,38 @@
-# Phản hồi BE cho FE010 — source tích hợp Import A1–A3 / Auth B1–B4
+# Phản hồi BE cho FE010 — canonical source handoff
+
+## CURRENT FACT — Data Readiness D1–D5 / source main local
+
+D5 `11ef320a5873fc4dc314fdad63878db5f8a8b38c` tích hợp giữ ancestry vào main local.
+[OpenAPI](openapi.json) source73 operations/66 paths, head0027/72 tables; enclosing
+merge commit + source-input hashes sở hữu provenance. Không thêm endpoint/migration.
+Runtime8103 manifest vẫn `052cddee075e165af2c0cea42ebc2e616c396760`; không restart,
+migrate hoặc deploy. Source contract mới không có nghĩa process8103 đã chạy bản mới.
+
+R01 `/api/v1/stores/{store_id}/readiness?actions=planning` và C01
+`/api/v1/stores/{store_id}/planning-context` không query chỉ đánh giá default.
+Truyền `planning_request=<URL-encoded strict C02 JSON>` để đánh giá full/partial
+custom hoặc saved; dùng cùng request khi POST C02, fresh acceptance revalidate.
+[Examples JSON](examples.json) mục data_readiness có default/supplied GET và typed
+synthetic fragments; không là business facts hoặc runtime response hoàn chỉnh.
+Full custom/saved đủ facts không bị unused default chặn. R01 planning_assessment/
+forecast_assessment, C01 readiness.assessment/forecast giữ input_scope và
+semantics_version planning_readiness/1; quality_status not_evaluated không claim accuracy.
+
+Blockers chặn đúng scope; warnings cho phép thử chạy nhưng cần hiển thị reason/
+provenance. UNKNOWN không là0, NONE hoặc confirmed fact. can_generate/can_execute
+không cam kết winner/global optimality; no eligible offer vẫn xét zero purchase khi
+đủ stock. Shared fee unknown, corrupt/conflicting facts và applicable mandatory safety
+vẫn block. Offer omission giữ reference/version/reason và eligible-domain proof.
+Current GET assessment dùng facts/config hiện tại; C03/C08 source_reference/
+source_version đến từ retained Run, không rewrite theo facts mới. Old queued/retained
+semantics/digests và I06 completion schema giữ nguyên.
+
+Canonical meaning/permissions: [Planning](../PROCUREMENT_API_CONTRACT_VI.md#planning-context),
+[R01](../IMPORT_MAPPING_API_CONTRACT_VI.md#readiness-v1),
+[policy](../features/DATA_READINESS_POLICY.md). Commands/isolation/limits:
+[runbook D5](../runbooks/FULL_TEST_FLOW.md#data-readiness-d5). Backend focused gate
+không là browser/full-suite/real-accuracy acceptance; D3 timing root cause còn mở.
+
 
 
 ## CURRENT FACT — customer self-service / canonical backend

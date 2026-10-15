@@ -232,7 +232,9 @@ def test_overall_deadline_records_actual_engine_elapsed_without_false_cancel(flo
     poll=c[0][5].get(response.headers['Location']);assert poll.status_code==200,poll.text
     assert poll.json()['data']['errors'][0]['code']=='EXECUTION_DEADLINE_EXCEEDED'
     from pathlib import Path
-    Path('runtime/s49/c03_failed_actual_test.json').write_text(poll.text,encoding='utf-8')
+    output=Path('runtime/s49/c03_failed_actual_test.json')
+    output.parent.mkdir(parents=True,exist_ok=True)
+    output.write_text(poll.text,encoding='utf-8')
 
 
 def test_worker_unavailable_leaves_data_valid_and_get_does_not_start_it(flow,monkeypatch):

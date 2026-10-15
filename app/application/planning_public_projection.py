@@ -40,6 +40,19 @@ def notice(code,field=None,entity=None,entity_id=None,dates=None):
         details=dto.PlanningNotificationDetails(field=field,entity=entity,entity_id=entity_id,affected_dates=dates))
 
 
+def capture_warning(record,problem):
+    admission=record.declarations.offer_admission if record.declarations else None
+    omitted=next((o for o in admission.omissions if o.term_id==problem.entity_id),None) if admission else None
+    if problem.code!='OFFER_OMITTED' or omitted is None:
+        return notice(problem.code,problem.field,problem.entity,problem.entity_id,(problem.day,) if problem.day else None)
+    return dto.PlanningNotification(code='OFFER_OMITTED',
+        message='Offer excluded from this Run; results and proofs cover only captured eligible offers.',
+        details=dto.PlanningNotificationDetails(field='supplier_term',entity='supplier_term',entity_id=omitted.term_id,
+            ingredient_ids=(omitted.ingredient_id,),classification=omitted.reason,proof_scope=admission.proof_scope,
+            source_reference=omitted.source_reference,source_version=omitted.version,
+            suggested_action='Provide the missing offer facts or finite bound through the existing reviewed source workflow, then create a new Run.'))
+
+
 def forecast_window_warnings(training_start: date | None,training_end: date | None,
                              forecast_start: date,forecast_end: date) -> tuple[dto.PlanningNotification,...]:
     """PLAN7 provenance only: never reject overlap or substitute another model."""
@@ -152,7 +165,7 @@ def results(record):
                 *((notice('DELIVERY_FEE_TAXONOMY_UNAVAILABLE'),) if o.outlay.fee_classification=='PAYABLE_FEE_TYPE_NOT_CAPTURED' else ()))))
     return dto.PlanningResult(completeness='full' if not r.capture.exclusions and r.comparison is not None and r.outcome not in ('EXECUTION_ERROR','COMPUTATION_BLOCKED','NUMERIC_UNSUPPORTED') else 'partial',
         strategies=strategies,options=tuple(options),winner_option_id=winner,winner_reason=r.selection.reason if r.selection else 'NOT_EVALUATED',
-        warnings=tuple(notice(p.code,p.field,p.entity,p.entity_id,(p.day,) if p.day else None) for p in r.problems if p.kind=='WARNING'))
+        warnings=tuple(capture_warning(record,p) for p in r.problems if p.kind=='WARNING'))
 
 
 def project_run(record, *, response_version=None):

@@ -408,5 +408,48 @@
       "authorization_version": "opaque-synthetic-version"
     },
     "scope": "Illustrative metadata only, not a runtime capture or seeded Store. Refresh T02 for current authorization."
+  },
+  "data_readiness": {
+    "synthetic": true,
+    "source_inputs": {
+      "main_before_integration": "052cddee075e165af2c0cea42ebc2e616c396760",
+      "readiness_d5": "11ef320a5873fc4dc314fdad63878db5f8a8b38c"
+    },
+    "scope": "Typed illustrative fragments, not a full response or assessed real Store. GET requires current rights; can_generate is not a winner promise.",
+    "default_get": "/api/v1/stores/{store_id}/planning-context",
+    "supplied_get": "/api/v1/stores/{store_id}/planning-context?planning_request=%7B%22requirements_mode%22%3A%22custom%22%2C%22forecast_start_date%22%3A%222026-10-15%22%2C%22requirements%22%3A%7B%22paths%22%3A%5B%7B%22path%22%3A%22BASE%22%2C%22min_fill_rate_percent%22%3A%2290%22%2C%22product_overrides%22%3A%5B%5D%7D%5D%2C%22budget_limit%22%3A%220%22%7D%7D",
+    "request": {
+      "requirements_mode": "custom",
+      "forecast_start_date": "2026-10-15",
+      "requirements": {
+        "paths": [
+          {
+            "path": "BASE",
+            "min_fill_rate_percent": "90",
+            "product_overrides": []
+          }
+        ],
+        "budget_limit": "0"
+      }
+    },
+    "planning_assessment": {
+      "semantics_version": "planning_readiness/1",
+      "input_scope": "SUPPLIED_REQUEST",
+      "requirements_mode": "custom",
+      "configuration_status": "RESOLVED",
+      "blockers": [],
+      "warnings": []
+    },
+    "forecast_assessment": {
+      "requested_mode": "TRAINED",
+      "actual_model_type": "baseline",
+      "actual_model_version": "synthetic-baseline",
+      "selection_reason": "NO_ARTIFACT",
+      "quality_status": "not_evaluated"
+    },
+    "retained_notification_details": {
+      "source_reference": "synthetic-reviewed-source",
+      "source_version": 1
+    }
   }
 }
