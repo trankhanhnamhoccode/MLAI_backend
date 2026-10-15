@@ -1,4 +1,4 @@
-# Forecast engine integration — E1 compatibility and benchmark protocol
+# Forecast engine integration — compatibility, causal harness and benchmark protocol
 
 ## Authority and status
 
@@ -12,9 +12,12 @@ CURRENT FACT: E1 supplies static boundary traces, a frozen synthetic protocol,
 portable admission fixtures and small offline validators. E2 implements the
 separate opt-in detached adapter and private filesystem retention; fixed native
 inference/cache/fresh-process replay are verified on tiny synthetic artifacts.
-Operational DB/public serving wiring, accuracy, research training and promotion
-have **not** run. No public API, schema, permission, accepted ADR or production
-configuration changes. E3–E5 remain PROPOSAL/NOT_STARTED.
+E3 implements bounded causal A/B/C training and paired scoring; newly fitted native
+residual/point/CQR artifacts and all three arms replay exactly in a fresh process
+on synthetic correctness data. E3 is PARTIAL / REAL_BENCHMARK_BLOCKED, not real
+accuracy VERIFIED. Operational DB/public serving wiring and promotion have not run.
+No public API, schema, permission, accepted ADR or production configuration changes.
+E4–E5 remain NOT_STARTED.
 
 Authority: [ADR-012](../adr/ADR-012-observed-sales-forecast-execution-contract.md),
 [ADR-014](../adr/ADR-014-retained-baseline-execution.md),
@@ -403,6 +406,93 @@ Hashing proves identity, not authenticity or authorization. Retain original prov
 never overwrite older baseline comparisons. Raw private execution outputs belong in
 owned ignored runtime; reusable synthetic acceptance inputs stay in tests/fixtures.
 
+## E3 offline benchmark
+
+CURRENT FACT: `scripts/forecast_benchmark.py` is an explicitly enabled offline caller,
+with no database/provider/worker dependencies. Typed dataset/plan admission freezes
+scope, units, source revision, known-at assumptions and E1 protocol digest before fits.
+One configuration per A/B/C, four origins, one thread, maximum24 booster fits,
+8 point/CQR fits and300 seconds are frozen. The wall budget is cooperative, checked
+between causal prefixes and booster iterations; it is not a hard process deadline.
+Completed fits and handled-failure resource receipts survive resume. Complete runs
+reuse only matching input/config/training/runtime/host-source identities after replay;
+report changes use `rescore`, with no fitting and no overwrite of earlier evidence.
+
+Training builds each feature row from its independently availability-filtered raw
+prefix. A/B retain causal_stockout_v1; C reconstructs raw observations once per prefix
+with native policy, signed seasonal residual anchor and the frozen E1 configuration.
+The harness maps n_estimators/n_jobs explicitly to low-level LightGBM rounds/threads,
+then invokes pinned native point and CQR fit functions. This is a new candidate fit,
+not reproduction of the old research artifact. C labels end O−56, point uses
+O−55..O−28, CQR O−27..O; postprocess tasks originating before the preceding fit is
+available are purged. ACCEPTED DECISION (explicit E3 request): all holdout target
+dates are quarantined from fitting in every arm, including later origins, without
+changing windows, masks or criteria. Mature earlier observations may be inference
+features, but holdout labels never select/tune parameters. Weather remains excluded.
+Quantiles and separate CQR intervals retain actual clipping/crossing diagnostics.
+
+Artifacts retain actual fit/publication/execution instants alongside historical
+origin/window cutoffs. Offline inference runs after the new local artifact is
+published, not with a fabricated historical publication date. This proves causal
+retrospective correctness on admitted inputs, not historical deployment availability.
+Schema3 artifacts use E2 strict checksum/runtime/scope/point/CQR admission and replay.
+No artifact is promoted and production_available_at remains null.
+
+CURRENT FACT data inventory: only the portable synthetic generator
+`tests/fixtures/forecast_engine/benchmark_setup.py` is admitted for this execution.
+It declares fictional calendar independently before sales generation, with missing,
+zero, known-false, censored and unknown observations; two synthetic Products use cup
+and piece, daily history2025-11-01..2026-06-29, explicit calendar through2026-07-06,
+generated next-run availability. Origins2026-06-01/08/15/22 follow the unchanged E1
+two-validation/two-holdout/window policies. Dates in E1's template are illustrative;
+the execution dates were frozen before training and before actual local artifact fits.
+Dataset digest is `3178e138eff2be24654400e07a03033a3df29b89e4cca3f6ce658d8ad6451b80`.
+The earlier120-day host fixture lacks a sourced operating calendar and sufficient
+native split evidence; the E2 tiny artifact proves inference correctness only.
+The six external demo workbooks remain metadata-only inventory with unverified
+scope/schema/units/vintages/use rights; the old research holdout is exposed. Neither
+operational shelfcash_local nor customer/demo rows were queried/copied for E3.
+
+REAL_BENCHMARK_BLOCKED: no authorized real unseen dataset with stable Store/Product
+scope/units, tri-state stockout, complete sourced known-at daily calendar and adequate
+prefix/point/CQR/validation/holdout coverage is established. Real inputs must include
+source revisions and historical availability evidence; retrospective current revisions
+must disclose their limitation. Missing labels stay missing and only already available
+actuals are scored. Unknown/censored strata remain separate from primary known-false.
+Synthetic scores cannot establish real accuracy, calibration quality or savings.
+Promotion remains INSUFFICIENT_EVIDENCE, irrespective of synthetic ranking.
+
+Reproduce in the isolated E2 venv after installing its pinned wheel/dependencies:
+
+```powershell
+.venv/Scripts/python.exe -m scripts.forecast_benchmark --enable synthetic-inputs
+$benchmarkInputs = 'runtime/challenger/benchmarks/inputs/3178e138eff2be24654400e07a03033a3df29b89e4cca3f6ce658d8ad6451b80'
+.venv/Scripts/python.exe -m scripts.forecast_benchmark --enable freeze --dataset "$benchmarkInputs/dataset.json" --plan "$benchmarkInputs/plan.json"
+.venv/Scripts/python.exe -m scripts.forecast_benchmark --enable smoke --dataset "$benchmarkInputs/dataset.json" --plan "$benchmarkInputs/plan.json"
+.venv/Scripts/python.exe -m scripts.forecast_benchmark --enable run --dataset "$benchmarkInputs/dataset.json" --plan "$benchmarkInputs/plan.json"
+.venv/Scripts/python.exe -m scripts.forecast_benchmark --enable replay --experiment <printed-experiment-identity>
+.venv/Scripts/python.exe -m scripts.forecast_benchmark --enable rescore --experiment <printed-experiment-identity>
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_benchmark.py tests/unit/test_forecast_challenger.py -q
+```
+
+The initial smoke's completed checkpoints are reused by the full run. Hash envelopes,
+environment/source receipts, fit tables, artifact identities, raw predictions/targets/
+masks, per-product/horizon/partition/stockout metrics and resource receipts stay in
+owned ignored `runtime/challenger/benchmarks`; native artifacts/evidence remain in
+E2 private storage. CLI stdout is aggregate only. `replay` recomputes all completed
+A/B/C forecasts without fitting and audits train/point/CQR target dates/availability
+and holdout quarantine; native C also compares E2 exact stage evidence in a fresh
+process. Source/hash mismatch or missing bytes fails closed, with no family fallback.
+
+PROPOSAL / E4 inputs already available: explicitly pinned per-origin C artifacts and
+E2 captured inputs/forecast/quantile/CQR/diagnostic evidence, matching retained A/B
+forecasts, the dataset/plan/environment/source digests and target masks. These can
+support a separately authorized synthetic counterfactual comparison. They contain
+no operational recipe/BOM/loss, inventory/lot/expiry/receipts, supplier/pack/price/fee,
+budget/constraint/policy or search-resource capture. E4 must separately freeze the
+same host operational context for all arms; no historical impact/savings evidence
+exists from E3. E4/E5 are not executed here.
+
 ## Offline verification and lifecycle
 
 CURRENT FACT tooling: `scripts/forecast_benchmark_protocol.py` validates frozen
@@ -432,14 +522,14 @@ conversation, not an accumulating report in this document.
 | Slice | Status/scope and acceptance |
 | --- | --- |
 | E1 | COMPLETE compatibility/protocol scope: canonical specification + frozen synthetic config/fixtures/offline checks. Real-data/runtime integration remains unverified. |
-| E2 | COMPLETE internal opt-in adapter: strict typed capture/artifact admission, pinned installed native stages, separate quantile/CQR/provenance, private immutable evidence/cache and exact fresh-process replay. Tiny native correctness verified; production wiring/activation disabled, E2 left WIP for review. |
-| E3 | NOT_STARTED: authorized data inventory→freeze real execution manifest→causal per-origin training/point/CQR harness→paired accuracy/replay/coverage; report insufficient evidence honestly. |
+| E2 | COMPLETE internal opt-in adapter: strict typed capture/artifact admission, pinned installed native stages, separate quantile/CQR/provenance, private immutable evidence/cache and exact fresh-process replay. Local checkpoint b92d2c43cbf82e8308043f60630c9f83f65abefb; production wiring/activation disabled. |
+| E3 | PARTIAL: causal per-origin A/B/C training/point/CQR harness, paired metrics and fresh-process replay VERIFIED on synthetic correctness corpus. REAL_BENCHMARK_BLOCKED / INSUFFICIENT_EVIDENCE; real accuracy not verified. |
 | E4 | NOT_STARTED: common captured host operational context→forecast-only swap→Planning impact and search evidence, with historical vs counterfactual meaning explicit. |
 | E5 | NOT_STARTED: integration acceptance/current authorization and fresh-session persistence/restart/replay→review evidence→explicit user promotion/config selection and rollback; no automatic promotion. |
 
-Stop after E2; no E3 execution. E1 is committed locally; E2 remains uncommitted WIP.
-Rollback E2 consists of its new adapter/snapshot/tooling and current documentation
-changes; retain private artifacts/evidence and unrelated operational data.
+Stop after E3; E1/E2 committed locally, E3 remains uncommitted WIP.
+Rollback E3 consists of its detached benchmark contracts/harness/tooling/fixtures and
+current documentation changes; retain private artifacts/evidence and operational data.
 Later runtime rollback must select a retained compatible host serving identity,
 keep challenger captures/artifacts/audit and never rewrite completed Planning.
 

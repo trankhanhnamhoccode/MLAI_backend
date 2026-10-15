@@ -61,3 +61,4 @@ forecast accuracy claim từ targeted synthetic tests.
 - [Kiến trúc](docs/ARCHITECTURE.md), [domain](docs/DOMAIN_MODEL.md), [schema](docs/DATABASE_SCHEMA.md), [ADRs](docs/DECISIONS.md).
 - [FE handoff/OpenAPI](docs/handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
 - [Forecast challenger offline — isolated opt-in setup, inference và replay](docs/features/FORECAST_ENGINE_INTEGRATION.md#e2-runtime).
+- [Forecast benchmark E3 — causal synthetic checks, freeze/run/rescore/replay và real-data requirements](docs/features/FORECAST_ENGINE_INTEGRATION.md#e3-offline-benchmark).

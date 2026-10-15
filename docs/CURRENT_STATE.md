@@ -1,6 +1,6 @@
 # Current state
 
-## CURRENT FACT — forecast challenger E1/E2 (isolated branch)
+## CURRENT FACT — forecast challenger E1/E2/E3 (isolated branch)
 
 E1 compatibility/protocol và E2 internal adapter COMPLETE trong worktree riêng
 `backend-forecast-engine-challenger`, branch `feat/forecast-engine-challenger`, từ
@@ -16,10 +16,15 @@ ACCEPTED DECISION theo yêu cầu E1: BE làm host, forecast mới qua adapter r
 giữ BOM/loss/Product serving/FEFO/procurement/requirements/winner/retained Planning.
 E1–E5 không LLM/OpenRouter. Production serving/API/schema/permissions, FE, engine
 source và runtime/DB người dùng không đổi. E2 production mode bị khóa, CLI OFF mặc
-định, không operational DB caller. Chỉ tiny bounded synthetic test setup được train;
-không research training/accuracy benchmark/DB/server/worker/seed/reset/activation.
-E1 commit local; E2 giữ WIP để review, dừng sau E2. Unseen/vintage, operational
-sourced calendar, real compatible artifacts và causal E3 fit recipe vẫn là gaps.
+định, không operational DB caller. E2 checkpoint local
+`b92d2c43cbf82e8308043f60630c9f83f65abefb`; E3 giữ WIP để review, dừng sau E3.
+E3 PARTIAL: causal A/B/C harness, bounded native residual/point/CQR fits,
+paired scoring và fresh-process replay VERIFIED trên synthetic corpus riêng.
+Không dùng nhãn holdout để fit; weather excluded; production LOCKED.
+Real accuracy `REAL_BENCHMARK_BLOCKED` / `INSUFFICIENT_EVIDENCE`: chưa có dữ liệu
+real unseen được phép, historical vintages và sourced operating calendar đủ điều kiện.
+E4 Planning impact/E5 activation chưa thực hiện. Command và giới hạn do canonical
+Forecast integration sở hữu; không thay public API/schema/permissions hay DB.
 
 ## CURRENT FACT — self-service Store/customer local
 
