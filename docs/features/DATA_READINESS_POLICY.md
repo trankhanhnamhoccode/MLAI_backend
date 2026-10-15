@@ -11,12 +11,15 @@ cho phép phương pháp eligible với warning; thiếu làm phép tính/ràng 
 
 HISTORICAL INFORMATION — D1 là audit source/design tại checkpoint local
 `c930dfe66cfda5de5896164e16fcf8f4c7acaefe`, không đổi runtime/API. D2/D3 đã
-checkpoint trong nhánh D, D4 COMPLETE local WIP, chưa merge/main runtime.
+checkpoint trong nhánh D, D4 COMPLETE checkpoint local; D5 VERIFIED local WIP,
+chưa merge/main runtime.
 Main được audit tại
 `052cddee075e165af2c0cea42ebc2e616c396760`. Worktree D1 `backend-data-readiness`,
 branch `feat/data-readiness`, xuất phát đúng main này. D2 checkpoint local
 `9f720caf01fdf0a8f586c049660a2fcc9447ade3`; D3 checkpoint local
-`d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 WIP, chưa merge/main.
+`d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 checkpoint local
+`72415332e2a5224ab9909d54606d7e7e374bdd18`; D5 backend acceptance VERIFIED local WIP,
+chưa merge/main.
 Không nhập E1–E4.
 Đối chiếu read-only challenger tại `c2544c1025815bd0ccef9acb524f6f265dd03c45`
 cộng E4/dataset-admission WIP; các findings này không phải khả năng của main.
@@ -269,8 +272,9 @@ Synthetic correctness không là forecast accuracy hay research benchmark eviden
 
 ## CURRENT FACT — D4 contextual readiness và public warnings
 
-D3 checkpoint local `d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 COMPLETE local WIP,
-chưa commit/push/merge/deploy. Existing R01/C01 routes thêm optional URL-encoded
+D3 checkpoint local `d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 COMPLETE checkpoint local
+`72415332e2a5224ab9909d54606d7e7e374bdd18`, chưa push/merge/deploy.
+Existing R01/C01 routes thêm optional URL-encoded
 `planning_request` (strict C02 PlanningRequest JSON). Không query đánh giá default
 ngày Store hôm nay; có query đánh giá đúng request, không suy hypothetical custom.
 R01 forecast_start_date nếu đồng thời có phải khớp ngày request. Malformed/null,
@@ -319,7 +323,43 @@ Canonical [R01](../IMPORT_MAPPING_API_CONTRACT_VI.md#readiness-v1) và
 [C01](../PROCUREMENT_API_CONTRACT_VI.md#planning-context) sở hữu API/FE delta;
 [runbook D4](../runbooks/FULL_TEST_FLOW.md#data-readiness-d4) có commands/expected cases.
 
-### Existing warning contracts và remaining proposals
+## D5 — backend linked acceptance và integration boundary
+
+CURRENT FACT: user authorized backend-only HTTP/application workers/PostgreSQL,
+không yêu cầu FE. [Matrix/runbook](../runbooks/FULL_TEST_FLOW.md#data-readiness-d5)
+reuse D2–D4 và chỉ thêm liên kết/invariants thiếu. Tests trong
+[public linked acceptance](../../tests/integration/test_data_readiness_acceptance.py)
+reuse public setup của Import, không framework/production test route/permission mới.
+Synthetic fixtures explicit: received date unknown, known stock/completeness, no fees,
+one bounded price offer và one unbounded zero-price omission. Bounded independent
+oracle kiểm14 demand/stock12/pack4/cost10 →1 pack/outlay10; stock20 →zero purchase.
+Oracle không nâng production proof hoặc claim market impossibility.
+
+Future-only reviewed fee amendment giữ historical fee guard; UNKNOWN coverage cho
+request mới vẫn block. Same-key terminal replay là current terminal200/poll0 của
+cùng Run, không receipt queued cũ; request/resolved budget/capture không resolve lại.
+Ceiling đổi sau GET phải revalidate khi C02 mới. C03/C08/fresh Session kiểm retained
+facts/warnings/digests sau stock, budget và future fee mutation. Mixed scope giữ
+excluded Product/override NOT_EVALUATED, recognized NO_ARTIFACT fallback giữ actual
+method/reason. Mandatory safety0 chỉ applicable computed dependencies mới block.
+
+Backend acceptance VERIFIED bằng final focused unit/API/PostgreSQL invocation;
+không full-suite claim. Không sửa production source trong D5; OpenAPI JSON-equal
+so với D4. Workbook smoke/browser E2E chưa chạy; accuracy/real impact
+chưa đánh giá. Không tự suy business declarations từ uploads. D3 timing overrun
+vẫn known limitation nếu không có telemetry chứng minh root cause.
+
+Integration chú ý shared D4 files: app/api/readiness.py và application/contracts/
+readiness.py/planning_context.py sở hữu query+assessment; readiness_evaluation.py,
+contextual_planning.py và planning_admission.py dùng canonical resolver/admission.
+DB planning_capture wrapper tiếp tục giữ legacy acceptance marker. Import
+contracts/import_mapping.py giữ CompletionReadinessIssue/details riêng; public
+PlanningNotificationDetails optional source reference/version elide khi absent.
+LLM/challenger integration phải giữ các boundaries này, current sensitive-read
+guards và retained semantics; không đưa research eligibility/LLM vào business truth.
+D5 không thêm contract delta ngoài D4 cần FE đồng bộ sau này.
+
+## Existing warning contracts và remaining proposals
 
 ACCEPTED DECISION — warning vẫn cho chạy; blocker chặn đúng action/scope; irrelevant
 missing không có issue. Existing retained Runs không bị update/reclassify theo policy
@@ -473,8 +513,8 @@ không đổi C thành baseline trong old paired cohort hoặc nới gate để 
 | D1 | Audit/policy này, CURRENT_STATE/ROADMAP; không runtime/API/schema delta | Source/test trace, JSON examples, local links, UTF-8/whitespace; dừng chưa commit/push/merge |
 | D2 | CURRENT FACT COMPLETE, checkpoint9f720caf: shared choice + typed internal assessment, scoped history blockers và dependency/runtime classification; public shapes/replay giữ nguyên | Focused forecast/HTTP/PostgreSQL regressions, linked all-censored fail→fix, fresh-session retained evidence; không challenger activation |
 | D3 | CURRENT FACT COMPLETE, local checkpoint d0f3716c261f6634d5fcd5ae886c00cf3014276c: versioned offer admission/source proof; /1/legacy giữ nguyên | Focused alternatives/fee/capacity/safety/unknown graph/stock/stale/permissions/Import/replay và OpenAPI equality |
-| D4 | CURRENT FACT COMPLETE local WIP: contextual request/resolver/admission và shared warnings; I06 retained schema giữ nguyên | Focused modes/budgets/scope/retained/security/OpenAPI delta; không FE/browser hoặc full-suite claim |
-| D5 | PROPOSAL: FE/browser integration cho D4 extension, optional consumer-specific workbook acceptance, timing investigation khi authorized | Không lặp backend acceptance đã xong; không sửa/chạy E1–E4 hoặc accuracy benchmark ngầm |
+| D4 | CURRENT FACT COMPLETE checkpoint72415332: contextual request/resolver/admission và shared warnings; I06 retained schema giữ nguyên | Focused modes/budgets/scope/retained/security/OpenAPI delta; không FE/browser hoặc full-suite claim |
+| D5 | CURRENT FACT backend acceptance VERIFIED, local tests/docs WIP: public setup/actual workers/PG, independent oracle, retained/security/concurrency | Final focused invocation và OpenAPI equality D4 PASS; timing instability còn mở; không full-suite/FE/workbook/accuracy claim |
 
 BE phụ thuộc eligibility/classification/capture/projection hiện có; domain vẫn plain
 Python, không service registry/agent framework/new infrastructure. FE cần render
@@ -496,7 +536,7 @@ safety stock nếu muốn hỗ trợ, và nguồn/phạm vi/effectivity của m�
 declaration mới nếu existing workflows chưa biểu diễn được. Không cần hỏi lại Owner
 cho immutable proof hợp lệ. CQR/calendar changes hoặc research promotion có review
 riêng, không là điều kiện để dùng baseline hiện có. D2 được authorized riêng;
-D3/D4 được authorized riêng; D5 chưa được mở.
+D3/D4/D5 được authorized riêng; D5 là backend-only acceptance, không mở lát tiếp theo.
 
 ## Acceptance cases — D2–D4 coverage và PROPOSAL D5
 

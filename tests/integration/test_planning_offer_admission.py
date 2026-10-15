@@ -145,7 +145,7 @@ def test_missing_conditional_shelf_life_uses_complete_alternative(flow):
     assert record.capture.exclusions==()
 
 
-def test_remaining_offer_fee_bindings_are_rechecked_without_charging_omitted_offer(flow):
+def test_remaining_offer_fee_bindings_are_rechecked_without_charging_omitted_offer(flow,record_property):
     c,ingredient,_,worker=flow
     omitted=demand_and_offer(flow,cost='0')
     supplier,eligible=uuid4(),uuid4()
@@ -169,6 +169,9 @@ def test_remaining_offer_fee_bindings_are_rechecked_without_charging_omitted_off
         s.commit()
     assert submit(c).status_code==202
     record=worker.run_one()
+    record_property('stage_seconds',record.public_execution.elapsed_seconds)
+    record_property('engine_seconds',record.public_execution.engine_seconds)
+    record_property('stage_overrun_seconds',record.public_execution.stage_overrun_seconds)
     assert record.outcome=='recommendation_available',(record.error_code,record.public_execution)
     assert record.declarations.offer_admission.omissions[0].term_id==omitted
     winner=next(o for o in record.result.comparison.options if o.token==record.result.selection.winner_token)

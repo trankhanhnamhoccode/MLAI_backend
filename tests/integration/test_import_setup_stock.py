@@ -16,6 +16,21 @@ from app.models import Product, Ingredient, InventoryLot, InventoryMovement
 from app.models.operational_import import InventoryReceiptRecord
 
 
+from dataclasses import dataclass
+from datetime import date
+
+
+@dataclass(frozen=True)
+class PublicPlanningSetup:
+    today: date
+    cutoff: date
+    product: UUID
+    ingredient: UUID
+    lot: UUID
+    budget_etag: str
+    import_id: str
+
+
 @pytest.fixture
 def fresh_store(env):
     env[4][0] = datetime.now(timezone.utc)
@@ -169,8 +184,8 @@ def test_fresh_opening_public_commit_reimport_and_count(fresh_store):
         assert session.scalar(select(func.count()).select_from(InventoryLot)) == 1
 
 
-@pytest.mark.parametrize("reverse", [False, True])
-def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_store, reverse, monkeypatch):
+def prepare_public_planning(c,monkeypatch,*,reverse=False,omitted_offer=False):
+    """Existing explicit Import/Owner setup shared by linked acceptance cases."""
     from datetime import timedelta
     from zoneinfo import ZoneInfo
     from app.application.use_cases.readiness import ReadinessReads
@@ -180,7 +195,6 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
     from tests.integration.test_readiness_context import configure_baseline
     from app.models import Supplier, SupplierTerm, RecipeLine, SalesDaily, PlanningRun
 
-    c = fresh_store
     from app.infrastructure import import_suggestions
     monkeypatch.setattr(import_suggestions, "suggest_sheet",
         lambda *a, **kw: pytest.fail("A3 provider must remain OFF"))
@@ -209,6 +223,20 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
             components=[], covered_source_term_keys=["T1"], covered_source_supplier_keys=["SUP"],
             evidence_reference="Synthetic explicit no fees", reason="Owner fixture fact")])),
     ]
+    if omitted_offer:
+        metadata['FREE_SUP']=('supplier',dict(name='Unbounded source supplier',active=True))
+        sources[2]=('suppliers.csv',csv_source('suppliers',[
+            dict(source_supplier_key=key,**metadata[key][1]) for key in ('SUP','FREE_SUP')]))
+        term=dict(source_term_key='T1',supplier_id='SUP',ingredient_id='MILK',
+            effective_from=today.isoformat(),effective_to=None,unit='l',pack_size_base_quantity='4',pack_cost='10',
+            currency='VND',price_basis='PER_PACK',price_quantity=None,price_unit=None,moq_basis='PACKS',
+            minimum_order_quantity='1',moq_unit=None,lead_time_days=0,shelf_life_days=None,active=True,maximum_order_base_quantity='100')
+        sources[5]=('terms.csv',csv_source('supplier_terms',[
+            dict(term,source_term_key='T0',supplier_id='FREE_SUP',pack_cost='0',maximum_order_base_quantity=None),term]))
+        sources[-1]=('fees.csv',csv_source('payable_fees',[dict(source_fee_key='F1',scope='STORE_PROCUREMENT',
+            effective_from=today.isoformat(),effective_to=None,mode='NONE',coverage='COMPLETE',currency='VND',components=[],
+            covered_source_term_keys=['T0','T1'],covered_source_supplier_keys=['FREE_SUP','SUP'],
+            evidence_reference='Synthetic Owner confirms no payable fees across both offers',reason='Explicit complete fixture scope')]))
     ident = analyzed_files(c, list(reversed(sources)) if reverse else sources)
     review_batch(c, ident, creations=metadata)
     read, done = complete(c, ident)
@@ -216,13 +244,13 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
     with Session(c[0][1]) as session:
         assert session.scalar(select(func.count()).select_from(Product)) == 1
         assert session.scalar(select(func.count()).select_from(Ingredient)) == 1
-        assert session.scalar(select(func.count()).select_from(Supplier)) == 1
+        assert session.scalar(select(func.count()).select_from(Supplier)) == (2 if omitted_offer else 1)
         product = session.scalar(select(Product)).id
         ingredient = session.scalar(select(Ingredient)).id
         lot = session.scalar(select(InventoryLot)).id
         assert session.scalar(select(RecipeLine)).quantity == 1
         assert session.scalar(select(SalesDaily)).quantity == 2
-        assert session.scalar(select(SupplierTerm)).pack_cost == 10
+        assert sorted(t.pack_cost for t in session.scalars(select(SupplierTerm))) == ([0,10] if omitted_offer else [10])
     client = c[0][5]
     client.app.state.readiness = ReadinessReads(c[0][2], client.app.state.forecast_serving, planning_available=lambda:True)
     client.app.state.planning_configuration = PlanningConfigurationWrites(c[0][2])
@@ -251,6 +279,18 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
     assert after.status_code == 200, after.text
     assert "INVENTORY_SCOPE_UNKNOWN" not in str(after.json()["data"])
     assert "DEFAULT_CONFIGURATION_UNAVAILABLE" in str(after.json()["data"])  # No seeded default to claim READY.
+    return PublicPlanningSetup(today,cutoff,product,ingredient,lot,budget.headers['ETag'],ident)
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_store, reverse, monkeypatch):
+    from datetime import timedelta
+    from app.application.use_cases.planning_worker import PlanningExecution
+    from app.models import SalesDaily,PlanningRun
+    c=fresh_store
+    setup=prepare_public_planning(c,monkeypatch,reverse=reverse)
+    today,cutoff,product,ingredient,lot,ident=(setup.today,setup.cutoff,setup.product,setup.ingredient,setup.lot,setup.import_id)
+    client=c[0][5];base=f"/api/v1/stores/{c[1].store_id}"
     from app.application.use_cases import forecast_trained_execution
     monkeypatch.setattr(forecast_trained_execution, "_now", lambda:c[0][4][0])
     accepted = client.post(base + "/procurement-plans", headers={**c[3], "Idempotency-Key":str(uuid4())},
@@ -321,7 +361,7 @@ def test_fresh_multifile_setup_readiness_custom_planning_and_retained_run(fresh_
     # Explicit current config and source correction after retention must not
     # reconstruct either Run's input, capture, result, digest or provenance.
     changed_budget = client.put(base + "/planning-budget",
-        headers={**c[3], "Idempotency-Key":str(uuid4()), "If-Match":budget.headers["ETag"]},
+        headers={**c[3], "Idempotency-Key":str(uuid4()), "If-Match":setup.budget_etag},
         json=dict(amount="80"))
     assert changed_budget.status_code == 200, changed_budget.text
     from tests.integration.test_import_staging import approved

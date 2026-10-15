@@ -11,13 +11,17 @@ matrix, current gaps, issue/assumption proposal, API impact và acceptance cases
 | D1 audit/policy | COMPLETE, local checkpoint c930dfe66cfda5de5896164e16fcf8f4c7acaefe từ main052cddee; documentation-only, không runtime/API delta; không push/merge. |
 | D2 forecast eligibility/fallback | COMPLETE, local checkpoint9f720caf01fdf0a8f586c049660a2fcc9447ade3. Shared choice + typed internal assessment, scoped all-censored R01/C01/Today fix, dependency/runtime-vs-integrity; focused forecast/HTTP/PG/replay gates, OpenAPI giữ nguyên. Không full-suite/accuracy claim. |
 | D3 confirmed facts/partial scope | COMPLETE, local checkpoint d0f3716c261f6634d5fcd5ae886c00cf3014276c: accepted offer_eligibility/1, scoped local omission/source proof, remaining eligible domain/zero purchase; shared unknown/invalid/safety vẫn block; old-policy queued/retained payloads giữ semantics/digests. |
-| D4 public readiness/warnings | COMPLETE, local WIP chưa commit: contextual R01/C01 query + scope/version/forecast metadata, shared resolver/admission và warnings; Today default consistent, retained C03/C08 source references. I06 retained schema unchanged. Focused acceptance/OpenAPI delta tại runbook D4; no GET computation. |
-| D5 acceptance/benchmark | PROPOSAL; remaining FE/browser integration của additive D4 query/fields, optional workbook acceptance theo consumer và điều tra timing instability nếu được authorized. Không lặp portable backend D2–D4 đã xong; không mở E3/E4 hoặc accuracy gate ngầm. Chưa authorized. |
+| D4 public readiness/warnings | COMPLETE, local checkpoint72415332e2a5224ab9909d54606d7e7e374bdd18: contextual R01/C01 query + scope/version/forecast metadata, shared resolver/admission và warnings; Today default consistent, retained C03/C08 source references. I06 retained schema unchanged. |
+| D5 backend linked acceptance | VERIFIED, local tests/docs WIP chưa commit: public setup/custom/omission/zero purchase/shared fee/retention, independent small oracle và final D2–D5 focused unit/API/PG gate. Không production source/contract delta. Không yêu cầu FE/workbook đủ facts; timing root cause còn mở; không E3/E4/training/accuracy benchmark. |
 
 Main đã có baseline và recognized fallback; không mở lại từ đầu hoặc dùng research
 calendar gate chặn product baseline. E3 real accuracy blocked/E4 synthetic incomplete
 thuộc challenger branch/WIP, không tích hợp hoặc đổi kết quả trong D1. Main local
 runtime/config/DB/artifacts và mọi challenger WIP được bảo toàn.
+
+D5 không bao gồm FE/browser E2E hoặc real accuracy/savings. Các hạng mục đó chưa
+nghiệm thu, không là blocker cho backend-only acceptance. D3 deadline instability
+chưa có root cause; bounded diagnostics không đóng issue bằng một lượt pass.
 
 ## CURRENT FACT
 

@@ -1,12 +1,14 @@
 # Current state
 
-## CURRENT FACT — D4 contextual readiness/public warnings COMPLETE, local WIP
+## CURRENT FACT — D5 backend acceptance VERIFIED, local WIP
 
 Isolated `backend-data-readiness` / `feat/data-readiness` từ main052cddee, D1 committed
 local `c930dfe66cfda5de5896164e16fcf8f4c7acaefe`; D2 local checkpoint
 `9f720caf01fdf0a8f586c049660a2fcc9447ade3`. D3 committed local
-`d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 source/tests/docs WIP để review,
-chưa commit/push/merge/deploy. Shared forecast
+`d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 committed local
+`72415332e2a5224ab9909d54606d7e7e374bdd18`. D5 backend acceptance VERIFIED qua final
+focused unit/API/PostgreSQL invocation; tests/docs WIP chưa commit/push/merge/deploy.
+Không production source/API/migration delta D5. Shared forecast
 choice và typed internal assessment giữ actual method/candidate/reason/warnings,
 scoped history blockers, recognized-only whole-scope fallback và exact retained
 replay. R01/C01 all-censored TRAINED trước trả503, nay trả200 blocked assessment;
@@ -39,7 +41,12 @@ source_reference/source_version từ retained evidence. OpenAPI additive fields/
 không endpoint/migration/FE source change; I06 retained issue schema giữ nguyên.
 Commands/limits tại [D4 runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d4).
 D3 deadline overrun chưa rõ root cause, không đổi180s hoặc retry/proof/search policy.
-D5 chưa authorized; integrity/unknown-fee/safety guards giữ nguyên. Main8103/local DB/config/
+D5 authorized backend-only: public Import/Owner declarations → full custom readiness
+→ C02 → actual workers → C03/C08/fresh Session. Oracle nhỏ độc lập, idempotency/current
+ceiling revalidation, retained facts sau stock/fee/config mutation; không cần FE.
+Matrix/commands/recovery tại [D5 runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d5).
+Workbook smoke/browser E2E chưa chạy; không đánh giá forecast accuracy/real impact.
+Integrity/unknown-fee/safety guards giữ nguyên. Main8103/local DB/config/
 artifacts, challenger E4/dataset WIP và sáu baseline workbooks ngoài Git được giữ
 nguyên; không chạy E3/E4 benchmark hoặc training bằng workbook.
 

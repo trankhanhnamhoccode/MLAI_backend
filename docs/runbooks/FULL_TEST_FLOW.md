@@ -1,10 +1,124 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="data-readiness-d5"></a>
+## CURRENT FACT — D5 backend acceptance VERIFIED
+
+D4 checkpoint local `72415332e2a5224ab9909d54606d7e7e374bdd18`; D5 authorized,
+local WIP chưa commit. Scope là backend HTTP → application workers → PostgreSQL;
+FE/browser không thuộc gate. Dùng [D2 target/limited-role/flags guard](#data-readiness-d2)
+và head0027 trước integration, một pytest/reset process tại một thời điểm.
+Final focused invocation verified, không full-suite; D5 chỉ tests/docs, OpenAPI
+JSON-equal checkpoint D4. Per-invocation results/fail→fixture-fix ở conversation;
+không cộng overlap thành unique tests.
+
+Matrix trước execution, reuse D2–D4; chỉ bổ sung linked invariants còn thiếu:
+
+| Group | Existing coverage reused | D5 bổ sung / oracle |
+| --- | --- | --- |
+| A modes/context/budgets | test_contextual_readiness + test_planning_setup: default, full/partial custom, active/invalid/archived saved, omitted/null/0/[], stale versions | Public Import setup → supplied full custom → C02 cùng request; default-only GET không chặn custom; cap đổi sau assessment → new acceptance reject, same-key retained acceptance không resolve lại |
+| B forecast/scope | test_forecast_readiness + test_forecast_eligibility: sparse/zero/all-censored, dependency vs artifact invalid; mixed scope | Linked fallback assessment → worker → retained method/reason/warnings + exclusions/override NOT_EVALUATED; không infer accuracy hoặc zero-fill |
+| C offer/stock/shared facts | test_planning_offer_admission: omit + alternative, no eligible offers stock đủ/thiếu, fee conflicts; safety/unknown graph tests | Portable public setup reuse test_import_setup_stock: explicit missing receipt date, zero-cost unbounded offer + finite alternative; oracle14 litres demand/stock12/pack4/cost10 →1 pack/outlay10. Public count20 + fresh scope →zero purchases. Unknown fee import →current blocked/Run computation_blocked |
+| D retained/security/concurrency | test_planning_public_security, test_import_readiness_snapshot, legacy offer policy/digest tests; concurrent acceptance/two workers | Fresh Sessions giữ accepted request/config/input/result digests; live stock/fees/budget đổi không rewrite C03/C08, idempotent key không duplicate Run/effects; current rights/foreign Store regressions |
+| Timing | D3 group deadline failure, isolated pass6.21s; D4 group pass6.45s | Một bounded run case đó với existing stage/engine timing evidence; phân biệt real deadline assertion với clock-injection test. Không tăng180s, retry hoặc đổi proof/search policy; chưa root cause thì giữ limitation |
+
+Workbooks không bắt buộc; portable facts là explicit synthetic declarations,
+không import historical uploads làm current stock. Không provider/SMTP/training/
+E3/E4, không demo/development/other-worktree DB access. Failed test chỉ rerun affected
+groups sau fix. Recovery: assertion failure giữ output dưới ignored runtime nếu cần,
+kiểm DB guard/status; supported fixture reset chỉ DB readiness. Không purge runtime
+hoặc operational/audit evidence. Không retry business effects để làm xanh deadline.
+
+Focused integration milestone gate, một invocation; chọn explicit no-training nodes
+thay vì artifact fixtures có training. Không full-suite claim. Các concurrency checks
+chỉ chạy business transactions song song trong cùng fixture, không parallel reset.
+
+```powershell
+$readinessCases = @(
+ 'tests/unit/test_contextual_readiness.py',
+ 'tests/unit/test_offer_admission.py',
+ 'tests/unit/test_planning_setup.py',
+ 'tests/unit/test_stockout_readiness.py',
+ 'tests/unit/test_import_inventory_completeness.py',
+ 'tests/unit/test_forecast_serialization.py',
+ 'tests/unit/test_forecast_eligibility.py::test_recognized_absence_uses_same_choice_and_truthful_metadata',
+ 'tests/unit/test_forecast_eligibility.py::test_every_unusable_product_blocks_choice_with_scoped_assessment',
+ 'tests/unit/test_forecast_eligibility.py::test_stockout_projection_preserves_observations_and_causal_support',
+ 'tests/unit/test_forecast_eligibility.py::test_unexpected_failures_are_not_classified_as_missing_history',
+ 'tests/unit/test_forecast_eligibility.py::test_invalid_capture_rejected_before_choice_not_sanitized_as_data_missing',
+ 'tests/unit/test_application_contracts.py::test_application_has_no_http_or_direct_queries',
+ 'tests/api/test_planning_configuration_openapi.py',
+ 'tests/api/test_planning_public_openapi.py',
+ 'tests/api/test_import_openapi.py',
+ 'tests/integration/test_data_readiness_acceptance.py',
+ 'tests/integration/test_contextual_readiness.py',
+ 'tests/integration/test_forecast_readiness.py',
+ 'tests/integration/test_planning_offer_admission.py',
+ 'tests/integration/test_import_readiness_snapshot.py',
+ 'tests/integration/test_readiness_context.py::test_whole_response_permissions_and_action_not_granted_after_sensitive_reads',
+ 'tests/integration/test_readiness_context.py::test_current_membership_revoked_during_detached_preflight_denies_snapshot',
+ 'tests/integration/test_readiness_context.py::test_declaration_stale_coverage_watermark_exact_and_global_unsupported',
+ 'tests/integration/test_planning_public.py::test_concurrent_acceptance_and_two_workers_one_publication',
+ 'tests/integration/test_planning_public_security.py::test_current_revoke_at_every_boundary',
+ 'tests/integration/test_planning_public_security.py::test_store_membership_read_is_not_creator_only_and_foreign_hidden',
+ 'tests/integration/test_planning_public_security.py::test_retained_digest_and_typed_evidence_corruption_fails_closed',
+ 'tests/integration/test_planning_public_security.py::test_config_values_fixed_when_source_changes_after_acceptance',
+ 'tests/integration/test_planning_public_security.py::test_overall_deadline_records_actual_engine_elapsed_without_false_cancel',
+ 'tests/integration/test_forecast_execution_flow.py::test_replay_retained_not_operational_and_new_uuid',
+ 'tests/integration/test_forecast_execution_flow.py::test_s1_missing_retention_and_persisted_replay_missing_product'
+)
+& $readinessPython -m pytest @readinessCases -q --tb=short --show-capture=no --durations=5 --junitxml=runtime/verification/d5/final-focused.xml
+& $readinessPython -m scripts.dev status --test-database
+git diff --check
+```
+
+Development invocations (kết quả riêng ở conversation, không cộng overlap):
+
+```powershell
+& $readinessPython -m pytest tests/integration/test_data_readiness_acceptance.py -q --tb=short --show-capture=no --durations=3 --junitxml=runtime/verification/d5/public-first.xml
+& $readinessPython -m pytest tests/integration/test_data_readiness_acceptance.py tests/integration/test_import_setup_stock.py::test_fresh_multifile_setup_readiness_custom_planning_and_retained_run[False] -q --tb=short --show-capture=no --durations=3 --junitxml=runtime/verification/d5/linked.xml
+& $readinessPython -m pytest tests/integration/test_data_readiness_acceptance.py::test_public_setup_custom_oracle_omission_stock_fees_and_revalidation -q --tb=short --show-capture=no --durations=1 --junitxml=runtime/verification/d5/public-rerun.xml
+& $readinessPython -m pytest tests/integration/test_data_readiness_acceptance.py::test_public_setup_custom_oracle_omission_stock_fees_and_revalidation tests/integration/test_data_readiness_acceptance.py::test_mandatory_safety_is_blocking_only_for_computed_dependencies -q --tb=short --show-capture=no --durations=2 --junitxml=runtime/verification/d5/affected.xml
+```
+
+Expected linked evidence: new acceptance202/queued; completed same-key replay200/
+poll0, same run_id/accepted_at/captured config; new key after cap reduction422.
+Stock12 + pack4/cost10 →1 pack/outlay10, stock20 →0 packs/outlay0. Current unknown
+future fee →readiness blocked, accepted Run completed/computation_blocked, no winner.
+No eligible offers/insufficient stock chỉ captured eligible domain proof, không
+market impossibility. Forecast fallback NO_ARTIFACT giữ actual baseline/quality
+not_evaluated, mixed Product scope giữ override NOT_EVALUATED.
+
+Public future fee changes phải Owner-review period amendment và supplier_changes
+confirmation, không sửa fee effective today; Import coverage NONE phải explicit
+phủ cả offer/supplier khi declared COMPLETE. Đây là fixture facts, không defaults.
+Recovery client: đọc C03 trước; terminal retry trả current status, không khởi động
+worker lại. Muốn rerun sau sửa facts là explicit new key/Run, không overwrite old.
+Source JSON/capture/digests, stock movements và exact Import audit được kiểm qua
+fresh Session; HTTP2xx không được coi riêng là persistence evidence.
+
+OpenAPI capture/check: checkpoint D4 source đã được capture tại ignored
+runtime/verification/d5/openapi-d4.json; create_app(Settings(_env_file=None)).openapi()
+với psycopg.connect bị chặn phải JSON-equal snapshot đó. Original baseline fixture
+không bị thay. JSON examples/local links/UTF-8/whitespace/secrets được kiểm riêng.
+Workbook smoke NOT RUN (hash-preserved only); browser E2E NOT RUN; accuracy/real
+impact NOT EVALUATED. Không cần các gates đó để hoàn thành backend-only D5.
+
+Timing interpretation: case phí assert business outcome recommendation_available,
+không assertion latency6.45s. Worker dùng monotonic perf_counter/overall180s, check
+trước preparation/sau capture/sau engine; không hard cancellation. Actual bounded
+case D5 pass, stage/engine/overrun lấy retained PublicPlanningExecution và recorded
+JUnit properties. Clock-injection case181s vẫn failed/EXECUTION_DEADLINE_EXCEEDED,
+giữ actual engine timing và không fabricated result. Không có historical OS/resource
+telemetry để kết luận contention/race/root cause của D3; one passing run không đóng
+issue. Ảnh hưởng còn thật: Run có thể failed deadline khi overall stage vượt180s,
+client đọc C03 và explicit new Run nếu muốn thử lại, không retry/persist ngầm.
+
 <a id="data-readiness-d4"></a>
 ## CURRENT FACT — D4 contextual readiness/public warnings, isolated acceptance
 
-D3 checkpoint `d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 local WIP, chưa commit/
-push/merge/deploy. Dùng đúng own interpreter/DB5435/limited role/flags guard tại
+D3 checkpoint `d0f3716c261f6634d5fcd5ae886c00cf3014276c`; D4 checkpoint local
+`72415332e2a5224ab9909d54606d7e7e374bdd18`, chưa push/merge/deploy.
+Dùng đúng own interpreter/DB5435/limited role/flags guard tại
 [D2 setup](#data-readiness-d2), kiểm connected DB/role/head0027 trước integration.
 Các pytest/reset chạy tuần tự, không query/migrate main hoặc DB nhánh khác.
 Provider/email/background workers OFF; worker.run_one trong tests đồng bộ.
