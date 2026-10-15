@@ -9,14 +9,17 @@ quan consumer hiện tại không chặn và không phát warning. Thiếu làm 
 cho phép phương pháp eligible với warning; thiếu làm phép tính/ràng buộc không xác
 định phải block đúng action/scope hoặc yêu cầu xác nhận có provenance.
 
-CURRENT FACT — D1 là audit source/design, chưa sửa runtime, DTO, OpenAPI, guard,
-permission, schema hoặc thuật toán. Main được audit tại
+HISTORICAL INFORMATION — D1 là audit source/design tại checkpoint local
+`c930dfe66cfda5de5896164e16fcf8f4c7acaefe`, không đổi runtime/API. D2 có
+implementation WIP trong nhánh D, chưa merge/main runtime; xem mục D2 bên dưới.
+Main được audit tại
 `052cddee075e165af2c0cea42ebc2e616c396760`. Worktree D1 `backend-data-readiness`,
 branch `feat/data-readiness`, xuất phát đúng main này. Không nhập E1–E4.
 Đối chiếu read-only challenger tại `c2544c1025815bd0ccef9acb524f6f265dd03c45`
 cộng E4/dataset-admission WIP; các findings này không phải khả năng của main.
-Source/test trace dưới đây là kiểm tra tĩnh, không phải kết quả test mới hay bằng
-chứng process HTTPS8103 đang chạy đúng source này.
+Ma trận/source trace D1 dưới đây là kiểm tra tĩnh; kết quả implementation/verification
+D2 được phân biệt ở mục D2 và conversation. Không phần nào chứng minh process
+HTTPS8103 đang chạy source nhánh D.
 
 Tài liệu này sở hữu policy liên consumer và backlog D1–D5. Workflow/permissions vẫn
 thuộc [Import](../IMPORT_MAPPING_API_CONTRACT_VI.md),
@@ -108,24 +111,79 @@ Invalid/conflicting không được xem như merely missing để fallback bỏ 
    alternative đủ facts không tự giải được blocker này. PROPOSAL D3 chỉ cho bỏ offer
    khi chứng minh scope/cost/constraints của phần còn lại sound, retain omission và
    hạ proof về captured eligible domain. Không mặc định missing offer=no supplier.
-5. **Thông tin fallback chưa đi hết R01/C01**: `assess` trả `None` khi choice fallback
-   hợp lệ, không trả `BASELINE_FALLBACK`/selection reason cho readiness; C01 chỉ
+5. **Thông tin fallback chưa đi hết public R01/C01**: tại main/D1, `assess` trả
+   `None` khi choice fallback hợp lệ. D2 internal assessment đã có method/reason/
+   warnings, nhưng public projection giữ nguyên; C01 chỉ
    project blocker reason codes và không project action warnings. Execution/retained
    forecast và Planning forecast view đã có warnings. D4 cần additive projection,
    không kết luận warnings chỉ tồn tại trong logging.
-6. **Error distinction còn thô**: `assess` gộp `ArtifactError`/`ModelBoundaryError`
+6. **Error distinction tại main/D1, đã sửa trong D2**: `assess` cũ gộp `ArtifactError`/`ModelBoundaryError`
    thành `MODEL_ARTIFACT_INVALID`, có thể gồm dependency incompatibility. Với
    schema-2 all-censored Product và serving mode TRAINED, `_choose` có thể raise
-   `BaselineNotReadyError` trước `evaluate`; `ReadinessReads.read` chỉ catch `AuthError` quanh preparation,
-   `assess` không catch readiness exception. Đây là static integration risk cần
-   regression D2; unit evaluator all-censored đã có nhưng không chứng minh GET path.
+   `BaselineNotReadyError` trước `evaluate`; caller cũ không chuyển readiness exception
+   thành assessment. Linked regression D2 xác nhận handler chung trả503
+   SERVICE_UNAVAILABLE ở cả R01/C01. D2 trả scoped blockers, không che programming
+   errors; unit evaluator trước đây không bao phủ integration path này.
 7. **Drift được báo, không sửa approved intent**: Planning prose §4 nhắc sales
    availability đến D được xác nhận; source R01 dùng thiếu watermark làm warning,
    baseline vẫn eligible. Các ADR có đoạn implementation boundary lịch sử nói
    chưa có HTTP/config/capture trong khi main đã wired. D1 không dùng các đoạn đó
    thay source, không đổi prose/ADR để che drift. D4 phải reconcile rõ scope public.
 
-## Warning/blocker/assumption contract — PROPOSAL D2–D4
+## CURRENT FACT — D2 forecast eligibility và linked readiness
+
+D2 bổ sung [ForecastEligibility](../../app/application/contracts/forecast_eligibility.py),
+internal frozen dataclass cho requested mode/candidate, actual eligible method/version/
+artifact, ExecutionDetails selection reason, existing ForecastWarning và scoped
+Readiness Issue blockers. `failure_kind` phân biệt HISTORY_UNUSABLE, ARTIFACT_INVALID,
+DEPENDENCY_UNAVAILABLE và RUNTIME_UNAVAILABLE. Đây không phải retained/public schema;
+không đổi hash/serialization/identity schema1/schema2 hoặc DTO R01/C01.
+
+`ForecastServing.assess` gọi chính `choice` của execution, không selector mới. Shared
+baseline guard yêu cầu ≥1 usable observation cho mỗi requested Product; BASELINE
+mode cũng preflight guard này trước start. `_choose` sở hữu trained thresholds duy
+nhất, gồm ≥28 usable observations và ≥14 supervised rows cho trained được chọn;
+trước D2 check training rows nằm thêm ở serving wrapper. Consolidation áp dụng new
+selection; replay dùng `_replay_choice` cũ với đúng retained artifact/input/policy,
+không áp lại selection gate để đổi model. Thứ tự recognized absence, compatibility,
+observation minimum, baseline-selected evaluation và trained-row gate giữ truthful
+reasons/whole-scope fallback. Invalid capture vẫn raise validation error.
+
+No candidate/recognized missing artifact/history-ineligible/baseline-selected là
+recognized fallback, baseline phải ready; actual baseline/candidate/reason/warnings
+vẫn được retain bởi execution hiện có. Sparse days không zero-fill, observed0 giữ0,
+unknown stockout giữ null/observed compatibility. Projection luôn từ raw captured
+observations, không feed reconstructed estimates thành observed support. Không dùng
+recipe/stock/supplier/calendar/usage/purchase để gate model main hiện tại; explicit
+serving config vẫn required. Không thay main model thành challenger C.
+
+R01/C01 và Today caller dùng typed assessment, trả Product-scoped
+CENSORED_HISTORY_NOT_USABLE/PRODUCT_HISTORY_MISSING khi baseline không eligible.
+Dedup blockers giữ cả entity/date/source, không làm mất Product cùng code. Artifact
+corruption/policy incompatibility giữ MODEL_ARTIFACT_INVALID/data invalid; recognized
+ModelDependencyError (kể cả cause được artifact loader wrap) và wrapped storage
+OSError dùng existing EXECUTION_UNAVAILABLE/execution unavailable, không gán history
+missing/data invalid. Unexpected programming/raw technical errors vẫn propagate,
+không thành baseline success hoặc missing-data blocker. Unmet baseline prerequisite
+short-circuit downstream artifact checks; không claim artifact đã verified khi chưa
+đến bước load. Không artifact failure nào được success-fallback.
+
+GET không train/infer/solve hoặc ghi business state. Sales-only linked case kiểm
+fresh-session sparse observations, absent operational domains, no ForecastRun/
+PlanningRun sau GET; execution sau đó giữ metadata/warnings và replay sau live sales
+correction. Linked cases bao gồm all-censored R01/C01/Today, dependency-vs-integrity,
+explicit no-history scope và foreign Store denial. Synthetic tests không chứng minh
+real accuracy. Commands/owned DB/manual flow tại
+[runbook D2](../runbooks/FULL_TEST_FLOW.md#data-readiness-d2).
+
+D2 giữ các vấn đề default/custom/saved contextual readiness, offer omission và public
+warning/method fields ở D3/D4. Current public action warnings không tự thêm
+BASELINE_FALLBACK từ internal assessment trong slice này. Không sửa FE/permissions,
+accepted ADR, E1–E4, runtime người dùng hoặc workbook gốc. Sáu workbook mới trong
+ignored runtime/uploads là optional acceptance inputs theo consumer, chưa dùng/train
+trong D2; không kế thừa findings calendar của demo cũ.
+
+## Warning/blocker/assumption public extension — PROPOSAL D3–D4
 
 ACCEPTED DECISION — warning vẫn cho chạy; blocker chặn đúng action/scope; irrelevant
 missing không có issue. Existing retained Runs không bị update/reclassify theo policy
@@ -277,7 +335,7 @@ không đổi C thành baseline trong old paired cohort hoặc nới gate để 
 | Slice | Phạm vi, phụ thuộc và boundary thay đổi | Gate trước khi kết thúc |
 | --- | --- | --- |
 | D1 | Audit/policy này, CURRENT_STATE/ROADMAP; không runtime/API/schema delta | Source/test trace, JSON examples, local links, UTF-8/whitespace; dừng chưa commit/push/merge |
-| D2 | Forecast eligibility/fallback; reuse F1–F3, giữ recognized-only và exact replay; phân biệt missing/invalid/unsupported/ineligible/integrity/technical | Targeted baseline/trained/stockout/serving/replay và GET all-censored regression; không cần challenger activation |
+| D2 | CURRENT FACT implementation WIP: shared choice + typed internal assessment, scoped history blockers và dependency/runtime classification; public shapes/replay giữ nguyên | Focused forecast/HTTP/PostgreSQL regressions, linked all-censored fail→fix, fresh-session retained evidence; không challenger activation |
 | D3 | Confirmed facts và partial scope; reuse M04/N5/preview/commit, scope declarations, config revisions; proof cho offer omission/known dependency exclusions | Tests alternatives/unknown graph, stale/conflict/version/actor/effectivity, retained facts và no canonical hypothetical writes; fresh-session PG khi thay persistence |
 | D4 | Public contextual readiness/warnings; reuse R01/C01/I06/C02/C03, existing fields/extensions; không endpoint chỉ để warnings/config facts | OpenAPI diff và additive DTO/FE adapters, current authorization/no leak, GET no solver/business mutation, retained/new policy separation |
 | D5 | Acceptance/benchmark; protocol mới chỉ khi cần fallback/assumptions; không sửa E1–E4 | Deterministic end-to-end cases, fresh-session persistence, authorized dataset/protocol masks, reproducible manual flow; full suite ở integration milestone nếu thay đổi rộng |
@@ -303,9 +361,16 @@ nghiệp vụ thật sự cần trước capability mới là semantics/enforcem
 safety stock nếu muốn hỗ trợ, và nguồn/phạm vi/effectivity của một reusable operational
 declaration mới nếu existing workflows chưa biểu diễn được. Không cần hỏi lại Owner
 cho immutable proof hợp lệ. CQR/calendar changes hoặc research promotion có review
-riêng, không là điều kiện để dùng baseline hiện có. Chưa có authorization D2–D5.
+riêng, không là điều kiện để dùng baseline hiện có. D2 được authorized riêng;
+D3–D5 chưa được mở.
 
-## Acceptance cases — PROPOSAL, chưa chạy trong D1
+## Acceptance cases — D2 coverage và PROPOSAL D3–D5
+
+CURRENT FACT D2: forecast/stockout/eligibility/GET/replay cases được cover bởi
+[unit eligibility](../../tests/unit/test_forecast_eligibility.py),
+[linked HTTP/PG](../../tests/integration/test_forecast_readiness.py) và regressions
+F1–F3/R1. Các thay đổi facts/offer/public extensions ghi D3/D4/D5 vẫn là PROPOSAL,
+không suy từ passing forecast cases rằng các slices đó đã triển khai.
 
 | Case | Outcome cần giữ/chứng minh | Coverage / slice |
 | --- | --- | --- |
@@ -324,6 +389,7 @@ riêng, không là điều kiện để dùng baseline hiện có. Chưa có aut
 | Approved immutable mapping proof reuse vs batch IMPORT_VALUE | Không reapprove không cần thiết; source/rows/current rights vẫn validate; batch facts không reusable defaults | Import existing workflow, D3 |
 | Readiness/read/replay sau policy/config thay đổi | GET không solve/infer/train/business mutate; no sensitive-data leak; old Run không rewrite/reclassify; new Run new identity | R1/P2, D4/D5 |
 
-Rollback scope D1: chỉ tài liệu policy này và các đoạn D1 ở CURRENT_STATE/ROADMAP.
-Không có DB downgrade, environment/config/artifact rollback hoặc thao tác WIP.
+Rollback scope D1: ba tài liệu tại checkpoint c930dfe. Rollback D2 chỉ source/tests/
+docs và test-target allowlist của D2; giữ retained data/artifacts và private test config.
+Không downgrade DB, sửa main/challenger WIP hoặc xóa workbook/runtime để rollback.
 Verification commands/results thuộc conversation; đây không phải PASS report.

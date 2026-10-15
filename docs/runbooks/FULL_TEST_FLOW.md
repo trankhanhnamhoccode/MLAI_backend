@@ -1,5 +1,85 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="data-readiness-d2"></a>
+## CURRENT FACT — D2 forecast readiness trên test target riêng
+
+Worktree `backend-data-readiness`, branch `feat/data-readiness`, D1 checkpoint
+`c930dfe66cfda5de5896164e16fcf8f4c7acaefe`. D2 source/tests còn WIP, không deploy
+main8103 hoặc nhập challenger. Feature/remaining proposals ở
+[DATA_READINESS_POLICY](../features/DATA_READINESS_POLICY.md#current-fact--d2-forecast-eligibility-và-linked-readiness).
+Own `.venv` và ignored `.env`/`runtime/readiness-test`; provider/email/worker flags
+OFF. Six baseline workbooks trong ignored `runtime/uploads` giữ nguyên hashes;
+portable automated cases không đọc paths đó hoặc train benchmark bằng workbook.
+
+Test-only PostgreSQL17 riêng tại `127.0.0.1:5435`, container
+`shelfcash-readiness-postgres`, named volume `shelfcash_readiness_data`;
+DB `shelfcash_readiness_test`, role `shelfcash_readiness_tester` sở hữu schema/test
+DB nhưng không SUPERUSER/CREATEDB/CREATEROLE/REPLICATION. Private credentials giữ
+ngoài Git, không dùng/đọc config hoặc query main local DB hay test DB nhánh khác.
+Đây là test setup, không thêm process/database cho serving application. Khi setup
+máy khác, provision đúng test DB/limited role trước; `.env` DATABASE_URL và
+TEST_DATABASE_URL đều phải trỏ đúng target này; không copy credentials vào docs.
+
+Chạy tuần tự từ đúng worktree, kiểm target/role/flags trước reset/migration:
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-data-readiness
+$readinessPython = Join-Path $PWD '.venv/Scripts/python.exe'
+@'
+from app.config import Settings
+from app.infrastructure.database.engine import create_database_engine
+from scripts.dev import validate_reset_target
+from sqlalchemy import text
+from sqlalchemy.engine import make_url
+s = Settings()
+u = make_url(s.test_database_url)
+assert s.database_url == s.test_database_url
+assert (u.database,u.username,u.host,u.port) == ('shelfcash_readiness_test','shelfcash_readiness_tester','127.0.0.1',5435)
+validate_reset_target(s)
+assert not any((s.import_llm_suggestions_enabled,s.auth_email_delivery_enabled,s.import_worker_enabled,s.planning_worker_enabled,s.pdf_export_worker_enabled,s.notification_worker_enabled))
+e = create_database_engine(s)
+with e.connect() as c:
+    assert c.execute(text('select current_database(),current_user')).one() == ('shelfcash_readiness_test','shelfcash_readiness_tester')
+    assert c.execute(text('select rolsuper,rolcreatedb,rolcreaterole,rolreplication from pg_roles where rolname=current_user')).one() == (False,False,False,False)
+e.dispose()
+print('D2 target/role/flags OK; no credentials printed')
+'@ | & $readinessPython -
+if ($LASTEXITCODE -ne 0) { throw 'D2 guard failed; do not reset/migrate/test' }
+& $readinessPython -m scripts.dev status --test-database --allow-unmigrated
+& $readinessPython -m scripts.dev reset --test-database
+```
+
+Reset dùng supported explicit allowlist/role guard, Alembic head0027, no seed.
+Pytest `database_settings` reset/migrate chính DB này từng case, không chạy concurrent
+DB tests. Reuse `.venv` local sau `python -m venv .venv` và `pip install -e '.[dev]'`
+nếu setup lần đầu; không sửa/reuse interpreter environment của worktree khác.
+
+Focused gate commands (synthetic model mechanics, không real-accuracy claim):
+
+```powershell
+& $readinessPython -m pytest tests/unit/test_forecast_eligibility.py tests/unit/test_forecast_baseline.py tests/unit/test_forecast_execution.py tests/unit/test_forecast_stockout.py tests/unit/test_stockout_readiness.py tests/unit/test_forecast_trained.py tests/unit/test_forecast_artifacts.py tests/unit/test_forecast_serialization.py tests/unit/test_forecast_model_contracts.py tests/unit/test_database_config.py -q --tb=short
+& $readinessPython -m pytest tests/integration/test_forecast_readiness.py tests/integration/test_forecast_serving.py tests/integration/test_readiness_context.py tests/integration/test_forecast_trained_execution.py tests/integration/test_forecast_stockout_a1.py tests/integration/test_forecast_execution_flow.py tests/integration/test_discovery_c4.py -q --tb=short
+& $readinessPython -m scripts.dev status --test-database
+git diff --check
+```
+
+Manual inspection từ synthetic linked cases: sales-only explicit BASELINE, hai sales
+rows khác ngày gồm observed0 → R01 forecast ready với STOCKOUT_UNKNOWN nếu null,
+không recipe/inventory/supplier/context file prerequisite, no missing-day filling.
+All-censored TRAINED → R01 HTTP200 blocked với Product refs/dates;
+C01 can_generate=false/reason CENSORED_HISTORY_NOT_USABLE; Today readiness section
+available chứa blocked forecast. Không forecast0/Run từ GET. Trước D2 R01/C01 case
+này trả503 SERVICE_UNAVAILABLE, handler log BaselineNotReadyError.
+Dependency mismatch → execution unavailable/data valid nếu dữ liệu khác hợp lệ;
+artifact corrupt → MODEL_ARTIFACT_INVALID/data invalid; không success-fallback.
+Run metadata/replay assertions dùng fresh Session và captured facts, không chỉ2xx.
+
+Public DTO/routes/OpenAPI giữ nguyên; có behavior fix trong existing reasons/status.
+Default/custom/saved contextual readiness, offer omission và public method/warning
+extensions còn D3/D4. Không tự chạy E3/E4 hoặc activate challenger để verify D2.
+Exact commands/results của lượt thực thi thuộc conversation; không gọi focused gate
+là full suite hoặc synthetic mechanics là accuracy.
+
 <a id="customer-self-service"></a>
 ## CURRENT FACT — setup khách hàng từ số0
 

@@ -27,6 +27,10 @@ class ModelBoundaryError(Exception):
     pass
 
 
+class ModelDependencyError(ModelBoundaryError):
+    """Recognized incompatible runtime, distinct from artifact/data validity."""
+
+
 @dataclass(frozen=True)
 class TrainingRows:
     features: tuple[tuple[int | Decimal | None, ...], ...]
@@ -43,7 +47,7 @@ class QuantileModel:
 
 def require_dependencies() -> None:
     if (lgb.__version__, np.__version__, scipy.__version__) != ('4.6.0', '2.2.6', '1.17.1'):
-        raise ModelBoundaryError('DEPENDENCY_INCOMPATIBLE')
+        raise ModelDependencyError('DEPENDENCY_INCOMPATIBLE')
 
 
 def histories(prepared: PreparedForecastInput):

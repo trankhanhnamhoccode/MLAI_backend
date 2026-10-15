@@ -1,17 +1,26 @@
 # Current state
 
-## CURRENT FACT — D1 data readiness audit/design
+## CURRENT FACT — D2 forecast eligibility/readiness, local WIP
 
-Isolated `backend-data-readiness` / `feat/data-readiness` from main
-`052cddee075e165af2c0cea42ebc2e616c396760`: documentation-only D1, chưa runtime/API
-implementation. [Canonical policy/matrix](features/DATA_READINESS_POLICY.md) tách
-facts theo action/scope, current behavior, gaps và PROPOSAL D2–D5. Main đã có sparse
-baseline, recognized trained fallback, stockout warnings, partial Planning scope và
-confirmed declarations. Readiness default-mode restriction, offer-level blockers và
-warning projections còn cần refinement; không bỏ integrity/unknown-fee/safety guards.
-Challenger-only E3 real benchmark blocked, E4 counterfactual synthetic incomplete/WIP
-không nhập main. Main HTTPS8103/shelfcash_local và challenger WIP không được sửa;
-D1 không DB/server/training/provider/business tests, chưa commit/push/merge.
+Isolated `backend-data-readiness` / `feat/data-readiness` từ main052cddee, D1 committed
+local `c930dfe66cfda5de5896164e16fcf8f4c7acaefe`. D2 COMPLETE trong BE scope đã giao,
+source/tests/docs còn WIP để review, chưa commit/push/merge/deploy. Shared forecast
+choice và typed internal assessment giữ actual method/candidate/reason/warnings,
+scoped history blockers, recognized-only whole-scope fallback và exact retained
+replay. R01/C01 all-censored TRAINED trước trả503, nay trả200 blocked assessment;
+Today caller cùng fix. Dependency/runtime unavailable tách artifact invalid;
+invalid/programming errors không success-fallback. OpenAPI/DTO/routes giữ nguyên.
+
+[Canonical policy/matrix](features/DATA_READINESS_POLICY.md) tách main/D1 audit,
+current D2 và proposals D3–D5. Sales-only/sparse0/stockout/retained/schema1 replay,
+HTTP/PG/current-rights/Store isolation có focused acceptance, không full-suite hay
+real-accuracy claim. Own venv/test-only PostgreSQL5435, shelfcash_readiness_test /
+shelfcash_readiness_tester, head0027; provider/email/workers OFF. Commands/expected
+responses tại [runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d2).
+Default/custom/saved contextual readiness, offer omission và public warning fields
+còn D3/D4; integrity/unknown-fee/safety guards giữ nguyên. Main8103/local DB/config/
+artifacts, challenger E4/dataset WIP và sáu baseline workbooks ngoài Git được giữ
+nguyên; không chạy E3/E4 benchmark hoặc training bằng workbook.
 
 ## CURRENT FACT — self-service Store/customer local
 

@@ -53,16 +53,16 @@ class ReadinessReads:
             if current.authorization_version!=summary.authorization_version:
                 raise AuthError('SNAPSHOT_NOT_AVAILABLE',409)
             return project_context(facts,result,planning_available=self.planning_available())
-        model_issue=None
+        assessment=None
         if self.forecast is not None and facts.serving and {'forecast','planning'}&set(actions):
             try:
                 prepared=prepare_observations(facts,store,evaluated_start)
             except AuthError as error:
                 if error.code!='NO_COMPUTABLE_PRODUCTS':raise
             else:
-                model_issue=self.forecast.assess(prepared,facts.serving)
+                assessment=self.forecast.assess(prepared,facts.serving)
         available=self.planning_available()
-        result=evaluate(facts,store,now,evaluated_start,actions,permissions,model_issue=model_issue,
+        result=evaluate(facts,store,now,evaluated_start,actions,permissions,forecast_assessment=assessment,
             forecast_available=self.forecast is not None,planning_available=available)
         current,_=self._authorize(token,store,required)
         if current.authorization_version!=summary.authorization_version:

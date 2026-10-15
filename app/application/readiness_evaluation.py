@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 from app.application.contracts import readiness as dto
 from app.application.contracts import import_domains as domains
+from app.application.contracts.forecast_eligibility import ForecastEligibility
 from app.application.import_identity import content_digest
 from app.application.operational_import_facts import declaration_dependency,current_fees,inventory_matches
 from app.application.planning_fee_bindings import fee_bindings
@@ -94,7 +95,7 @@ def watermark(snapshot,declarations,ids,cutoff):
     return max(result,default=None)
 
 
-def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,forecast_available=True,planning_available=False):
+def evaluate(facts,store,now,start,actions,permissions,*,forecast_assessment: ForecastEligibility | None=None,forecast_available=True,planning_available=False):
     snapshot=facts.snapshot
     today=now.astimezone(ZoneInfo(snapshot['stores'][0]['timezone'])).date()
     cutoff=start-timedelta(days=1)
@@ -163,8 +164,12 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
                 blockers.append(issue('RESOURCE_LIMIT_EXCEEDED','catalog'));data='invalid'
             if facts.serving is None:
                 unknown.append(issue('MODEL_CONFIGURATION_UNKNOWN','configuration'))
-            if model_issue:
-                blockers.append(issue(model_issue,'forecast'));data='invalid'
+            if forecast_assessment and forecast_assessment.blockers:
+                blockers.extend(forecast_assessment.blockers)
+                if forecast_assessment.failure_kind in ('DEPENDENCY_UNAVAILABLE','RUNTIME_UNAVAILABLE'):
+                    execution='unavailable'
+                else:
+                    data='incomplete' if forecast_assessment.failure_kind=='HISTORY_UNUSABLE' else 'invalid'
             if current_ids and history_watermark is None:
                 warnings.append(issue('HISTORY_NOT_AVAILABLE_THROUGH_CUTOFF','sales'))
             for pid in current_ids:
@@ -243,7 +248,7 @@ def evaluate(facts,store,now,start,actions,permissions,*,model_issue=None,foreca
         if unknown and data=='valid':data='unknown'
         availability='blocked' if blockers else 'unknown' if unknown else 'ready'
         results.append(dto.ActionReadiness(action=action,availability=availability,can_execute=availability=='ready',
-            data_status=data,execution_status=execution,blockers=tuple({i.code:i for i in blockers+unknown}.values()),warnings=tuple(warnings)))
+            data_status=data,execution_status=execution,blockers=tuple({(i.code,i.source,i.scope,i.entity_id,i.affected_dates):i for i in blockers+unknown}.values()),warnings=tuple(warnings)))
     source_versions=versions(facts)
     return dto.Readiness(store_id=store,as_of_date=today,evaluated_at=now,
         data_version=content_digest(dict(versions=source_versions.model_dump(mode='json'),start=str(start),actions=actions,

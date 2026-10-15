@@ -107,6 +107,17 @@ def test_integration_reset_requires_exact_dedicated_role():
             database_url="postgresql+psycopg://admin:dummy@127.0.0.1:5432/shelfcash_integration_test"))
 
 
+@pytest.mark.parametrize('role', ['shelfcash_readiness_tester', 'admin', 'shelfcash_local_tester'])
+def test_readiness_reset_requires_exact_dedicated_role(role):
+    settings = Settings(_env_file=None, environment='test',
+        database_url=f'postgresql+psycopg://{role}:synthetic@127.0.0.1:5435/shelfcash_readiness_test')
+    if role == 'shelfcash_readiness_tester':
+        validate_reset_target(settings)
+    else:
+        with pytest.raises(ValueError, match='dedicated tester role'):
+            validate_reset_target(settings)
+
+
 @pytest.mark.parametrize("action", ["reset", "status"])
 def test_cli_test_database_uses_effective_environment_override(monkeypatch, action):
     import scripts.dev as dev

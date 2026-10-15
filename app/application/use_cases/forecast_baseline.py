@@ -28,6 +28,12 @@ def assess_baseline_readiness(prepared: PreparedForecastInput) -> tuple[Baseline
     return _readiness(histories)
 
 
+def require_baseline_readiness(prepared: PreparedForecastInput) -> None:
+    report = assess_baseline_readiness(prepared)
+    if any(r.status == 'NOT_READY_NO_HISTORY' for r in report):
+        raise BaselineNotReadyError(report)
+
+
 def run_historical_quantile_baseline(prepared: PreparedForecastInput) -> ForecastEngineResult:
     """Validate -> all-Product readiness -> exact quantiles -> mandatory result gate."""
     prepared, histories = _validated_histories(prepared)

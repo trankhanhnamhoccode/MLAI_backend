@@ -16,6 +16,14 @@ JSON/digest/replay is unchanged. Old observed artifacts cannot silently serve ne
 demand policy. [ADR-A1](adr/ADR-A1-observed-stockout-demand-policy.md) owns mechanics;
 P25/P50/P75 and LOW/BASE/HIGH semantics remain unchanged.
 
+CURRENT FACT D2 trong nhánh data-readiness: C01 all-censored TRAINED preflight trả
+readiness can_generate=false/reason CENSORED_HISTORY_NOT_USABLE qua existing DTO,
+thay generic503. Shared internal eligibility không train/infer/solve; dependency
+unavailable giữ riêng với corrupt/incompatible artifact. Exact retained replay và
+public default/custom/saved semantics không đổi; method/warning projection extension
+vẫn là D4 proposal. [Policy](features/DATA_READINESS_POLICY.md) và
+[runbook D2](runbooks/FULL_TEST_FLOW.md#data-readiness-d2) sở hữu chi tiết/gates.
+
 ACCEPTED DECISION: a recommendation is not customer selection or an order. No
 GET recomputes a forecast/solver/provider result. Current Store-sensitive rights
 apply to reads/replay/workers/PDF; no permissive staging account. Known configuration

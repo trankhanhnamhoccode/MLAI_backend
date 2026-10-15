@@ -1893,6 +1893,18 @@ LLM/forecast execution, no thay đổi canonical or jobenqueue.
 | forecast | Stable menu/sales/modelconfig, ≥1 tính được baseline Product có observations thực tế≤cutoff, preparation/execution adapteravailable; local missing history exclude affectedProduct. Empty/no computables blocked NO_COMPUTABLE_PRODUCTS; corrupt/incompatibleartifact blocker, not default fallback. |
 | planning | Current readable/resolvable config+knownStorecap+requirements, ≥1 computedProduct, inventorydeclarations/datedrecipes/terms/fees/constraints in scope đã biết and valid, snapshot/preparation/forecast+planning worker compositionavailable, planning.run. Feecoverage/globalconstraintunknown blocks, not localpermission exclusion. |
 
+CURRENT FACT D2 trong nhánh data-readiness: forecast eligibility assessment dùng
+cùng choice với execution. All-censored/no usable baseline history trả existing
+Product-scoped CENSORED_HISTORY_NOT_USABLE blocker (missing observations dùng
+PRODUCT_HISTORY_MISSING); R01 trả assessment200 thay lỗi SERVICE_UNAVAILABLE503.
+Artifact corrupt/incompatible giữ MODEL_ARTIFACT_INVALID/data invalid; recognized
+dependency mismatch hoặc wrapped storage unavailable dùng EXECUTION_UNAVAILABLE/
+execution unavailable, không reclassify thành history missing. Không success-fallback
+cho các lỗi đó. DTO/routes giữ nguyên; internal selected method/reason/warnings
+chưa thêm thành public fields. [Policy D2](features/DATA_READINESS_POLICY.md) sở hữu
+chi tiết classification và [runbook](runbooks/FULL_TEST_FLOW.md#data-readiness-d2)
+sở hữu commands/expected responses. Không đổi contextual Planning readiness trong D2.
+
 công thức Product validity từng7 ngày horizon, units/loss/yield theoCatalog; localize
 recipe/history/requiredinventory errors→estimated exclusions đúng Planning mục7,
 không rejectwholeStore chỉ vì một Product. Supplier availability/constraints và
