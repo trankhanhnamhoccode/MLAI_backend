@@ -483,6 +483,10 @@ E2 private storage. CLI stdout is aggregate only. `replay` recomputes all comple
 A/B/C forecasts without fitting and audits train/point/CQR target dates/availability
 and holdout quarantine; native C also compares E2 exact stage evidence in a fresh
 process. Source/hash mismatch or missing bytes fails closed, with no family fallback.
+F1 changes replay to require explicit verified historical source registration; the
+command above alone cannot replay an unregistered older /1 or /2 experiment.
+Only the registered /3 compatibility execution below has been verified with the
+current dispatcher. Earlier /1 synthetic replay results remain historical evidence.
 
 CURRENT FACT / inputs supplied to E4: explicitly pinned per-origin C artifacts and
 E2 captured inputs/forecast/quantile/CQR/diagnostic evidence, matching retained A/B
@@ -628,14 +632,120 @@ Fresh-process verification replayed all12 checkpoints/4 native artifacts with
 captured input and fit identity identical.658 pre-task workbook/runtime files
 retain their exact hashes. There is no new PostgreSQL persistence/browser/E4 claim.
 
-TECHNICAL DEBT — generic replay normalizes the frozen default resource budget from
-JSON integer300 to float300.0 and therefore rejects the identity. The separate
-`verify_demo_abc` validates the entire plan first, restores only the exact integral
-default via the same typed contract, requires canonical-byte equality, then checks
-original source/runtime/fit identities and replays. It does not rewrite the plan,
-reset budget or retrain. Generic `run_demo_abc replay` is not the verified path;
-the runbook uses the dedicated verifier. Freeze/run sources remain pinned to actual
-execution. Correct this generic representation issue before another protocol run.
+CURRENT FACT — local checkpoint `a863fb5b1a85c1fba3455628853fb4f76eb0a467`
+retains the executed /3 implementation as exploratory demo, not production acceptance.
+F1 fixes the replay-only representation defect: typed `budget.wall_seconds` now
+preserves JSON integer versus float, including non-default/fractional values. Full
+schema validation and canonical-byte equality remain mandatory; the budget stays
+in the identity. No other numeric field is normalized. This was a loader defect,
+not an error in saved forecasts or metrics.
+
+The generic `forecast_benchmark replay --compare-dedicated` uses an explicitly
+registered historical source snapshot, verified against that Git checkpoint and
+original raw source/environment hashes. Snapshot identity is
+`8e999717cde0bfdac94e3348ef8cb015eae9ec685013a263101ec2695cd9dcad`.
+An isolated worker executes historical inference/fit-availability validation with
+the current typed plan loader; its receipt distinguishes historical execution
+source from current loader/worker/dispatcher/validator hashes. It does not claim
+that current source is the original source. Original plans, artifacts, receipts,
+budget ledgers and manifests are read-only. New verification receipts live outside
+the experiment under `runtime/challenger/f1/replays/`. Fresh-process generic replay
+and the historical dedicated verifier agree on12 checkpoints/4 native artifacts;
+the dedicated future-label probe still has35 identical outputs after140 changes.
+Training is fail-fast forbidden, with0 fits/forbidden network attempts/original writes.
+All809 files in the pre-F1 preservation inventory, including six raw workbooks,
+retain exact SHA-256 bytes after verification. Focused56 tests pass; no full-suite,
+PostgreSQL, API/browser or production acceptance claim is added by F1.
+Absent or ambiguous historical registration rejects; no automatic source fallback.
+Plan representation tests cover /1,/2,/3, but historical executable replay is verified
+here only for this /3 experiment, not every older experiment/runtime. Direct current
+`run_demo_abc replay`/`verify_demo_abc` are not the compatibility entrypoint.
+
+### CURRENT FACT — independent retained-array diagnosis (F1)
+
+Independent exact-rational arithmetic agrees with all1176 retained metric groups
+(partition, arm, primary/censored masks, Product, horizon, Product×horizon and unit).
+This includes MAE/WAPE/bias, three pinballs, inclusive P25–P75 coverage/width and
+separate CQR coverage/width. Two censored outcomes remain excluded from primary
+scoring; censored scores describe observed lower bounds, not latent demand truth.
+Units are `ly`; target−origin=horizon and raw labels/masks agree. Historical replay
+also verifies origin/artifact binding, source/runtime identity, causal fit availability
+and strict holdout quarantine. No measurement/alignment/leakage defect was found
+within these checks. This is not proof of historical source vintages.
+
+Actual native order is residual+seasonal anchor → nonnegative quantity clip → sort
+three quantities → common point offset on all three and nonnegative clip → separate
+CQR interval → factual closure zeros. P50 is the middle sorted quantity plus that
+offset, not necessarily the raw q50 booster output: sorting changes the median on24
+of138 primary tasks. Quantity/point clips are0; point offsets preserve widths on
+these arrays. Final0 crossings establish ordering only. CQR fits the corrected
+P25/P75 interval using the retained per-horizon order statistic, then contains the
+median; it does not overwrite quantiles. Saved inference arithmetic agrees within
+1e−10; fit tables serialize10 decimal digits, so CQR parameter arithmetic is checked
+within1e−8, not claimed bitwise re-fitting.
+
+| C stage, holdout69 primary outcomes | P25–P75 coverage | Mean width ly | P50 MAE ly |
+|---|---:|---:|---:|
+| Raw reconstructed quantities | 17.3913% | 3.6590 | 6.6594 |
+| Sorted before point correction | 17.3913% | 3.8143 | 6.6980 |
+| Point corrected, before closure | 18.8406% | 3.8143 | 6.6931 |
+| Official final including closure | 26.0870% | 3.5796 | 4.2723 |
+
+Undercoverage already exists before sorting/point correction; the observed defect
+is not clipping-induced width collapse. Its learning/calibration cause remains a
+hypothesis requiring ablation. Validation raw/sorted coverage20.2899% becomes26.0870%
+after point correction. Empirical tails use strict `y<P25`, inclusive `y≤P50`, strict
+`y>P75`: validation26/69=37.6812%,33/69=47.8261%,25/69=36.2319%; holdout29/69=42.0290%,
+42/69=60.8696%,22/69=31.8841%. Validation has0 endpoint/median ties; holdout has5 ties
+at each quantile from closure zeros. Open-date holdout coverage is13/64=20.3125%.
+These correlated tasks span only14 dates/two origins per partition; pooled-Product
+point/CQR fits and CQR55.0725% do not establish quantile calibration or IID certainty.
+
+Horizon6 targets are Tuesdays30/06 and07/07, with correct date/weekday alignment.
+30/06 is explicitly closed, not a holiday; all five actuals are0. C's final closure
+override zeroes five positive pre-closure forecasts; A/B have no such calendar rule.
+The exact B−C absolute-error advantage totals122.0873 ly across69 holdout outcomes;
+H6 contributes130.0034 ly, or106.4840% of that net advantage. Other horizons jointly
+favor B by7.9161 ly. All five Products contribute to the closed-date effect.
+
+| Saved-array sensitivity only | B MAE ly | C MAE ly |
+|---|---:|---:|
+| Official holdout | 6.0417 | 4.2723 |
+| Omit H6 (59 outcomes) | 4.0415 | 4.1756 |
+| Leave out30/06 (64 outcomes) | 4.0420 | 4.6061 |
+| Leave out origin24/06 (34 outcomes) | 4.1593 | 4.5995 |
+| Leave out origin01/07 (35 outcomes) | 7.8702 | 3.9545 |
+| Apply the same sourced closure-zero rule to A/B | 3.7491 | 4.2723 |
+| Remove only C closure override | 6.0417 | 6.6931 |
+
+These diagnostics leave the official mask/comparators unchanged and create no trained
+candidate. They prove the implemented closure override's arithmetic effect, not a
+causal gain from residual learning. On open07/07 C's seasonal reference is closed30/06;
+all five anchors take `FALLBACK_ROLLING_MEDIAN_7`, then positive residuals and the
+shared+0.3455746641 point offset produce overprediction. B's retained H6 feature
+reconstruction has no missing feature/date-shift finding. Whether a different anchor
+policy improves forecasts is unproven. The official package comparison remains
+reproducible, but cannot establish general C superiority or isolate learned-model gain.
+
+Diagnostics are five hash-enveloped JSON files (`summary`, `metrics`, `stages`,
+`horizon6`, `provenance`) at
+`runtime/challenger/f1/diagnostics/00c733d0082cd2d4e03309627207d965a4d4fe202ebc471c93fa025746655a3a/`.
+They use saved arrays/fit tables and pure feature reconstruction, with0 training or
+new benchmark execution. Source/input hashes identify this diagnostic calculation.
+
+### PROPOSAL — bounded F2 hypotheses, not authorized execution
+
+For any change informed by F1, /3 holdout is now exposed development evidence,
+not an independent final holdout. No improvement direction is proven yet. Freeze
+one hypothesis/configuration and fresh chronological validation/calibration/evaluation
+scope before fitting; verify authorized POS/calendar availability and raw hashes first.
+Do not silently source the following week or reopen the original batch budget.
+
+| Hypothesis and changed component | Validation and guardrails | Compute estimate / fresh evaluation |
+|---|---|---|
+| Common known-at closure treatment may explain package differences: apply one explicit closure policy to all arms. | Paired MAE/WAPE/pinball plus open/closed-date and per-Product/horizon results; same masks and causal calendar availability for every arm. | First saved-array diagnostic0 fits,<5s; any new candidate evaluation needs a newly frozen budget and unseen periods containing open/closed days. |
+| Interval calibration design may improve tails already poor before point correction: one predeclared endpoint recalibration variant on fixed boosters. | Three pinballs, both tails, inclusive coverage/width, median bias/MAE and Product/horizon regressions; separate CQR; no holdout-fit, width-only optimization or variant search. | Up to8 postprocess fits,0 booster fits, hard300s proposed; new disjoint point/calibration windows and unseen evaluation labels required. |
+| Closed seasonal-reference fallback may contribute to07/07 overshoot: one explicit anchor/fallback variant. | Paired MAE/bias/pinball by open-after-closure vs ordinary dates; preserve84-date train minimum, holdout quarantine and all causal availability checks. | One configuration, at most24 boosters+8 postprocess fits, hard300s proposed; fresh origins with closed reference/open target, plus ordinary controls. |
 
 Outputs remain under `runtime/challenger/benchmarks/experiments/<experiment above>`:
 `demo-freeze.json`, plan/dataset/environment, resource ledgers, per-origin A/B/C
@@ -644,7 +754,7 @@ Artifacts and fit/point/calibration tables retain separate content identities.
 The scope is VERIFIED offline computation/replay, EXPLORATORY exposed demo evaluation.
 Real source vintages/unseen independent demand, more origins/diverse operational
 periods and later operational acceptance remain missing. Production/promotion LOCKED,
-E5 NOT_STARTED; all implementation after `c4ff88a` stays WIP for review.
+E5 NOT_STARTED; /3 checkpoint is `a863fb5`; F1 changes remain uncommitted for review.
 Commands/recovery: [runbook](../runbooks/FULL_TEST_FLOW.md#challenger-demo-abc).
 
 <a id="demo-baseline-ab"></a>

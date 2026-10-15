@@ -26,6 +26,7 @@ def main(argv=None):
     for name in ('replay','rescore'):
         command=sub.add_parser(name)
         command.add_argument('--experiment',required=True)
+        if name=='replay':command.add_argument('--compare-dedicated',action='store_true')
     args=parser.parse_args(argv)
     if not args.enable:
         print('{"status":"DISABLED","code":"BENCHMARK_OPT_IN_REQUIRED"}')
@@ -39,7 +40,7 @@ def main(argv=None):
                               'plan':str(directory.relative_to(ROOT)/'plan.json')}))
             return 0
         if args.command in ('replay','rescore'):
-            report=getattr(service,args.command)(args.experiment)
+            report=service.replay(args.experiment,dedicated=args.compare_dedicated) if args.command=='replay' else service.rescore(args.experiment)
         else:
             # Explicit request files only, never discover/query/copy business data.
             data=BenchmarkDataset.model_validate_json(args.dataset.read_bytes())

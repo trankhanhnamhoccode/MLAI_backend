@@ -43,10 +43,18 @@ replay12 checkpoints/4 native artifacts và future-label invariance VERIFIED,0 r
 C có aggregate improvement nhưng có Product/horizon regressions và interval limits;
 EXPLORATORY, no automatic winner, promotion LOCKED. E4 trên bộ mới vẫn BLOCKED;
 không chạy Planning/E4. Canonical [current /3 evidence](features/FORECAST_ENGINE_INTEGRATION.md#demo-abc-v3)
-sở hữu assumptions/windows/trade-offs và generic replay numeric-default debt.
+sở hữu assumptions/windows/trade-offs và F1 diagnosis. CURRENT FACT F1: /3 đã
+checkpoint exploratory tại `a863fb5`; generic replay sửa typed resource-budget
+round-trip và dùng verified historical source riêng với current loader,12 checkpoints/
+4 artifacts khớp dedicated verifier,0 retrain/original writes. Independent audit khớp
+1176 metric groups. Undercoverage tồn tại trước point/sorting; chưa xác định nguyên
+nhân learning/calibration. H6 đóng góp106.484% lợi thế B−C, tập trung closure30/06;
+bỏ H6 hoặc ngày này thì B có MAE tốt hơn. Official package scores vẫn tái lập được,
+không chứng minh learned-model superiority. /3 holdout là exposed development
+evidence cho mọi F2 dựa trên findings; F2 chỉ PROPOSAL, chưa chạy.
 Canonical [original A/B evidence](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab)
 sở hữu exact selection, origins, metrics và limits; [runbook](runbooks/FULL_TEST_FLOW.md#challenger-demo-ab)
-sở hữu commands. Implementation sau checkpoint `c4ff88a` giữ WIP để review; không promote.
+sở hữu commands. F1 sau checkpoint `a863fb5` giữ WIP để review; không promote.
 
 ## CURRENT FACT — Data Readiness D1–D5 tích hợp main local
 

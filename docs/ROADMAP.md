@@ -31,7 +31,16 @@ winner từ aggregate khi Product/horizon regressions còn hiện diện. /2 và
 nguyên bytes. E4 bộ mới vẫn BLOCKED và không chạy; không có POS09–15/07 để score.
 Exact selection/metrics tại [canonical integration](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab).
 Current /3 support/results/limits tại [demo A/B/C](features/FORECAST_ENGINE_INTEGRATION.md#demo-abc-v3);
-checkpoint A/B/admission `c4ff88a`, implementation /3 giữ WIP; E5/promotion NOT_STARTED.
+checkpoint A/B/admission `c4ff88a`, exploratory /3 checkpoint `a863fb5`.
+CURRENT FACT F1: generic read-only historical replay verified12 checkpoints/4 artifacts,
+typed budget representation fixed without changing original identities; independent
+1176-group metric audit agrees. H6 advantage is closure-concentrated (106.484% of net
+B−C benefit); quantile undercoverage precedes point/sorting. No model improvement
+or general superiority proven. F1 remains uncommitted; E5/promotion NOT_STARTED.
+PROPOSAL F2: at most three bounded closure-parity/endpoint-calibration/anchor-fallback
+hypotheses in canonical /3 integration. /3 holdout is exposed development evidence;
+fresh authorized data, frozen scope/configuration/budget and separate authorization
+are required before fitting/evaluation. No F2 execution or new data sourcing started.
 
 ## CURRENT FACT / PROPOSAL — data readiness D1–D5
 

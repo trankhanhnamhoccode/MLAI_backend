@@ -10,6 +10,7 @@ from app.application.contracts.forecast_challenger import (
     CalendarFact, CanonicalObservation, Count, Digest, Version,
 )
 from app.application.contracts.forecast_execution import CapturedForecastProduct
+from app.application.forecast_benchmark_plan import ResourceSeconds
 
 ARMS = ('A_be_baseline_causal_v1', 'B_be_lightgbm_causal_v1', 'C_engine_native_reconstruction_v1')
 PROTOCOL_DIGEST = '80bf93aa13a2a47b6ad84f37cb755c54c13b436e268c090e5106933623baa164'
@@ -51,7 +52,7 @@ class BenchmarkBudget(Contract):
     maximum_origins: Annotated[int, Field(strict=True, ge=4, le=4)] = 4
     maximum_booster_fits: Annotated[int, Field(strict=True, ge=1, le=24)] = 24
     maximum_postprocess_fits: Annotated[int, Field(strict=True, ge=1, le=8)] = 8
-    wall_seconds: Annotated[float, Field(gt=0, le=300, allow_inf_nan=False)] = 300
+    wall_seconds: ResourceSeconds = 300
     threads: Annotated[int, Field(strict=True, ge=1, le=1)] = 1
 
 

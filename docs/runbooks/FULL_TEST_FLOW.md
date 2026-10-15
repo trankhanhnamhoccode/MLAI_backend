@@ -6,10 +6,12 @@
 [Canonical design/results](../features/FORECAST_ENGINE_INTEGRATION.md#demo-abc-v3)
 owns the typed calendar assumption, native support matrix, frozen windows/model
 settings, Product/horizon trade-offs and limits. A/B/admission checkpoint is `c4ff88a`;
-/3 implementation remains reviewable WIP. Use only the challenger's pinned venv.
+/3 exploratory checkpoint is `a863fb5b1a85c1fba3455628853fb4f76eb0a467`.
+F1 loader/diagnostics remain uncommitted WIP. Use only the challenger's pinned venv.
 Do not start DB/app/provider/SMTP/Planning/E4 or change another worktree.
 
 ```powershell
+# HISTORICAL first-execution commands at the /3 checkpoint, not F1 verification.
 # Read six pinned source hashes, retain a separate typed calendar declaration,
 # inspect exact native tables with all booster training forbidden (zero fits).
 .venv/Scripts/python.exe -m scripts.prepare_demo_abc
@@ -17,9 +19,6 @@ Do not start DB/app/provider/SMTP/Planning/E4 or change another worktree.
 .venv/Scripts/python.exe -m scripts.run_demo_abc freeze
 # One first execution only; completed locally, do not rerun for verification.
 .venv/Scripts/python.exe -m scripts.run_demo_abc run
-# Existing completed run: fresh-process replay of all12 checkpoints and4 native
-# artifacts, actual earlier-output invariance under changed future labels, no fits.
-.venv/Scripts/python.exe -m scripts.verify_demo_abc --experiment e8fd6eea4f2528bdd9d83a95b6ffcabc84017228c04f2e347ea5a80ce1524e54
 ```
 
 Expected support: SUPPORT_VERIFIED_NO_FITS, native min train dates/Product84/91/98/105;
@@ -48,15 +47,44 @@ runtime, dataset or declaration mismatch requires review/new protocol identity,
 not an overwrite of old outputs. Support inspection does not fit models and does
 not consume or restart the single forecast batch.
 
-Use the dedicated verifier above. Generic `run_demo_abc replay` exposed a numeric
-representation bug: integral default300 becomes float300.0 on generic plan restore,
-so the experiment identity rejects. The verifier validates the contract, preserves
-only that exact frozen default, requires canonical JSON byte equality and verifies
-source/runtime/artifact checksums before exact replay. No model_construct/copy
-validation bypass, source-hash exception, plan rewrite or retraining is used.
-Expected REPLAY_AND_FUTURE_LABEL_INVARIANCE_VERIFIED:12 checkpoints,4 native artifacts,
-140 altered future labels,35 identical earlier C predictions,0 booster fits and
-no forbidden IO. Generic loader repair is retained technical debt for a later run.
+CURRENT FACT — F1 generic replay preserves the identity-bearing int/float budget
+representation through full typed validation and exact canonical round-trip. It
+executes explicitly pinned historical source with the current plan loader, not
+current inference masquerading as original source. Original experiment/fit/artifact
+files and resource ledgers stay unchanged. Do not use direct current
+`run_demo_abc replay`/`verify_demo_abc` for this historical experiment.
+
+```powershell
+# Current supported verification: replay only, no fit or benchmark execution.
+$f1Experiment = 'e8fd6eea4f2528bdd9d83a95b6ffcabc84017228c04f2e347ea5a80ce1524e54'
+.venv/Scripts/python.exe -m scripts.forecast_benchmark --enable replay --experiment $f1Experiment --compare-dedicated
+# Independent arithmetic and stage/feature diagnosis from retained arrays, no predict/fit.
+.venv/Scripts/python.exe -m scripts.forecast_diagnostics --experiment $f1Experiment
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_f1.py tests/unit/test_demo_calendar_abc.py tests/unit/test_forecast_benchmark.py -q
+```
+
+Expected READONLY_GENERIC_REPLAY_VERIFIED:12 checkpoints/4 native artifacts; nested
+historical REPLAY_AND_FUTURE_LABEL_INVARIANCE_VERIFIED with140 altered future labels,
+35 identical earlier outputs;0 fits/forbidden IO/original writes. Parent deadline120s.
+New receipt: `runtime/challenger/f1/replays/2c3239d2345d0ff66ee747c48afefba1413bfe41be3e88d30e2a3c9857d74096/replay.json`.
+Expected INDEPENDENT_METRICS_AND_STAGE_AUDIT_VERIFIED:1176 groups,0 training;
+five diagnostic envelopes under
+`runtime/challenger/f1/diagnostics/00c733d0082cd2d4e03309627207d965a4d4fe202ebc471c93fa025746655a3a/`.
+Actual focused result56 passed. This is targeted verification, not full regression.
+
+Historical source registration is explicit and fail-closed. The already captured
+snapshot under `runtime/challenger/replay-sources/8e999717cde0bfdac94e3348ef8cb015eae9ec685013a263101ec2695cd9dcad`
+binds original raw bytes, trusted Git commit, experiment and original environment.
+It was captured before F1 edits with:
+`python -m scripts.forecast_replay_source --commit a863fb5b1a85c1fba3455628853fb4f76eb0a467 --experiment <identity>`.
+Do not recapture a modified checkout or rewrite its manifest. If missing, recover
+those original bytes from a reliable copy at that commit and verify all original
+source/environment pins before registration. Missing/ambiguous snapshots, changed
+Git/source/artifact/plan/runtime fail; no automatic fallback or budget reset.
+Schema round-trip coverage spans /1,/2,/3, while actual historical execution here
+is verified only for the pinned /3 run. The canonical integration owns F1 findings
+and bounded F2 proposals. /3 holdout is exposed development evidence for F2;
+new data/scope/budget and authorization must be frozen before any new fitting.
 
 Focused regression commands:
 

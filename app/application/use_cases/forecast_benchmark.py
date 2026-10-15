@@ -190,27 +190,6 @@ class ForecastBenchmark:
         self.storage.retain(directory,f'rescored-{digest}.json',report)
         return report
 
-    def replay(self,experiment:str):
-        directory=self.storage.path('experiments',experiment)
-        data=BenchmarkDataset.model_validate(self.storage.load(directory,'dataset.json'))
-        plan=BenchmarkPlan.model_validate(self.storage.load(directory,'plan.json'))
-        expected,_,protocol=self.freeze(data,plan)
-        if expected!=experiment:
-            raise ValueError('BENCHMARK_SOURCE_OR_RUNTIME_CHANGED')
-        identities=[]
-        for task in plan.tasks:
-            for arm in plan.configuration_ids:
-                row=self.storage.load(directory,f'{task.origin}-{arm}.json')
-                if row is None:
-                    continue
-                checkpoint=ArmCheckpoint.model_validate(row)
-                from app.infrastructure.forecast_benchmark_replay import replay_checkpoint
-                identities.append(replay_checkpoint(data,plan,task,checkpoint,
-                    protocol['arm_configuration'][arm],self.storage,self.artifacts))
-        if not identities:
-            raise ValueError('NO_NATIVE_REPLAY_EVIDENCE')
-        source=self._source_record(directory)
-        report={'status':'PAIRED_REPLAY_VERIFIED','replayed_arms':len(identities),'native_artifacts':sum(1 for t in plan.tasks if self.storage.load(directory,f'{t.origin}-{ARMS[2]}.json') is not None),'identities':identities,
-                'experiment_identity':experiment}
-        self.storage.retain(directory,f'native-replay-{source}.json',report)
-        return report
+    def replay(self,experiment:str,*,dedicated:bool=False):
+        from app.infrastructure.forecast_readonly_replay import replay
+        return replay(self.root,experiment,dedicated=dedicated)
