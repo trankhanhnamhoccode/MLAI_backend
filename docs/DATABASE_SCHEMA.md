@@ -2,6 +2,24 @@
 
 ## CURRENT FACT — isolated assistant L2 schema
 
+L3 conversational head0030_conversational_chat depends only on0029. All sibling
+revision directories were inspected before choosing the unused revision; no head
+merge or applied-migration edits. Additive chat_generations brings this worktree
+to76 tables including Alembic. UUID PK, actor/Store/Run RESTRICT FKs, unique scoped
+key digest, request/record SHA-256, status/created_at and typed chat_generation/1
+JSONB pin request/profile/evidence/selection/prompt/schema/validator/process/claim.
+Running→terminal alone can change status/time/output/result/error; triggers reject
+all terminal UPDATE/DELETE and downgrade refuses retained rows. A completed final
+assistant_message/2 receipt and terminal generation commit atomically; /1 receipts
+are preserved, not rewritten. Short advisory key lock serializes legacy receipt
+versus new provider acceptance across configuration changes, never across network.
+Same key/body replays; different body409. Alive/unknown running claim409; OS-proven
+dead claim is failed only on explicit replay and never reissues an unknown paid call.
+Failed keys remain failed; explicit new key is deliberate new work. Recognized
+applied lost ACKs reconcile exact retained claims/finals in fresh Sessions; unapplied
+or unknown DB/programming failures do not fabricate success. Only assistant test DB
+is migrated, with no business/PlanningRun mutation or other-worktree DB access.
+
 L3 additive head0029_assistant_messages (parent0028) adds assistant_messages,
 bringing this worktree to75 tables with Alembic. All sibling revision directories
 were checked; no0029 collision observed at creation. Composite PK actor/Store/Run/

@@ -34,18 +34,37 @@ class IngredientCandidate(DTO):
     name: str
 
 
+class OptionCandidate(DTO):
+    option_id: str
+    source_strategies: tuple[Literal['lean','balanced','protected'],...]
+
+
 class Clarification(DTO):
     code: Literal['ENTITY_AMBIGUOUS','ENTITY_CONTEXT_MISMATCH','QUERY_UNSUPPORTED']
     question: str
     candidates: tuple[IngredientCandidate,...]
     original_question: str
+    option_candidates: tuple[OptionCandidate,...] = ()
 
 
 class ChatDiagnostics(DTO):
-    reason: Literal['MODEL_DISABLED','EVIDENCE_INSUFFICIENT']
-    prompt_version: None = None
-    validator_version: Literal['decision_chat_renderer/1'] = 'decision_chat_renderer/1'
-    model: None = None
+    reason: Literal['NONE','MODEL_DISABLED','EVIDENCE_INSUFFICIENT','PROVIDER_UNAVAILABLE','PREFLIGHT_REJECTED',
+                    'SCHEMA_REJECTED','GROUNDING_REJECTED','COVERAGE_REJECTED','INPUT_LIMIT','PROCESS_INTERRUPTED','WORDING_UNSUPPORTED']
+    prompt_version: str | None = None
+    validator_version: str = 'decision_chat_renderer/1'
+    model: str | None = None
+    resolved_model: str | None = None
+    provider: str | None = None
+    attempts: int = Field(default=0,ge=0,le=1)
+    input_tokens: int | None = Field(default=None,ge=0)
+    output_tokens: int | None = Field(default=None,ge=0)
+    cost_usd: str | None = None
+    latency_ms: int | None = Field(default=None,ge=0)
+    finish_reason: str | None = None
+    disposition: Literal['ACCEPTED','FALLBACK','CLARIFICATION'] = 'FALLBACK'
+    prompt_hash: str | None = None
+    schema_hash: str | None = None
+    evidence_hash: str | None = None
 
 
 class AssistantResponse(DTO):
@@ -57,7 +76,7 @@ class AssistantResponse(DTO):
     ingredient_id: UUID | None
     locale: Literal['vi','en']
     kind: Literal['answer','clarification']
-    source: Literal['deterministic_fallback','deterministic_clarification']
+    source: Literal['model','deterministic_fallback','deterministic_clarification']
     answer: str
     claims: tuple[ChatClaim,...]
     references: tuple[EvidenceReference,...]
@@ -69,7 +88,7 @@ class AssistantResponse(DTO):
         if (self.kind=='clarification') != (self.clarification is not None):
             raise ValueError('Clarification kind mismatch')
         if self.kind=='answer':
-            if self.source!='deterministic_fallback' or not self.claims:
+            if self.source not in ('model','deterministic_fallback') or not self.claims:
                 raise ValueError('Answer requires grounded claims')
             if self.answer!='\n\n'.join(c.text for c in self.claims):
                 raise ValueError('Answer differs from claims')

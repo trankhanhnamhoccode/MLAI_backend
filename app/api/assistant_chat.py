@@ -9,7 +9,7 @@ from app.application.contracts.assistant_chat import ChatRequest, ChatEnvelope
 from app.application.contracts.plan_summary import SummaryMeta
 
 router=APIRouter(prefix='/api/v1',tags=['Decision Assistant chat'],responses={
-    code:{'model':ConfigurationErrorEnvelope} for code in (400,401,403,404,409,413,422,503)})
+    code:{'model':ConfigurationErrorEnvelope} for code in (400,401,403,404,409,413,422,429,503)})
 
 
 @router.post('/procurement-plans/{plan_id}/assistant/messages',operation_id='AS03',response_model=ChatEnvelope,

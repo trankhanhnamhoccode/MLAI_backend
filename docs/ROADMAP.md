@@ -2,23 +2,27 @@
 
 ## CURRENT FACT — Decision Assistant L3 / remaining L4–L5
 
-L1 checkpoint is local; L2 WIP implements cold durable consistency evidence reads,
+L1 and L2/deterministic foundation checkpoints are local; foundation implements cold durable consistency evidence reads,
 typed summary renderer/fallback, constrained model presentation and AS01/AS02
 durable receipt/claim/publication lifecycle. Focused unit/API and owned PostgreSQL
 tests exercise fresh-process/revocation/concurrency/ACK/restart behavior with no
 engine/provider network. Cold misses no longer require cached verification. See
 [implementation/limits](features/DECISION_ASSISTANT.md) and
-[IMPLEMENTED summary / DESIGN_READY chat](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
+[summary / conversational chat contract](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
 
-- L3 implemented: deterministic on-demand chat intents, scoped Ingredient
-  clarification, bounded user-history entity context and immutable durable replay.
-  No what-if/ordering/config/inventory writes or model chat. Finite vocabulary
-  clarifies unsupported questions; general natural-language intent/wording quality
-  remains unverified. Free prose still requires semantic/negation/coverage guards.
+- L3 WIP implemented: AS03 optional conversational prose, sealed scoped facts,
+  bounded user-history context, clarification, independently configured provider,
+  deterministic assertion grammar/coverage checks and durable provider lifecycle.
+  No what-if/ordering/config/inventory writes. Finite resolution and conservative
+  grammar may reject legitimate paraphrases; general language entailment/quality
+  remains unverified. Summary presentation and import behavior remain separate.
+  Live acceptance remains NOT PASSED:10 progressive attempts retained original
+  fallback finals; final wording fixes have offline AS03 acceptance only. A fresh
+  fixed-version corpus with separate authorization is still required, not started.
 - L4 pending: separately approved frozen-evidence live evaluation, cost/attempt
   caps, raw/final diagnostics and legacy regression corpus/paraphrase coverage.
-  A narrow explicitly authorized synthetic Gemini summary smoke used2 calls with
-  price/token/attempt guards; this does not complete the broader L4 gate.
+  Narrow separately authorized synthetic summary/chat smokes retain every attempt,
+  raw/final diagnostics and price/token/attempt guards; they do not complete L4.
 - L5 pending: FE/browser/runtime integration and broader operational acceptance.
   Summary HTTP/owned-DB revocation/fresh retained reads/restart are L2 acceptance,
   not a claim that chat/whole FE or production deployment is verified.

@@ -52,3 +52,4 @@ from app.models.collaboration import PermissionRequestRecord, PermissionRequestA
 from app.models.store_creation import StoreCreationReceipt
 from app.models.plan_summary import PlanSummaryGeneration, PlanSummaryReceipt
 from app.models.assistant_message import AssistantMessage
+from app.models.chat_generation import ChatGenerationRow

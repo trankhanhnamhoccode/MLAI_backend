@@ -1435,14 +1435,15 @@ creator không email leak; locator recovery, grant revocation discovery/download
 missing/corrupt bytes, no implicit rendering, no retained fact rewrite.
 
 <a id="decision-assistant"></a>
-## 18. Decision Assistant — L2 summary / L3 deterministic chat
+## 18. Decision Assistant — L2 summary / L3 conversational explanation
 
 CURRENT FACT: C08 §15.3 vẫn là structured retained explanation; GET không gọi
 model, tạo job hoặc phát sinh phí. L2 thêm durable evidence access và AS01/AS02
 summary, synchronous explicit creation/retained read, deterministic renderer và
 optional bounded presentation adapter. Source OpenAPI75 operations/68 paths;
-L3 adds AS03 scoped deterministic chat: source76 operations/69 paths. Không deploy
-runtime8103. Model chat/free prose vẫn chưa có.
+L3 adds independently opt-in model-generated prose on AS03 with deterministic
+grounding/coverage validation and factual fallback: source76 operations/69 paths.
+Không deploy runtime8103; general natural-language entailment/quality chưa được chứng minh.
 [Feature](features/DECISION_ASSISTANT.md) sở hữu implementation boundary/limits;
 mục này sở hữu FE workflow, DTO nguồn/OpenAPI sở hữu exact wire.
 
@@ -1453,8 +1454,8 @@ mục này sở hữu FE workflow, DTO nguồn/OpenAPI sở hữu exact wire.
 | C03/C04/C05/C08 retained facts | IMPLEMENTED | Quyền và semantics hiện hành, không LLM |
 | Internal scoped evidence | IMPLEMENTED | Cold durable consistency checks; cache chỉ optimization; overview/option/Ingredient |
 | AS01/AS02 summary | IMPLEMENTED | PostgreSQL lifecycle/HTTP/deterministic fallback; fake-provider VERIFIED |
-| On-demand chat AS03 | IMPLEMENTED | Finite read intents, clarification/history, deterministic answer, immutable scoped replay |
-| Unrestricted model prose / live Qwen quality | UNAVAILABLE | L2 model chỉ chọn presentation theo schema hẹp; không live acceptance |
+| On-demand chat AS03 | IMPLEMENTED WIP | Scoped conversational prose/fallback, clarification/history, fenced provider lifecycle and immutable replay |
+| Unrestricted model prose / general entailment | UNAVAILABLE | L3 conservative assertion grammar; L2 summary still presentation ordering/tone only |
 | Live evaluation / FE integration | UNAVAILABLE | L4/L5 chưa thực hiện |
 | Chat what-if, ordering, config/inventory mutation | UNAVAILABLE | Không thuộc contract này |
 
@@ -1475,7 +1476,7 @@ legacy vì C08 đang hứa một structured read khác responsibility.
 | --- | --- | --- |
 | POST `/assistant/summary` AS01 | SummaryRequest | Create/replay durable summary,200 SummaryEnvelope; không rerun |
 | GET `/assistant/summary/{generation_id}` AS02 | No body/query |200 SummaryEnvelope retained; không provider/job |
-| POST `/assistant/messages` AS03 | ChatRequest | Một deterministic answer hoặc structured clarification;200 ChatEnvelope |
+| POST `/assistant/messages` AS03 | ChatRequest unchanged | Một model/deterministic answer hoặc structured clarification;200 ChatEnvelope |
 
 SummaryRequest = `{expected_evidence_version:Version,option_id:OptionId|null,
 locale:"vi"|"en",detail_level:"simple"|"technical"}`; mọi field required.
@@ -1503,7 +1504,7 @@ AS01/AS02 dùng SummaryEnvelope §18.5. AS03 giữ envelope
 `{data,meta:{request_id},error:null}` với AssistantResponse:
 `{schema_version:"decision_assistant/1",run_id:UUID,evidence_version:Version,
 result_digest:Version|null,option_id:OptionId|null,ingredient_id:UUID|null,
-locale,kind:"answer"|"clarification",source:"deterministic_fallback"|
+locale,kind:"answer"|"clarification",source:"model"|"deterministic_fallback"|
 "deterministic_clarification",answer:string,claims:Claim[],references:Reference[],
 clarification:Clarification|null,diagnostics:Diagnostics}`.
 
@@ -1518,14 +1519,23 @@ không tự chứng minh claim chỉ vì nhắc đúng entity hoặc một số 
 
 Clarification = `{code:"ENTITY_AMBIGUOUS"|"ENTITY_CONTEXT_MISMATCH"|
 "QUERY_UNSUPPORTED",question:string,candidates:[{ingredient_id:UUID,name:string}],
-original_question:string}`. Candidates chỉ từ retained computed scope có label;
+original_question:string,option_candidates?:[{option_id,source_strategies}]}`.
+Ingredient candidates chỉ từ retained computed scope có label;
 không có label thì yêu cầu chọn canonical ID qua C04, không đặt tên giả. Khi kind
 clarification: claims/references có thể rỗng, không gọi model chỉ để resolve
 ambiguity; FE giữ câu hỏi và hiện candidates inline. Retry sau lựa chọn explicit
 giữ original_question và gửi ingredient_id. Không auto đổi Ingredient/option.
+Option ambiguity uses retained option_candidates from the same Run; supply an
+explicit option context and pair IDs from C03. Missing labels never create aliases.
 
-Diagnostics L3 = `{reason:"MODEL_DISABLED"|"EVIDENCE_INSUFFICIENT",prompt_version:null,
-validator_version:"decision_chat_renderer/1",model:null}`. Không raw prompt/output, credentials,
+Diagnostics L3 has reason, prompt_version, validator_version, model, resolved_model,
+provider, attempts0..1, input/output_tokens, cost_usd, latency_ms, finish_reason,
+disposition ACCEPTED/FALLBACK/CLARIFICATION and prompt/schema/evidence hashes.
+OpenAPI/ChatDiagnostics owns exact nullable structure and reason enum. Reasons
+distinguish disabled/insufficient/wording unsupported, preflight/provider/schema/
+grounding/coverage/input failures; NONE with source=model means validated wording,
+not that all business evidence exists or a model quality evaluation passed.
+No raw prompt/output, credentials,
 provider stacktrace hoặc sensitive logs trong FE. 200 fallback không chứng minh
 provider thành công. Khi model disabled/provider failure/grounding rejection,
 L2/L3 phải trả deterministic answer từ cùng authorized evidence, kèm limitations
@@ -1557,22 +1567,44 @@ assertion authority. Không suy no-winner thành certified infeasible.
 Standard error envelope §2/10. 401 UNAUTHENTICATED;403 PERMISSION_DENIED/
 CSRF_CHECK_FAILED;404 RESOURCE_NOT_FOUND/OPTION_NOT_FOUND/INGREDIENT_NOT_IN_RUN;
 409 RESULT_NOT_READY/COMPUTED_SCOPE_NOT_AVAILABLE/EVIDENCE_VERSION_CONFLICT/
-IDEMPOTENCY_KEY_REUSED;413 RESOURCE_LIMIT_EXCEEDED;422 INVALID_PLANNING_CONFIGURATION;
+IDEMPOTENCY_KEY_REUSED/GENERATION_IN_PROGRESS/GENERATION_FAILED/STALE_CHAT_CLAIM;
+413 RESOURCE_LIMIT_EXCEEDED;422 INVALID_PLANNING_CONFIGURATION;429 GENERATION_LIMIT_EXCEEDED;
 503 RESULT_INTEGRITY_UNAVAILABLE/UNSUPPORTED_RESULT_VERSION/
 SERVICE_UNAVAILABLE. Auth/integrity failures không biến thành fallback200.
 Handled clarification là200 có candidates; FE không reset conversation/retry loop.
 
-Idempotency-Key UUID required ở AS03, scoped actor+Store+Run+AS03+key. Một immutable
-receipt lưu toàn bounded normalized request (cả history/context/evidence version)
-và response theo assistant_message/1; hash/canonical/identity được kiểm khi replay.
-Cùng key/body trả cùng data, request_id envelope mới; khác body409. Kết quả deterministic
-và receipt commit atomically, concurrent same-key chỉ1 row. Không pending/running
-job, GET message endpoint hoặc conversation graph. Lost/unapplied commit ACK trả503;
-explicit retry cùng key an toàn, không tự retry. Mọi replay vẫn đọc verified retained
-evidence, đối chiếu renderer/version và quyền hiện hành; không dùng receipt như quyền.
-History bounded được client gửi lại và nằm trong receipt, không tạo conversation.
+Idempotency-Key UUID required, scoped actor+Store+Run+AS03+key. Bounded normalized
+request includes question/history/context/evidence version. Same key/body replays
+the retained data with a fresh envelope request_id; changed body409. Old immutable
+assistant_message/1 receipts keep their pinned renderer (new model-OFF work uses
+renderer/2 with the same resolver/factual family fallback). Enabling chat later
+does not regenerate an existing deterministic receipt.
 
-L3 không gọi provider dù summary đã bật. Finite vocabulary chọn read intent cho
+New provider acceptance uses additive chat_generation/1 with frozen request/model/
+route/config, evidence/selection hashes, prompt/schema/validator versions, process
+incarnation and claim token. Accepted running identity commits before network;
+preflight/provider waits hold no Session/connection. Current authority repeats
+immediately before completion after preflight and at publication/delivery/replay.
+Publication atomically commits a terminal generation plus immutable assistant_message/2
+final receipt; stale/late writers cannot overwrite it. Same-key concurrency409
+GENERATION_IN_PROGRESS,20 running/store cap429. GET is never a worker/recovery path;
+there is no chat GET endpoint or new conversation service.
+
+Alive/unknown running owner stays409. Only explicit POST replay with OS proof of
+dead owner records PROCESS_INTERRUPTED, then GENERATION_FAILED409; no paid call is
+repeated. Same failed key stays failed; a new key is deliberate new work. Transport
+timeout/uncertain completion yields retained deterministic fallback with attempts1,
+never automatic retry or exactly-once billing promise. Recognized applied DB ACK
+loss reconciles exact durable claims/finals through fresh Sessions; unapplied/
+unrecognized DB or programming failures are503, not fabricated fallback success.
+Every replay reauthorizes and verifies Run/receipt/generation hashes and pinned
+final assertions/refs against retained evidence. History is bounded request context,
+not a conversation authority or alternative source of facts.
+
+L3 uses independent CHAT_LLM_ENABLED, model/providers/input/output/deadline/price
+profile, default OFF; summary/import enablement and key presence never activate it.
+Unsupported/overpriced parameters/endpoints reject before a paid call. One attempt,
+no provider/model substitution or retry. Finite vocabulary chọn read intent cho
 outcome, cost/budget/pairwise, requirements, scope, proof, limitations, summary hoặc
 Ingredient stock/purchases/daily simulated balances. Unknown/unsupported wording,
 what-if/orders/mutations trả QUERY_UNSUPPORTED clarification. Không claim tổng quát
@@ -1580,14 +1612,24 @@ khả năng hiểu paraphrase. Full retained names/UUID nhận entity; tên trù
 explicit ID trái câu hỏi clarify, không đổi entity. Short follow-up có thể dùng
 last user history message để nhận1 Ingredient; assistant history không cung cấp facts.
 Không có captured label thì yêu cầu ID qua C04, không đặt tên. Raw question/history
-không được gửi cho summary provider. Answer server-owned và mọi ref resolve cùng
-projection; không model claims/repair/removal. Current rights kiểm trước projection,
+không được gửi cho summary provider. Facts are server-owned; chat prose must
+validate each assertion against the same projection, with no repair/removal.
+Current rights kiểm trước projection,
 receipt/publication và delivery. GET C03/C08/AS02 không lazy model/job.
 
-PROPOSAL model chat: chỉ bật sau durable billable lifecycle, explicit separate flag,
-task/profile/versions và token/attempt/cost/deadline caps/live-data approval. Không
-tái dùng SUMMARY_LLM_ENABLED hay mapping key policy để tự bật. L3 receipt không
-phải provider work queue; không hứa recovery cho future ambiguous billable calls.
+Model writes actual statement prose with sealed fact IDs, not presentation choices.
+Backend verifies COMPLETE clauses, typed role/availability, exact values/units,
+entity/path, polarity and required coverage. Every clause and required fact must
+match; citations alone do not suffice. Unknown wording/material additions/omitted
+main facts reject the whole generation to the same topic fallback. No numeric
+repair/sentence removal/salvage/model judge. Backend safety qualifiers always state
+retained/simulated/proposal/proof scope; they do not turn a wrong assertion into
+a repaired success. Grammar is deliberately bounded: legitimate paraphrases may
+fall back, and this is not proof of general language entailment. Larger evidence
+cannot silently truncate to fit; INPUT_LIMIT returns the complete backend fallback.
+Stock/expiry/daily detail and broad summary families outside conversational grammar
+use the richer deterministic renderer (WORDING_UNSUPPORTED), not a quantity-only
+answer to the wrong question. Summary AS01/AS02 remain presentation mode.
 
 L3–L4 nếu cho phép free prose phải kiểm: sau salvage còn trả lời ý chính; repair không sinh
 “đồng đồng”; negation tiếng Việt/English và positive controls; “đủ điều kiện”/

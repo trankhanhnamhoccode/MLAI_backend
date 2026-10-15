@@ -2,12 +2,20 @@
 
 ## CURRENT FACT — Decision Assistant L3 retained chat / L2 summary
 
-AS03 POST assistant/messages adds bounded read intents, Ingredient clarification,
-user-history entity context and deterministic grounded answers, immutable scoped
-idempotency receipts. Chat has no provider dependency; enabling summary does not
-enable model chat. Migration0029_assistant_messages adds1 table after0028; source
-76 operations/69 paths,75 tables including Alembic. Applied only on owned assistant
-test DB. No conversation/worker/engine execution or business state mutation.
+AS03 POST assistant/messages now supports optional model-generated conversational
+prose over sealed retained facts, conservative assertion/coverage validation and
+topic-specific deterministic fallback. Separate CHAT_LLM_ENABLED/model/profile,
+default OFF; summary/import flags/key presence never enable chat. Migration0030
+adds a fenced provider generation after0029 immutable receipts;76 operations/69
+paths,76 tables including Alembic. Only owned assistant test DB migrated. Existing
+0029 receipts remain readable; no conversation platform/worker/engine execution or
+business state mutation. Foundation checkpoint a3b83799 includes L2/deterministic
+chat only; conversational additions remain WIP. Current implementation/coverage
+limits and synthetic live evidence are owned by the feature document/runbook.
+Conversational live acceptance is NOT PASSED: progressive10 attempts all retained
+original fallback finals; final wording fixes pass offline AS03 replay, with no
+paid call after the exhausted cap. Keep this distinct from the accepted summary
+presentation smoke and from a future fixed-version L4 evaluation.
 Explicit synthetic Gemini smoke exercised actual AS01/AS02: first routing guard
 fallback corrected, second accepted;2 calls,$0.0003932 total API-reported cost.
 This verifies constrained presentation, not unrestricted prose or customer data.
@@ -26,8 +34,8 @@ Owned assistant PostgreSQL5436/limited tester, fresh-process cold read/restart,
 HTTP lifecycle/revocation/concurrency/ACKs and mock-provider gates exercised; not
 full-suite/browser/live Qwen acceptance. Runtime8103/main/other WIP unchanged.
 Implementation/limits: [Decision Assistant](features/DECISION_ASSISTANT.md).
-[Summary presentation / deterministic chat IMPLEMENTED](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
-L4 broad evaluation/L5 FE remain pending; unrestricted model prose is unavailable. Existing Run
+[Summary presentation / conversational chat](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
+L4 broad evaluation/L5 FE remain pending; general prose entailment is not proven. Existing Run
 explanation needs no data-readiness/challenger merge or model promotion.
 
 ## CURRENT FACT — self-service Store/customer local

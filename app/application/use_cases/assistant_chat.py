@@ -15,8 +15,11 @@ from app.repositories.assistant_message import MessageRepository
 
 
 class AssistantChat:
-    def __init__(self, planning):
+    def __init__(self, planning, profile=None, provider=None):
         self.planning,self.auth,self.engine=planning,planning.auth,planning.engine
+        from app.application.contracts.chat_generation import ChatProfile
+        self.profile=profile or ChatProfile()
+        self.provider=provider
 
     def _authority(self, session, token, run_id, csrf):
         store=PlanningRepository(session).owning_store(run_id)
@@ -26,7 +29,12 @@ class AssistantChat:
         actor,_,_=self.auth.authorize_in_session(session,token,store,READ_PERMISSIONS,csrf=csrf or '')
         return actor.user_id,store
 
-    def _answer(self, token, run_id, request):
+    def _answer(self, token, run_id, request, conversational=False):
+        if conversational:
+            from app.application.use_cases.conversational_chat import ConversationalChat
+            _,plan=ConversationalChat(self).prepare(token,run_id,request)
+            diagnostics=plan.fallback.diagnostics.model_copy(update={'validator_version':'decision_chat_renderer/2'})
+            return plan.fallback.model_copy(update={'diagnostics':diagnostics})
         record,view=self.planning.read_record(token,run_id,evidence_only=True)
         if view.response_version!=request.expected_evidence_version:
             raise ConfigurationError('EVIDENCE_VERSION_CONFLICT',409)
@@ -48,7 +56,14 @@ class AssistantChat:
                 raise ValueError('Unsupported message record')
             saved_request=ChatRequest.model_validate(raw['request'])
             response=AssistantResponse.model_validate(raw['response'])
-            if canonical_bytes(raw)!=canonical_bytes(dict(storage_version='assistant_message/1',request=saved_request,response=response)):
+            encoded=response.model_dump(mode='json')
+            legacy_fields={'reason','prompt_version','validator_version','model'}
+            if set(raw['response']['diagnostics'])<=legacy_fields:
+                encoded['diagnostics']={k:v for k,v in encoded['diagnostics'].items() if k in legacy_fields}
+            if raw['response'].get('clarification') and 'option_candidates' not in raw['response']['clarification']:
+                encoded['clarification'].pop('option_candidates',None)
+            if response.source=='model':raise ValueError('Provider result requires generation verification')
+            if canonical_bytes(raw)!=canonical_bytes(dict(storage_version='assistant_message/1',request=saved_request,response=encoded)):
                 raise ValueError('Noncanonical retained message')
             if canonical_bytes(saved_request)!=canonical_bytes(request) or canonical_bytes(response)!=canonical_bytes(expected):
                 raise ValueError('Retained message differs from pinned evidence/renderer')
@@ -66,21 +81,39 @@ class AssistantChat:
         # Current rights/CSRF precede evidence materialization and receipt reads.
         with auth_session(self.engine) as session:
             actor,store=self._authority(session,token,run_id,csrf)
+            MessageRepository(session).lock_key(actor,store,run_id,kd)
             prior=MessageRepository(session).get(actor,store,run_id,kd)
             if prior and prior.request_digest!=digest('assistant-message-request',request):
                 raise ConfigurationError('IDEMPOTENCY_KEY_REUSED',409)
+            from app.repositories.chat_generation import ChatGenerationRepository
+            generation=ChatGenerationRepository(session).get(actor,store,run_id,kd)
+            if generation is not None and generation.request_digest!=digest('assistant-message-request',request):
+                raise ConfigurationError('IDEMPOTENCY_KEY_REUSED',409)
+            use_generation=generation is not None or (self.profile.enabled and prior is None)
             session.commit()
-        answer=self._answer(token,run_id,request)
+        if use_generation:
+            from app.application.use_cases.conversational_chat import ConversationalChat
+            return ConversationalChat(self).create(token,run_id,request,key,csrf)
+        # New model-OFF work uses the same resolver/evidence-family fallback.
+        # Retained /1 renderer receipts keep their original interpretation.
+        use_new_renderer=prior is None or prior.record_json.get('response',{}).get('diagnostics',{}).get('validator_version')=='decision_chat_renderer/2'
+        answer=self._answer(token,run_id,request,use_new_renderer)
         with auth_session(self.engine) as session:
             current_actor,current_store=self._authority(session,token,run_id,csrf)
+            MessageRepository(session).lock_key(actor,store,run_id,kd)
             if (current_actor,current_store)!=(actor,store): raise AuthError('PERMISSION_DENIED')
             row=PlanningRepository(session).get(store,run_id)
             if row.record_digest!=request.expected_evidence_version:
                 raise ConfigurationError('EVIDENCE_VERSION_CONFLICT',409)
-            receipt=MessageRepository(session).accept(actor,store,run_id,kd,
-                digest('assistant-message-request',request),dict(storage_version='assistant_message/1',request=request,response=answer))
-            result=self._decode(receipt,request,answer)
+            generation=ChatGenerationRepository(session).get(actor,store,run_id,kd)
+            if generation is None:
+                receipt=MessageRepository(session).accept(actor,store,run_id,kd,
+                    digest('assistant-message-request',request),dict(storage_version='assistant_message/1',request=request,response=answer))
+                result=self._decode(receipt,request,answer)
             session.commit()
+        if generation is not None:
+            from app.application.use_cases.conversational_chat import ConversationalChat
+            return ConversationalChat(self).create(token,run_id,request,key,csrf)
         # No provider/engine runs at any point. Lost commit ACK can safely be
         # retried explicitly with this key; an unapplied receipt returns no 200.
         with auth_session(self.engine) as session:

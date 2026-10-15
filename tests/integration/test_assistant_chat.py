@@ -76,6 +76,7 @@ def test_clarification_ingredient_and_strict_http_bounds(chat):
     assert post(expected_evidence_version='stale-version').status_code==409
     oversized=state[5].post(path,headers=headers,content=' '*32769)
     assert oversized.status_code==413
+    assert oversized.json()['error']['code']=='RESOURCE_LIMIT_EXCEEDED'
     assert state[5].post(path,headers={**headers,'If-Match':'anything'},json=body).status_code==400
     assert state[5].post(path+'?unknown=1',headers=headers,json=body).status_code==422
 

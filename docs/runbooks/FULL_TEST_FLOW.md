@@ -4,8 +4,9 @@
 ## Decision Assistant L2/L3 — isolated verification
 
 CURRENT FACT source: AS01 explicit synchronous summary create/replay and AS02
-retained read, AS03 deterministic chat/clarification, no what-if/worker/deployment.
-Source76 operations/69 paths;0029 adds immutable chat receipts after0028;
+retained read, AS03 optional conversational prose/clarification with topic fallback,
+no what-if execution/worker/deployment. Source76 operations/69 paths;0030 adds
+fenced provider generations after0029 immutable chat receipts;
 contract/limits at [Planning §18](../PROCUREMENT_API_CONTRACT_VI.md#decision-assistant)
 and [feature](../features/DECISION_ASSISTANT.md). C08 remains structured facts.
 
@@ -27,6 +28,7 @@ Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-decision-assistant
 $assistantPython = '..\backend\.venv\Scripts\python.exe'
 & $assistantPython -B -m scripts.assistant_test_database
 & $assistantPython -B -m scripts.assistant_tests tests/integration/test_assistant_summary.py tests/integration/test_assistant_chat.py -q -p no:cacheprovider
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_conversational_chat.py -q -p no:cacheprovider
 & $assistantPython -B -m pytest tests/unit/test_decision_evidence.py tests/unit/test_assistant_cold_reads.py tests/unit/test_plan_summary.py tests/unit/test_assistant_chat.py tests/unit/test_assistant_smoke_budget.py tests/api/test_plan_summary_openapi.py tests/live/test_assistant_smoke.py -q -p no:cacheprovider
 git diff --check
 ```
@@ -59,8 +61,14 @@ POST `/api/v1/procurement-plans/{plan_id}/assistant/messages` with UUID key,
 Origin/CSRF, SummaryRequest fields plus question, ingredient_id:null or retained
 UUID, history:[] or bounded user/assistant messages. Clarification keeps original
 question and asks for retained ID; explicit new request/key after selection.
-Same key/body replays, changed question/history/context409. No GET message endpoint,
-provider or implicit computation; C05 links/details retain exact Ingredient scope.
+Same key/body replays, changed question/history/context409. No GET message endpoint
+or implicit computation; C05 links/details retain exact Ingredient scope. CHAT_* is
+independent from SUMMARY_*/Import and default OFF; a key alone never enables it.
+Model-enabled acceptance pins profile/evidence/selection/prompt/schema/validator,
+calls preflight/provider outside DB, repeats authority immediately before completion,
+then validates full assertions/coverage and publishes immutable final. Running409;
+dead owner only fails on explicit replay, never automatically retries paid work.
+Read source/disposition/reason: HTTP200 fallback is not accepted model wording.
 
 ### Explicit synthetic live smoke (separate authorization only)
 
@@ -87,6 +95,49 @@ Do not rerun merely to consume the remaining slot. Safe synthetic raw/final arti
 remain ignored. GET/replay made0 additional model calls; timeout fallback was offline.
 This verifies model presentation routing/schema through AS01/AS02, not free prose,
 model chat or a broader L4 evaluation. L3 chat always uses deterministic evidence.
+
+### Conversational AS03 opt-in smoke and offline replay
+
+Ordinary pytest skips all6 conversational live cases. The opt-in CLI alone enables
+synthetic AS03 calls on the guarded assistant DB. It reads this worktree's private
+.env key only in memory and uses its configured Gemini model; SUMMARY_MODEL is
+permitted as test-only selection for this already approved model. Production chat
+does not inherit summary model/config: explicit CHAT_LLM_ENABLED/CHAT_MODEL/
+CHAT_PROVIDERS/CHAT_* bounds are required. Empty providers is explicit default
+OpenRouter routing, no fallback/model substitution. No real Store data is approved.
+
+Public endpoint support/price metadata is checked before each completion. Request
+sets temperature0, strict JSON schema, reasoning disabled, require_parameters=true,
+max_price prompt0.3/completion2.5 USD per million and per-request0; no tools/search/
+attachments. Slots1..8:≤12000 serialized UTF-8 bytes, conservative prompt bound32768,
+output768, reserve$0.0117504 each. Slots9..10 MUST use≤6144 bytes, prompt bound8192,
+output128, reserve$0.0027776 each. Total worst-case$0.0995584≤$0.10 for10 attempts.
+Byte caps include messages/schema and token bounds reserve additional framing.
+Exclusive write-ahead slots survive uncertain calls and are never refunded, deleted
+or recycled. The current ledger under runtime/assistant-test/conversational-live is
+exhausted. Do not bypass it; another batch needs its own explicit authorization.
+
+```powershell
+# Paid command, separate explicit authorization only; current batch is exhausted.
+& $assistantPython -B -m scripts.conversational_live_smoke --allow-paid-synthetic-max-10-usd-0.10 --case all
+# Only when an authorized small slot remains:
+& $assistantPython -B -m scripts.conversational_live_smoke --allow-paid-synthetic-max-10-usd-0.10 --case followup --small-output
+# Offline: inspect a synthetic AS03 acceptance for the final ellipsis regression.
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_conversational_chat.py::test_elliptical_purchase_form_is_accepted_offline_through_as03 -q -p no:cacheprovider
+& $assistantPython -B -m pytest tests/unit/test_conversational_chat.py tests/unit/test_conversational_budget.py tests/live/test_conversational_smoke.py -q -p no:cacheprovider
+```
+
+Inspect every raw-N/final-N artifact and prompt/schema/evidence hashes, resolved
+model/provider, usage/cost/latency/finish reason, source/disposition/reason and replay
+completion count. All attempts stay, including rejected/fallback. The first transport
+failure has no recovered raw usage: cost is unknown, not zero, and fully reserved.
+This progressive10-attempt batch had0 original source=model finals. Legitimate
+paraphrase false rejects were fixed with scoped controls/offline AS03 replay; they
+are not relabeled as new live PASS. The fixture has one deduplicated option, so
+trade-off smoke tests missing pair evidence, not known pairwise numeric quality.
+Fresh final-version live acceptance/broad L4 evaluation remains pending. HTTP200/
+pytest PASS alone is not a model quality result; evolving WIP versions are not an
+accuracy benchmark. Independent summary live artifacts/results remain unchanged.
 
 <a id="customer-self-service"></a>
 ## CURRENT FACT — setup khách hàng từ số0

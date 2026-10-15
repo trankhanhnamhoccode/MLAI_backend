@@ -2,7 +2,7 @@
 
 CURRENT FACT L2/L3: immutable `decision_evidence/1`, durable cold consistency reads,
 typed deterministic summary, optional bounded model presentation and AS01/AS02
-durable PostgreSQL lifecycle and AS03 deterministic scoped chat are implemented.
+durable PostgreSQL lifecycle and AS03 optional conversational prose are implemented.
 Focused offline/owned-DB verification and an explicitly authorized synthetic Gemini
 summary smoke are separate evidence. No new grant or deployment.
 The [Planning contract §18](../PROCUREMENT_API_CONTRACT_VI.md#decision-assistant)
@@ -138,6 +138,14 @@ constrained presentation only, not arbitrary prose grounding or L4 evaluation.
 
 ## Scoped chat implementation
 
+CURRENT FACT acceptance limit: progressive synthetic conversational smoke consumed
+10 completion attempts, with0 original model-accepted finals. One transport has
+unknown usage/cost, fully reserved; known replies resolved google/gemini-2.5-flash /
+Google and returned schema-valid prose. False rejects on legitimate wording/ellipsis
+were corrected through scoped regressions and offline AS03 replay. Original live
+finals remain immutable fallback. No fresh paid call after the final fixes fits
+the exhausted attempt cap; this is not conversational live acceptance or L4.
+
 CURRENT FACT AS03 uses `AssistantChat`, `assistant_chat_rendering` and typed
 ChatRequest/AssistantResponse. Finite read intents cover outcome, cost/budget/
 pairwise, requirements, computed scope, proof, limitations, summary and Ingredient
@@ -153,18 +161,54 @@ Ingredient. Assistant history assertions never become facts; arbitrary history
 does not authorize system/tool messages or operations. Without captured labels,
 candidates omit names and ask for canonical ID via C04. No auto context mutation.
 
-Chat has no provider wiring/config; SUMMARY_LLM_ENABLED does not activate it. This
-choice follows the smoke's limited presentation evidence: free model assertions
-and general language/intent quality remain future acceptance. Output is fully
-server-owned, grounded and available with provider unavailable. No NLP repair or
-sentence removal is reported. One immutable AS03 receipt stores bounded request/
-history/context/version and deterministic response. Replays validate pinned evidence,
-renderer, hash and current rights; conflicting key/body409. Concurrent identical
-requests commit one row; technical/unknown commit failures503 and explicit same-key
-retry safely replay or create once. No pending work, worker or billable ambiguity.
-Migration0029 adds one purpose-specific table after0028 with immutable triggers and
-retention-aware downgrade. It was checked against sibling revisions and applied
-only on the owned assistant test DB. No conversation persistence or GET generation.
+Chat has independent CHAT_LLM_ENABLED/model/providers/bounds/price caps, default
+OFF; SUMMARY_LLM_ENABLED and Import flags never activate it. The OpenRouter adapter
+preflights endpoint support and price before one non-retried completion; strict
+JSON output has actual model-written statement text and fact_ids, not template/
+ordering/tone choices. No hidden reasoning is requested/returned. Network uses
+NoRedirect, request/response bytes, tokens, timeout/deadline and no provider/model
+fallback. Question/history and selected typed facts/context alone are sent, never
+whole Run/package/auth/session/email or another Store's retained data. Live opt-in
+uses only synthetic graphs; ordinary pytest does not enable paid work.
+
+`chat_resolution` handles natural cost/selection/trade-off/follow-up questions and
+what-if clarification (create a new Run; no new simulation/implicit mutation).
+`chat_evidence_selection` selects sealed typed assertions with exact displays,
+units, Product/path, availability, requested/fulfilled/lost/service fields and refs.
+Unknown stays distinct from zero, no-winner from blocked/technical failure and
+failed retained winners from available recommendations. Multiple possible pairs
+clarify instead of selecting the first; pairwise changes retain to-minus-from
+direction and do not imply global ranking, probability or causal procurement.
+
+`chat_grounding` is a deliberately conservative compositional assertion grammar:
+each COMPLETE clause must parse to an issued fact with exact values, role, unit,
+entity/path and polarity. Multi-clause output must account for every clause and
+every required fact exactly once. Merely existing citations are insufficient.
+Unknown additions, positive selection on no-winner, wrong units/numbers/path,
+certification/global/causal/actual/probability claims, generic nonanswers or missing
+main content reject the WHOLE generation into a topic-specific factual fallback.
+It is not general natural-language entailment: legitimate paraphrases outside the
+grammar can fall back. No model judge, nearest-number repair, sentence removal or
+salvage is used. Required backend safety qualifiers are composed for both model
+and fallback outputs, including proposal/viewed-option scope for colloquial purchase
+wording. They are not post-hoc repairs. Stored model text/claims plus qualifiers
+are revalidated on replay against pinned evidence and the same final contract.
+
+Legacy assistant_message/1 deterministic receipts remain immutable/readable.
+Additive0030 chat_generations owns accepted/running/completed/failed claims, pinned
+request/profile/evidence/selection/prompt/schema/validator/process and terminal
+fences. A completed assistant_message/2 receipt and final generation commit atomically.
+Scoped key advisory locks serialize old/new acceptance across config changes and
+close before provider waits. Provider is outside Session/transaction; current
+authority repeats after preflight immediately before completion and at publication,
+delivery and replay. Revocation discards output. Same key/body never calls again;
+different body409; new key is explicit new work, not exactly-once provider billing.
+Running alive/unknown409; only explicit replay of an OS-proven dead claim records
+PROCESS_INTERRUPTED without repeating an unknown completion. Same failed key stays
+failed. Applied ACK loss reconciles exact durable records, not guessed success;
+unapplied/technical failure never becomes business fallback. No worker/queue/
+conversation platform or lazy GET generation. Migration refuses retained-row
+downgrade and has only been applied on the owned assistant test DB.
 
 CURRENT FACT: focused no-DB tests use hand-authored read contracts and interned static
 synthetic pipeline fixtures from existing s363 review artifacts, not newly generated
@@ -210,10 +254,11 @@ profile, scoped allowlisted evidence and authorization before transport.
 
 PROPOSAL next slices (separate authorization): L4 broader fixed-evidence live evaluation with explicit
 cost/attempt caps and raw/final diagnostics; L5 HTTP/FE/security/restart integration.
-Free-prose coverage, unit repair and general Vietnamese/English negation/paraphrase
-guards remain acceptance requirements if free wording is introduced. L2 rejects
-all free provider assertions by schema, including legacy failures; deterministic
-no-winner/unknown wording and valid fixed variants preserve polarity without NLP.
+Broader free-prose acceptance, Vietnamese/English paraphrase coverage and quality
+remain L4 requirements. L3 tests exercise bounded paraphrases/negation/compound
+clauses and conservative rejection; they do not prove general NLP correctness.
+L2 summary still rejects all free provider assertions by schema and only uses
+presentation ordering/tone. Chat transport/prompt/validation do not change it.
 Explanation of existing verified Runs needs no merge from data-readiness/challenger;
 new data admission/forecast quality evidence remains separately scoped.
 

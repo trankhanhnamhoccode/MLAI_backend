@@ -3,7 +3,7 @@ import unicodedata
 from dataclasses import dataclass
 from uuid import UUID
 from app.application.contracts.assistant_chat import (
-    AssistantResponse, ChatClaim, ChatDiagnostics, Clarification, IngredientCandidate,
+    AssistantResponse, ChatClaim, ChatDiagnostics, Clarification, IngredientCandidate,OptionCandidate,
 )
 from app.application.contracts.plan_summary import SummaryDiagnostics
 from app.application.plan_summary_rendering import render_summary
@@ -20,6 +20,9 @@ class ChatScope:
     ingredient_id: UUID | None
     clarification: str | None = None
     candidates: tuple = ()
+    option_id: str | None = None
+    comparison_pair: tuple[str,str] | None = None
+    option_candidates: tuple = ()
 
 
 # Deliberately finite vocabulary. Unsupported/compound actions clarify, never execute.
@@ -85,7 +88,8 @@ def render_chat(evidence, request, scope):
         result_digest=identity.result_digest,option_id=evidence.option.option_id if evidence.option else None,
         ingredient_id=scope.ingredient_id,locale=request.locale)
     if scope.clarification:
-        question=(('Bạn muốn hỏi nguyên liệu nào? Chọn ID đã lưu trong Run.' if vi else 'Which retained Ingredient do you mean? Choose its ID.')
+        question=((('Bạn muốn so sánh cặp phương án nào? Nêu hai option ID từ C03.' if vi else 'Which option pair do you mean? Provide two retained option IDs from C03.') if scope.intent=='option' else
+                   ('Bạn muốn hỏi nguyên liệu nào? Chọn ID đã lưu trong Run.' if vi else 'Which retained Ingredient do you mean? Choose its ID.'))
                   if scope.clarification=='ENTITY_AMBIGUOUS' else
                   (('Phương án trong câu hỏi khác context hiện tại; hãy chọn option_id explicit.' if vi else 'The question and viewed option differ; choose an explicit option_id.') if scope.intent=='option' else
                    ('Nguyên liệu trong câu hỏi khác lựa chọn hiện tại; hãy xác nhận ID.' if vi else 'The question and selected Ingredient differ; confirm an ID.'))
@@ -94,7 +98,8 @@ def render_chat(evidence, request, scope):
                    'I can explain this Run’s outcome, costs, requirements, scope, proof or Ingredients. Choose a question in that scope.'))
         clarification=Clarification(code=scope.clarification,question=question,
             candidates=tuple(IngredientCandidate(ingredient_id=i.ingredient_id,name=i.name) for i in scope.candidates if i.name),
-            original_question=request.question)
+            original_question=request.question,
+            option_candidates=tuple(OptionCandidate(option_id=o.option_id,source_strategies=o.source_strategies) for o in scope.option_candidates))
         return AssistantResponse(**common,kind='clarification',source='deterministic_clarification',answer=question,
             claims=(),references=(),clarification=clarification,diagnostics=ChatDiagnostics(reason='EVIDENCE_INSUFFICIENT'))
     fallback=render_summary(evidence,request,SummaryDiagnostics(disposition='FALLBACK',reason='MODEL_DISABLED',requested_model=None))

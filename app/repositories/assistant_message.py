@@ -2,6 +2,7 @@
 from sqlalchemy.dialects.postgresql import insert
 from app.models.assistant_message import AssistantMessage
 from app.application.planning_serialization import digest, exact_json
+from sqlalchemy import text
 
 
 class MessageRepository:
@@ -9,6 +10,12 @@ class MessageRepository:
 
     def get(self, actor, store, run, key):
         return self.session.get(AssistantMessage,(actor,store,run,key))
+
+    def lock_key(self,actor,store,run,key):
+        # Same short transaction fence for legacy deterministic and provider
+        # acceptance. Never held while waiting on a model.
+        value=int(digest('AS03-key-lock',[actor,store,run,key])[:15],16)
+        self.session.execute(text('SELECT pg_advisory_xact_lock(:key)'),{'key':value})
 
     def accept(self, actor, store, run, key, request_digest, record):
         self.session.execute(insert(AssistantMessage).values(actor_id=actor,store_id=store,run_id=run,

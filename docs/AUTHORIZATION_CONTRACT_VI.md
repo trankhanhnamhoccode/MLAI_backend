@@ -118,8 +118,11 @@ C04/C05/C08/N9 require planning.result.read, budget.read and procurement.cost.re
 CURRENT FACT assistant AS01/AS02/AS03 reuse those same three rights, current session/
 Store checks before materialization and on read/replay/publication. Missing one
 denies the whole summary, including cached/durable results; no new grant/catalogue
-key. Optional summary provider never receives unauthorized facts. AS03 deterministic
-chat checks Origin/CSRF and reauthorizes before projection, receipt and delivery.
+key. Optional summary/chat providers never receive unauthorized retained facts.
+AS03 checks Origin/CSRF and reauthorizes before projection/acceptance, immediately
+before completion after preflight, at publication/delivery and on immutable replay.
+Revocation during provider work discards final output; permission failures are not
+converted into successful fallback. No extra grant or membership inference.
 N10/J01 PDF/N11 also require planning.export, checked against current authority.
 One-time approval proposals stay unimplemented; no permission expansion here.
 

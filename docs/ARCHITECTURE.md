@@ -26,9 +26,14 @@ test tooling, not normal startup or a product permission.
 ## CURRENT FACT ? dependency direction
 
 Assistant L3 AS03 wires AssistantChat to PublicPlanning retained consistency reads,
-finite intent/renderer and concrete immutable MessageRepository. No model, solver,
-worker or live catalog dependency. Request/history/evidence version pin one atomic
-receipt; current authority repeats before projection/publication/delivery/replay.
+finite resolution, typed evidence selection, optional task-specific conversational
+provider and deterministic assertion grammar/fallback. No solver/worker/live catalog
+dependency. Existing deterministic receipts remain immutable/readable; additive
+chat_generations owns accepted/running/completed/failed claim fencing and pins
+request/profile/evidence/selection/prompt/schema/validator. Current authority repeats
+before projection/acceptance, after metadata preflight immediately before completion,
+and at publication/delivery/replay. Provider/preflight waits hold no Session/connection;
+brief authority transactions close before network. No generic LLM framework/queue.
 The L2 optional summary provider remains separate; its configured empty route now
 means explicitly permitted default OpenRouter routing with fallback disabled.
 

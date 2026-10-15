@@ -16,7 +16,7 @@ def main():
         raise RuntimeError('Refusing any other test target')
     validate_reset_target(Settings(_env_file=None,environment='test',database_url=url))
     env = {**os.environ,'ENVIRONMENT':'test','DATABASE_URL':url,'TEST_DATABASE_URL':url,
-        'SUMMARY_LLM_ENABLED':'false','AUTH_EMAIL_DELIVERY_ENABLED':'false',
+        'CHAT_LLM_ENABLED':'false','SUMMARY_LLM_ENABLED':'false','AUTH_EMAIL_DELIVERY_ENABLED':'false',
         'IMPORT_WORKER_ENABLED':'false','PLANNING_WORKER_ENABLED':'false',
         'PDF_EXPORT_WORKER_ENABLED':'false','NOTIFICATION_WORKER_ENABLED':'false',
         'IMPORT_LLM_SUGGESTIONS_ENABLED':'false','PYTHONDONTWRITEBYTECODE':'1'}

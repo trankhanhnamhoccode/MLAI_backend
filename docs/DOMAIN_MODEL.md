@@ -12,8 +12,14 @@ CURRENT FACT L3: a chat message is a scoped explanation of the same retained Run
 not a new decision or conversation authority. History can identify an Ingredient
 from a prior user message for an explicit follow-up, never supply stock/cost/winner
 facts. Ambiguous/conflicting entities clarify; unsupported operations do not run.
-Deterministic message receipts preserve request/context/version and answer; summary
-provider enablement does not enable chat generation or free-form model assertions.
+Message receipts preserve request/context/version and final answer. Optional chat
+model writes prose from backend-selected sealed facts; complete clauses, roles,
+values/units/entity/path, polarity and required coverage must validate before final
+publication. Unknown grammar or missing material content yields the topic fallback,
+never guessed facts/number repair. Model prose is presentation, not domain truth.
+Summary provider enablement does not enable conversational generation. What-if
+questions disclose that no new simulation exists and direct creation of a new Run;
+chat never creates that Run or mutates inputs implicitly.
 
 CURRENT FACT self-service Store: authenticated active verified credential-ready
 holder tự tạo Store với name/timezone/currency explicit và trở thành Owner đúng
