@@ -24,7 +24,7 @@ def fit_identity(data: BenchmarkDataset, plan: BenchmarkPlan, task: BenchmarkOri
     from datetime import timedelta
     prefix['calendar'] = tuple(c for c in data.calendar if c.day <= task.origin+timedelta(days=7) and
                                c.available_at <= next_run(task.origin,data.timezone))
-    if plan.harness_version=='causal_benchmark/2':
+    if plan.harness_version!='causal_benchmark/1':
         prefix['host_source']=host_source_identity()
         prefix['harness_version']=plan.harness_version
     return challenger_digest('fit', {'prefix':prefix, 'task':task, 'arm':arm,'configuration':config,

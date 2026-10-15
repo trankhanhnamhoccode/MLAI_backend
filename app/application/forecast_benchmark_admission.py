@@ -2,7 +2,7 @@
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
-from app.application.contracts.forecast_benchmark import ARMS, PROTOCOL_DIGEST, BenchmarkDataset, BenchmarkPlan
+from app.application.contracts.forecast_benchmark import ARMS, PROTOCOL_DIGEST, DEMO_ABC_PROTOCOL_DIGEST, BenchmarkDataset, BenchmarkPlan
 from app.application.contracts.forecast_challenger import ChallengerFailure as Failure
 from app.application.forecast_challenger_serialization import challenger_digest
 from app.application.forecast_challenger_validation import require
@@ -36,15 +36,17 @@ def admit_dataset(data: BenchmarkDataset) -> None:
 
 def admit_plan(data: BenchmarkDataset, plan: BenchmarkPlan) -> None:
     admit_dataset(data)
-    arms=ARMS if plan.harness_version=='causal_benchmark/1' else ARMS[:2]
-    require(plan.protocol_digest == PROTOCOL_DIGEST and plan.configuration_ids == arms,
+    demo3=plan.harness_version=='causal_benchmark/3'
+    arms=ARMS[:2] if plan.harness_version=='causal_benchmark/2' else ARMS
+    digest=DEMO_ABC_PROTOCOL_DIGEST if demo3 else PROTOCOL_DIGEST
+    require(plan.protocol_digest == digest and plan.configuration_ids == arms,
             'FROZEN_PROTOCOL_OR_ARMS_CHANGED')
     require(plan.dataset_digest == challenger_digest('dataset', data), 'DATASET_DIGEST_MISMATCH')
     require(len(plan.tasks) == 4 and [t.partition for t in plan.tasks] == ['validation']*2+['holdout']*2,
             'FROZEN_PARTITIONS')
     for index, task in enumerate(plan.tasks):
         require((task.train_end, task.point_start, task.point_end, task.calibration_start, task.calibration_end) == (
-            task.origin-timedelta(days=56), task.origin-timedelta(days=55), task.origin-timedelta(days=28),
+            task.origin-timedelta(days=48 if demo3 else 56), task.origin-timedelta(days=47 if demo3 else 55), task.origin-timedelta(days=28),
             task.origin-timedelta(days=27), task.origin), 'FROZEN_WINDOWS')
         if index:
             require(task.origin-plan.tasks[index-1].origin == timedelta(days=7), 'FROZEN_ORIGIN_SPACING')

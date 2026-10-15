@@ -53,6 +53,27 @@ def native_frame(data: BenchmarkDataset, origin: date, config):
     return panel, frame
 
 
+class NativeFrameCache:
+    """One explicit per-process cache of exact prefixes, never a global/resume cache."""
+    def __init__(self):
+        self.frames={}
+        self.hits=0
+
+    def get(self,data,origin,config):
+        from app.application.forecast_challenger_serialization import challenger_digest
+        key=challenger_digest('native-prefix-cache',dict(observations=at_origin(data,origin),
+            calendar=calendar_at_origin(data,origin),products=data.products,timezone=data.timezone,
+            config=config.to_dict(),origin=origin))
+        if key not in self.frames: self.frames[key]=native_frame(data,origin,config)
+        else: self.hits+=1
+        return tuple(frame.copy(deep=True) for frame in self.frames[key])
+
+
+def _native_prefix(data,origin,config,guard):
+    cache=getattr(guard,'native_cache',None)
+    return native_frame(data,origin,config) if cache is None else cache.get(data,origin,config)
+
+
 @dataclass(frozen=True)
 class HostRows:
     features: tuple
@@ -92,10 +113,10 @@ def host_rows(data: BenchmarkDataset, origin: date, plan: BenchmarkPlan, guard) 
     return HostRows(tuple(rows), tuple(targets), tuple(keys), excluded)
 
 
-def native_training_table(data: BenchmarkDataset, train_end: date, plan: BenchmarkPlan, config, encoder, guard):
+def build_native_training_table(data: BenchmarkDataset, train_end: date, plan: BenchmarkPlan, config, encoder, guard):
     import pandas as pd
     from shelfcash_forecast.baselines.seasonal_naive import seasonal_naive_predict_rows
-    label_panel, _ = native_frame(data, train_end, config)
+    label_panel, _ = _native_prefix(data, train_end, config,guard)
     labels = {(str(r.product_key),r.date.date()):r for r in label_panel.itertuples(index=False)}
     forbidden = holdout_dates(plan)
     records, excluded = [], 0
@@ -103,7 +124,7 @@ def native_training_table(data: BenchmarkDataset, train_end: date, plan: Benchma
     for ordinal in range(first.toordinal()+27, train_end.toordinal()):
         guard.check()
         origin = date.fromordinal(ordinal)
-        _, frame = native_frame(data, origin, config)
+        _, frame = _native_prefix(data, origin, config,guard)
         frame = encoder.transform(frame)
         anchor = seasonal_naive_predict_rows(frame)
         for i, row in frame.iterrows():
@@ -120,10 +141,18 @@ def native_training_table(data: BenchmarkDataset, train_end: date, plan: Benchma
                 label_quantity=float(label.demand_proxy))
             records.append(record)
     table = pd.DataFrame(records)
+    return table,excluded
+
+
+def native_training_table(data: BenchmarkDataset, train_end: date, plan: BenchmarkPlan, config, encoder, guard):
+    table,excluded=build_native_training_table(data,train_end,plan,config,encoder,guard)
     require(not table.empty and table['target_date'].nunique() >= config.walk_forward_minimum_train_days,
             'NATIVE_TRAINING_DATES_INSUFFICIENT', Failure.DATA_BLOCKED)
     require(set(table['product_key']) == {str(p.product_id) for p in data.products},
             'NATIVE_TRAINING_PRODUCT_MISSING', Failure.DATA_BLOCKED)
+    if plan.harness_version=='causal_benchmark/3':
+        require(all(table.loc[table.product_key==str(p.product_id),'target_date'].nunique()>=config.walk_forward_minimum_train_days
+                    for p in data.products),'NATIVE_PRODUCT_TRAINING_DATES_INSUFFICIENT', Failure.DATA_BLOCKED)
     return table, excluded
 
 
@@ -142,7 +171,7 @@ def postprocess_tasks(data: BenchmarkDataset, start: date, end: date, fit_availa
         if origin < fit_available:
             purge += sum(start <= origin+timedelta(days=h) <= end for h in range(1,8))*len(data.products)
             continue
-        _, frame = native_frame(data, origin, config)
+        _, frame = _native_prefix(data, origin, config,guard)
         frame = encoder.transform(frame)
         frame = correct_quantile_crossing(predict_raw_quantiles(model, frame))
         if point is not None:

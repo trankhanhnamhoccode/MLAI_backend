@@ -19,6 +19,8 @@ def require(condition: bool, code: str, category: Failure = Failure.UNSUPPORTED)
 
 
 def admit_input(value: ChallengerInput) -> None:
+    require(value.mode!='production' or not any(c.source.startswith('benchmark_assumed_calendar:') for c in value.calendar),
+            'BENCHMARK_CALENDAR_PRODUCTION_REJECTED', Failure.DATA_BLOCKED)
     r = value.request
     try:
         zone = ZoneInfo(value.timezone)

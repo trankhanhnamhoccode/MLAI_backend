@@ -13,6 +13,7 @@ from app.application.contracts.forecast_execution import CapturedForecastProduct
 
 ARMS = ('A_be_baseline_causal_v1', 'B_be_lightgbm_causal_v1', 'C_engine_native_reconstruction_v1')
 PROTOCOL_DIGEST = '80bf93aa13a2a47b6ad84f37cb755c54c13b436e268c090e5106933623baa164'
+DEMO_ABC_PROTOCOL_DIGEST = '6adf514b662b9c0169b00e1a12291285870f265b00d28b971fd488301b3d7259'
 
 
 class BenchmarkDataset(Contract):
@@ -56,7 +57,7 @@ class BenchmarkBudget(Contract):
 
 class BenchmarkPlan(Contract):
     schema_version: Version = 1
-    harness_version: Literal['causal_benchmark/1', 'causal_benchmark/2'] = 'causal_benchmark/1'
+    harness_version: Literal['causal_benchmark/1', 'causal_benchmark/2', 'causal_benchmark/3'] = 'causal_benchmark/1'
     protocol_digest: Digest = PROTOCOL_DIGEST
     dataset_digest: Digest
     configuration_ids: tuple[str, ...] = ARMS

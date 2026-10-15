@@ -493,6 +493,160 @@ budget/constraint/policy or search-resource capture. E4 separately freezes the s
 synthetic host operational context for all arms. No historical impact/savings evidence
 exists from E3 or the E4 counterfactual fixtures. E5 is not executed here.
 
+<a id="demo-abc-v3"></a>
+## CURRENT FACT — exposed-demo A/B/C protocol /3
+
+ACCEPTED DECISION (explicit continuation request,15/10/2026): use the same six
+hash-verified workbooks and original five-Product/unit/timezone/POS declarations;
+allow a separate demo-only calendar assumption and justified window/origin changes
+without lowering model support. A/B/admission was reviewed/tested and checkpointed
+at `c4ff88a` before these changes. No main/worktree merge, raw edits, E4, DB/provider,
+SMTP, tuning/repeats, deployment or promotion is part of /3.
+
+Typed `DemoCalendarAssumption` binds raw-bundle revision
+`f79b217d99a47db6133591c6d3e01cd73820ab80849447147043a2ada152b592`, calendar file
+`042e97456d2293b4b37e0fad967f516da3416d215eb8d455dcea1ce497d71bb0`, normalized
+row digest, Store, exact Product scope and timezone. Only valid sourced `closed`
+and `holiday` rows are assumed planned/known before all feature origins. No missing
+date/field is filled, and duplicate/unknown/formula/positive-sales-on-closure conflicts
+reject. Weather and promotion outcomes are excluded. This is explicitly
+DEMO_RETROSPECTIVE_ASSUMPTION, not historical vintage proof. Raw calendar availability
+stays null; synthetic availability exists only in the detached benchmark projection
+with `benchmark_assumed_calendar:<declaration digest>` provenance. Both the projection
+and production-mode challenger input reject benchmark-only use. Production remains locked.
+
+Authority is the user's explicit conversation request; actual receipt time is
+2026-10-15T10:59:04.177294Z. Actor kind is USER_IN_CONVERSATION; an authenticated
+actor identifier/source issuer time is unknown and stays null. These are not fabricated
+historical timestamps. Input/declaration/source envelopes live in ignored
+`runtime/challenger/demo-abc/inputs/57249b1b53513eb9d5ea34304d4e3197271d08ccfa77341634e01efcba0b8f3a`.
+
+### Frozen design and native support before fits
+
+Moving four weekly origins later under original windows cannot retain a complete
+7-day observed horizon by08/07: the first origin must be≤10/06. Exact native code
+gives only76 eligible dates for the least-supported Product there (77 was the old
+optimistic upper bound). By17/06 the minimum is83, still below84. This rules out
+the original four-origin design without inventing later POS.
+
+Protocol /3 retains origins10/06,17/06 validation and24/06,01/07 exposed-demo holdout;
+train ends O−48, point targets O−47..O−28 (20 days), calibration O−27..O (28 days).
+Train/point/calibration do not overlap. Every point task originates after train fit
+availability; every CQR task after point fit availability, with the original purge.
+All14 holdout target dates remain quarantined from fitting in every arm, including
+later origins. No rolling-origin relaxation was needed. Mature prior observations
+may be inference features under the existing policy. Hyperparameters, reconstruction,
+1500 native rounds,84 training dates,28 usable-history warm-up, point30 tasks/7 dates
+and CQR20 samples remain unchanged. /3 additionally checks84 dates per Product.
+No C metrics were available when this design was selected.
+
+Support inspection uses the same `build_native_training_table`, raw-prefix native
+adaptation/features/reconstruction and postprocess task availability/masks as fitting;
+training calls are forbidden during inspection. Warm-up begins with native usable
+observations; earliest eligible feature cutoffs are28/01 or29/01 by Product.
+
+| Origin / partition | Available POS rows | Min train dates/Product old→new | Train end | Point window | CQR window | Min point tasks/dates per horizon | Min CQR tasks/dates per horizon |
+| --- | ---: | ---: | --- | --- | --- | ---: | ---: |
+| 10/06 validation | 805 | 76→84 | 23/04 | 24/04–13/05 | 14/05–10/06 | 68/14 | 108/22 |
+| 17/06 validation | 840 | 83→91 | 30/04 | 01/05–20/05 | 21/05–17/06 | 68/14 | 109/22 |
+| 24/06 holdout | 875 | 90→98 | 07/05 | 08/05–27/05 | 28/05–24/06 | 68/14 | 109/22 |
+| 01/07 holdout | 910 | 97→105 | 14/05 | 15/05–03/06 | 04/06–01/07 | 68/14 | 74/15 |
+
+Point/CQR groups pool Products by horizon as the native methods specify; these
+sample counts do not establish per-Product calibration. Full support envelopes keep
+per-Product eligible train dates/tasks and Product×horizon point/CQR populations,
+stockout/missing exclusions,105 purged tasks per window and245 holdout-quarantined
+CQR tasks at the last origin. Calendar covers every required date at every prefix;
+its historical availability is assumed, not observed. All A/B/C pass this demo-only
+design's admission. No operational workbook is required by the forecast consumer.
+
+The separately frozen [manifest](../../tests/fixtures/forecast_engine/benchmark_manifest_demo_v3.json)
+has digest `6adf514b662b9c0169b00e1a12291285870f265b00d28b971fd488301b3d7259`;
+model configurations must equal E1's original bytes. It is not /1 or /2 evidence.
+Experiment `e8fd6eea4f2528bdd9d83a95b6ffcabc84017228c04f2e347ea5a80ce1524e54`
+freezes the protocol, scope, assumptions, observations/stockout-derived masks,
+source/runtime and budget before fits. Its dataset digest is
+`31ff9987f2f8a41a572cf9248a57d11700a6fb73975c6787b734b7d63f9c4ecb`.
+Inherited /2 staging text saying C remains blocked is retained verbatim as historical
+limitation; the separate /3 assumption resolves only demo admission, not production
+or historical-vintage proof. No old result or declaration is rewritten.
+
+### Actual paired results and trade-offs
+
+A/B/C were all fitted/executed anew on /3:140 outputs each,420 total,4 origins,
+28 distinct target dates,140 distinct Product/day outcomes. The shared primary mask
+has138 known-false outcomes (69 per partition);2 censored lower bounds are diagnostic
+only,0 missing/unknown. Horizon5 has9 primary outcomes per partition, other horizons10.
+No future POS09–15/07 was supplied. No reconstruction is applied twice: A/B use host
+causal_stockout_v1; C starts from raw observations and uses native reconstruction.
+
+| Arm | Partition | MAE ly | WAPE | Bias ly | Pinball P25/P50/P75 | Quantile coverage/width ly | CQR coverage/width ly |
+| --- | --- | ---: | ---: | ---: | --- | --- | --- |
+| A | validation | 7.2029 | 19.1007% | −5.1159 | 2.4130/3.6014/3.2382 | 65.2174%/10.5761 | unavailable |
+| B | validation | 5.0141 | 13.2965% | −0.8818 | 2.1272/2.5071/1.8669 | 43.4783%/8.4501 | unavailable |
+| C | validation | 4.5849 | 12.1584% | −0.2622 | 1.8758/2.2925/2.0021 | 26.0870%/3.3607 | 34.7826%/5.5367 |
+| A | holdout | 8.2174 | 23.2282% | −2.4493 | 3.8406/4.1087/2.9348 | 53.6232%/10.6377 | unavailable |
+| B | holdout | 6.0417 | 17.0781% | +0.9190 | 3.2157/3.0208/2.0553 | 46.3768%/8.4740 | unavailable |
+| C | holdout | 4.2723 | 12.0766% | +1.0246 | 2.0251/2.1362/1.7200 | 26.0870%/3.5796 | 55.0725%/6.4328 |
+
+WAPE is absolute P50 error divided by sum of eligible paired actuals, null at zero
+denominator. Quantile intervals are P25–P75; CQR is separately nominal50% and is
+not those quantiles. Raw crossings across all tasks A0/B1/C24, final0. Primary C
+crossings are11 validation/13 holdout. Validation-only aggregate mean pinball favours
+C (2.0568 vsB2.1670/A3.0842), but /3 explicitly reports trade-offs and selects no
+automatic winner. No holdout tuning, savings, real-accuracy or promotion claim.
+
+| Product / unit ly | Validation MAE B→C | Validation mean pinball B→C | Holdout MAE A/B/C | Holdout WAPE A/B/C |
+| --- | --- | --- | --- | --- |
+| t1 Sinh tố chuối | 4.8981→4.2593 | 2.1233→1.9337 | 8.1429/4.6704/4.4627 | 24.0506/13.7943/13.1810% |
+| t2 Trà sữa trân châu | 7.5205→6.1008 | 3.4487→2.8948 | 10.7143/8.1996/5.3815 | 22.8659/17.4992/11.4848% |
+| t3 Cà phê sữa | 5.7795→5.5280 | 2.3366→2.4569 | 8.4286/7.6308/4.3185 | 20.4152/18.4828/10.4601% |
+| t4 Nước cam | 4.0022→4.1547 | 1.6603→1.7560 | 7.7857/4.8644/3.1758 | 26.6504/16.6508/10.8705% |
+| t5 Matcha latte | 2.7982→2.8512 | 1.2303→1.2211 | 5.8462/4.7511/4.0039 | 23.4568/19.0630/16.0649% |
+
+C improves all five Product holdout MAEs on this sample, but validation regresses
+on t4 MAE/pinball, t3 pinball and t5 MAE. Holdout horizon MAE B→C is
+1:3.963→2.554;2:4.058→4.467;3:4.593→4.821;4:3.319→4.151;
+5:5.066→5.084;6:17.843→4.843;7:3.352→4.067. Much of the aggregate gain is horizon6;
+an aggregate ranking is insufficient. Narrow quantiles under-cover substantially,
+and CQR validation coverage is also below nominal. The retained `summary.json`
+contains full validation/holdout Product/unit/horizon/Product×horizon metrics,
+all three pinballs, bias, widths/coverage and masks; no dimension is omitted there.
+
+One hard-bounded≤300s subprocess batch consumed72.047s cooperative wall,24 boosters,
+8 point/CQR fits and0 solves; no fallback, failure or partial case. Fixed one thread
+and no repeats/search. A compute0.265s; B training6.812s/inference0.265s;
+C training56.155s/inference6.892s (includes native preparation, not just booster fit).
+These are one-run local diagnostics, not production SLA/cost. A per-process explicit
+prefix cache reuses only exact observation/calendar/config prefixes; it is not a
+cross-run cache or a substitute for support. Tests verify detached copies and future
+label invariance. DB/provider imports, network and child launches are forbidden
+after standard-library platform preflight; no forbidden attempt was recorded.
+
+Fresh-process verification replayed all12 checkpoints/4 native artifacts with
+`lightgbm.train` forbidden. Altering140 future labels left35 earlier C predictions,
+captured input and fit identity identical.658 pre-task workbook/runtime files
+retain their exact hashes. There is no new PostgreSQL persistence/browser/E4 claim.
+
+TECHNICAL DEBT — generic replay normalizes the frozen default resource budget from
+JSON integer300 to float300.0 and therefore rejects the identity. The separate
+`verify_demo_abc` validates the entire plan first, restores only the exact integral
+default via the same typed contract, requires canonical-byte equality, then checks
+original source/runtime/fit identities and replays. It does not rewrite the plan,
+reset budget or retrain. Generic `run_demo_abc replay` is not the verified path;
+the runbook uses the dedicated verifier. Freeze/run sources remain pinned to actual
+execution. Correct this generic representation issue before another protocol run.
+
+Outputs remain under `runtime/challenger/benchmarks/experiments/<experiment above>`:
+`demo-freeze.json`, plan/dataset/environment, resource ledgers, per-origin A/B/C
+checkpoints, predictions, full summary, offline receipt and `verify-<digest>.json`.
+Artifacts and fit/point/calibration tables retain separate content identities.
+The scope is VERIFIED offline computation/replay, EXPLORATORY exposed demo evaluation.
+Real source vintages/unseen independent demand, more origins/diverse operational
+periods and later operational acceptance remain missing. Production/promotion LOCKED,
+E5 NOT_STARTED; all implementation after `c4ff88a` stays WIP for review.
+Commands/recovery: [runbook](../runbooks/FULL_TEST_FLOW.md#challenger-demo-abc).
+
 <a id="demo-baseline-ab"></a>
 ## CURRENT FACT — baseline demo A/B after main readiness merge
 

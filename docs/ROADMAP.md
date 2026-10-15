@@ -23,9 +23,15 @@ và historical operational snapshots chặn real quality/impact claims. Đã d�
 bước E5/serving activation vẫn chưa được mở. CURRENT FACT: A/B demo hồi cứu manifest/2
 đã chạy và replay8 checkpoints VERIFIED trên baseline đến08/07, với declarations
 được duyệt theo dataset hash. Đây là EXPLORATORY A/B, không phải bằng chứng C.
-C vẫn BLOCKED (calendar vintages/native train minimum), E4 bộ mới BLOCKED
-(operational facts/unsupported constraints); không có POS tuần09–15/07 để score.
+C tại /2 vẫn BLOCKED (calendar vintages/native train minimum). CURRENT FACT /3:
+user-authorized calendar assumption và point window20 ngày đủ native support84+,
+giữ calibration28 và strict holdout quarantine. A/B/C đã chạy mới cùng scope/masks,
+420 forecasts và exact replay12 checkpoints VERIFIED, exploratory only; không chọn
+winner từ aggregate khi Product/horizon regressions còn hiện diện. /2 và E3/E4 cũ
+nguyên bytes. E4 bộ mới vẫn BLOCKED và không chạy; không có POS09–15/07 để score.
 Exact selection/metrics tại [canonical integration](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab).
+Current /3 support/results/limits tại [demo A/B/C](features/FORECAST_ENGINE_INTEGRATION.md#demo-abc-v3);
+checkpoint A/B/admission `c4ff88a`, implementation /3 giữ WIP; E5/promotion NOT_STARTED.
 
 ## CURRENT FACT / PROPOSAL — data readiness D1–D5
 

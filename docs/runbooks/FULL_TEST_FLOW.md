@@ -1,5 +1,79 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="challenger-demo-abc"></a>
+## CURRENT FACT — offline demo A/B/C protocol /3
+
+[Canonical design/results](../features/FORECAST_ENGINE_INTEGRATION.md#demo-abc-v3)
+owns the typed calendar assumption, native support matrix, frozen windows/model
+settings, Product/horizon trade-offs and limits. A/B/admission checkpoint is `c4ff88a`;
+/3 implementation remains reviewable WIP. Use only the challenger's pinned venv.
+Do not start DB/app/provider/SMTP/Planning/E4 or change another worktree.
+
+```powershell
+# Read six pinned source hashes, retain a separate typed calendar declaration,
+# inspect exact native tables with all booster training forbidden (zero fits).
+.venv/Scripts/python.exe -m scripts.prepare_demo_abc
+# Freeze /3 before fits. This is a separate experiment from A/B /2 and E3/E4 /1.
+.venv/Scripts/python.exe -m scripts.run_demo_abc freeze
+# One first execution only; completed locally, do not rerun for verification.
+.venv/Scripts/python.exe -m scripts.run_demo_abc run
+# Existing completed run: fresh-process replay of all12 checkpoints and4 native
+# artifacts, actual earlier-output invariance under changed future labels, no fits.
+.venv/Scripts/python.exe -m scripts.verify_demo_abc --experiment e8fd6eea4f2528bdd9d83a95b6ffcabc84017228c04f2e347ea5a80ce1524e54
+```
+
+Expected support: SUPPORT_VERIFIED_NO_FITS, native min train dates/Product84/91/98/105;
+point minimum68 tasks/14 dates per horizon and CQR108/109/109/74 tasks. All original
+model/support minima remain; no future POS is synthesized. Declaration actor is the
+conversation user, identifier unknown/null; actual receipt time is separate from
+synthetic assumed availability. Only sourced closed/holiday fields are assumed;
+weather/promotion remain excluded. All-unknown/duplicate/formula/calendar-sale
+conflicts and source/scope/hash drift reject. Projection/native admission refuse
+production use. Six files are pinned for provenance, not forecast requirements.
+
+Freeze expected identity is `e8fd6eea4f2528bdd9d83a95b6ffcabc84017228c04f2e347ea5a80ce1524e54`.
+Inputs/declaration/support are in
+`runtime/challenger/demo-abc/inputs/57249b1b53513eb9d5ea34304d4e3197271d08ccfa77341634e01efcba0b8f3a`.
+Outputs are in `runtime/challenger/benchmarks/experiments/<identity>`; fit tables,
+raw stages, boosters and point/CQR artifacts retain distinct content identities.
+Expected run status EXPLORATORY,140 outputs per arm,24 booster fits/8 postprocess,
+no failures/fallback. Actual cooperative wall72.047s. Parent deadline300s includes
+startup; the child guard forbids DB/provider imports, network and grandchildren
+after standard-library platform preflight. No additional trials/repeats or batch.
+
+`bounded-batch-start.json` and resource ledgers must never be removed/reset to
+resume. A second run rejects BATCH_ALREADY_ATTEMPTED. On hard timeout keep PARTIAL
+cases/receipts and identify missing cases; do not chain another300s batch. Source,
+runtime, dataset or declaration mismatch requires review/new protocol identity,
+not an overwrite of old outputs. Support inspection does not fit models and does
+not consume or restart the single forecast batch.
+
+Use the dedicated verifier above. Generic `run_demo_abc replay` exposed a numeric
+representation bug: integral default300 becomes float300.0 on generic plan restore,
+so the experiment identity rejects. The verifier validates the contract, preserves
+only that exact frozen default, requires canonical JSON byte equality and verifies
+source/runtime/artifact checksums before exact replay. No model_construct/copy
+validation bypass, source-hash exception, plan rewrite or retraining is used.
+Expected REPLAY_AND_FUTURE_LABEL_INVARIANCE_VERIFIED:12 checkpoints,4 native artifacts,
+140 altered future labels,35 identical earlier C predictions,0 booster fits and
+no forbidden IO. Generic loader repair is retained technical debt for a later run.
+
+Focused regression commands:
+
+```powershell
+.venv/Scripts/python.exe -m pytest tests/unit/test_demo_calendar_abc.py tests/unit/test_demo_benchmark_v2.py tests/unit/test_forecast_benchmark.py tests/unit/test_forecast_challenger.py tests/unit/test_forecast_engine_protocol.py -q
+.venv/Scripts/python.exe -m pytest tests/unit/test_demo_calendar_abc.py tests/unit/test_demo_workbook_admission.py -q
+git diff --check
+```
+
+Coverage: typed assumption/exact fields/hash/scope, missing/conflicting/unknown/formula
+calendar and production rejection, exact windows/config freeze, unchanged84-date
+gate per Product, native cache copies/future-label invariance, budget round-trip
+identity, adapter/artifact guards and prior A/B admission. Run only affected tests
+after a small verification repair. This is not full pytest, DB integration or a
+public API/persistence acceptance claim. No public DTO/routes changed. Preserve
+all658 pre-task runtime/workbook file hashes; no customer rows/model bytes enter Git.
+
 <a id="challenger-demo-ab"></a>
 ## CURRENT FACT — offline challenger A/B demo verification
 

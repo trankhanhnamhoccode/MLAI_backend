@@ -16,10 +16,11 @@ class BudgetExceeded(RuntimeError):
 
 
 class FitBudget:
-    def __init__(self, budget: BenchmarkBudget, *, spent_seconds=0, boosters=0, postprocess=0):
+    def __init__(self, budget: BenchmarkBudget, *, spent_seconds=0, boosters=0, postprocess=0,native_cache=None):
         self.budget, self.boosters, self.postprocess = budget, boosters, postprocess
         self.started = monotonic()
         self.spent_seconds = float(spent_seconds)
+        self.native_cache = native_cache
 
     def check(self):
         if monotonic()-self.started+self.spent_seconds >= self.budget.wall_seconds:

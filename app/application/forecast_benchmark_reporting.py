@@ -54,6 +54,8 @@ def summary(data: BenchmarkDataset, plan: BenchmarkPlan, checkpoints: tuple[ArmC
                               r.partition=='validation' and r.mask=='primary_known_false'}) for a in arms}
     if complete and all(v is not None for v in losses.values()) and all(n>=2 for n in validation_origins.values()):
         selected=min(arms,key=lambda a:(losses[a],arms.index(a)))
+    aggregate_leader=selected
+    if plan.harness_version=='causal_benchmark/3': selected=None
     primary_counts={p:aggregate[ARMS[0],p]['distinct_outcomes'] for p in ('validation','holdout')}
     origin_counts={p:len({r.origin for r in paired if r.arm==ARMS[0] and r.partition==p and r.mask=='primary_known_false'})
                    for p in ('validation','holdout')}
@@ -62,9 +64,9 @@ def summary(data: BenchmarkDataset, plan: BenchmarkPlan, checkpoints: tuple[ArmC
     improvement=ARMS[2] in arms and all(aggregate[ARMS[2],p]['mean_pinball'] is not None and all(
         aggregate[ARMS[2],p]['mean_pinball'] < aggregate[a,p]['mean_pinball'] for a in arms[:2])
         for p in ('validation','holdout')) if numeric_gate else False
-    return {'schema_version':2 if plan.harness_version=='causal_benchmark/2' else 1,'comparison_arms':arms,
+    return {'schema_version':3 if plan.harness_version=='causal_benchmark/3' else 2 if plan.harness_version=='causal_benchmark/2' else 1,'comparison_arms':arms,
         'challenger_evidence':ARMS[2] in arms,
-        'wape_denominator_policy':'sum eligible observed actual quantities on paired mask; null at zero denominator','status':'EXPLORATORY' if plan.harness_version=='causal_benchmark/2' and complete else 'SYNTHETIC_CORRECTNESS' if complete and data.classification=='SYNTHETIC'
+        'wape_denominator_policy':'sum eligible observed actual quantities on paired mask; null at zero denominator','status':'EXPLORATORY' if plan.harness_version!='causal_benchmark/1' and complete else 'SYNTHETIC_CORRECTNESS' if complete and data.classification=='SYNTHETIC'
             else 'EXPLORATORY' if complete else 'INCOMPLETE',
         'real_benchmark':'REAL_BENCHMARK_BLOCKED' if data.classification=='SYNTHETIC' else 'EXPLORATORY' if data.classification=='REAL_EXPOSED' else 'EVALUATED_UNSEEN_NOT_PROMOTED',
         'population_tasks_per_arm':population,'output_coverage':{a:len(keys[a]) for a in arms},
@@ -74,6 +76,8 @@ def summary(data: BenchmarkDataset, plan: BenchmarkPlan, checkpoints: tuple[ArmC
         'masks':dict(Counter(r.mask for r in paired if r.arm==ARMS[0])),
         'exclusions':[{'arm':c.arm,'origin':c.origin,'status':c.status,'reason':c.reason} for c in checkpoints if c.status!='COMPLETED'],
         'selected_by_validation_only':selected,'primary_distinct_outcomes':primary_counts,
+        'validation_aggregate_leader':aggregate_leader,
+        'selection_policy':'REPORT_PRODUCT_TRADEOFFS_NO_AUTOMATIC_WINNER' if plan.harness_version=='causal_benchmark/3' else 'VALIDATION_MEAN_PINBALL',
         'primary_origin_counts':origin_counts,
         'validation_origins_with_primary_targets':validation_origins,
         'raw_crossing_tasks':{a:sum(r.raw_crossing for r in rows if r.arm==a) for a in arms},

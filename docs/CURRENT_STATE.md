@@ -35,11 +35,18 @@ CURRENT FACT — challenger đã merge main readiness `869eaec` tại `1c48162`.
 Manifest `causal_benchmark/2` chạy riêng A/B trên baseline demo đến08/07, với ba
 declarations được người dùng chấp thuận và pin raw-bundle hash. A/B offline outputs
 và fresh-process replay8 checkpoints VERIFIED; kết quả EXPLORATORY, không phải real
-accuracy/C evidence. C BLOCKED bởi historical calendar vintages và native training
-minimum tại origin đầu; E4 trên bộ mới BLOCKED bởi operational facts/constraints.
-Canonical [admission/results](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab)
+accuracy/C evidence. A/B/admission đã checkpoint `c4ff88a` trước protocol mới.
+CURRENT FACT /3: user-approved hash-bound calendar DEMO_RETROSPECTIVE_ASSUMPTION
+và windows train O−48/point20/calibration28 giữ strict support/quarantine. A/B/C đã
+chạy cùng experiment mới,420 forecasts,24 boosters/8 postprocess fits,~72s; fresh-process
+replay12 checkpoints/4 native artifacts và future-label invariance VERIFIED,0 retrain.
+C có aggregate improvement nhưng có Product/horizon regressions và interval limits;
+EXPLORATORY, no automatic winner, promotion LOCKED. E4 trên bộ mới vẫn BLOCKED;
+không chạy Planning/E4. Canonical [current /3 evidence](features/FORECAST_ENGINE_INTEGRATION.md#demo-abc-v3)
+sở hữu assumptions/windows/trade-offs và generic replay numeric-default debt.
+Canonical [original A/B evidence](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab)
 sở hữu exact selection, origins, metrics và limits; [runbook](runbooks/FULL_TEST_FLOW.md#challenger-demo-ab)
-sở hữu commands. Code/docs sau checkpoint/merge giữ WIP để review; không promote.
+sở hữu commands. Implementation sau checkpoint `c4ff88a` giữ WIP để review; không promote.
 
 ## CURRENT FACT — Data Readiness D1–D5 tích hợp main local
 

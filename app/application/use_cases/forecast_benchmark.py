@@ -6,7 +6,7 @@ import hashlib
 from pathlib import Path
 from time import monotonic
 
-from app.application.contracts.forecast_benchmark import ARMS, PROTOCOL_DIGEST, ArmCheckpoint, BenchmarkDataset, BenchmarkPlan
+from app.application.contracts.forecast_benchmark import ARMS, PROTOCOL_DIGEST, DEMO_ABC_PROTOCOL_DIGEST, ArmCheckpoint, BenchmarkDataset, BenchmarkPlan
 from app.application.contracts.forecast_challenger import ChallengerError
 from app.application.forecast_benchmark_admission import admit_plan
 from app.application.forecast_benchmark_reporting import summary, attach_targets
@@ -18,13 +18,19 @@ from app.infrastructure.forecast_benchmark_storage import BenchmarkStorage, FitB
 from app.infrastructure.forecast_benchmark_training import fit_arm, fit_identity
 
 
-def load_protocol(root:Path):
+def load_protocol(root:Path,plan:BenchmarkPlan|None=None):
     # Reuse the existing E1 offline validator without changing its frozen contract.
     from scripts.forecast_benchmark_protocol import validate_manifest, canonical_digest
     payload=json.loads((root/'tests/fixtures/forecast_engine/benchmark_manifest.json').read_bytes())
     validate_manifest(payload)
     if canonical_digest(payload)!=PROTOCOL_DIGEST:
         raise ValueError('FROZEN_PROTOCOL_DIGEST_MISMATCH')
+    if plan is not None and plan.harness_version=='causal_benchmark/3':
+        revised=json.loads((root/'tests/fixtures/forecast_engine/benchmark_manifest_demo_v3.json').read_bytes())
+        if (canonical_digest(revised)!=DEMO_ABC_PROTOCOL_DIGEST or revised['base_protocol_digest']!=PROTOCOL_DIGEST or
+            revised['arm_configuration']!=payload['arm_configuration'] or revised['tasks']!=[t.model_dump(mode='json') for t in plan.tasks]):
+            raise ValueError('FROZEN_DEMO_PROTOCOL_CHANGED')
+        return revised
     return payload
 
 
@@ -36,9 +42,9 @@ class ForecastBenchmark:
 
     def freeze(self,data:BenchmarkDataset,plan:BenchmarkPlan):
         admit_plan(data,plan)
-        protocol=load_protocol(self.root)
+        protocol=load_protocol(self.root,plan)
         runtime=current_runtime()
-        if plan.harness_version=='causal_benchmark/2':
+        if plan.harness_version!='causal_benchmark/1':
             runtime_identity=dict(runtime=runtime,host_source=host_source_identity())
         else: runtime_identity=runtime
         identity=challenger_digest('experiment',{'plan':plan,'runtime':runtime_identity,'training_source':training_source_identity()})
@@ -95,7 +101,9 @@ class ForecastBenchmark:
             spent=max(spent,float(ledger['spent_seconds']))
             booster_count=max(booster_count,ledger['boosters'])
             post_count=max(post_count,ledger['postprocess'])
-        guard=FitBudget(plan.budget,spent_seconds=spent,boosters=booster_count,postprocess=post_count)
+        from app.infrastructure.forecast_benchmark_features import NativeFrameCache
+        guard=FitBudget(plan.budget,spent_seconds=spent,boosters=booster_count,postprocess=post_count,
+            native_cache=NativeFrameCache() if plan.harness_version=='causal_benchmark/3' else None)
         tasks=plan.tasks[:1] if smoke else plan.tasks
         budget_exceeded=False
         for task in tasks:
