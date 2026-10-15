@@ -4,6 +4,7 @@ import argparse
 import base64
 import hashlib
 import json
+import logging
 import os
 from pathlib import Path
 import secrets
@@ -86,7 +87,14 @@ def guard(connection,db,role):
 def save(name,value):
     PRIVATE.mkdir(parents=True,exist_ok=True)
     target=PRIVATE/name;temporary=target.with_suffix('.tmp')
-    temporary.write_text(json.dumps(value,indent=2),encoding='utf-8');temporary.replace(target)
+    temporary.write_text(json.dumps(value,indent=2),encoding='utf-8')
+    # Windows readers/antivirus can briefly deny atomic replacement.
+    for attempt in range(6):
+        try:
+            temporary.replace(target);return
+        except PermissionError:
+            if attempt==5:raise
+            time.sleep(.05)
 
 
 def prepare_secrets():
@@ -289,6 +297,20 @@ def status():
     print(json.dumps(result));return result
 
 
+def watch_server(server,finished,run_id,app,local):
+    while not finished.wait(.5):
+        # Shutdown must remain available even when observations cannot be written.
+        if (PRIVATE/'stop.json').exists() and json.loads((PRIVATE/'stop.json').read_text())['run_id']==run_id:
+            server.should_exit=True;return
+        if server.started:
+            names={t.name for t in threading.enumerate() if t.is_alive()}
+            try:
+                save('workers.json',dict(run_id=run_id,observed_at=time.time(),database=DB,profile_digest=profile_digest(app,local),
+                    threads={name:name in names for name in ('shelfcash-import','shelfcash-planning','shelfcash-pdf-export','shelfcash-notifications','email-verification')}))
+            except OSError:
+                logging.getLogger(__name__).warning('Worker observation write failed; shutdown watcher remains active')
+
+
 def serve(run_id):
     import uvicorn
     from app.main import create_app
@@ -296,15 +318,7 @@ def serve(run_id):
     server=uvicorn.Server(uvicorn.Config(application,host='127.0.0.1',port=local.local_port,
         ssl_keyfile=str(PRIVATE/'localhost.key'),ssl_certfile=str(PRIVATE/'localhost.pem'),access_log=False))
     finished=threading.Event()
-    def watch():
-        while not finished.wait(.5):
-            if server.started:
-                names={t.name for t in threading.enumerate() if t.is_alive()}
-                save('workers.json',dict(run_id=run_id,observed_at=time.time(),database=DB,profile_digest=profile_digest(app,local),
-                    threads={name:name in names for name in ('shelfcash-import','shelfcash-planning','shelfcash-pdf-export','shelfcash-notifications','email-verification')}))
-            if (PRIVATE/'stop.json').exists() and json.loads((PRIVATE/'stop.json').read_text())['run_id']==run_id:
-                server.should_exit=True;return
-    thread=threading.Thread(target=watch,daemon=True);thread.start()
+    thread=threading.Thread(target=watch_server,args=(server,finished,run_id,app,local),daemon=True);thread.start()
     try:server.run()
     finally:
         finished.set();thread.join(timeout=2);save('exit.json',dict(run_id=run_id,stopped=True))

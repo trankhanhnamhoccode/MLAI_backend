@@ -53,6 +53,14 @@ fixtures và recovery. Database `shelfcash_local` khác `shelfcash_local_test`; 
 chỉ dedicated test DB, chạy tuần tự. Không reset demo/development; không full-suite/
 forecast accuracy claim từ targeted synthetic tests.
 
+## Tài khoản giả để test local
+
+CURRENT FACT: có CLI tạo/reuse Owner, Store trống và một Staff với quyền ban đầu
+`menu.read`. Xem [quy trình chạy, lấy mật khẩu và recovery](docs/runbooks/FULL_TEST_FLOW.md#local-test-accounts).
+Chạy seed khi BE đã stop để tránh tranh invitation delivery với email worker.
+Start yêu cầu Git sạch/đã commit; seed không cần BE đang chạy. Các file đăng nhập
+nằm trong ignored `runtime/local/private`, được giữ qua stop/start.
+
 ## Tài liệu và contract
 
 - [Trạng thái](docs/CURRENT_STATE.md), [roadmap](docs/ROADMAP.md), [engineering rules](AGENTS.md).

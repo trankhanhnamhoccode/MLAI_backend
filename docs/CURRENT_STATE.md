@@ -1,5 +1,28 @@
 # Current state
 
+## CURRENT FACT — local shutdown watcher
+
+Local runtime retries transient Windows PermissionError during atomic status-file
+replacement. Persistent observation-write errors are logged without terminating
+the shutdown watcher; matching run-scoped stop requests are checked before worker
+observations. Stale observations still fail status checks. This repairs the
+observed workers.tmp→workers.json denial that previously disabled graceful stop;
+no API, DB, business-worker or clean-source start policy changes.
+
+## CURRENT FACT — optional synthetic local Owner/Store/Staff
+
+User-requested `python -m scripts.seed_local_owner` creates/reuses one synthetic
+credential-ready Owner and empty Store on guarded `shelfcash_local` only. Existing
+assisted provisioning/SETUP/auth application boundaries retain audit and current
+authorization; no public API/schema changes, SMTP, credential reset or business
+facts. Private login file is retained under ignored `runtime/local/private`.
+Customer setup remains empty unless this command is explicitly run. Usage/recovery
+and coverage belong to [local runbook](runbooks/FULL_TEST_FLOW.md#customer-self-service).
+`python -m scripts.seed_local_staff` adds/reuses `staff.local@example.test` in that
+same Store through Owner invitation and authenticated synthetic holder acceptance,
+initial grant `menu.read` only. Targeted private delivery touches only this
+invitation; replay preserves later grant changes/revocation and credentials.
+
 ## CURRENT FACT — Data Readiness D1–D5 tích hợp main local
 
 Isolated `backend-data-readiness` / `feat/data-readiness` từ main052cddee, D1 committed

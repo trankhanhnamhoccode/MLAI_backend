@@ -360,6 +360,91 @@ hoặc bắt khách dùng assisted provisioning/accounts.json.
 EMAIL_VERIFY consumer/callback và create Store flow được xác nhận. Backend API/fake
 delivery chạy được không chứng minh browser/email workflow thật đã chạy.
 
+<a id="local-test-accounts"></a>
+### Owner/Store/Staff giả cho kiểm thử local (tùy chọn)
+
+CURRENT FACT: sau khi setup/migrate local bên dưới, chạy từ `backend`:
+
+DB PostgreSQL cần đang chạy, `.env` local hợp lệ và schema đúng head. Seed gọi
+application trực tiếp nên không cần HTTP server. Dừng BE trước seed Staff để email
+worker không nhận invitation trước private delivery; giữ nguyên encryption key
+`AUTH_DELIVERY_ENCRYPTION_KEY` do `local_runtime secrets` chuẩn bị.
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.seed_local_owner
+Get-Content .\runtime\local\private\test-owner.json
+```
+
+Thêm một nhân viên giả vào cùng Store:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.seed_local_staff
+Get-Content .\runtime\local\private\test-staff.json
+```
+
+Staff email `staff.local@example.test`, display name `Local Test Staff`; initial
+grant duy nhất `menu.read`. Owner có thể cấp thêm qua quản lý quyền hiện có.
+Script dùng account provisioning/credential SETUP, Owner invitation, targeted
+private delivery và authenticated synthetic Staff acceptance; không SQL cấp quyền
+hay xử lý queued email khác. Chạy lại không tạo thêm Store/account/membership,
+không reset password, regrant hoặc reactivate. Token phục hồi invitation nằm trong
+private `test-staff-invitation-<UUID>.json`; giữ file khi setup chưa hoàn tất.
+Nếu invocation bị ngắt sau delivery claim nhưng trước lưu token, hoặc invitation
+expired/revoked/đã bị worker khác nhận, cần xử lý qua Owner/recovery hiện có; không
+tự resend/reissue với outcome chưa rõ. Không chạy song song các lệnh seed này.
+
+Đăng nhập FE bằng email/password trong file: `owner.local@example.test`, Store
+`Local Test Store` (Asia/Ho_Chi_Minh, VND). Password random riêng được lưu trước DB
+mutation; script không in password/token. Giữ file để dùng lại; không commit/chia sẻ.
+Chạy lại dùng cùng account/Store và password, không reset credential hoặc khôi phục
+quyền đã revoke. Nếu setup bị ngắt, chạy lại để hoàn thành SETUP chưa xong. Nếu mất
+file sau khi account đã usable, script không tự reset; cần account recovery riêng.
+
+Đây là synthetic fixture được user yêu cầu rõ, chỉ CLI sau exact development/local
+URL, DB marker, limited role và Alembic-head guards; không thay onboarding khách.
+Dùng application assisted provisioning/audit + private in-memory SETUP delivery +
+credential completion/login/current Store authorization/logout. Synthetic operator
+chỉ tồn tại trong invocation, không sửa `.env`, không thêm public endpoint, SMTP
+hoặc fake session. Không menu/stock/sales/budget/completeness/default planning seed.
+Các tính năng cần business facts vẫn cần import/khai báo dữ liệu của mình.
+
+Quy trình test thường dùng, sau khi setup lần đầu và source đã commit:
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend
+.\.venv\Scripts\python.exe -m scripts.local_runtime stop
+if ($LASTEXITCODE -ne 0) { throw 'Stop failed; inspect server before continuing' }
+.\.venv\Scripts\python.exe -m scripts.seed_local_owner
+if ($LASTEXITCODE -ne 0) { throw 'Owner setup failed; preserve private files' }
+.\.venv\Scripts\python.exe -m scripts.seed_local_staff
+if ($LASTEXITCODE -ne 0) { throw 'Staff setup failed; preserve private files' }
+.\.venv\Scripts\python.exe -m scripts.local_runtime start
+if ($LASTEXITCODE -ne 0) { throw 'Start failed; check Git status and private server.log' }
+.\.venv\Scripts\python.exe -m scripts.local_runtime status
+# Đăng nhập FE bằng owner hoặc staff; FE chạy riêng tại https://localhost:5173.
+# Khi test xong:
+.\.venv\Scripts\python.exe -m scripts.local_runtime stop
+```
+
+`seed_local_staff` tự gọi seed/reuse Owner nên có thể chạy riêng nếu muốn tạo cả
+hai tài khoản. Kiểm tra state phải là `server=running` sau start và `server=stopped`
+sau stop; health HTTP200 chỉ là liveness. Stop không dừng PostgreSQL hoặc FE.
+Nếu start báo `Start requires clean committed source`, review/commit đúng changes
+cần chạy rồi thử lại; không reset/clean để bỏ WIP. Log BE ở
+`runtime/local/private/server.log`; lỗi seed được rút gọn để tránh lộ credential.
+Không xóa file private hoặc đổi email trong file để tạo lại account đang tồn tại.
+
+Verification (dedicated test DB, không development DB):
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/unit/test_seed_local_owner.py tests/unit/test_local_runtime.py tests/unit/test_local_runtime_shutdown.py tests/integration/test_seed_local_owner.py tests/integration/test_seed_local_staff.py -q --tb=short --show-capture=no
+```
+
+Integration chỉ dùng dedicated test DB từ test fixture; assertions qua fresh Session
+kiểm credential/membership/audit, no duplicate, interruption recovery và revocation.
+Không xóa fixture bằng SQL/reset development chỉ để rollback script; giữ audit và
+dữ liệu test đã nhập. Chưa kiểm chứng browser FE bằng script này.
+
 ### A. Checkout sạch và setup lần đầu
 
 Cần Git, Python3.11+, Docker Desktop Linux engine và PowerShell. `tzdata` được khai
@@ -447,6 +532,20 @@ stop/start. Status báo source SHA/root/configuration_matches, worker observatio
 email capabilities; health chỉ liveness. BE launcher không sửa/chạy/dừng FE.
 
 ### B. Chạy hằng ngày
+
+CURRENT FACT: nếu log có `PermissionError` khi replace `workers.tmp` →
+`workers.json`, launcher mới retry ngắn/có giới hạn và giữ watcher hoạt động khi
+ghi observation vẫn lỗi. Watcher kiểm stop đúng run trước ghi observations; status
+vẫn từ chối observation stale. Process đã chạy source cũ cần dừng trước để dùng fix.
+Không xóa manifest/private files, reset DB hoặc kill mọi Python process để chữa.
+Nếu watcher cũ đã chết, xác minh manifest PID/birth/run_id, listener child/command
+line và job state trước khi operator buộc dừng đúng process; forced termination
+không chứng minh graceful shutdown và không tự tạo `exit.json` giả.
+
+Start giữ yêu cầu clean committed source. Kiểm `git status --short` và review/commit
+đúng phần thay đổi cần chạy trước restart; không discard WIP để vượt guard.
+Coverage cho fix: `python -m pytest tests/unit/test_local_runtime.py
+tests/unit/test_local_runtime_shutdown.py tests/unit/test_seed_local_owner.py -q`.
 
 ```powershell
 Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend

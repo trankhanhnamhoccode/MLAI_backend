@@ -1,5 +1,17 @@
 # Remaining work and acceptance gates
 
+CURRENT FACT: local launcher shutdown watcher tolerates Windows observation-file
+replacement failure; targeted lifecycle tooling regressions cover bounded retry,
+persistent denial and run-scoped stop after write failure. Native restart/browser
+acceptance after this repair remains separate; clean-source start guard retained.
+
+CURRENT FACT: optional user-requested synthetic local Owner/Store CLI is available
+as `python -m scripts.seed_local_owner`; repeatable login-ready fixture without
+business seed or customer onboarding changes. See [local setup/recovery](runbooks/FULL_TEST_FLOW.md#customer-self-service).
+`python -m scripts.seed_local_staff` adds one synthetic Staff through invitation
+consent to that Store, initial `menu.read`; current grants remain Owner-managed.
+Browser FE and business-feature acceptance remain separate gates.
+
 ## CURRENT FACT / PROPOSAL — data readiness D1–D5
 
 ACCEPTED DECISION: readiness theo facts/semantics của action/scope, không yêu cầu
