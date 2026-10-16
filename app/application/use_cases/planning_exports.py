@@ -245,7 +245,9 @@ class PlanningExports:
                 report=document(record,view,self._option(view,claimed.receipt.option_id));s.commit()
             # No DB session or authorization lock during expensive rendering/IO.
             if not self.renderer.available:raise ConfigurationError('SERVICE_UNAVAILABLE',503)
-            data=self.renderer.render(report)
+            if claimed.receipt.render_version=='planning-pdf/1':data=self.renderer.render_legacy(report)
+            elif claimed.receipt.render_version=='planning-pdf/2':data=self.renderer.render_v2(report)
+            else:data=self.renderer.render(report)
             if perf_counter()-started>120:raise RuntimeError('Bounded PDF render deadline exceeded')
             prepared=self.artifacts.prepare(claimed.export_id,data)
             def publish(s,old):

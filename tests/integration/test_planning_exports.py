@@ -55,7 +55,9 @@ def test_real_pdf_winner_job_replay_download_and_font_proof(exports):
     from pypdf import PdfReader
     reader=PdfReader(BytesIO(pdf.content));assert len(reader.pages)>1
     text='\n'.join(p.extract_text() for p in reader.pages)
-    for phrase in ('Nguyên liệu cà phê','Báo cáo phương án','Phụ lục đầy đủ','exact','UNPROVEN',str(run.run_id),run.result_digest):assert phrase in text,phrase
+    for phrase in ('Nguyên liệu cà phê','Kế hoạch mua hàng','Danh sách mua','Khả năng đáp ứng','CAPTURED_FINITE_DOMAIN_ONLY',str(run.run_id),run.result_digest):assert phrase in ' '.join(text.split()),phrase
+    assert 'Phụ lục đầy đủ' not in text and 'daily_balances[' not in text
+    assert receipt['render_version']=='planning-pdf/3'
     fonts=[font.get_object() for p in reader.pages for font in p['/Resources']['/Font'].values()]
     assert any('/FontDescriptor' in font and '/FontFile2' in font['/FontDescriptor'].get_object() for font in fonts)
     assert export(c,location,key=key).json()['data']==receipt
@@ -84,7 +86,7 @@ def test_real_pdf_winner_job_replay_download_and_font_proof(exports):
     assert svc.run_one().status=='completed'
     assert c[0][5].get(location+'/exports/'+again.json()['data']['export_id']).content==pdf.content
     assert c[0][5].get(location.replace(str(run.run_id),str(uuid4()))+'/exports/'+receipt['export_id']).status_code==404
-    out=Path('runtime/s410');out.mkdir(parents=True,exist_ok=True)
+    out=Path('runtime/p11-pdf/http-pg');out.mkdir(parents=True,exist_ok=True)
     (out/'planning_sample_vi.pdf').write_bytes(pdf.content)
     (out/'n10_actual.json').write_text(response.text,encoding='utf-8')
     (out/'j01_pdf_actual.json').write_text(polled.text,encoding='utf-8')
@@ -113,3 +115,99 @@ def test_export_no_winner_explicit_ineligible_and_not_ready_validation(exports):
     from io import BytesIO
     text='\n'.join(p.extract_text() for p in PdfReader(BytesIO(result.content)).pages)
     assert 'PHƯƠNG ÁN KHÔNG ĐỦ ĐIỀU KIỆN' in text and 'KHÔNG PHẢI KHUYẾN NGHỊ' in text
+
+
+@pytest.mark.parametrize('old_version', ['planning-pdf/1', 'planning-pdf/2'])
+def test_old_version_receipt_replay_retry_and_bytes_survive_upgrade(exports, monkeypatch, old_version):
+    """Emulate /1 or /2 acceptance, then execute /3 code against the old job."""
+    from app.application.use_cases import planning_exports as module
+    from app.application.contracts.planning_export import ExportAccepted
+    from app.application.use_cases.planning_exports import document
+    from app.repositories.planning import PlanningRepository
+    from io import BytesIO
+    from pypdf import PdfReader
+    flow, svc = exports
+    c, _, _, worker = flow
+    submitted = submit(c)
+    run = worker.run_one()
+    assert run.status == 'completed'
+    location = submitted.headers['Location']
+    key = str(uuid4())
+    with monkeypatch.context() as old:
+        old.setattr(module, 'ExportAccepted', lambda **fields: ExportAccepted(**fields, render_version=old_version))
+        accepted = export(c, location, key=key)
+    assert accepted.status_code == 202
+    receipt = accepted.json()['data']
+    assert receipt['render_version'] == old_version
+    # Fresh session reads exactly the retained document used by the old renderer.
+    with Session(c[0][1]) as session:
+        record, view = svc.public.retained.read(PlanningRepository(session).get(c[1].store_id, run.run_id))
+        report = document(record, view, svc._option(view, receipt['option_id']))
+    expected = (svc.renderer.render_legacy(report) if old_version == 'planning-pdf/1' else svc.renderer.render_v2(report))
+    ident = UUID(receipt['export_id'])
+    claimed = svc.claim(ident)
+    svc.fail(ident, claimed.claim, 'RENDER_FAILED')
+    assert svc.retry_failed(ident).receipt.render_version == old_version
+    assert svc.run_one().status == 'completed'
+    original = c[0][5].get(location + '/exports/' + receipt['export_id']).content
+    assert original == expected
+    assert export(c, location, key=key).json()['data'] == receipt
+    new = export(c, location).json()['data']
+    assert new['render_version'] == 'planning-pdf/3' and new['export_id'] != receipt['export_id']
+    assert svc.run_one().status == 'completed'
+    current = c[0][5].get(location + '/exports/' + new['export_id']).content
+    assert current != original
+    original_text = '\n'.join(p.extract_text() for p in PdfReader(BytesIO(original)).pages)
+    assert ('Phụ lục đầy đủ' in original_text) == (old_version == 'planning-pdf/1')
+    # GET/discovery cannot invoke either template or manufacture another job.
+    def forbidden(*args):
+        raise AssertionError('Read attempted rendering')
+    monkeypatch.setattr(svc.renderer, 'render', forbidden)
+    monkeypatch.setattr(svc.renderer, 'render_legacy', forbidden)
+    monkeypatch.setattr(svc.renderer, 'render_v2', forbidden)
+    assert c[0][5].get(location + '/exports/' + receipt['export_id']).content == original
+    items = c[0][5].get(location + '/exports').json()['data']['items']
+    assert {item['render_version'] for item in items} == {old_version, 'planning-pdf/3'}
+    with Session(c[0][1]) as session:
+        rows = session.query(PlanningExport).all()
+        assert len(rows) == 2 and all(decode_export(row).status == 'completed' for row in rows)
+    # An old artifact/receipt is never a bearer grant after membership revocation.
+    from app.models import StoreMembership
+    with Session(c[0][1]) as session:
+        member = session.query(StoreMembership).filter_by(store_id=c[1].store_id, user_id=c[1].user_id).one()
+        member.active = False
+        session.commit()
+    for retained in (receipt, new):
+        denied = c[0][5].get(location + '/exports/' + retained['export_id'])
+        assert denied.status_code == 404 and denied.json()['data'] is None
+        assert denied.json()['error']['code'] == 'RESOURCE_NOT_FOUND'
+    assert export(c, location, key=key).status_code == 404
+    assert c[0][5].get(location + '/exports').status_code == 404
+
+
+def test_unknown_fee_completed_without_option_and_failed_run_cannot_export(exports):
+    from datetime import date
+    from app.application.contracts import import_domains as d
+    from app.application.use_cases.operational_configuration import OperationalConfiguration
+    flow, svc = exports
+    c, _, _, worker = flow
+    with Session(c[0][1]) as session:
+        OperationalConfiguration(session, c[1].store_id).fee(d.FeeSource(
+            source_fee_key='none', scope='STORE_PROCUREMENT', effective_from=date(2026, 10, 10), effective_to=None,
+            mode='PER_OFFER', coverage='UNKNOWN', currency='VND', components=(), covered_source_term_keys=(),
+            covered_source_supplier_keys=(), evidence_reference='synthetic unknown fee', reason='explicit fixture'),
+            uuid4(), 'synthetic', {}, {})
+        session.commit()
+    submitted = submit(c)
+    run = worker.run_one()
+    assert run.status == 'completed' and run.outcome == 'computation_blocked'
+    assert export(c, submitted.headers['Location']).json()['error']['code'] == 'WINNER_NOT_AVAILABLE'
+    assert export(c, submitted.headers['Location'], option='absent').status_code == 404
+    # A durable failed Run is rejected by the existing export gate, not rendered.
+    failed = submit(c, body=dict(requirements_mode='custom', forecast_start_date='2026-10-10',
+        requirements=dict(paths=[dict(path='BASE', min_fill_rate_percent='95', product_overrides=[])], budget_limit='1')))
+    claimed = worker.runs.claim(c[1].store_id, UUID(failed.json()['data']['run_id']))
+    worker.runs.fail(c[1].store_id, claimed.run_id, claimed.claim, code='EXECUTION_ERROR')
+    assert export(c, failed.headers['Location']).json()['error']['code'] == 'RESULT_NOT_READY'
+    with Session(c[0][1]) as session:
+        assert session.query(PlanningExport).count() == 0

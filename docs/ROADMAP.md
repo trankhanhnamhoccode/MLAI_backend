@@ -1,5 +1,16 @@
 # Remaining work and acceptance gates
 
+## CURRENT FACT — P1/P1.1 owner-friendly PDF
+
+Backend presentation /3 implemented on the isolated PDF branch for owner review;
+local checkpoint includes P1/P1.1 source/tests/docs. N10/N11/EX01 and retained /1,/2
+compatibility remain. No FE/engine/capture/provider/migration work, push/main merge,
+deployment or next slice. Store/Supplier name capture and global unit display
+aliases remain separate gaps. Primary comparison uses the same P1 synthetic oracle;
+not the original169-page Run or real business/whole-FE acceptance.
+[Policy](PROCUREMENT_API_CONTRACT_VI.md#154-pdf--n10n11-thêm-không-thay-planning-state),
+[manual verification](runbooks/FULL_TEST_FLOW.md#owner-pdf-p1).
+
 ## CURRENT FACT - L5 backend source integration
 
 Decision Assistant L4.1 checkpoint1f9b5c5 is integrated with main base8b09685 in an

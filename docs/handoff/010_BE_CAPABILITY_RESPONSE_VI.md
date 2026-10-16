@@ -12,9 +12,11 @@ tr??c khi d?ng; working-tree artifact kh?ng t? l? release/deployment.
 
 FE pin c? `869eaec914aa6905d6b935889afebe7d973004ae`, OpenAPI SHA256
 `790443d80350cc597c7c06179309e43303ba558de34017ea1dd4113de71fc1ee`.
-[Diff machine-readable](openapi_diff_fe73.json) d?ng ??ng baseline hash: ch? th?m
-AS01/AS02/AS03, kh?ng ??i/x?a73 operations ho?c schemas c?. Historical handoff ZIP
-v? original baseline ???c gi?; kh?ng gh?p artifacts t? c?c nh?nh WIP.
+[Diff machine-readable](openapi_diff_fe73.json) preserves the original baseline hash.
+CURRENT FACT P1/P1.1: AS01/AS02/AS03 remain the only route additions since FE73; PDF changes
+only ExportAccepted.render_version=/3 alongside retained /1,/2 (new default /3).
+Existing operations and all other schemas remain unchanged. This local PDF checkpoint is for owner
+review, not deployed FE synchronization; original baseline and historical ZIP remain.
 
 ??c theo th? t?:
 

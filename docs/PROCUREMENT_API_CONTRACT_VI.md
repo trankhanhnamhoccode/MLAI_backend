@@ -1122,7 +1122,7 @@ không chọn strategy bằng label tạo optionmới. Run completed mới expor
 
 Require planning.export+planning.result.read+budget.read+procurement.cost.read;
 samecurrentStore boundary. Response202 {export_id:UUID,run_id,option_id,
-status:"queued",job_id:UUID,result_digest:Version,render_version:"planning-pdf/1"};
+status:"queued",job_id:UUID,result_digest:Version,render_version:"planning-pdf/3"};
 meta.poll_after_ms=2000. J01 poll theo [shared job canonical](IMPORT_MAPPING_API_CONTRACT_VI.md#readiness-v1), mục14.5 (không chuyển C02 thành job_id).
 J01 result khi completed={export_id,download_url:relative routeN11,sha256,
 byte_count:int,media_type:"application/pdf"}; failed gồm structurederror, không
@@ -1140,16 +1140,90 @@ no-store, X-Content-Type-Options:nosniff. Failed/notready409 EXPORT_NOT_READY v�
 errorenvelope; artifactmissing/corrupt503 EXPORT_ARTIFACT_UNAVAILABLE, không current
 DBrerender ngầm. Range không cần v1; không publicshare URL/token bypasspermissions.
 
-PDF in từ kết quả đã lưu: Store/timezone/currency, Run UUID và các thời điểm nhận/
-capture; horizon, model thực dùng/provenance và tình trạng quality; requirements,
-Store ceiling và effective budget; option xuất, trạng thái winner/eligible;
-mọi dòng mua (quantity, packs, term IDs, arrival/expiry, cost breakdown), mức phục
-vụ từng Product/path, exclusions, warnings/blockers, proof/execution/bounds và các
-giả định hypothetical P1. In đủ dòng bằng nhiều trang; không screenshot hoặc chỉ
-in trang FE đang xem. Giá trị display được làm tròn phải có nhãn; phụ lục exact
-values gồm numerator/denominator khi C03 giữ phân số, không biến decimal_view
-thành giá trị exact. PDF là report, không hóa đơn hoặc xác nhận đặt hàng. Unknown
-hiện “Chưa biết/Chưa đánh giá”, không0; không thêm stochastic risk chưa có.
+CURRENT FACT P1/P1.1: PDF mặc định `planning-pdf/3` là báo cáo chủ quán, độc lập LLM.
+Tổng quan giữ kỳ kế hoạch, thời điểm chụp theo timezone Store, trạng thái Run,
+option đang xuất so với winner, tổng chi/tiền mua/phí/ngân sách đã lưu và nhãn
+“Đề xuất mua hàng — chưa phải đơn đặt hàng.” Product dùng tên từ retained menu;
+Ingredient dùng retained ingredient_labels qua inspection. Store/Supplier chưa
+capture tên: fallback mã suffix phân biệt trong cùng báo cáo, full ID ở truy vết.
+Không lookup tên hiện tại, backfill Run hoặc suy tên từ source_record_key.
+Gap capture Store/Supplier names là TECHNICAL DEBT, không được mở rộng bởi P1/P1.1.
+Nhãn synthetic/demo chỉ bật khi provenance retained có marker rõ ràng được hỗ trợ
+(`synthetic_fixture/1` hoặc đúng chuỗi `User-requested SYNTHETIC local demo; no real inventory/sales/order evidence` trong captured_stock.provenance); không suy từ tên/model/policy.
+Nguồn khác chưa có marker chuẩn được giữ nguyên, không tự chứng nhận real/synthetic.
+
+Trang đầu làm nổi kỳ kế hoạch, tổng chi dự kiến, ngân sách đã lưu và winner/viewed
+option. Ngân sách hiệu lực/trần Store chỉ gộp khi exact bằng nhau và cùng currency;
+khác nhau phải giữ nhãn riêng. Chiến lược tạo option chuyển về truy vết. Kết luận
+BASE đếm distinct Product trong computed scope đạt assessment đã lưu; chỉ nêu khi
+mọi Product trong scope có service row và assessment PASS/FAIL. Không đủ evidence
+thì nói chưa đủ đánh giá, không dùng trung bình tỷ lệ thành chỉ số tổng hợp.
+Partial scope luôn giới hạn kết luận, không bao gồm excluded Products.
+
+Ngày hiển thị dd/MM/yyyy; thời điểm chụp dùng timezone Store đã lưu, không giờ máy.
+CURRENT_CAPTURE: tồn kho đầu vào đã lưu tại thời điểm chụp, biến động/tiêu thụ sau
+đó là mô phỏng. HYPOTHETICAL_CURRENT_CAPTURE: dùng tồn đầu vào tại thời điểm chụp
+cho ngày kế hoạch giả định; không coi là tồn lịch sử tại ngày đó. Thiếu temporal
+evidence nói chưa đủ thông tin. Không suy tồn đầu vào là tồn thực đã kiểm chứng;
+nguồn synthetic giữ nhãn giả lập riêng. Không sửa capture hoặc business facts.
+
+Mọi dòng mua giữ riêng supplier/term/arrival, packs, tổng lượng, tiền mua; quy cách
+gói chỉ là exact quantity / packs trong cùng unit. Phí theo offer/supplier-order
+trình bày riêng theo retained fee_components, không phân bổ giả hoặc cộng lặp.
+Hạn dùng và full term IDs ở truy vết theo số dòng. Thiếu loại phí không được gọi
+là phí giao hàng. Không suy density, đổi unit, savings hay no-purchase comparison.
+
+BASE là bảng chính; LOW/HIGH là các bảng kịch bản gọn, giữ từng Product/path,
+requested/fulfilled/lost_sales/service và assessment/target đã lưu. Không KPI trung
+bình mới, không cộng khác đơn vị. Excluded/missing evidence hiện chưa đánh giá;
+zero demand có ratio không xác định, không giả PASS. Mọi lost_sales dương là đáng
+chú ý. Bảng rủi ro rút gọn chỉ gồm shortage/expired dương trong daily_balances,
+cộng exact theo cùng Ingredient/path/unit và liệt kê mọi ngày có evidence; không
+là actual stock/consumption hay causal attribution. Không in lot/ngày/path đầy đủ
+khi không có rủi ro này; không suy “không có rủi ro” từ missing evidence.
+Notices chỉ gộp khi code/message và toàn bộ details ngoài affected_dates trùng
+(cùng entity/field/scope/action/source); giữ union ngày, không đếm thành root causes.
+Không gộp khác entity/phạm vi. Lời tóm tắt nhu cầu chưa đáp ứng chỉ nêu các path
+thực sự có lost_sales exact dương (kể cả nhỏ dưới ngưỡng display), theo thứ tự
+BASE/LOW/HIGH. Không đếm Product×path rồi gọi là số món, không dùng Ingredient
+shortage thay lost_sales, không suy thiếu hàng thực tế từ mô phỏng.
+Proof được gộp chỉ khi execution/proof/proof_scope/search_complete và cả hai
+feasibility states trùng. Câu chính dùng lời dễ hiểu “vẫn có thể còn lựa chọn khác
+chưa được tìm thấy” khi chưa kiểm đủ; chứng nhận đầy đủ giới hạn trong các lựa
+chọn theo dữ liệu đã lưu, không áp dụng ngoài phạm vi đó. ERROR/INCOMPLETE/BLOCKED/
+NUMERIC_UNSUPPORTED và no-pass certificate giữ khác biệt; mã gốc ở truy vết gọn,
+không dùng “miền hữu hạn”/“tối ưu toàn cục” làm giải thích chính, không nhận xác suất.
+
+Policy số chỉ ở display: exact integer half-up, dấu ~ (xấp xỉ) khi giá trị làm tròn
+khác nguồn, dấu < ngưỡng thay cho zero giả với số dương nhỏ. Lượng mọi unit giữ tối đa
+3 số lẻ (không đổi unit), tỷ lệ 1 số lẻ; VND/JPY/KRW 0, USD/EUR/GBP/AUD/CAD/SGD/THB
+2, KWD/BHD 3; currency khác giữ code và 3 số lẻ có nhãn xấp xỉ khi cần, không quy
+đổi hoặc giả minor-unit rule. Có chú giải tổng dòng có thể lệch canonical totals
+do display rounding. Canonical exact fractions/totals không thay đổi. Dùng ~ vì
+font Noto đóng gói hiện không có glyph U+2248; không đổi font/template /1.
+
+Phần chính Việt hoá snapshot/provenance/dump/KPI thành dữ liệu tại thời điểm lập
+kế hoạch/thông tin nguồn/dữ liệu kỹ thuật chi tiết/chỉ số tổng hợp theo ngữ cảnh.
+Chưa có global display alias authority cho cup→ly; giữ canonical unit (không
+conversion) và chú giải chưa có nhãn tiếng Việt được xác nhận. Import unit alias
+trong profile không phải quyền đổi nhãn mọi Run.
+
+Không in flattened capture/provenance/raw JSON hoặc phụ lục exact mặc định /3.
+Evidence gốc, digest và source retention không đổi. Mục kỹ thuật cuối giữ Run,
+option, winner, result digest, model/quality và entity/term mappings để truy vết.
+Không thêm export mode/endpoint. Mục tiêu fixture nhỏ 3–5 trang, không hard cap:
+bảng có headers lặp, tiếp tục nhiều trang, không cắt dòng hoặc thu nhỏ chữ.
+
+CURRENT FACT compatibility: P1 /2 đã có PDF/ZIP review ngoài pytest, không coi là
+chưa phát hành identity để render nội dung khác dưới cùng version. P1.1 dùng /3.
+Same-key replay trả receipt cũ trước admission/materialization, không nâng version.
+ExportRecord digest giữ receipt/version cùng intent; worker dispatch đúng /1,/2,/3.
+`planning_pdf_legacy.py` giữ nguyên /1; `planning_pdf_v2.py` và frozen helper
+`planning_pdf_display_v2.py` giữ output /2 độc lập với wording/format /3. Test fixture
+chứng minh /2 còn nguyên SHA256 P1. Artifact completed cũ tải nguyên bytes;
+N11/EX01/J01 không render. Không overwrite artifact/export identity, thêm migration
+hoặc sửa retained Run. Rollback phải giữ decode/dispatch mọi version đã phát hành;
+không hạ code về binary chỉ nhận /1 hoặc /2 sau khi có intent /3.
 
 Renderer embed font Unicode tiếng Việt, lặp headers bảng, đánh số trang/Run ID,
 hiện cảnh báo, escape dữ liệu và không scripts. Local artifact ghi atomic cùng
@@ -1173,12 +1247,13 @@ Acceptance criteria: danh sách Run đúng Store, cursor và trạng
 thái; revoke/cross-Store từ chối; completed/no-winner không có winner giả; C08 cùng
 digest/codes engine C03, không LLM. PDF optionnull dùng winner đã lưu; option khác
 được ghi rõ eligible/reference, không có candidate thì chặn. Thay giá/công thức/
-ngưỡng sau Run không đổi facts PDF. Mọi dòng và exact-value appendix đều có, font
-đọc được. Concurrent retry chỉ một job/artifact; crash không download file dở;
+ngưỡng sau Run không đổi facts PDF. Mọi dòng mua và từng Product/path đều có; /3 không in dữ liệu kỹ thuật chi tiết mặc định; /1,/2 giữ template
+cũ. Font đọc được. Concurrent retry chỉ một job/artifact; crash không download file dở;
 revoke chặn worker/download/replay; PDF không tạo PO hoặc sửa Run.
 
 CURRENT FACT: listing/C08/PDF/local fonts/artifact integrity/durable worker đã có.
-PROPOSAL/OPEN: AI wording và broader PDF editing/design.
+CURRENT FACT: P1/P1.1 owner presentation /3 đã triển khai trong source; AI wording và
+export modes/editing khác vẫn PROPOSAL/OPEN. Kiểm thử/review theo runbook P1.
 
 <a id="planning-detail-v1"></a>
 ## 16. Chi tiết kết quả từ engine — C04/C05 v1
@@ -1464,7 +1539,7 @@ locale:"vi"}; null resolve winner tại acceptance, không winner409 WINNER_NOT_
 theo source và contract mục15.4; unknown option404 OPTION_NOT_FOUND,
 known strategy không exportable409 OPTION_NOT_EXPORTABLE.
 202 data ExportAccepted={export_id,run_id,option_id,status:"queued",job_id,
-result_digest,render_version:"planning-pdf/1"}, meta.poll_after_ms=2000.
+result_digest,render_version:"planning-pdf/3"}, meta.poll_after_ms=2000.
 Key/payload cũ trả original receipt/job; timeout retry samekey, không generate
 export mới. N10 không resurrect failed export; user muốn attempt mới phải chọn
 explicit generate lại với key mới sau review. Không chuyển Run hoặc selected option.
