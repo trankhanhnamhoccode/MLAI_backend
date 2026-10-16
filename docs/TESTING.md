@@ -1,12 +1,21 @@
 # Verification policy and coverage
 
-CURRENT FACT — integration profile: use backend-integrate-import-auth's ignored
-.env with shelfcash_integration_test/shelfcash_integration_tester and runtime/integration,
-all workers/provider OFF. Never reuse Auth/Import/demo/development DB URLs. Explicit
-identity/allowlist guards run before reset/migration; tests remain sequential.
-[Integrated gate, exact results and source-WIP adaptations](runbooks/FULL_TEST_FLOW.md#integrated-acceptance)
-own this milestone. Historical shelfcash_test commands below retain their original
-scope and do not select the integration DB without effective TEST_DATABASE_URL.
+## Local profile — điểm bắt đầu mặc định
+
+CURRENT FACT: [GETTING_STARTED](GETTING_STARTED.md#first-time-setup) sở hữu clone,
+venv/env và provisioning local. Template dùng `shelfcash_local_test` với role
+`shelfcash_local_tester`, tách khỏi DB customer `shelfcash_local`.
+Kiểm effective `TEST_DATABASE_URL` trước khi chọn integration tests; env của shell
+có thể override `.env`. Fixture kiểm DB/role và reset/migrate DB test khi cần.
+Không in connection strings có password; không reset development/demo.
+
+Chạy từ repo root bằng `.venv/Scripts/python.exe`, tuần tự trên mỗi DB, SMTP/provider
+fake. [Runbook D](runbooks/FULL_TEST_FLOW.md#d-troubleshootingrecovery-và-tests)
+giữ chỉ dẫn verification; các case cần Assistant/challenger hoặc fixture profile
+riêng phải theo đúng profile, không suy toàn suite dùng được với local defaults.
+Thay đổi chỉ documentation dùng links/consistency/diff checks, không business tests.
+
+## Policy và coverage
 
 ACCEPTED DECISION: choose tests for changed behavior and affected callers. After
 small fixes rerun affected/failed tests, not full pytest without new evidence.
@@ -15,11 +24,10 @@ transaction/infrastructure changes when targeted coverage is insufficient.
 Document-only changes need link/consistency checks. State commands/results/limits
 and the reason for broadening; historical PASS is not a fresh result.
 
-[FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) owns runnable setup/DB guards/API/
-manual/browser/restart commands. Integration fixtures run sequentially and own
-only the effective, explicitly allowlisted local test DB. The legacy profile owns
-shelfcash_test; this integration owns shelfcash_integration_test with its dedicated
-tester role, never development/S4.11 demo data. Assert committed
+[GETTING_STARTED](GETTING_STARTED.md) owns local setup/run/configuration/recovery;
+[FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md) owns scoped API/manual/browser/restart
+acceptance commands. Integration fixtures run sequentially and own only the
+effective, explicitly allowlisted test DB, never development/demo data. Assert committed
 state through a new Session; HTTP2xx is insufficient. API changes require explicit
 approval, source DTO/OpenAPI tests and before/after diff.
 
@@ -61,6 +69,18 @@ CURRENT FACT: real Planning/PDF spawn targets live in `tests/planning_process_ca
 Windows child bootstrap imports that fixture-free module instead of importing
 the test modules and their app-composition/fixture dependencies. Child service
 calls, local test DB guards, cleanup and the original 20-second waits remain.
+
+## Profile chuyên biệt và kết quả lịch sử
+
+HISTORICAL INFORMATION — integration milestone: `backend-integrate-import-auth`
+used its own ignored `.env`, `shelfcash_integration_test`/`shelfcash_integration_tester`
+and `runtime/integration`, workers/provider OFF. This is a separate owned profile,
+not a sibling-venv prerequisite for a new clone. Its
+[integrated gate and source-WIP adaptations](runbooks/FULL_TEST_FLOW.md#integrated-acceptance)
+retain their original scope. Auth/Import/Assistant/challenger profiles in the runbook
+use their own dedicated DBs/roles; never reuse another profile's DB implicitly.
+Legacy `shelfcash_test` commands likewise do not select the local test DB without
+the effective TEST_DATABASE_URL. Select coverage appropriate to the profile.
 
 Routine output goes to ignored runtime/verification or private integration runtime.
 Tests/fixtures/independent oracle specifications remain; old logs/PASS reports and

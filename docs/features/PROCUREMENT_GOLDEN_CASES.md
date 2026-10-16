@@ -5,10 +5,15 @@ Scratch observations below are historical; current implementation and runnable
 verification are in [PROCUREMENT_ENGINE](PROCUREMENT_ENGINE.md) and
 [the runbook](../runbooks/FULL_TEST_FLOW.md). Retired evidence is not a current gate.
 
-Classification: PROPOSAL for future acceptance; CURRENT FACT only for the executed
-scratch experiments below. Not a production engine or completed procurement slice.
-The script is [procurement_experiments.py](../../runtime/s341/procurement_experiments.py);
-machine-readable evidence is [results.json](PROCUREMENT_ENGINE.md).
+Classification: HISTORICAL INFORMATION for executed scratch experiments; their
+original PROPOSAL status is not authority for current production policy.
+The original `runtime/s341/procurement_experiments.py` and `results.json` were local
+scratch artifacts, not tracked inputs supplied by a clean clone. Retain existing
+private evidence where present; this document does not claim those files can be
+recreated from Git. Current implementation is described in
+[PROCUREMENT_ENGINE](PROCUREMENT_ENGINE.md) and [PROCUREMENT_V2](PROCUREMENT_V2.md);
+reusable checks include [Planning small-domain oracles](../../tests/unit/test_planning_small_domain.py)
+and [procurement/2 checks](../../tests/unit/test_procurement_v2.py).
 
 ## Executed finite domains
 
@@ -111,7 +116,10 @@ claim, no monetary sum of cash outlay plus duplicated purchased-consumption cost
 
 ## Commands and limits
 
-Executed twice (second run added the actual greedy comparator):
+HISTORICAL INFORMATION — original command recorded at the scratch checkpoint,
+executed twice (second run added the actual greedy comparator). The referenced
+test filename is not present in current Git; this is provenance, not a runnable
+clean-clone instruction:
 
 ```
 .venv/Scripts/python.exe -B -m pytest tests/unit/test_procurement_small_domain.py -q
@@ -122,3 +130,11 @@ Python3.11.9/SciPy1.17.1. Earlier run4.242949899999985 seconds is historical and
 superseded for current script. No pytest/full regression, legacy test execution,
 DB access, benchmark-size workload, production procurement or forecast accuracy
 verification was performed. Task notes record document/archive checks separately.
+
+Current reusable checks can be selected separately (not executed by this documentation task):
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_procurement_v2.py tests/unit/test_planning_small_domain.py -q
+```
+
+The historical timings/results above do not apply to this current selection.

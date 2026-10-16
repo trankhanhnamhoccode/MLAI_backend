@@ -42,12 +42,14 @@ checkpointed locally at `8f4d90838cfe7898cf3fbbe0e0784ca136dad8cf`; technical
 test-only acceptance VERIFIED, product activation NOT IMPLEMENTED, production
 promotion LOCKED. F4.1 is checkpointed at `b9ec9782a398722ef1705edbd51f70d1d7c35358`;
 F4.2 is checkpointed at `8537e122f28ded9b48bdc14d651cf7ecee38d1a2`.
-CURRENT FACT: challenger source and shared host adapter reuse are integrated into
+HISTORICAL INFORMATION — forecast integration checkpoint: challenger source and shared host adapter reuse were integrated into
 main local through a separate integration worktree, based on main
 `b0db90cedd3962d8cb2e3f2dfe4696ec83b4e52a`. Main dev-account/shutdown docs/code
 are retained; Assistant/import WIP is not merged. Only CURRENT_STATE/ROADMAP
 conflicted; both accounts were reconciled. No fetch/push/deploy/demo restart or
-activation occurred. Source integration does not change runtime model eligibility.
+activation occurred in that checkpoint. CURRENT FACT: main now also composes the
+Assistant (see [CURRENT_STATE](../CURRENT_STATE.md)); separate Import upgrades
+remain excluded. Source integration does not change runtime model eligibility.
 
 `ChallengerPlanningServing` is an explicit internal test composition; application
 startup still installs host `ForecastServing`. There is no new model action, FE
@@ -76,7 +78,9 @@ Private `ExecutionDetails` schema2 retains actual native input/output/provenance
 the existing ForecastRun metadata table. Its legacy schema1 serializer omits new
 fields. Migration `f4_20261016_metadata_v2`, parent0027, only widens the metadata
 version check; no new table, backfill or changes to old rows. Downgrade refuses
-retained metadata2. Assistant revisions on other branches are not merged or edited.
+retained metadata2. HISTORICAL INFORMATION: that F4 migration slice did not merge
+or edit Assistant revisions. Current combined migration graph is owned by
+[DATABASE_SCHEMA](../DATABASE_SCHEMA.md), not the isolated F4 head.
 
 ForecastRun completion reuses owned transactions and uncertain-commit reconciliation;
 Planning acceptance/claim/retain/finalize keeps existing authority, lost-ACK, process

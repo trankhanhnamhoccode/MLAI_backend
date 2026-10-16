@@ -1,5 +1,10 @@
 # Current state
 
+Local setup/run/configuration belongs to [GETTING_STARTED](GETTING_STARTED.md);
+verification policy/profile selection to [TESTING](TESTING.md), and FE source
+contracts to the [handoff entrypoint](handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
+These describe source and supported tooling, not a new deployment/runtime acceptance.
+
 ## CURRENT FACT — bounded owner summary S3 local integration
 
 New application generations use profile/6, selection/2, prompt/5, compact schema/3,
@@ -282,7 +287,13 @@ nguyên; không chạy E3/E4 benchmark hoặc training bằng workbook.
 
 ## CURRENT FACT — self-service Store/customer local
 
-Canonical checkout `backend` trên main, own .venv/TLS/runtime/local profile. WIP9
+CURRENT FACT: local tooling uses the checkout's own .venv/TLS/runtime/local profile;
+[GETTING_STARTED](GETTING_STARTED.md) owns the current instructions. Source API and
+migration inventory follow the handoff/schema documents, not the old customer
+checkpoint below. No current serving DB/runtime verification is implied.
+
+HISTORICAL INFORMATION — customer setup checkpoint: canonical checkout `backend`
+trên main, own .venv/TLS/runtime/local profile. WIP9
 nhánh import_mapping_rules được backup và giữ nguyên tại backend-import-mapping-preserved;
 không merge WIP documents/artifacts cũ vào main. Import15/Auth0 giữ nguyên.
 T03 POST /api/v1/stores: active verified credential-ready holder tự tạo Store/Owner,
@@ -294,7 +305,8 @@ Single opted-in email thread handles existing verification/reset/invitation queu
 parameterized invitation callback supports confirmed FE route. No real SMTP/model
 calls in setup/tests. EMAIL_VERIFY callback và signup/verify/create Store UI chưa
 được FE nối/xác nhận: browser/self-service email E2E BLOCKED/PENDING, không claim PASS.
-Verification, commands và14 customer flows thuộc [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#customer-self-service).
+Current setup commands thuộc [GETTING_STARTED](GETTING_STARTED.md);
+14 customer checklists và historical verification thuộc [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md#customer-self-service).
 Source checkpoint86fcc6795957baea9b2d7f343a8079bed44c1559; focused83/schema210 pass,
 Auth149/1 assertion failure đã sửa và affected cases pass, không full-suite claim.
 Own HTTPS runtime verified: OpenAPI73/66 khớp artifact, exact Origin/guards, direct

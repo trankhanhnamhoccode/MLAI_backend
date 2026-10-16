@@ -1,73 +1,45 @@
-# ShelfCash Competition Edition
+# ShelfCash
 
-Backend giúp quán F&B so sánh phương án mua nguyên liệu từ demand, BOM, tồn kho,
-hạn dùng, supplier terms và budget. Backend tính toán; khách quyết định, không tự đặt hàng.
+ShelfCash là backend hỗ trợ chủ quán F&B quyết định mua nguyên liệu: cần mua gì,
+bao nhiêu và phương án nào phù hợp với ngân sách, tồn kho và hạn dùng đã ghi nhận.
+Hệ thống dùng dữ liệu bán hàng, công thức và điều kiện nhà cung cấp để dự báo nhu
+cầu, tính toán và giải thích các phương án. Chủ quán quyết định việc mua hàng.
 
-CURRENT FACT: self-service account → verify/password → login → tạo Store/Owner →
-invite Staff; Import có review/atomic commit, Inventory, Planning/History/PDF,
-permission requests/mapping queue/notifications và Today. Source73 operations/66 paths,
-head0027/72 tables. Không seed account/Store/business facts cho customer workflow.
-Browser E2E pending; FE chưa có signup/EMAIL_VERIFY callback/create Store flow được
-xác nhận. Email mặc định OFF tới khi SMTP/key/callback đúng; không giả full browser pass.
+## Từ dữ liệu đến phương án mua
 
-## Setup lần đầu
+Nhập và duyệt dữ liệu → kiểm tra khả năng tính → dự báo → tính nhu cầu nguyên
+liệu và tồn kho có thể dùng → so sánh phương án mua → xem giải thích hoặc tải PDF.
 
-Checkout chính: `D:\hocc_bk\ai\proj\projectMLAI\backend`, main, `.venv` riêng.
-Cần Python3.11+, Docker Desktop Linux engine, Git và PowerShell. Từ checkout sạch:
+## Khả năng hiện có trong source
 
-```powershell
-Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e '.[dev]'
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-.\.venv\Scripts\python.exe -m scripts.local_runtime secrets
-notepad .env
-.\.venv\Scripts\python.exe -m scripts.local_runtime docker
-.\.venv\Scripts\python.exe -m scripts.local_runtime init-db
-.\.venv\Scripts\python.exe -m scripts.local_runtime migrate
-.\.venv\Scripts\python.exe -m scripts.local_runtime tls
-Import-Certificate -FilePath .\runtime\local\private\localhost.cer -CertStoreLocation Cert:\CurrentUser\Root
-```
+| Khả năng | Giúp người dùng làm gì |
+| --- | --- |
+| Import / Inventory | Duyệt cách hiểu dữ liệu trước khi nhập; theo dõi nguyên liệu, lô hàng, tồn kho và hạn dùng. |
+| Forecast | Dự báo nhu cầu sản phẩm từ lịch sử bán hàng, với các mức phân vị nhu cầu. |
+| Planning | Tính nhu cầu nguyên liệu và so sánh phương án mua theo dữ liệu, ngân sách và điều kiện đã khai báo. |
+| Summary | Đọc bản tóm tắt của một kết quả Planning đã lưu. |
+| Chat | Hỏi và nhận giải thích theo bằng chứng của kết quả đang xem. |
+| PDF | Xuất báo cáo từ kết quả đã lưu để tải xuống. |
 
-Nếu port5433 đã có PostgreSQL, chọn đúng existing container/admin trong .env trước
-lệnh docker; không tạo Compose thứ hai. Không overwrite .env/WIP có sẵn. Secrets
-được tạo local, không in hoặc đưa Git. SMTP App Password do user tự nhập riêng.
+Summary và Chat hỗ trợ đọc kết quả; backend vẫn sở hữu dữ liệu và phép tính.
 
-## Chạy hằng ngày
+## Bắt đầu và tìm tài liệu
 
-```powershell
-.\.venv\Scripts\python.exe -m scripts.local_runtime start
-.\.venv\Scripts\python.exe -m scripts.local_runtime status
-# Khi dùng xong:
-.\.venv\Scripts\python.exe -m scripts.local_runtime stop
-```
+- **Clone mới:** [cài đặt và cấu hình lần đầu](docs/GETTING_STARTED.md#first-time-setup).
+- **Máy đã setup:** [start / status / stop](docs/GETTING_STARTED.md#daily-use).
+- **Đăng ký và tạo quán:** [signup → xác minh email → tạo Store](docs/GETTING_STARTED.md#onboarding).
+- **FE:** [bắt đầu từ handoff](docs/handoff/010_BE_CAPABILITY_RESPONSE_VI.md), rồi đọc OpenAPI và contract theo chức năng.
+- **Developer:** [testing](docs/TESTING.md), [runbook kiểm chứng](docs/runbooks/FULL_TEST_FLOW.md) và [engineering rules](AGENTS.md).
+- **Hiểu hệ thống:** [kiến trúc](docs/ARCHITECTURE.md), [nghiệp vụ](docs/DOMAIN_MODEL.md) và [các quyết định kiến trúc](docs/DECISIONS.md).
+- **Theo dõi tiến độ:** [trạng thái hiện tại](docs/CURRENT_STATE.md) và [roadmap](docs/ROADMAP.md).
 
-BE **https://localhost:8103**, exact FE Origin **https://localhost:5173**. FE chạy riêng;
-launcher BE không sửa/chạy FE. Không migrate/reset/seed mỗi ngày; không dùng accounts.json
-hoặc operator provisioning cho khách. Store mới trống cần import/config/completeness
-có nguồn, không tự READY. Email/OpenRouter opt-in riêng, không gửi/call trong setup.
+## Giới hạn hiện tại
 
-[**FULL_TEST_FLOW — hướng dẫn canonical A–D**](docs/runbooks/FULL_TEST_FLOW.md#customer-self-service)
-chứa checkout mới, [.env.example](.env.example) từng nhóm/Gmail/callbacks,14 luồng API,
-fixtures và recovery. Database `shelfcash_local` khác `shelfcash_local_test`; pytest/reset
-chỉ dedicated test DB, chạy tuần tự. Không reset demo/development; không full-suite/
-forecast accuracy claim từ targeted synthetic tests.
+Chất lượng dự báo trên dữ liệu thực chưa được đánh giá; forecast challenger chỉ
+dành cho kiểm chứng có opt-in, chưa được bật cho production. Toàn bộ browser flow
+và deployment của source hiện tại chưa được xác nhận. FE chạy riêng với backend.
 
-## Tài khoản giả để test local
-
-CURRENT FACT: có CLI tạo/reuse Owner, Store trống và một Staff với quyền ban đầu
-`menu.read`. Xem [quy trình chạy, lấy mật khẩu và recovery](docs/runbooks/FULL_TEST_FLOW.md#local-test-accounts).
-Chạy seed khi BE đã stop để tránh tranh invitation delivery với email worker.
-Start yêu cầu Git sạch/đã commit; seed không cần BE đang chạy. Các file đăng nhập
-nằm trong ignored `runtime/local/private`, được giữ qua stop/start.
-
-## Tài liệu và contract
-
-- [Trạng thái](docs/CURRENT_STATE.md), [roadmap](docs/ROADMAP.md), [engineering rules](AGENTS.md).
-- [Authorization/Store](docs/AUTHORIZATION_CONTRACT_VI.md#self-service-stores), [API chung](docs/API_CONTRACT.md).
-- [Import](docs/IMPORT_MAPPING_API_CONTRACT_VI.md), [Planning](docs/PROCUREMENT_API_CONTRACT_VI.md), [Notifications](docs/NOTIFICATION_API_CONTRACT_VI.md).
-- [Kiến trúc](docs/ARCHITECTURE.md), [domain](docs/DOMAIN_MODEL.md), [schema](docs/DATABASE_SCHEMA.md), [ADRs](docs/DECISIONS.md).
-- [FE handoff/OpenAPI](docs/handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
-- [Forecast challenger offline — isolated opt-in setup, inference và replay](docs/features/FORECAST_ENGINE_INTEGRATION.md#e2-runtime).
-- [Forecast benchmark E3 — causal synthetic checks, freeze/run/rescore/replay và real-data requirements](docs/features/FORECAST_ENGINE_INTEGRATION.md#e3-offline-benchmark).
-- [Planning impact E4 — shared synthetic facts, fixed-basket realized serving, bounded run và replay](docs/features/FORECAST_ENGINE_INTEGRATION.md#e4-counterfactual-planning-impact).
+Email thật cần SMTP và callback FE phù hợp; LLM là tùy chọn, cấu hình riêng cho
+Import, Summary và Chat. Có đường tính toán và giải thích xác định không cần LLM.
+Store mới cần dữ liệu và cấu hình đủ điều kiện trước khi Planning có thể tính.
+ShelfCash không tự đặt hàng hay biến phương án mua thành tồn kho thực tế.

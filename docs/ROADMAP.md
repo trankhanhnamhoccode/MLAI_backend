@@ -1,5 +1,11 @@
 # Remaining work and acceptance gates
 
+Current local instructions live in [GETTING_STARTED](GETTING_STARTED.md),
+developer verification policy/profiles in [TESTING](TESTING.md), and scoped
+acceptance/history in [FULL_TEST_FLOW](runbooks/FULL_TEST_FLOW.md).
+Fresh-clone execution, email callback/browser acceptance and serving deployment
+remain separate verification gates; documentation does not complete them.
+
 ## CURRENT FACT / limits — bounded owner summary integration
 
 S3 local integration completes important-warning and distinct-purchase-line acceptance with
