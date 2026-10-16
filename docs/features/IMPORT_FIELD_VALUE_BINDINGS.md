@@ -34,12 +34,16 @@ khác thiếu declaration; chỉ nullable fields nhận null. Blank string bị 
 không chuyển ngầm thành null trong shared declaration. Zero/false giữ nguyên.
 Không live lookup selling_unit/context currency để tự điền row. Units/conversion,
 requiredness, date/recipe periods, Store scope và permissions vẫn được kiểm.
+Approved missing-source exceptions (loss effective0, open-ended recipe end date,
+unknown SKU) are system policy with separate provenance, never shared constants:
+[canonical policy](../IMPORT_MAPPING_API_CONTRACT_VI.md#approved-missing-policy).
 
 ACCEPTED DECISION / CURRENT FACT M1: products.sku hỗ trợ **IMPORT_VALUE=null only**
-cho toàn rows trong một sheet/import được xác nhận SKU chưa biết. SKU vẫn required;
-không khai báo không tự null. Không PROFILE_CONSTANT/non-null shared SKU hoặc mở
+cho toàn rows trong một sheet/import được xác nhận SKU chưa biết. Missing source
+SKU nay unknown/null theo policy mới, không required source column. Không PROFILE_CONSTANT/non-null shared SKU hoặc mở
 các nullable fields khác. Blank string bị reject; metadata new-entity không thay
-nguồn field. Reusable spec chỉ giữ requirement, mỗi import phải khai báo lại.
+nguồn field. Khi explicit IMPORT_VALUE rule được chọn, reusable spec chỉ giữ
+requirement, mỗi import phải khai báo lại; missing command không tự bỏ reviewed rule.
 Existing SKU khác null vẫn ENTITY_METADATA_CONFLICT, không erase/correction. Source
 switch/rule edit vẫn N5 và current CAS/authorization/confirmation invalidation.
 Mixed per-key decisions không dùng scalar all-sheet unknown; M2 typed Product-ID

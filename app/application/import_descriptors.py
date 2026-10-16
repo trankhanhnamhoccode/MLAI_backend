@@ -280,7 +280,13 @@ def options(schema=None):
             elif full == "supplier_terms.unit":
                 description = "Đơn vị vật lý của lượng trong một pack; không phải nhãn thùng/bao. Quy đổi có evidence tới Ingredient.base_unit."
             elif full == "products.sku":
-                description = "SKU vẫn required-nullable. Shared IMPORT_VALUE chỉ nhận null tường minh cho toàn sheet hiện tại khi SKU chưa biết; không PROFILE_CONSTANT, không fallback hoặc xóa SKU existing."
+                description = "SKU thiếu là unknown/null, không mã giả; existing SKU khác vẫn conflict. M1 explicit null và M2 per-Product declarations giữ riêng provenance, không PROFILE_CONSTANT."
+            elif full == 'ingredients.sku':
+                description = 'SKU thiếu là unknown/null; không copy source key, không xóa SKU existing.'
+            elif full == 'recipes.process_loss_rate':
+                description = 'Thiếu dùng effective0%, warning RECIPE_PROCESS_LOSS_DEFAULTED_ZERO và provenance SYSTEM_DEFAULT; explicit0 giữ SOURCE_EXPLICIT. Invalid vẫn chặn.'
+            elif full == 'recipes.effective_to':
+                description = 'Thiếu là chưa ấn định kết thúc; không suy từ upload/data_date. Explicit date/null giữ provenance riêng.'
             prop = model.model_json_schema()["properties"][key]
             bounds = tuple(f"{name}={p[name]}" for p in prop.get("anyOf", (prop,))
                            for name in ("minLength", "maxLength", "pattern") if name in p)
@@ -288,6 +294,12 @@ def options(schema=None):
             nullable = any(p.get("type") == "null" for p in prop.get("anyOf", ()))
             result.append(
                 dto.FieldOption(
+                    missing_policy=('effective_zero' if full == 'recipes.process_loss_rate' else
+                        'open_ended' if full == 'recipes.effective_to' else
+                        'unknown_null' if full in {'products.sku','ingredients.sku'} else
+                        'block' if field.is_required() else 'optional'),
+                    effective_default='0' if full == 'recipes.process_loss_rate' else None,
+                    missing_warning_code='RECIPE_PROCESS_LOSS_DEFAULTED_ZERO' if full == 'recipes.process_loss_rate' else None,
                     key=full,
                     type=str(field.annotation),
                     requiredness="required" if field.is_required() else "optional",

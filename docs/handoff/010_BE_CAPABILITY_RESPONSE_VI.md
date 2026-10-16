@@ -1,5 +1,34 @@
 # Phản hồi BE cho FE010 — canonical source handoff
 
+## CURRENT FACT — approved missing data and OOXML numeric quantity
+
+M03 now publishes missing_policy/effective_default/missing_warning_code. Missing
+recipe loss calculates effective0% with RECIPE_PROCESS_LOSS_DEFAULTED_ZERO; show
+“Hao hụt chưa khai báo; đang tính0%”. I04 after contains effective values; row and
+line provenance expose raw source_value, source_missing=true, origin/value_source
+SYSTEM_DEFAULT and rule IDs. Explicit0 stays SOURCE_EXPLICIT without that warning.
+I06 references retain the same evidence. Missing recipe end date means open-ended;
+missing Product/Ingredient SKU unknown/null, never code generation. Invalid values
+and other required fields block; no stock/fees/price/MOQ/unit defaults. Existing
+required IMPORT_VALUE selections still require declaration, including M2 coverage.
+Historical provenance defaults source_missing=false without relabeling old evidence.
+New previews report import_mapping_policy/2; retained /1 remains readable with its
+captured values/provenance. FE must retain the returned version rather than synthesize it.
+
+M04 SourceContext optional recipe_quantity_format=OOXML_FINITE_DECIMAL generates a
+fixed Owner-reviewed Recipe quantity rule; no new route. Only numeric XLSX cells,
+exact bounded decimal expansion, no float/rounding/CSV/text/formula. Rule change
+needs N5 and invalidates prior confirmation; approved compatible reuse reads current
+values. [Canonical examples/errors/policy](../IMPORT_MAPPING_API_CONTRACT_VI.md#approved-missing-policy)
+and [numeric rule](../IMPORT_MAPPING_API_CONTRACT_VI.md#original-recipe-numeric-proposal)
+own workflow; updated OpenAPI owns DTO shapes. Original July08 recipe-only acceptance
+verifies10 Ingredients/5 Recipes/19 lines and exact BOM, replay and re-export NO_OP.
+No FE implementation/runtime restart or whole Store Planning READY claim.
+Metadata creation provenance includes source_value for each declared scalar and
+entity_proposal rule ID; full reviewed spec retains user evidence/declared_by and
+version.approved_by. Recipe loss is recipe-wide, including packaging; do not
+display expiry_tracking=false as a loss exemption. [Current limitation](../IMPORT_MAPPING_API_CONTRACT_VI.md#recipe-source-basis-và-canonical-whole-yield).
+
 ## CURRENT FACT — M2 Product declarations, local Menu checkpoint
 
 Source OpenAPI keeps73 operations/66 paths, adds M04 product_values typed variant,

@@ -112,7 +112,7 @@ Money = Annotated[StrictStr, Field(pattern=r"^(0|[1-9][0-9]{0,17})(\.[0-9]{1,18}
 class ProductMetadata(DTO):
     name: Annotated[StrictStr, Field(min_length=1, max_length=200)]
     selling_unit: Annotated[StrictStr, Field(min_length=1, max_length=32)]
-    sku: Annotated[StrictStr, Field(min_length=1, max_length=64)] | None
+    sku: Annotated[StrictStr, Field(min_length=1, max_length=64)] | None = None
     price: Money | None
     active: StrictBool
 
@@ -120,7 +120,7 @@ class ProductMetadata(DTO):
 class IngredientMetadata(DTO):
     name: Annotated[StrictStr, Field(min_length=1, max_length=200)]
     base_unit: Annotated[StrictStr, Field(min_length=1, max_length=32)]
-    sku: Annotated[StrictStr, Field(min_length=1, max_length=64)] | None
+    sku: Annotated[StrictStr, Field(min_length=1, max_length=64)] | None = None
     expiry_tracking: StrictBool
     active: StrictBool
 

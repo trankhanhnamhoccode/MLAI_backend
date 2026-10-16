@@ -52,7 +52,7 @@ def test_basis_to_canonical_to_dated_bom(basis, quantity, loss, unit, expected):
 @pytest.mark.parametrize("field,bad", [
     ("quantity_basis", None), ("quantity_basis", "1sp"), ("quantity_basis", ""),
     ("yield_quantity", None), ("yield_quantity", "0"), ("yield_quantity", "-1"),
-    ("process_loss_rate", None), ("process_loss_rate", "1"),
+    ("process_loss_rate", "1"),
     ("process_loss_rate", "-0.2"), ("process_loss_rate", "20%"),
     ("process_loss_rate", "NaN"), ("unit", None), ("yield_unit", None),
 ])

@@ -61,6 +61,8 @@ M03 FieldOption bổ sung `nullable:boolean`, `input_sources:[excel|binding]`,
 `required + nullable=true` là required-nullable, không được bỏ field. Các references
 hiển thị tên/mã nghiệp vụ, có thể resolve bằng identity binding đã duyệt; Excel
 không cần chứa UUID. Binding hiện resolve token trong cột; không generic row constant.
+Ngoại lệ missing được người dùng duyệt nay thể hiện bằng `missing_policy`,
+`effective_default`, `missing_warning_code`; xem [policy hiện hành](#approved-missing-policy).
 Store/actor/file IDs/profile versions và semantic/parsing context không phải cột
 business bắt buộc. Không tự điền date/unit/currency/zero từ context chưa hỗ trợ.
 Chi tiết đủ fields, validation, writer và gaps:
@@ -110,10 +112,11 @@ active, including false. Source code and SKU are separate; no implicit code→SK
 sales-history→active. Current catalog source key still supports provenance/identity
 binding; full-name recognition above does not require every other file to share it.
 
-ACCEPTED DECISION / CURRENT FACT M1: products.sku stays required-nullable; existing
+ACCEPTED DECISION / CURRENT FACT M1: explicit products.sku null remains supported; existing
 shared_value accepts IMPORT_VALUE=null only for an explicitly confirmed homogeneous
-sheet. No PROFILE_CONSTANT/shared known SKU/blank/missing-value fallback or arbitrary
-nullable injection. Entity metadata does not replace row field sources. M1 rule
+sheet. No PROFILE_CONSTANT/shared known SKU/blank or missing declaration fallback,
+or arbitrary nullable injection. Missing raw SKU follows the newer approved policy;
+entity metadata does not replace row field sources. M1 rule
 changes retain N5; reuse requires a new value. M2 below expresses mixed fields by
 resolved Product IDs. Existing different metadata stays ENTITY_METADATA_CONFLICT,
 not a Product update/correction API.
@@ -835,7 +838,8 @@ ACCEPTED DECISION: `recipes.quantity_basis` là required source semantics, nhậ
 `PER_SERVING` hoặc `WHOLE_BATCH`. Field không tạo cột canonical mới. Cột nguồn đã map
 hoặc M04 `shared_value` đều được phép; PROFILE_CONSTANT dành cho semantics ổn định
 được Owner duyệt, IMPORT_VALUE dành cho facts của lần nhập. Header “lượng 1 sp” chỉ
-proposal. Không có default basis/yield/loss/unit. Profile lịch sử thiếu basis vẫn
+proposal. Không có default basis/yield/unit; missing loss dùng effective0 với warning/
+SYSTEM_DEFAULT theo policy mới bên dưới. Profile lịch sử thiếu basis vẫn
 đọc được, nhưng không auto-reuse; `RECIPE_BASIS_REVIEW_REQUIRED` yêu cầu review lại.
 
 CURRENT FACT: sau lexical/date normalization và validation, ingredient conversion
@@ -843,8 +847,9 @@ theo exact declared factor; PER_SERVING nhân lượng với yield đúng một 
 `RecipeValue.lines[].quantity` toàn mẻ. WHOLE_BATCH giữ lượng toàn mẻ. Loss là ratio
 `0 <= process_loss_rate < 1`, giữ nguyên ở DB; BOM dùng
 `demand * canonical_quantity / yield / (1-loss)`. Không chuyển `20%` thành `0.2`,
-không rounding/epsilon. Yield/line >0; loss=0 hợp lệ khi explicit. Missing/null/zero
-không thay thế nhau. Exponent không được conversion làm thành lexical hợp lệ.
+không rounding/epsilon. Yield/line >0; explicit loss=0 khác missing loss có effective0.
+Raw missing/default provenance vẫn giữ riêng. Exponent không được conversion làm
+thành lexical hợp lệ; chỉ reviewed OOXML numeric rule bên dưới được xử lý nó.
 
 Yield unit phải bằng Product.selling_unit; output conversion chưa hỗ trợ,
 `UNIT_MISMATCH` chặn. Recipe conversion giữa known mass mg/g/kg và volume ml/l bị
@@ -878,6 +883,105 @@ CAS/rights/read-set/idempotency/atomic batch. Staff không approve_activate. Pre
 100g/serving × yield10 và 1000g/WHOLE_BATCH yield10 cùng lưu line1000g, demand40 →
 4000g. Batch1000ml/yield10/loss0.2 → 5000ml. Readiness chỉ hết recipe gap khi version
 bao phủ đủ horizon và lines hợp lệ; sales/kho/supplier/config blockers vẫn độc lập.
+
+CURRENT FACT / LIMITATION: process_loss_rate applies at Recipe level to **every**
+line. BOM has no food/packaging classification or per-line loss exemption. For40
+servings/yield1,150ml food +1 plastic cup per serving, loss20% produces7500ml and50
+cups, not40 cups. expiry_tracking=false does not exempt a line. Original July08
+loss0 acceptance therefore does not establish packaging correctness for nonzero
+loss. This slice preserves the current formula; a different packaging policy needs
+a separate accepted business decision/representation, not inferred classification.
+
+CURRENT FACT metadata provenance: N5 retains full EntityReservation.metadata and
+evidence_reference, source_provenance.declared_by and immutable version.approved_by.
+Creation rows/I06 references retain each declared scalar in provenance.source_value,
+origin SOURCE_EXPLICIT, value_source IDENTITY_BINDING and entity_proposal rule ID.
+Explicit metadata sku:null has source_missing=false; omitted SKU stays UNKNOWN/
+SYSTEM_DEFAULT with source_missing=true. For July08, active/expiry_tracking/SKU
+come from the user's explicit dataset-scoped confirmation, not Excel/benchmark
+inference; name/base_unit are corroborated by source B/D.
+
+<a id="original-recipe-numeric-proposal"></a>
+### ACCEPTED DECISION / CURRENT FACT — exact OOXML numeric quantity normalization
+
+M04 SourceContext accepts optional `recipe_quantity_format:"OOXML_FINITE_DECIMAL"`.
+It generates fixed Normalization kind `numeric_format`, fields `["quantity"]`,
+rule_id `declared_ooxml_quantity`, parameter `OOXML_FINITE_DECIMAL`, scoped only to
+Recipe sheets with recorded XLSX epoch. No endpoint, arbitrary transform or broader
+Quantity grammar. Owner reviews the full spec; rule changes invalidate pin/preview/
+confirmation and require N5. Compatible approved reuse retains the rule, re-reading
+current cells. Example on the existing sheet source_context mapping_id:
+
+```json
+{"resolution":{"kind":"source_context","source_system_key":"USER_SYNTHETIC_RECIPES","report_type":"PRODUCT_RECIPES","date_format":"EXCEL_SERIAL","recipe_quantity_format":"OOXML_FINITE_DECIMAL","evidence_reference":"Reviewed exact numeric quantity source and XLSX epoch; business identities/basis reviewed separately"}}
+```
+
+Only XLSX numeric cells qualify; CSV/text/formula/error cells cannot use this rule.
+Decimal parsing/expansion is exact without float, rounding or unit conversion.
+Input/output max200 characters, absolute lexical exponent≤200, bounded before
+allocation; larger fixed-point output also rejects. NaN/Infinity/negative/percent/
+locale guesses reject. Zero expands but still fails positive Recipe quantity.
+Raw source_value/source index remain unchanged; applied_rule_ids include the rule.
+Errors: OOXML_RECIPE_QUANTITY_SCOPE_REQUIRED, OOXML_NUMERIC_SOURCE_REQUIRED,
+INVALID_OOXML_NUMERIC_QUANTITY, OOXML_NUMERIC_RESOURCE_LIMIT, existing
+INVALID_SOURCE_VALUE for invalid typed quantity. Canonical input without opt-in
+continues under the existing strict grammar.
+
+CURRENT FACT original July08 acceptance: nineteen recipe lines/five exact Menu
+Products/ten Ingredients. Source A2/C3 supports reviewed PER_SERVING; E/F yield1/ly,
+G version1, H Excel1900 date2026-06-01. Source C10/C13/C19/C21 exponent values retain
+their exact decimal values, including0.025000000000000001. User-approved metadata
+is pinned in [fixture](../tests/fixtures/import_recipe_declarations.json), scoped
+only to this synthetic dataset. M04 Ingredient reservations → N5 → preview → confirm
+→ atomic dependency-ordered Ingredient/Recipe commit uses existing writers. Fresh
+session checks10 Ingredients/5 Recipes/19 lines, exact BOM for40 of each Product,
+commit replay and renamed re-export NO_OP. All19 raw recipe rows retained; separate
+26 operational-rule rows explicitly excluded and retained raw. No combo recipes,
+inventory/supplier/Planning completion or training claim.
+
+<a id="approved-missing-policy"></a>
+### ACCEPTED DECISION / CURRENT FACT — approved missing-data policy
+
+[ADR-023](adr/ADR-023-approved-import-missing-policy.md) records the user's limited
+supersession of blanket missing-data blocking. Source missing differs from explicit
+0/null and from invalid input. Missing source column or genuinely empty cell may
+use only the following approved policy. Whitespace/nonblank invalid strings, error
+cells and invalid explicit shared declarations do not default.
+
+| Field | Missing source behavior / effective value | Provenance / warning |
+| --- | --- | --- |
+| recipes.process_loss_rate | Effective `"0"` (0%) for preview/canonical computation | origin/value_source SYSTEM_DEFAULT, source_missing=true, raw source_value retained, rule recipe_missing_loss_zero; RECIPE_PROCESS_LOSS_DEFAULTED_ZERO |
+| recipes.effective_to | null, no assigned end; never upload/data_date | origin UNKNOWN, value_source SYSTEM_DEFAULT, source_missing=true, rule recipe_open_ended |
+| products.sku / ingredients.sku | null, unknown; no generated/copy source code | origin UNKNOWN, value_source SYSTEM_DEFAULT, source_missing=true, rule missing_sku_unknown |
+| Other required fields | Block; M01 profile missing_fields names targets; blank mapped rows return MISSING_REQUIRED_VALUE | No zero/fallback for stock, fees, price, MOQ, units, basis, quantity, yield or effective_from |
+
+Explicit loss0 keeps SOURCE_EXPLICIT and no default warning; explicit nonzero stays
+unchanged. Explicit shared null/date or per-Product SKU declaration stays explicit,
+with declaration_id; no default is recorded as Owner-declared fact/PROFILE_CONSTANT.
+Explicitly selected IMPORT_VALUE rules still require their declaration (including
+per-Product exact coverage); missing a command is not missing a source field.
+Existing known SKU or other metadata differences remain conflicts, never erase.
+M04 metadata SKU omission is recorded as reservation sku_missing, distinct from an
+explicit metadata sku:null; request fingerprints preserve that distinction.
+
+M03 FieldOption publishes missing_policy (block/optional/unknown_null/open_ended/
+effective_zero), effective_default and missing_warning_code. I04 preview.after
+contains effective values; provenance and Recipe line_provenance retain raw value,
+source_missing (default false for historical reads), origin/value_source and rule
+IDs. warnings on each logical Recipe row include physical locations of defaulted
+loss lines; I06 canonical references retain provenance/warnings. FE shows “Hao hụt
+chưa khai báo; đang tính0%” and allows inspection of source/effective values, rather
+than displaying default0 as a measured/Owner-declared fact.
+
+No DDL: canonical Recipe loss stays non-null effective numeric, end date/SKU stay
+nullable; existing Import JSON persists absence/provenance/warnings. BOM and recipe
+readiness already consume effective0 correctly; no independent consumer fallback or
+default for other fields. Historical previews/specs/receipts are not rewritten;
+old provenance without source_missing reads false with its recorded origin intact.
+New previews explicitly pin `import_mapping_policy/2` in summary and retained
+payload; historical `/1` remains readable/committable under its captured typed
+operations and current guards, without recomputing the new missing policy.
+Whole Store Planning readiness still depends on its other data/config/runtime.
 
 Profile reuse kiểm tra từng dòng: column basis/unit mới được đọc lại, sai enum/unit
 bị chặn. IMPORT_VALUE luôn yêu cầu declaration mới; PROFILE_CONSTANT đổi cần proposal
@@ -2882,7 +2986,8 @@ not raw rows. Filtered rows/configuration projections are pages, not complete
 Store configuration; collect pinned pages to satisfy exact confirmation sets.
 
 M03 descriptors are the authority for requiredness, nullability and source roles;
-required-nullable still needs a key. Unknown/unresolved semantics cannot become0.
+required-nullable still needs a key unless the explicit [missing policy](#approved-missing-policy)
+allows absence. Unknown/unresolved semantics cannot become0 outside that allowlist.
 PROFILE_CONSTANT is reviewed reusable content; IMPORT_VALUE is batch-only and
 must not enter a reusable spec. Source switches require explicit acknowledgment;
 active-pointer change does not silently migrate an authorized immutable old pin.

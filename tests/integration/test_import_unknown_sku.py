@@ -31,7 +31,7 @@ def test_explicit_unknown_sku_owner_commit_replay_and_each_import_requires_decla
     c=fresh_store
     ident=prepared(c)
     proposal,=summary(c,ident)['profile_proposals']
-    assert proposal['missing_fields'] == ['products.sku'] and proposal['spec'] is None
+    assert not proposal['missing_fields'] and proposal['spec'] is not None
     with Session(c[0][1]) as fresh:
         assert fresh.scalar(select(func.count()).select_from(Product)) == 0
     response=shared(c,ident,'products.sku',None)

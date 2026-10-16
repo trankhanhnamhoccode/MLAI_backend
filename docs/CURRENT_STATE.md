@@ -1,5 +1,52 @@
 # Current state
 
+## CURRENT FACT — original Ingredients/Recipes and approved missing-data policy
+
+Menu checkpoint is `99224f1be02b70a62fb882df2ecbdbdb15b3d837`. Exact six source
+hashes match the July08 manifest; no August replacement. Original workbook04 has
+19 recipe lines for five exact Menu names and ten distinct Ingredient names/units.
+A2/C3 state per-Product quantity; E/F supply yield1/ly, G supplies version1,
+H supplies Excel1900 serial46174 =2026-06-01. These are source facts for explicit
+mapping/review, not defaults or approval. Operational conditions remain a separate
+26-row raw sheet, excluded explicitly from the recipe-only inspection scope.
+
+Public API/worker inspection rebuilds all ten Menu Products in a fresh isolated
+Store, manually binds five exact full names and maps all eight recipe columns.
+No SQL business seed or retained test UUIDs. User-approved metadata for this synthetic
+July08 set: ten unknown/null SKUs, all Ingredients active, expiry tracking for nine
+foods but not plastic cups. M04 Ingredient proposals supply typed metadata and
+reserved IDs under existing N5; dependency-ordered atomic commit can create the
+catalog before dependent Recipe writes in the same transaction. No new endpoint
+or Ingredient shared-SKU extension is necessary for that path.
+
+Without Ingredient resolution, preview still correctly blocks and canonical counts
+remain0. Completed flow now verifies10 Ingredients/5 Recipes/19 RecipeLines through
+Owner N5 → preview → confirm → atomic commit, fresh-session exact fields/Store/units/
+dates and lineage. No canonical Ingredient/Recipe before commit. Renamed re-export
+returns NO_OP, replay retains one receipt. Real dated BOM for40 of each Product
+matches independent raw-source rational expectations for all ten Ingredients;
+recipe readiness accepts effective loss0. All19 recipe/26 operational raw rows and
+bytes remain unchanged; no stock/supplier/operational-rule/Planning benchmark writes.
+
+The approved [OOXML numeric rule](IMPORT_MAPPING_API_CONTRACT_VI.md#original-recipe-numeric-proposal)
+is opt-in on M04 SourceContext, fixed to recipes.quantity numeric XLSX cells, exact/
+bounded decimal expansion without float/rounding. Owner reviews reusable rule;
+CSV/text/formula/error/invalid/capacity guards remain. Four original exponent cells
+now normalize without changing values or raw evidence. [ADR-023](adr/ADR-023-approved-import-missing-policy.md)
+records approved missing loss effective0% with warning/SYSTEM_DEFAULT, missing end
+date open-ended and missing Product/Ingredient SKU unknown/null. Explicit values,
+invalid input and other required facts remain distinct. M03 publishes missing policy;
+I04/I06 publish effective values plus raw/source_missing/provenance/warnings.
+No DDL/writer/consumer fallback changes: existing JSON retains absence and canonical
+loss is effective0. New previews pin import_mapping_policy/2; retained /1 values/
+origin/version remain readable without rewriting evidence. This work forms the
+local Ingredients/Recipes checkpoint after Menu; no main integration/push/runtime
+change. Creation provenance retains declared metadata scalar values and proposal/
+actor/Owner references. Positive loss applies to every recipe line, including
+plastic cups; no packaging exemption/classifier is implemented. Original loss0
+acceptance cannot validate packaging policy at loss>0. Provider/FE/development DB
+untouched; targeted logs under runtime.
+
 ## CURRENT FACT — Menu M1/M2 after local Import checkpoint
 
 I1–I5.1 checkpoint `739e7480a5a6c0d8d69ea4654e090887341610f3`; M1/Menu/M2 form

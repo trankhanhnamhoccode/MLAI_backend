@@ -19002,6 +19002,11 @@
           "approval_revision": {
             "type": "string",
             "title": "Approval Revision"
+          },
+          "sku_missing": {
+            "type": "boolean",
+            "title": "Sku Missing",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -20950,6 +20955,40 @@
       },
       "FieldOption": {
         "properties": {
+          "missing_policy": {
+            "type": "string",
+            "enum": [
+              "block",
+              "optional",
+              "unknown_null",
+              "open_ended",
+              "effective_zero"
+            ],
+            "title": "Missing Policy",
+            "default": "block"
+          },
+          "effective_default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Default"
+          },
+          "missing_warning_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing Warning Code"
+          },
           "key": {
             "type": "string",
             "title": "Key"
@@ -21170,6 +21209,11 @@
             "type": "string",
             "title": "Field"
           },
+          "source_missing": {
+            "type": "boolean",
+            "title": "Source Missing",
+            "default": false
+          },
           "source_value": {
             "anyOf": [
               {
@@ -21193,6 +21237,7 @@
               "SOURCE_EXPLICIT",
               "DETERMINISTIC_DERIVED",
               "SYSTEM_ASSIGNED",
+              "SYSTEM_DEFAULT",
               "UNKNOWN",
               "AMBIGUOUS"
             ],
@@ -21212,7 +21257,8 @@
               "SOURCE_COLUMN",
               "PROFILE_CONSTANT",
               "IMPORT_VALUE",
-              "IDENTITY_BINDING"
+              "IDENTITY_BINDING",
+              "SYSTEM_DEFAULT"
             ],
             "title": "Value Source",
             "default": "SOURCE_COLUMN"
@@ -23212,7 +23258,6 @@
         "required": [
           "name",
           "base_unit",
-          "sku",
           "expiry_tracking",
           "active"
         ],
@@ -23424,7 +23469,6 @@
         "required": [
           "name",
           "base_unit",
-          "sku",
           "expiry_tracking",
           "active",
           "source_business_key"
@@ -27147,7 +27191,8 @@
               "date_format",
               "unit_label_alias",
               "exact_scale",
-              "stockout_alias"
+              "stockout_alias",
+              "numeric_format"
             ],
             "title": "Kind"
           },
@@ -30228,7 +30273,10 @@
           },
           "policy_version": {
             "type": "string",
-            "const": "import_mapping_policy/1",
+            "enum": [
+              "import_mapping_policy/1",
+              "import_mapping_policy/2"
+            ],
             "title": "Policy Version",
             "default": "import_mapping_policy/1"
           },
@@ -30693,7 +30741,6 @@
         "required": [
           "name",
           "selling_unit",
-          "sku",
           "price",
           "active"
         ],
@@ -30750,7 +30797,6 @@
         "required": [
           "name",
           "selling_unit",
-          "sku",
           "price",
           "active"
         ],
@@ -31001,7 +31047,6 @@
         "required": [
           "name",
           "selling_unit",
-          "sku",
           "price",
           "active",
           "source_business_key"
@@ -31563,6 +31608,11 @@
       },
       "ProvenanceValue": {
         "properties": {
+          "source_missing": {
+            "type": "boolean",
+            "title": "Source Missing",
+            "default": false
+          },
           "source_value": {
             "anyOf": [
               {
@@ -31586,6 +31636,7 @@
               "SOURCE_EXPLICIT",
               "DETERMINISTIC_DERIVED",
               "SYSTEM_ASSIGNED",
+              "SYSTEM_DEFAULT",
               "UNKNOWN",
               "AMBIGUOUS"
             ],
@@ -31604,7 +31655,8 @@
               "SOURCE_COLUMN",
               "PROFILE_CONSTANT",
               "IMPORT_VALUE",
-              "IDENTITY_BINDING"
+              "IDENTITY_BINDING",
+              "SYSTEM_DEFAULT"
             ],
             "title": "Value Source",
             "default": "SOURCE_COLUMN"
@@ -35719,6 +35771,18 @@
               }
             ],
             "title": "Date Format"
+          },
+          "recipe_quantity_format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "OOXML_FINITE_DECIMAL"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipe Quantity Format"
           },
           "pack_cost_basis": {
             "anyOf": [

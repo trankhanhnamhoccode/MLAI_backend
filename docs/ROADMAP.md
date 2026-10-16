@@ -196,6 +196,26 @@ Accepted full-name recognition preserves size/variant/hot-cold; manual binding/r
 works without common codes/SKU. M02 automatic name-prioritized candidate projection
 and finite status-label normalization are outside current scope.
 
+CURRENT FACT Ingredients/Recipes: Menu checkpoint99224f1 is local and separated
+from subsequent WIP. Exact July08 workbook04 completes public API/worker/Owner/
+preview/confirm/atomic commit with rebuilt Menu prerequisites and reviewed scoped
+Ingredient metadata:10 Ingredients/5 Recipes/19 lines, fresh exact values/Store/
+lineage, zero canonical recipe/catalog writes before commit. Original19 recipe/
+26 operational raw rows retained; operational sheet explicitly excluded. Exact BOM
+for40 each Product matches source rational expectations; replay/renamed re-export
+NO_OP. Reviewed [OOXML numeric rule](IMPORT_MAPPING_API_CONTRACT_VI.md#original-recipe-numeric-proposal)
+handles numeric exponents exactly within bounds, not CSV/text/formulas. Approved
+[missing policy](IMPORT_MAPPING_API_CONTRACT_VI.md#approved-missing-policy) uses
+effective loss0 with SYSTEM_DEFAULT/warning, open-ended missing recipe end date,
+unknown/null SKU; invalid/other required facts still block. DTO/OpenAPI changes
+are explicit; no DDL/writer/consumer fallback. Targeted tests cover boundaries,
+permissions, stale, exact values and prior canonical grammar. No inventory/NCC/
+Planning benchmark/FE/provider/development DB change. Ingredients/Recipes forms a
+local checkpoint after Menu; metadata source values and actor/Owner provenance
+are verified. Positive Recipe loss multiplies all lines, including packaging;
+per-line exemptions/food classification remain outside scope, not established by
+original loss0 acceptance. Inventory acceptance starts only after this checkpoint.
+
 Chốt/push v1.0 trước rồi tách nhánh import: audit sáu workbook chỉ đọc, cải tiến
 deterministic mapping proposals và approved Store/source/report/version profile
 reuse, phát hiện drift, giữ Owner approval và atomic commit. Provider thật cần

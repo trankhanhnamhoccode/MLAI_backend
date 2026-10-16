@@ -1,5 +1,16 @@
 # S4.4 — Import staging/mapping/preview
 
+CURRENT FACT approved missing policy: recipe loss absent→effective0%, warning
+RECIPE_PROCESS_LOSS_DEFAULTED_ZERO and SYSTEM_DEFAULT/source_missing provenance;
+absent recipe end date→open-ended, absent Product/Ingredient SKU→unknown/null.
+Invalid values and other required facts remain blocked; explicit0/null retain
+their origin. M03 shows missing_policy/effective_default/missing_warning_code;
+I04 after/provenance/line_provenance/warnings and I06 references retain effective
+and source distinctions. [Canonical policy](../IMPORT_MAPPING_API_CONTRACT_VI.md#approved-missing-policy).
+Reviewed opt-in OOXML numeric Recipe quantity normalization now completes original
+July08 recipe-only scope,10 Ingredients/5 Recipes/19 lines, exact BOM/replay/NO_OP
+re-export. Operational sheet raw only. No DDL/consumer fallback/FE/runtime changes.
+
 CURRENT FACT M2 completes original Menu catalog scope: ten original rows through
 manual Product resolution → Owner N5 → preview → confirmation → atomic commit,
 fresh-session exact Product/Store/SKU/status/price/unit and lineage. Raw source/hash

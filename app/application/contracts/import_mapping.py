@@ -262,6 +262,7 @@ class SourceContext(DTO):
     inventory_semantics: Literal["lot_stock_count", "actual_receipt"] | None = None
     decimal_locale: Literal["dot", "comma"] | None = None
     date_format: Literal["ISO", "DMY_SLASH", "MDY_SLASH", "EXCEL_SERIAL"] | None = None
+    recipe_quantity_format: Literal["OOXML_FINITE_DECIMAL"] | None = None
     pack_cost_basis: Literal["PER_PACK", "PER_SOURCE_UNIT"] | None = Field(
         default=None, json_schema_extra={"deprecated": True},
         description="Historical readability only; new proposals require supplier price_basis/price_quantity/price_unit declarations.")
@@ -432,14 +433,22 @@ class EntityReservation(DTO):
     metadata: ProductMetadata | IngredientMetadata | SupplierMetadata
     evidence_reference: str
     approval_revision: str
+    sku_missing: StrictBool = False
 
 
 class Normalization(DTO):
     rule_id: str
-    kind: Literal["decimal_locale", "date_format", "unit_label_alias", "exact_scale", "stockout_alias"]
+    kind: Literal["decimal_locale", "date_format", "unit_label_alias", "exact_scale", "stockout_alias", "numeric_format"]
     fields: tuple[str, ...]
     parameter: str
     evidence_reference: str
+
+    @model_validator(mode="after")
+    def numeric_scope(self):
+        if self.kind == 'numeric_format' and (self.fields != ('quantity',)
+                or self.parameter != 'OOXML_FINITE_DECIMAL'):
+            raise ValueError('OOXML_RECIPE_QUANTITY_SCOPE_REQUIRED')
+        return self
 
 
 class SourceProvenance(DTO):
@@ -487,6 +496,10 @@ class ProfileSpec(DTO):
 
     @model_validator(mode="after")
     def shared_sources(self):
+        numeric_rules = [r for r in self.normalizations if r.kind == 'numeric_format']
+        if numeric_rules and (len(numeric_rules) != 1 or self.schema != 'recipes'
+                or not any(b.target_field == 'recipes.quantity' and not b.ignored for b in self.field_bindings)):
+            raise ValueError('OOXML_RECIPE_QUANTITY_SCOPE_REQUIRED')
         if self.schema == 'inventory_receipts' and self.inventory_semantics != 'actual_receipt':
             raise ValueError('ACTUAL_RECEIPT_SEMANTICS_REQUIRED')
         shared = [r.target_field for r in self.shared_field_bindings]
@@ -864,6 +877,9 @@ class MappingList(DTO):
 
 
 class FieldOption(DTO):
+    missing_policy: Literal['block', 'optional', 'unknown_null', 'open_ended', 'effective_zero'] = 'block'
+    effective_default: str | None = None
+    missing_warning_code: str | None = None
     key: str
     type: str
     requiredness: Literal["required", "optional"]
@@ -971,17 +987,19 @@ class Change(DTO):
 
 class FieldProvenance(DTO):
     field: str
+    source_missing: StrictBool = False
     source_value: str | bool | int | None = None
     origin: Literal[
         "SOURCE_EXPLICIT",
         "DETERMINISTIC_DERIVED",
         "SYSTEM_ASSIGNED",
+        "SYSTEM_DEFAULT",
         "UNKNOWN",
         "AMBIGUOUS",
     ]
     applied_rule_ids: tuple[str, ...] = ()
     value_source: Literal[
-        "SOURCE_COLUMN", "PROFILE_CONSTANT", "IMPORT_VALUE", "IDENTITY_BINDING"
+        "SOURCE_COLUMN", "PROFILE_CONSTANT", "IMPORT_VALUE", "IDENTITY_BINDING", "SYSTEM_DEFAULT"
     ] = "SOURCE_COLUMN"
     source_column_index: int | None = None
     declaration_id: UUID | None = None
@@ -1004,17 +1022,19 @@ class EntityRefs(DTO):
 
 
 class ProvenanceValue(DTO):
+    source_missing: StrictBool = False
     source_value: str | bool | int | None = None
     origin: Literal[
         "SOURCE_EXPLICIT",
         "DETERMINISTIC_DERIVED",
         "SYSTEM_ASSIGNED",
+        "SYSTEM_DEFAULT",
         "UNKNOWN",
         "AMBIGUOUS",
     ]
     applied_rule_ids: tuple[str, ...]
     value_source: Literal[
-        "SOURCE_COLUMN", "PROFILE_CONSTANT", "IMPORT_VALUE", "IDENTITY_BINDING"
+        "SOURCE_COLUMN", "PROFILE_CONSTANT", "IMPORT_VALUE", "IDENTITY_BINDING", "SYSTEM_DEFAULT"
     ] = "SOURCE_COLUMN"
     source_column_index: int | None = None
     declaration_id: UUID | None = None
@@ -1193,7 +1213,7 @@ class PreviewSummary(DTO):
     created_at: datetime
     source_set_version: str
     mapping_bindings: tuple[BindingRef, ...]
-    policy_version: Literal["import_mapping_policy/1"] = "import_mapping_policy/1"
+    policy_version: Literal["import_mapping_policy/1", "import_mapping_policy/2"] = "import_mapping_policy/1"
     mode: Literal["atomic"] = "atomic"
     validation_status: Literal["ready", "blocked", "confirmation_required"]
     can_commit: bool = False

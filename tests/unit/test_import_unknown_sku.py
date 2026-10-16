@@ -1,4 +1,4 @@
-"""Explicit batch-only unknown SKU, never a missing-field default."""
+"""Explicit batch-only unknown SKU remains distinct from approved missing policy."""
 from uuid import uuid4
 import pytest
 from pydantic import ValidationError
@@ -12,7 +12,7 @@ from tests.unit.test_import_field_values import declared, spec, row
 
 def test_unknown_sku_is_required_nullable_and_batch_only_with_provenance():
     option = next(o for o in options('products') if o.key == 'products.sku')
-    assert option.requiredness == 'required' and option.nullable
+    assert option.requiredness == 'optional' and option.nullable and option.missing_policy == 'unknown_null'
     assert option.allowed_shared_scopes == ('IMPORT_VALUE',)
     assert allowed_scopes('ingredients.sku') == ()
     s = spec('products', ('source_business_key','name','selling_unit','price','active'),

@@ -125,10 +125,10 @@ class RecipeSource(DTO):
     product_id: UUID
     version: StrictInt = Field(ge=1, le=2147483647)
     effective_from: date
-    effective_to: date | None
+    effective_to: date | None = None
     yield_quantity: Quantity
     yield_unit: str
-    process_loss_rate: Quantity
+    process_loss_rate: Quantity = '0'
     ingredient_id: UUID
     quantity: Quantity
     unit: str

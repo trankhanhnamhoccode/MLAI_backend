@@ -1,0 +1,19 @@
+{
+  "purpose": "Explicit user metadata approval scoped only to synthetic July08 dataset; never global catalog defaults or benchmark UUIDs.",
+  "recipe_sha256": "a4370e477ffc4cfe843cdf7d46c2bf53a1a86ad84f4f1695496a2f8e2332023e",
+  "source_system_key": "USER_SYNTHETIC_RECIPES",
+  "report_type": "PRODUCT_RECIPES",
+  "evidence": "User approved all ten Ingredients SKU unknown/null, currently used; expiry tracking for nine foods, not plastic cups. Names/base units are source B/D. No stock, shelf-life duration or density declaration.",
+  "ingredients_by_full_name": {
+    "Chuối": {"sku": null, "active": true, "expiry_tracking": true},
+    "Sữa tươi": {"sku": null, "active": true, "expiry_tracking": true},
+    "Đường": {"sku": null, "active": true, "expiry_tracking": true},
+    "Ly nhựa 500ml": {"sku": null, "active": true, "expiry_tracking": false},
+    "Trà đen": {"sku": null, "active": true, "expiry_tracking": true},
+    "Trân châu": {"sku": null, "active": true, "expiry_tracking": true},
+    "Cà phê hạt": {"sku": null, "active": true, "expiry_tracking": true},
+    "Sữa đặc": {"sku": null, "active": true, "expiry_tracking": true},
+    "Cam": {"sku": null, "active": true, "expiry_tracking": true},
+    "Bột matcha": {"sku": null, "active": true, "expiry_tracking": true}
+  }
+}

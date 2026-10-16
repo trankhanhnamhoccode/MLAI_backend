@@ -355,6 +355,9 @@ def build_spec(
         else sheet.shared_field_bindings
     )
     if schema:
+        if context is not None and context.recipe_quantity_format and (
+                schema != 'recipes' or sheet.excel_date_system not in {'1900', '1904'}):
+            missing.append('OOXML_RECIPE_QUANTITY_SCOPE_REQUIRED')
         required = {o.key for o in options(schema) if o.requiredness == "required"}
         shared_targets = {r.target_field for r in shared}
         if shared_targets & set(targets):
@@ -377,6 +380,11 @@ def build_spec(
     if missing:
         return None, tuple(missing)
     normalizations = list(prior_normalizations)
+    if context.recipe_quantity_format:
+        normalizations = [r for r in normalizations if r.kind != 'numeric_format']
+        normalizations.append(dto.Normalization(rule_id='declared_ooxml_quantity', kind='numeric_format',
+            fields=('quantity',), parameter=context.recipe_quantity_format,
+            evidence_reference=context.evidence_reference))
     if context.stockout_aliases:
         import json
         normalizations = [r for r in normalizations if r.kind != 'stockout_alias']

@@ -346,6 +346,24 @@ def normalize(source, spec, import_values=()):
                 declaration_id=declaration.declaration_id,
             )
         )
+    # Approved missing-data policy only. Invalid strings/error cells remain invalid;
+    # an explicitly required IMPORT_VALUE above must still be supplied.
+    missing_policies = ({'process_loss_rate': ('0', 'SYSTEM_DEFAULT', 'recipe_missing_loss_zero'),
+                         'effective_to': (None, 'UNKNOWN', 'recipe_open_ended')}
+                       if spec.schema == 'recipes' else
+                       {'sku': (None, 'UNKNOWN', 'missing_sku_unknown')}
+                       if spec.schema in {'products', 'ingredients'} else {})
+    for field, (effective, origin, policy) in missing_policies.items():
+        prior = next((p for p in provenance if p.field == field), None)
+        missing = field not in values or (values[field] is None and (
+            prior is None or prior.value_source == 'SOURCE_COLUMN'))
+        if missing:
+            values[field] = effective
+            provenance = [p for p in provenance if p.field != field] + [dto.FieldProvenance(
+                field=field, source_value=prior.source_value if prior else None,
+                source_missing=True, origin=origin, value_source='SYSTEM_DEFAULT',
+                source_column_index=prior.source_column_index if prior else None,
+                applied_rule_ids=(policy,))]
     for rule in spec.normalizations:
         if (
             rule.kind == "exact_scale"
@@ -358,7 +376,21 @@ def normalize(source, spec, import_values=()):
             value = values.get(field)
             if value is None:
                 continue
-            if rule.kind == "decimal_locale" and rule.parameter == "comma":
+            if rule.kind == 'numeric_format':
+                from app.application.import_numeric import ooxml_quantity
+                binding = next((b for b in spec.field_bindings if not b.ignored
+                    and b.target_field == 'recipes.quantity'), None)
+                cell = next((c for c in source['cells'] if binding
+                    and c['column_index'] == binding.source_column_index), None)
+                if (spec.schema != 'recipes' or field != 'quantity'
+                        or source.get('excel_date_system') not in {'1900', '1904'}
+                        or not cell or cell['kind'] != 'numeric' or cell.get('formula')):
+                    raise RowBlocked('OOXML_NUMERIC_SOURCE_REQUIRED')
+                try:
+                    values[field] = ooxml_quantity(value)
+                except ValueError as error:
+                    raise RowBlocked(str(error)) from None
+            elif rule.kind == "decimal_locale" and rule.parameter == "comma":
                 if not re.fullmatch(r"(0|[1-9][0-9]*)(,[0-9]+)?", value):
                     raise RowBlocked("INVALID_DECLARED_DECIMAL")
                 values[field] = value.replace(",", ".")
@@ -1257,6 +1289,9 @@ def make_preview(
         )
     for key, group in sorted(recipe_groups.items()):
         first, prov, loc, _ = group[0]
+        default_warnings = tuple(notice('RECIPE_PROCESS_LOSS_DEFAULTED_ZERO', location, True)
+            for _, provenance, location, _ in group
+            if any(p.field == 'process_loss_rate' and p.origin == 'SYSTEM_DEFAULT' for p in provenance))
         blockers = [b for _, _, _, bs in group for b in bs]
         # Matching Product/version and headers do not establish one report grain.
         # Split-part declarations are not implemented; never combine independent
@@ -1388,6 +1423,7 @@ def make_preview(
                 before=before,
                 after=after,
                 provenance=prov,
+                warnings=default_warnings,
                 blockers=tuple(blockers),
                 source_locations=tuple(x[2] for x in group),
                 line_provenance=tuple(
@@ -1464,8 +1500,11 @@ def make_preview(
             provenance=tuple(
                 dto.FieldProvenance(
                     field=k, origin="SOURCE_EXPLICIT", value_source="IDENTITY_BINDING",
+                    source_value=values[k],
                     applied_rule_ids=("entity_proposal:" + str(ent.proposal_id),),
-                )
+                ) if k != 'sku' or not ent.sku_missing else dto.FieldProvenance(
+                    field=k, origin='UNKNOWN', value_source='SYSTEM_DEFAULT', source_missing=True,
+                    applied_rule_ids=('missing_sku_unknown',))
                 for k in type(ent.metadata).model_fields
             ),
             blockers=tuple(blockers),

@@ -81,7 +81,7 @@ def prepare_original_menu(fresh_store, monkeypatch, source_system_key="MENU_INSP
     return context, ident, rows, digest, path, cells, sheet
 
 
-def test_original_menu_keeps_all_rows_and_blocks_unrepresentable_sku(fresh_store, monkeypatch, i5_trace):
+def test_original_menu_keeps_all_rows_and_blocks_unreviewed_status(fresh_store, monkeypatch, i5_trace):
     context, ident, rows, digest, path, cells, sheet = prepare_original_menu(fresh_store, monkeypatch)
 
     def issue(kind):
@@ -96,7 +96,7 @@ def test_original_menu_keeps_all_rows_and_blocks_unrepresentable_sku(fresh_store
     assert rejected.status_code == 422 and rejected.json()['error']['code'] == 'VALIDATION_ERROR'
     current = summary(context, ident)
     proposal, = current['profile_proposals']
-    assert proposal['missing_fields'] == ['products.sku'] and proposal['spec'] is None
+    assert not proposal['missing_fields'] and proposal['spec'] is not None
     assert not current['can_preview'] and not current['binding_refs']
     options = context[0][5].get(f'/api/v1/imports/{ident}/sheets/{sheet["sheet_id"]}/field-options')
     assert options.status_code == 200, options.text
@@ -105,17 +105,17 @@ def test_original_menu_keeps_all_rows_and_blocks_unrepresentable_sku(fresh_store
     assert not current['sheets'][0]['import_values']  # No unauthorized all-ten null.
     approval = post(context, f'/stores/{context[1].store_id}/mapping-profiles/{proposal["profile_id"]}/decisions',
         dict(decision='approve_activate', proposal_revision=proposal['proposal_revision'],
-             expected_active_version=proposal['active_version'], reason='Guard probe: incomplete spec must not activate'),
+             expected_active_version=proposal['active_version'], reason='Review complete spec under approved missing-SKU policy; source status remains invalid'),
         match=proposal['lifecycle_revision'])
-    assert approval.status_code == 409, approval.text
-    batch_read = context[0][5].get('/api/v1/imports/'+ident).json()['data']
-    preview = post(context, '/imports/'+ident+'/process',
-        dict(phase='preview',mapping_revision=current['mapping_revision']), match=batch_read['import_revision'])
-    assert preview.status_code == 409 and preview.json()['error']['code'] == 'OWNER_MAPPING_APPROVAL_REQUIRED'
-    assert context[2].run_one() is None
+    assert approval.status_code == 200, approval.text
+    # Re-read revisions after Owner activation; invalid source status still blocks.
+    from tests.integration.test_import_staging import previewed
+    read = previewed(context, ident)
+    assert not read['preview']['summary']['can_commit']
+    assert any(b['code'] == 'INVALID_BOOLEAN' for r in read['preview']['rows'] for b in r['blockers'])
     with Session(context[0][1]) as fresh:
         assert fresh.scalar(select(func.count()).select_from(Product)) == 0
-        assert fresh.scalar(select(func.count()).select_from(ImportProfileVersion)) == 0
+        assert fresh.scalar(select(func.count()).select_from(ImportProfileVersion)) == 1
         raw, = fresh.get(ImportBatch, UUID(ident)).analysis_json['sources']
         assert [r['row_number'] for r in raw['rows']] == list(range(4,14))
         for r in raw['rows']:
@@ -130,9 +130,9 @@ def test_original_menu_keeps_all_rows_and_blocks_unrepresentable_sku(fresh_store
         missing_fields=proposal['missing_fields'], guidance=current['completion_guidance'],
         m1_scope_limit='IMPORT_VALUE null is available only sheet-wide; five unknown keys plus five known SKUs cannot share one value',
         shared_sku_error=rejected.json()['error'], approval_error=approval.json()['error'],
-        preview_error=preview.json()['error'], canonical_products=0,
+        preview_blockers=read['preview']['summary']['blockers'], canonical_products=0,
         additional_limit='Raw Vietnamese status has no Product bool alias; sheet-wide constant cannot express mixed reviewed status',
-        limits='Ten explicit M04 proposals/reservations only; no canonical Products, Owner approval, typed preview, confirmation/commit or original reexport NO_OP'))
+        limits='Owner reviewed; typed preview blocked by invalid source status. No canonical Products, confirmation/commit or original reexport NO_OP'))
 
 
 def test_synthetic_catalog_mixed_status_nullable_sku_commit_and_renamed_reexport(fresh_store, monkeypatch, i5_trace):

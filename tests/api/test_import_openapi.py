@@ -7,6 +7,14 @@ from app.main import create_app
 def test_import_operations_and_typed_variants_preserve_boundaries():
     spec = create_app(Settings(_env_file=None)).openapi()
     schemas = spec['components']['schemas']
+    assert schemas['SourceContext']['properties']['recipe_quantity_format']['anyOf'][0]['const']=='OOXML_FINITE_DECIMAL'
+    assert 'numeric_format' in schemas['Normalization']['properties']['kind']['enum']
+    assert 'process_loss_rate' in schemas['RecipeValue']['required']  # Canonical effective value stays non-null.
+    assert 'sku' not in schemas['ProductSource']['required'] and 'sku' not in schemas['IngredientSource']['required']
+    assert schemas['FieldOption']['properties']['missing_policy']['enum']==['block','optional','unknown_null','open_ended','effective_zero']
+    assert 'SYSTEM_DEFAULT' in schemas['ProvenanceValue']['properties']['origin']['enum']
+    assert schemas['ProvenanceValue']['properties']['source_missing']['default'] is False
+    assert schemas['PreviewSummary']['properties']['policy_version']['enum']==['import_mapping_policy/1','import_mapping_policy/2']
     assert schemas['ProductValuesResolution']['properties']['target_field']['enum'] == ['products.sku','products.active']
     assert schemas['ProductImportValue']['properties']['version']['const'] == 'product_field_value/1'
     assert 'product_value_scopes' in schemas['MappingSummary']['properties']

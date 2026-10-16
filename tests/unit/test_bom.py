@@ -11,6 +11,20 @@ from app.application.use_cases.bom import expand_bom
 from tests.unit.test_decision_execution import D, PRODUCT, INGREDIENT, RECIPE, snapshot_data, issue
 
 
+@pytest.mark.parametrize('loss,liquid,cups', [('0','6000','40'),('0.2','7500','50')])
+def test_recipe_level_loss_applies_to_packaging_as_well_as_food(loss,liquid,cups):
+    """Current limitation: no per-line food/packaging loss classification."""
+    from uuid import uuid4
+    from app.domain.demand.bom import DemandPoint, DatedRecipe, RecipeLine, expand_dated_bom
+    food_id,packaging_id=uuid4(),uuid4()
+    recipe=DatedRecipe(uuid4(),PRODUCT,D,None,Decimal(1),Decimal(loss),
+        (RecipeLine(food_id,'ml',Decimal(150)),RecipeLine(packaging_id,'piece',Decimal(1))))
+    result=expand_dated_bom((DemandPoint('BASE',PRODUCT,D,Decimal(40)),),(recipe,))
+    assert not result.gaps
+    assert {row.ingredient_id:row.quantity for row in result.totals}=={
+        food_id:Decimal(liquid),packaging_id:Decimal(cups)}
+
+
 def capture(**changes):
     return PreparedDecisionInput.model_validate(snapshot_data() | changes)
 

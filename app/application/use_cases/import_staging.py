@@ -1004,6 +1004,8 @@ class ImportStaging:
             expected['stockout_aliases'] = next((json.loads(n.parameter)
                 for n in existing_spec.normalizations if n.kind == 'stockout_alias'), [])
             expected.update(
+                recipe_quantity_format=next((r.parameter for r in existing_spec.normalizations
+                    if r.kind == 'numeric_format'), None),
                 decimal_locale=next(
                     (
                         r.parameter
@@ -1522,8 +1524,14 @@ class ImportStaging:
         return result
 
     def resolve(self, token, ident, mapping_id, body, key, match, csrf):
+        sku_missing = (isinstance(body, dto.ResolveRequest) and isinstance(body.resolution, dto.NewEntity)
+            and body.resolution.entity in {'product', 'ingredient'}
+            and 'sku' not in body.resolution.metadata.model_fields_set)
         body = type(body).model_validate(body.model_dump())
-        kd, fp, m = self._request(key, body.model_dump(mode="json"), match, True)
+        request_data = body.model_dump(mode='json')
+        if sku_missing:
+            request_data['metadata_sku_missing'] = True
+        kd, fp, m = self._request(key, request_data, match, True)
         with auth_session(self.engine) as s:
             b = self._batch(s, ident, False)
             actor, authorization, _ = self._authority(
@@ -1574,6 +1582,9 @@ class ImportStaging:
                     for raw in b.analysis_json["sources"]
                     if raw["sheet_id"] == str(sheet.sheet_id)
                 )
+                if context.recipe_quantity_format and (sheet.selected_type != 'recipes'
+                        or sheet.excel_date_system not in {'1900', '1904'}):
+                    raise AuthError('OOXML_RECIPE_QUANTITY_SCOPE_REQUIRED', 409)
                 if source_context_conflicts(sheet, rawsheet, context):
                     raise AuthError("SOURCE_CONTEXT_CONFLICT", 409)
                 candidates = self._source_candidates(s, b, sheet, context)
@@ -1612,6 +1623,7 @@ class ImportStaging:
                     for kind, param in (
                         ("decimal_locale", context.decimal_locale),
                         ("date_format", context.date_format),
+                        ('numeric_format', context.recipe_quantity_format),
                     ):
                         if param is not None and not any(
                             n.kind == kind and (n.parameter == param or kind == 'date_format'
@@ -1978,6 +1990,7 @@ class ImportStaging:
                                 else uuid4()
                             ),
                             metadata=resolution.metadata,
+                            sku_missing=sku_missing,
                             evidence_reference=resolution.evidence_reference,
                             approval_revision=rev(),
                         )
@@ -3402,7 +3415,7 @@ class ImportStaging:
                         i.model_dump(mode="json", exclude={"samples"})
                         for i in self._issues(b)
                     ],
-                    policy_version="import_mapping_policy/1",
+                    policy_version="import_mapping_policy/2",
                     source_files=[
                         dict(file_id=str(f.id), content_digest=f.digest)
                         for f in self._files(s, b)
@@ -3432,6 +3445,7 @@ class ImportStaging:
                             )
                         )
                 summary = dto.PreviewSummary(
+                    policy_version='import_mapping_policy/2',
                     preview_id=pid,
                     digest="",
                     created_at=self.clock(),
