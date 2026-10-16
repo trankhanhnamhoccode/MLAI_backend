@@ -1,6 +1,6 @@
 # Current state
 
-## CURRENT FACT — bounded owner summary S3 source
+## CURRENT FACT — bounded owner summary S3 local integration
 
 New application generations use profile/6, selection/2, prompt/5, compact schema/3,
 renderer/4 and owner guard/4. Original S1/S2/S2.1 implementations and receipts stay
@@ -22,6 +22,26 @@ human UX or production acceptance is claimed.
 [Feature](features/DECISION_ASSISTANT.md#current-fact--bounded-owner-summary)
 owns selection, configuration and limits; [handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md)
 owns the FE entrypoint.
+
+## CURRENT FACT — P1/P1.1 owner-friendly Planning PDF
+
+New N10 intents pin `planning-pdf/3`: prominent period/cost/budget/winner and
+retained BASE assessments; Store-local dates, temporal-basis-specific inventory
+wording, grouped proof and unmet-demand paths without a new aggregate ratio.
+All purchase/service rows remain, exact display rounding leaves facts unchanged.
+Product/Ingredient names use retained labels; Store/Supplier names remain absent
+and use distinct suffixes. No accepted global cup→ly label, so canonical units stay.
+Old /1 and /2 receipts/jobs/retry/download retain frozen renderers and immutable
+bytes. P1 PDF/ZIP evidence is preserved; P1.1 writes only runtime/p11-pdf.
+Only ExportAccepted.render_version accepts /1,/2,/3 (new default /3); unchanged
+76 operations/69 paths, no migration/engine/capture/provider/FE change. Implemented
+from approved PDF commit9a80f970ed2770b9d44ac662c08cdb63b4b50806 in the local
+main integration. Owner PDF review is approved; browser/runtime deployment is not.
+HISTORICAL INFORMATION: the PDF-only merge preserved its base Summary behavior.
+Current bounded Summary integration is described above; independent flags stay OFF.
+Summary text is not automatically inserted into PDF.
+Policy/limits belong to [Planning §15.4](PROCUREMENT_API_CONTRACT_VI.md#154-pdf--n10n11-thêm-không-thay-planning-state),
+reproduction to [runbook](runbooks/FULL_TEST_FLOW.md#owner-pdf-p1).
 
 ## CURRENT FACT - Decision Assistant L5 combined source
 

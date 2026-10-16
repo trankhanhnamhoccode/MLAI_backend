@@ -38,6 +38,9 @@ def assistant(env, request):
         ('shelfcash_assistant_test', 'shelfcash_assistant_tester', '127.0.0.1', 5445),
         # Separate S3 baseline comparison target, owned by this same task.
         ('shelfcash_assistant_test', 'shelfcash_assistant_tester', '127.0.0.1', 5446),
+
+# Dedicated PDF integration instance; no Summary/L5/demo DB reuse.
+        ('shelfcash_integration_test', 'shelfcash_integration_tester', '127.0.0.1', 5447),
     }, 'Only the owned Assistant or L5 disposable target'
     owner=setup(env)
     record=retained_record(getattr(request,'param','stock'),actor_id=owner.user_id)

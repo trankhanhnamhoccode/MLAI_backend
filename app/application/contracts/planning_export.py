@@ -24,7 +24,7 @@ class ExportAccepted(DTO):
     status: Literal['queued']='queued'
     job_id: UUID
     result_digest: Version
-    render_version: Literal['planning-pdf/1']='planning-pdf/1'
+    render_version: Literal['planning-pdf/1','planning-pdf/2','planning-pdf/3']='planning-pdf/3'
 
 
 class ExportMeta(DTO):

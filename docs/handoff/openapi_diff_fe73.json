@@ -1,7 +1,7 @@
 {
   "baseline_source": "869eaec914aa6905d6b935889afebe7d973004ae",
   "baseline_openapi_sha256": "790443d80350cc597c7c06179309e43303ba558de34017ea1dd4113de71fc1ee",
-  "provenance": "Current enclosing Git commit owns generated artifacts; final ZIP manifest supplies exact source SHA",
+  "provenance": "Original FE73 baseline pinned. Combined local main/PDF integration preserves Summary schemas; only ExportAccepted.render_version accepts /1,/2,/3, default /3.",
   "before": {
     "operations": 73,
     "paths": 66
@@ -54,5 +54,7 @@
     "SummaryView"
   ],
   "removed_schemas": [],
-  "changed_schemas": []
+  "changed_schemas": [
+    "ExportAccepted"
+  ]
 }

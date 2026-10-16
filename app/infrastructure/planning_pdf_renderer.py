@@ -1,128 +1,233 @@
-"""Vietnamese multi-page retained report; deterministic data, embedded fonts."""
+"""Vietnamese owner report /3. Facts and compatibility use retained documents."""
+from datetime import date
+from fractions import Fraction
 from io import BytesIO
-from pathlib import Path
 from time import perf_counter
-from threading import Lock
+from zoneinfo import ZoneInfo
 from xml.sax.saxutils import escape
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer,LongTable,TableStyle,PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, LongTable, TableStyle, PageBreak
 from app.application.contracts.planning_pdf import PlanningPDFDocument
-
-_FONT_LOCK=Lock()
-_ROOT=Path(__file__).resolve().parents[1]/'assets'/'fonts'
-
-
-def fonts():
-    with _FONT_LOCK:
-        for name,file in [('ShelfCashNoto','NotoSans-Regular.ttf'),('ShelfCashNotoBold','NotoSans-Bold.ttf')]:
-            if name not in pdfmetrics.getRegisteredFontNames():pdfmetrics.registerFont(TTFont(name,str(_ROOT/file)))
+from app.infrastructure.planning_pdf_legacy import PlanningPDFRenderer as LegacyRenderer, fonts
+from app.infrastructure.planning_pdf_v2 import PlanningPDFRenderer as Version2Renderer
+from app.infrastructure.planning_pdf_display import (
+    UNKNOWN, PATHS, STRATEGIES, RetainedLabels, fraction, number, quantity, money, percent, grouped_notices,
+)
+from app.infrastructure.planning_pdf_wording import day, synthetic, temporal_note, base_assessment, unmet_note, proof_notes, proof_trace
 
 
-def exact(value):
-    if value is None:return 'Chưa biết/Chưa đánh giá'
-    if isinstance(value,dict) and {'numerator','denominator'}<=set(value):
-        return value.get('decimal_view',value.get('percent_view',''))+' [exact '+str(value['numerator'])+'/'+str(value['denominator'])+']'
-    return str(value)
+class PlanningPDFRenderer(LegacyRenderer):
+    def render_legacy(self, document: PlanningPDFDocument) -> bytes:
+        return super().render(document)
 
+    def render_v2(self, document: PlanningPDFDocument) -> bytes:
+        return Version2Renderer().render(document)
 
-def flat(value,prefix=''):
-    if isinstance(value,dict):
-        if {'numerator','denominator'}<=set(value):yield prefix,exact(value)
-        elif not value:yield prefix,'Không có'
-        else:
-            for key,child in value.items():yield from flat(child,prefix+'.'+key if prefix else key)
-    elif isinstance(value,list):
-        if not value:yield prefix,'Không có'
-        for index,child in enumerate(value):yield from flat(child,f'{prefix}[{index}]')
-    else:yield prefix,exact(value)
-
-
-class PlanningPDFRenderer:
-    @property
-    def available(self):
-        return all((_ROOT/name).is_file() for name in ('NotoSans-Regular.ttf','NotoSans-Bold.ttf','OFL.txt'))
-
-    def render(self,document:PlanningPDFDocument):
-        started=perf_counter()
+    def render(self, document: PlanningPDFDocument) -> bytes:
+        started = perf_counter()
         fonts()
-        base=ParagraphStyle('body',fontName='ShelfCashNoto',fontSize=8,leading=12,spaceAfter=5,splitLongWords=True)
-        heading=ParagraphStyle('heading',parent=base,fontName='ShelfCashNotoBold',fontSize=14,leading=19,spaceBefore=10,spaceAfter=8,keepWithNext=True)
-        cell=ParagraphStyle('cell',parent=base,fontSize=7,leading=10,spaceAfter=0)
-        def p(value,style=base):return Paragraph(escape(str(value)),style)
-        story=[]
-        def title(value):story.append(p(value,heading))
-        def table(headers,rows,widths):
-            if not rows:story.append(p('Không có dòng dữ liệu.'));return
-            data=[[p(h,cell) for h in headers]]+[[p(exact(v),cell) for v in row] for row in rows]
-            result=LongTable(data,colWidths=widths,repeatRows=1,hAlign='LEFT')
-            result.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.HexColor('#E7EEF2')),
-                ('VALIGN',(0,0),(-1,-1),'TOP'),('GRID',(0,0),(-1,-1),0.25,colors.HexColor('#CDD7DF')),
-                ('LEFTPADDING',(0,0),(-1,-1),5),('RIGHTPADDING',(0,0),(-1,-1),5),
-                ('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5)]))
-            story.extend([result,Spacer(1,8)])
-        view,option=document.view,document.option
-        title('ShelfCash — Báo cáo phương án mua hàng')
-        story.append(p('Đề xuất giả định P1; không phải hóa đơn, đơn đặt hàng hoặc xác nhận hàng thực nhận.'))
-        story.append(p('LOW/BASE/HIGH là các đường nhu cầu; không phải khoảng tin cậy hay xác suất thiếu hàng.'))
-        if not option.eligible:story.append(p('CẢNH BÁO: PHƯƠNG ÁN KHÔNG ĐỦ ĐIỀU KIỆN — KHÔNG PHẢI KHUYẾN NGHỊ.'))
-        elif view.result.winner_option_id!=option.option_id:story.append(p('Phương án được chọn để kiểm tra; không phải winner được lưu.'))
-        table(['Thông tin','Giá trị'],[
-            ('Run',view.run_id),('Store',view.store_id),('Tên Store tại capture','Chưa được giữ lại'),
-            ('Phương án',option.option_id),('Result digest',document.explanation.result_digest),
-            ('Nhận yêu cầu',view.accepted_at.isoformat()),('Bắt đầu',view.started_at.isoformat() if view.started_at else None),
-            ('Thời gian capture',document.ingredients[0].captured_stock.captured_at.isoformat() if document.ingredients else None),
-            ('Khoảng ngày',str(view.request.forecast_start_date)+' — '+str(view.forecast.end_date if view.forecast else 'Chưa biết')),
-            ('Tiền tệ',option.costs.currency),('Timezone',view.operational_basis.timezone if view.operational_basis else 'Chưa biết'),
-            ('Ngân sách hiệu lực',view.configuration.budget.limit),('Trần Store lúc nhận',view.configuration.budget.ceiling_at_acceptance),
-            ('Đủ điều kiện',option.eligible),('Winner',view.result.winner_option_id),
-            ('Mô hình',view.forecast.model_type if view.forecast else None),('Phiên bản mô hình',view.forecast.model_version if view.forecast else None),
-            ('Chất lượng mô hình','Chưa đánh giá' if view.forecast and view.forecast.quality_status=='not_evaluated' else view.forecast.quality_status if view.forecast else None)], [150,365])
-        title('Chi phí và các dòng mua giả định')
-        labels={'purchase':'Giá mua','payable_fees':'Phí phải trả','delivery_fees':'Phí giao hàng','total':'Tổng chi phí'}
-        table(['Khoản','Giá trị exact'],[(labels[field],getattr(option.costs,field).model_dump(mode='json') if getattr(option.costs,field) is not None else None)
-            for field in ('purchase','payable_fees','delivery_fees','total')],[150,365])
-        table(['Nguyên liệu / term / nhà cung cấp','Packs / lượng / unit','Arrival / expiry','Chi phí'],[
-            (f'{r.ingredient_id}\n{r.supplier_term_id}\n{r.supplier_id}',f'{r.packs} / '+exact(r.quantity.model_dump(mode='json'))+' '+r.unit,
-             str(r.arrival_date)+' / '+str(r.expiry_date) if r.expiry_date else str(r.arrival_date)+' / Chưa biết',r.purchase_outlay.model_dump(mode='json'))
-            for r in option.purchases],[185,125,100,105])
-        title('Đáp ứng Product theo đường nhu cầu')
-        table(['Product / path / unit','Yêu cầu','Phục vụ','Mất bán','Service'],[
-            (f'{r.product_id} / {r.path} / {r.unit}',r.requested.model_dump(mode='json'),r.fulfilled.model_dump(mode='json'),
-             r.lost_sales.model_dump(mode='json'),r.service.model_dump(mode='json') if r.service else None)
-            for r in option.product_services],[180,85,85,85,80])
-        title('Tồn vật lý tại capture và mô phỏng nguyên liệu')
-        story.append(p('Lot vật lý được giữ nguyên tại capture, gồm lot hết hạn nếu có. Arrivals dưới đây là giả định. Ngày hết hạn X còn dùng trong ngày X, hết hạn cuối ngày X.'))
+        body = ParagraphStyle('body2', fontName='ShelfCashNoto', fontSize=10, leading=15, spaceAfter=7)
+        heading = ParagraphStyle('heading2', parent=body, fontName='ShelfCashNotoBold', fontSize=17,
+                                 leading=23, spaceAfter=14, keepWithNext=True)
+        cell = ParagraphStyle('cell2', parent=body, fontSize=8.5, leading=12, spaceAfter=0, splitLongWords=True)
+        small = ParagraphStyle('trace2', parent=cell, fontSize=8, leading=11)
+        emphasis = ParagraphStyle('emphasis3', parent=body, fontName='ShelfCashNotoBold', fontSize=12, leading=18)
+        amount = ParagraphStyle('amount3', parent=body, fontName='ShelfCashNotoBold', fontSize=20, leading=28,
+                                textColor=colors.HexColor('#185B45'))
+        conclusion = ParagraphStyle('conclusion3', parent=body, backColor=colors.HexColor('#EDF5F1'), borderPadding=8,
+                                    spaceBefore=8, spaceAfter=14)
+        story = []
+        view, option = document.view, document.option
+        labels = RetainedLabels(document)
+        currency = option.costs.currency
+
+        def p(value, style=body):
+            return Paragraph(escape(str(value)).replace('\n', '<br/>'), style)
+
+        def text(value):
+            story.append(p(value))
+
+        def title(value, new_page=False):
+            if new_page:
+                story.append(PageBreak())
+            story.append(p(value, heading))
+
+        def table(headers, rows, widths):
+            if not rows:
+                text('Chưa có dữ liệu được giữ lại để đánh giá.')
+                return
+            data = [[p(h, cell) for h in headers]] + [[p(v, cell) for v in row] for row in rows]
+            result = LongTable(data, colWidths=widths, repeatRows=1, hAlign='LEFT', splitInRow=0)
+            result.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#DDEDE7')),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F5F8F7')]),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('LINEBELOW', (0, 0), (-1, 0), .6, colors.HexColor('#6C9887')),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6), ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 7), ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+            ]))
+            story.extend((result, Spacer(1, 12)))
+
+        title('ShelfCash — Kế hoạch mua hàng')
+        text('Đề xuất mua hàng — chưa phải đơn đặt hàng.')
+        # Explicit retained marker, never inferred from a model or name.
+        if synthetic(document):
+            text('DỮ LIỆU SYNTHETIC / DEMO: có nguồn đã đánh dấu giả lập; không dùng để xác nhận kết quả kinh doanh thực tế.')
+        text(labels.name('Cửa hàng', view.store_id))
+        story.append(p('Kỳ kế hoạch: ' + day(view.request.forecast_start_date) + ' đến ' + day(view.forecast.end_date if view.forecast else None), emphasis))
+        basis = view.operational_basis
+        if basis:
+            text('Thời điểm chụp dữ liệu: ' + basis.captured_at.astimezone(ZoneInfo(basis.timezone)).strftime('%d/%m/%Y %H:%M') + ' (' + basis.timezone + ').')
+        else:
+            text('Thời điểm chụp dữ liệu / múi giờ: Chưa biết.')
+        status = {'completed': 'Đã hoàn tất', 'failed': 'Thất bại', 'running': 'Đang xử lý', 'queued': 'Đang chờ'}[view.status]
+        text('Trạng thái lần chạy: ' + status + '.')
+        recommended = view.status == 'completed' and view.outcome == 'recommendation_available' and view.result is not None and view.result.winner_option_id == option.option_id and option.eligible
+        if not option.eligible:
+            story.append(p('PHƯƠNG ÁN KHÔNG ĐỦ ĐIỀU KIỆN — KHÔNG PHẢI KHUYẾN NGHỊ.', emphasis))
+        elif recommended:
+            story.append(p('Đang xuất phương án được khuyến nghị trong lần chạy này.', emphasis))
+        else:
+            story.append(p('Đang xem phương án tham khảo; không phải phương án được khuyến nghị trong lần chạy này.', emphasis))
+        budget = view.configuration.budget
+        merged_budget = Fraction(budget.limit) == Fraction(budget.ceiling_at_acceptance) and budget.currency == currency
+        budget_label = 'Ngân sách hiệu lực / trần cửa hàng đã lưu' if merged_budget else 'Ngân sách hiệu lực đã lưu'
+        overview = LongTable([[p('Tổng chi dự kiến', emphasis), p(budget_label, emphasis)],
+                              [p(money(option.costs.total, currency), amount), p(money(budget.limit, budget.currency), amount)]],
+                             colWidths=[257.5, 257.5], hAlign='LEFT')
+        overview.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#EDF5F1')),
+                                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                     ('LEFTPADDING', (0, 0), (-1, -1), 10), ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                                     ('TOPPADDING', (0, 0), (-1, -1), 8), ('BOTTOMPADDING', (0, 0), (-1, -1), 8)]))
+        story.extend((overview, Spacer(1, 12)))
+        cost_rows = [
+            ('Tiền mua nguyên liệu', money(option.costs.purchase, currency)),
+            ('Phí phải trả', money(option.costs.payable_fees, currency)),
+        ]
+        if not merged_budget:
+            cost_rows.append(('Trần cửa hàng lúc nhận yêu cầu', money(budget.ceiling_at_acceptance, budget.currency)))
+        table(['Chi tiết đã lưu', 'Số tiền'], cost_rows, [290, 225])
+        story.append(p(base_assessment(document), conclusion))
+        if option.costs.fee_classification == 'PAYABLE_FEE_TYPE_NOT_CAPTURED':
+            text('Phí phải trả đã biết số tiền; chưa lưu loại phí, chưa thể gọi là phí giao hàng.')
+        elif option.costs.fee_classification == 'DECLARED_DELIVERY':
+            text('Phí giao hàng đã khai báo: ' + money(option.costs.delivery_fees, currency) + '.')
+        if view.scope:
+            text(f'Phạm vi đầu vào: {view.scope.computed_count}/{view.scope.menu_count} món được đưa vào tính toán. Phạm vi này không tự chứng minh kết quả đáp ứng.')
+        text(temporal_note(document))
+
+        title('1. Danh sách mua dự kiến', True)
+        text('Mỗi dòng giữ riêng nguyên liệu, nhà cung cấp, điều khoản và ngày nhận; không gộp các dòng mua.')
+        rows = []
+        for index, row in enumerate(option.purchases, 1):
+            pack = number(fraction(row.quantity) / row.packs) + ' ' + row.unit
+            rows.append((f'{index}. ' + labels.name('Nguyên liệu', row.ingredient_id),
+                         f'{row.packs} gói\nMỗi gói: {pack}\nTổng: {quantity(row.quantity, row.unit)}',
+                         labels.name('Nhà cung cấp', row.supplier_id), day(row.arrival_date), money(row.purchase_outlay, currency)))
+        if rows:
+            table(['Nguyên liệu', 'Quy cách / số lượng', 'Nhà cung cấp', 'Ngày dự kiến nhận', 'Tiền mua'], rows, [130, 120, 100, 80, 85])
+        else:
+            text('Phương án này không phát sinh dòng mua thêm nguyên liệu.')
+        text('Thành tiền từng dòng là tiền mua; phí phải trả trình bày riêng, không cộng lặp vào từng dòng.')
+        if option.costs.fee_components:
+            table(['Phí đã lưu / phạm vi áp dụng', 'Số tiền'], [
+                (('Theo điều khoản' if f.basis == 'OFFER' else 'Theo đơn nhà cung cấp') + ' — mã …' + labels.codes[f.entity_id], money(f.amount, currency))
+                for f in option.costs.fee_components], [365, 150])
+        text('Ngày nhận là giả định nếu thực hiện phương án, chưa xác nhận giao hàng. Quy cách mỗi gói = tổng lượng đã lưu / số gói; không đổi đơn vị hoặc suy mật độ.')
+        text('Dấu ~ nghĩa là xấp xỉ do làm tròn; dấu < chỉ lượng dương nhỏ hơn ngưỡng hiển thị. Tổng dòng hiển thị có thể lệch tổng chi đã lưu do làm tròn; tổng chi không bị sửa.')
+
+        title('2. Khả năng đáp ứng nhu cầu', True)
+        text('Nhu cầu thấp, cơ sở và cao là ba kịch bản nhu cầu mô phỏng, không phải xác suất. Tỷ lệ thuộc từng món trong từng kịch bản, không phải tỷ lệ chung của kế hoạch.')
+        services = {(r.product_id, r.path): r for r in option.product_services}
+        product_ids = list(dict.fromkeys((*labels.products, *(r.product_id for r in option.product_services))))
+        for path in ('BASE', 'LOW', 'HIGH'):
+            story.append(p(PATHS[path] + ' (' + path + ')', ParagraphStyle('path-' + path, parent=body, fontName='ShelfCashNotoBold', keepWithNext=True)))
+            rows = []
+            for ident in product_ids:
+                row = services.get((ident, path))
+                assessment = next((a for a in option.requirements_assessment if a.product_id == ident and a.path == path), None)
+                assessed = {'PASS': 'Đạt', 'FAIL': 'Chưa đạt', 'NOT_EVALUATED': 'Chưa đánh giá'}.get(assessment.status if assessment else '', 'Chưa có yêu cầu đã lưu' if path == 'BASE' else '')
+                if assessment:
+                    assessed += ' / mục tiêu ' + number(Fraction(assessment.target_percent), 1) + ' %'
+                rows.append((labels.name('Món', ident), quantity(row.requested, row.unit) if row else 'Chưa đánh giá',
+                             quantity(row.fulfilled, row.unit) if row else 'Chưa đánh giá',
+                             quantity(row.lost_sales, row.unit) if row else 'Chưa đánh giá',
+                             (('Không xác định (nhu cầu bằng 0)' if fraction(row.requested) == 0 else percent(row.service)) if row else 'Chưa đánh giá') + ('\n' + assessed if assessed else '')))
+            table(['Món', 'Nhu cầu', 'Phục vụ mô phỏng', 'Chưa đáp ứng', 'Tỷ lệ / yêu cầu'], rows, [135, 85, 95, 85, 115])
+        text('Món bị loại là chưa đánh giá, không có nghĩa nhu cầu bằng 0. Tỷ lệ không xác định khi nhu cầu bằng 0; lượng mô phỏng vẫn giữ phần lẻ.')
+
+        title('3. Điểm cần kiểm tra', True)
+        text(unmet_note(document))
+        risks = []
         for detail in document.ingredients:
-            title((detail.display_name or 'Tên chưa được giữ lại')+' — '+str(detail.ingredient_id)+' / '+detail.unit)
-            story.append(p('Khai báo: '+detail.captured_stock.scope_declaration+'; provenance: '+(detail.captured_stock.provenance or 'Chưa biết')))
-            table(['Lot','Lượng exact','Nhận / hết hạn','Cost'],[
-                (l.lot_id,l.quantity.model_dump(mode='json'),(str(l.received_date) if l.received_date else 'Chưa biết')+' / '+(str(l.expiry_date) if l.expiry_date else 'Chưa biết'),l.unit_cost)
-                for l in detail.captured_stock.lots],[185,130,120,80])
-            if detail.daily_balances is None:story.append(p('Mô phỏng: Chưa đánh giá.'))
-            else:table(['Path / ngày','Yêu cầu','Có thể dùng','Thiếu','Dùng','Hết hạn','Hao hụt khác','Kết thúc','Đến giả định'],[
-                (r.path+' / '+str(r.day),*[getattr(r,f).model_dump(mode='json') for f in ('requested','available','shortage','consumed','expired','other_waste','ending','incoming_quantity')])
-                for r in detail.daily_balances],[103,*([51.5]*8)])
-        title('Lý do, sản phẩm loại trừ, cảnh báo và giới hạn bằng chứng')
-        for item in (*document.explanation.blockers,*document.explanation.warnings):story.append(p(item.code+': '+item.message))
-        for item in document.explanation.exclusions:story.append(p(str(item.product_id)+': '+', '.join(item.reason_codes)))
-        for strategy in view.result.strategies:
-            story.append(p(f'{strategy.strategy}: execution={strategy.execution}; termination={strategy.termination}; feasibility={strategy.customer_feasibility}; proof={strategy.proof}; scope={strategy.proof_scope}; search_complete={strategy.search_complete}; domain_size={strategy.domain_size}'))
-        story.append(p('UNPROVEN/UNKNOWN không chứng minh infeasibility. Bằng chứng finite domain không áp dụng ngoài nguồn đã capture.'))
-        story.append(PageBreak())
-        title('Phụ lục đầy đủ — exact values và nguồn đã giữ lại')
-        story.append(p('Giá trị có nhãn exact n/d giữ numerator/denominator. decimal_view/percent_view chỉ là giá trị hiển thị làm tròn theo contract; không thay exact fraction. null là Chưa biết/Chưa đánh giá.'))
-        table(['Trường nguồn được giữ lại','Giá trị'],list(flat(document.model_dump(mode='json'))),[205,310])
-        output=BytesIO()
-        doc=SimpleDocTemplate(output,pagesize=A4,leftMargin=40,rightMargin=40,topMargin=42,bottomMargin=42,
-            title='ShelfCash — Báo cáo phương án',author='ShelfCash',pageCompression=1,invariant=1)
-        def footer(canvas,doc):
-            if doc.page>1000:raise ValueError('PDF representation page budget exceeded')
-            if perf_counter()-started>120:raise ValueError('Cooperative PDF render deadline exceeded')
-            canvas.saveState();canvas.setFont('ShelfCashNoto',7);canvas.setFillColor(colors.HexColor('#50616C'))
-            canvas.drawString(40,23,'Run '+str(view.run_id));canvas.drawRightString(A4[0]-40,23,'Trang '+str(doc.page));canvas.restoreState()
-        doc.build(story,onFirstPage=footer,onLaterPages=footer)
+            if detail.daily_balances is None:
+                text(labels.name('Nguyên liệu', detail.ingredient_id) + ': chưa có đánh giá mô phỏng theo ngày.')
+                continue
+            for path in ('BASE', 'LOW', 'HIGH'):
+                for field, label in (('shortage', 'Thiếu nguyên liệu mô phỏng'), ('expired', 'Hết hạn mô phỏng')):
+                    affected = [r for r in detail.daily_balances if r.path == path and fraction(getattr(r, field)) > 0]
+                    if affected:
+                        amount = sum((fraction(getattr(r, field)) for r in affected), Fraction())
+                        risks.append((labels.name('Nguyên liệu', detail.ingredient_id), PATHS[path], label,
+                                      number(amount) + ' ' + detail.unit, ', '.join(day(r.day) for r in affected)))
+        if risks:
+            text('Bảng rút gọn: tổng lượng dương theo ngày trong cùng nguyên liệu / đơn vị / đường nhu cầu; không phải tồn kho thực tế. Chi tiết gốc được giữ trong hệ thống.')
+            table(['Nguyên liệu', 'Đường nhu cầu', 'Dấu hiệu', 'Tổng theo ngày', 'Ngày có bằng chứng'], risks, [135, 85, 105, 85, 105])
+        for excluded in document.explanation.exclusions:
+            text(labels.name('Món', excluded.product_id) + ': loại khỏi phạm vi, chưa đánh giá. Mã lý do: ' + ', '.join(excluded.reason_codes) + '. Ngày: ' + ', '.join(day(d) for d in excluded.affected_dates))
+        for item, dates in grouped_notices((*document.explanation.blockers, *document.explanation.warnings, *option.issues)):
+            suffix = (' — mã …' + labels.codes[item.details.entity_id]) if item.details.entity_id else ''
+            text(item.message + suffix + ('. Ngày ảnh hưởng: ' + ', '.join(day(date.fromisoformat(d)) for d in dates) if dates else '') + ' [' + item.code + ']')
+            if item.details.suggested_action:
+                text('Cần kiểm tra: ' + item.details.suggested_action)
+        if document.explanation.availability != 'available':
+            text('Bằng chứng kết quả chỉ có một phần hoặc chưa có; không suy thành không có rủi ro.')
+        for note in proof_notes(view.result.strategies if view.result else (), recommended):
+            text(note)
+        text('Kiểm tra số lượng, điều kiện nhà cung cấp và ngày nhận dự kiến trước khi đặt mua.')
+
+        title('4. Cách đọc và truy vết')
+        text('Tiền theo loại tiền đã lưu, không quy đổi. Lượng hiển thị tối đa 3 chữ số thập phân; tỷ lệ 1 chữ số. Giá trị chính xác và thông tin nguồn vẫn được giữ trong hệ thống; không in toàn bộ dữ liệu kỹ thuật chi tiết mặc định.')
+        if any(row.unit == 'cup' for row in option.product_services) or (view.scope is not None and any(product.selling_unit == 'cup' for product in view.scope.menu_products)):
+            text('Đơn vị được giữ nguyên theo dữ liệu đã lưu; chưa có nhãn tiếng Việt được xác nhận cho các mã đơn vị như cup. Không quy đổi lượng.')
+        else:
+            text('Đơn vị được giữ nguyên theo dữ liệu đã lưu; không quy đổi lượng.')
+        if view.forecast:
+            text('Mô hình đã dùng: ' + view.forecast.model_type + ' / ' + view.forecast.model_version + '. Chất lượng: ' + ('Chưa đánh giá' if view.forecast.quality_status == 'not_evaluated' else 'Đã có đánh giá') + '.')
+        for label, value in [('Run', view.run_id), ('Phương án đang xuất', option.option_id),
+                             ('Phương án khuyến nghị đã lưu', view.result.winner_option_id if view.result else None),
+                             ('Result digest', document.explanation.result_digest), ('Renderer', 'planning-pdf/3'),
+                             ('Chiến lược tạo phương án', ', '.join(STRATEGIES[s] for s in option.source_strategies))]:
+            story.append(p(label + ': ' + (str(value) if value is not None else UNKNOWN), small))
+        for row in proof_trace(view.result.strategies if view.result else ()):
+            story.append(p(row, small))
+        # Trace only suffixes actually used in prose/tables. Named entities are
+        # discoverable through the retained Run; term IDs are mapped by line below.
+        referenced = {view.store_id, *(r.supplier_id for r in option.purchases),
+                      *(i.ingredient_id for i in document.ingredients if not i.display_name),
+                      *(r.ingredient_id for r in option.purchases if not labels.ingredients.get(r.ingredient_id)),
+                      *(ident for ident in product_ids if not labels.products.get(ident)),
+                      *(f.entity_id for f in option.costs.fee_components)}
+        referenced.update(item.details.entity_id for item in (*document.explanation.blockers, *document.explanation.warnings, *option.issues) if item.details.entity_id)
+        table(['Mã trong báo cáo', 'ID đầy đủ'], [('…' + labels.codes[ident], ident) for ident in sorted(referenced)], [130, 385])
+        if option.purchases:
+            table(['Dòng mua', 'Điều khoản đầy đủ / hạn dùng dự kiến'],
+                  [(str(i), str(r.supplier_term_id) + '\n' + (day(r.expiry_date) if r.expiry_date else 'Chưa biết hạn dùng')) for i, r in enumerate(option.purchases, 1)], [70, 445])
+        output = BytesIO()
+        pdf = SimpleDocTemplate(output, pagesize=A4, leftMargin=40, rightMargin=40, topMargin=42,
+                                bottomMargin=44, title='ShelfCash — Kế hoạch mua hàng', author='ShelfCash', invariant=1)
+
+        def footer(canvas, doc):
+            if doc.page > 1000 or perf_counter() - started > 120:
+                raise ValueError('PDF representation budget exceeded')
+            canvas.saveState()
+            canvas.setFont('ShelfCashNoto', 8)
+            canvas.setFillColor(colors.HexColor('#50616C'))
+            canvas.drawString(40, 23, 'ShelfCash • Đề xuất mua hàng')
+            canvas.drawRightString(A4[0] - 40, 23, 'Trang ' + str(doc.page))
+            canvas.restoreState()
+
+        pdf.build(story, onFirstPage=footer, onLaterPages=footer)
         return output.getvalue()
