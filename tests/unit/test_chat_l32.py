@@ -32,7 +32,7 @@ def test_fixed_corpus_expectations_and_saved_outcomes():
         rows.append(dict(**c,accepted=accepted,failures=check.failures,
             rationale='Known synthetic value/unit and correct role/entity; no extra cause/probability. Negative cases deliberately violate these facts or omit the main answer.',
             false_acceptance=accepted and not c['expected_valid'],false_rejection=not accepted and c['expected_valid']))
-    out=Path('runtime/assistant-test/l32');out.mkdir(parents=True,exist_ok=True)
+    out=Path('runtime/assistant-test/l4');out.mkdir(parents=True,exist_ok=True)
     (out/'corpus-outcomes.json').write_text(json.dumps(dict(label_author='Codex coding assistant; not independent human review',mode='OFFLINE_NO_PROVIDER',cases=rows,
         false_acceptances=sum(r['false_acceptance'] for r in rows),false_rejections=sum(r['false_rejection'] for r in rows)),ensure_ascii=False,indent=2),encoding='utf8')
     assert not any(r['false_acceptance'] or r['false_rejection'] for r in rows)

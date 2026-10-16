@@ -267,6 +267,56 @@ explicit, never reconstructed. Verbose proof/comparison, opaque option labels,
 clarification disposition mismatch and finite-language limits remain. No full
 suite, real/unseen-data claim, L4, reviewer model, FE/runtime deployment.
 
+### L4 paired quality evaluation — separate group
+
+CURRENT FACT L3.2 acceptance checkpoint464dec8dc5c04f2f773ce4cedcee26e342151f57.
+Default remains V6. Candidate is explicit application composition presentation7,
+not a new client parameter/config flag. No endpoint/schema migration/API delta.
+Corpus/split/criteria in tests/fixtures/assistant_l4; exposure.json marks eight
+evaluation cases exposed to development. Read per-stratum results and raw prose,
+not a single accuracy or pytest lifecycle score.20/35g inputs are offline projected
+fixtures only; live uses consistent retained20/20g synthetic evidence.
+
+```powershell
+& $assistantPython -B -m pytest tests/unit/test_assistant_l4_budget.py tests/live/test_chat_l4_live.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m pytest tests/unit/test_assistant_l4_presentation.py tests/unit/test_chat_l32_final_paraphrases.py tests/api/test_plan_summary_openapi.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_assistant_l4.py -q -p no:cacheprovider --tb=short
+# Use a NEW ignored output path; evaluator preserves prior results exclusively.
+& $assistantPython -B -m scripts.assistant_l4_eval --version 7 --split all --output runtime/assistant-test/l4/reproduction-candidate.json
+# Historical paid commands, not instructions to repeat a completed evaluation:
+& $assistantPython -B -m scripts.conversational_l4_live --phase baseline --freeze-source
+& $assistantPython -B -m scripts.conversational_l4_live --phase baseline --allow-paid-l4-max-24-usd-0.50
+& $assistantPython -B -m scripts.conversational_l4_live --phase candidate --freeze-source
+& $assistantPython -B -m scripts.conversational_l4_live --phase candidate --allow-paid-l4-max-24-usd-0.50
+```
+
+`L4-quality-evaluation-1` has its own write-ahead/fsynced exclusive ledger, cap24
+completions including both phases/regeneration/retries, USD0.50 conservative total.
+Unchanged byte/token/price bounds reserve USD0.0140592 each (24 reserve0.3374208).
+Unknown cost retains reservation;429 stops the whole group, crash lock fails closed.
+Private configured Gemini/OpenRouter routing unchanged, no fallback/model judge.
+Normal pytest skips six live scenarios. Freeze copies full app/fixture/corpus and
+selected harness sources per phase; a baseline freeze cannot be recreated from a
+changed candidate worktree. Keep snapshots and use their original source for replay.
+
+Executed baseline6 lifecycle tests passed,9 completions; candidate6 passed,8 calls.
+Separate Codex review: baseline7 ACCEPTED/1 REGENERATED/1 clarification, candidate8
+ACCEPTED/1 clarification; all4 turns complete, all finals fresh-persisted, same-key
+replay0, current rights403/Store isolation404. No message GET exists. Total17/24,
+known USD0.0319601, no unknown usage, reservations0.2390064/0.50,7 slots unused.
+Old30/30 ledger and L3.2 group11/16 with5 unused slots are unchanged, not pooled.
+Stop after completed subset. No call is needed to spend unused slots.
+
+Offline baseline34 pass/1 coverage failure/1 SQL, candidate35 pass/1 SQL; original
+metric-null failures remain historical and corrected separately. Authored assertion
+probe FA/FR0/0 is separate from the baseline valid live paraphrase false rejection,
+also rejected by candidate in offline replay. Proof/comparison/no-winner shorten;
+quantity/why do not improve uniformly. Keep V6 default pending broader evidence.
+Final affected20 unit/API/3 SQL tests pass, earlier focused40/17; no full suite.
+Exact commands/results and phase source/version/usage/latency are under ignored
+runtime/assistant-test/l4/index.json and L4-quality-evaluation-1. Review ZIP is scoped,
+ignored and deletable without losing originals; no secrets, DB dumps or whole runtime.
+
 ## CURRENT FACT — setup khách hàng từ số0
 
 Checkout chính: `D:\hocc_bk\ai\proj\projectMLAI\backend`, main, `.venv` riêng.

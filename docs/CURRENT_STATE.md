@@ -2,6 +2,29 @@
 
 ## CURRENT FACT - Decision Assistant L3.2 retained chat / L2 summary
 
+CURRENT FACT L4 evaluation WIP after acceptance checkpoint464dec8dc5c04f2f773ce4cedcee26e342151f57:
+default remains V6. Explicit application composition presentation_version=7 selects
+candidate191b9bd60ce5256cf1fa4a50e9a159852effb6b1d1d98debe3e431fb3932cf77,
+prompt6/validator7/selection7/renderer8/resolver5/assertions2. Exact typed groups
+and scoped labels shorten simple proof/comparison and remove opaque option IDs;
+old versions stay pinned. Clarification disposition uses existing CLARIFICATION
+only on new renderer8. Public OpenAPI unchanged76/69, no migration/head0030.
+36 prelabelled synthetic scenarios: candidate35 contract checks pass plus separate
+SQL authority case; baseline34 pass/1 failed-run intent coverage gap/1 separate SQL.
+Eight original evaluation cases exposed to development are explicitly marked;
+remaining9 offline and1 SQL cases pass both versions, not independent unseen proof.
+Paired live6 scenarios/all4 context turns: baseline7 accepted/1 regenerated/1
+clarification in9 calls; candidate8 accepted/1 clarification in8 calls. Live20/20g
+uses retained fixture;20/35g, zero/unknown variants are offline projected inputs only.
+L4 group17/24 calls, known USD0.0319601, no unknown usage, reservations0.2390064/0.50.
+Old groups unchanged, including5 unused L3.2 slots. No extra model call after matrix.
+Proof/comparison/no-winner shorten; quantity/why do not improve uniformly. One
+valid live baseline mechanistic paraphrase is rejected by both validators offline;
+candidate live success does not establish general entailment. V6 stays default;
+candidate7 remains explicit for review, no production configuration/FE/L5/deployment.
+Final affected20 unit/API and3 SQL tests pass; earlier broader focused40/17 pass.
+Quality, coverage, FA/FR and tokens/cost/latency are reported separately in feature/runbook.
+
 AS03 POST assistant/messages now supports optional model-generated conversational
 prose over sealed retained facts, conservative assertion/coverage validation and
 topic-specific deterministic fallback. Separate CHAT_LLM_ENABLED/model/profile,

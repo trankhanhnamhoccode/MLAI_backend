@@ -2,6 +2,14 @@
 
 ## CURRENT FACT — isolated assistant L2 schema
 
+CURRENT FACT L4 candidate keeps head0030 and all columns/triggers. Explicit
+presentation7 generations pin selection7/prompt6/validator7/resolver5 and renderer8.
+Internal grouped cards carry typed original members, exact semantic values and
+reference union; optional presentation/group/product_id fields elide when absent,
+preserving old canonical plan JSON. New model-OFF renderer8 receipts and model-ON
+generation7 read through their retained versions, independent of current selection.
+V6 remains default; no rewrite/backfill, new endpoint or migration.
+
 CURRENT FACT L3.2 keeps head0030 and the existing tables/triggers. New JSON
 generation records pin prompt/5, chat_assertions/6 and assertions/2, structured
 request context, per-request completion/cost limits and final safe failure traces.

@@ -43,22 +43,25 @@ class ConversationalChat:
         self.owner=assistant;self.engine=assistant.engine
         self.clock=lambda:datetime.now(timezone.utc)
 
-    def prepare(self,token,run,request,version='chat_assertions/6',selection_version='chat_evidence/6'):
+    def prepare(self,token,run,request,version=None,selection_version=None):
+        selected=getattr(self.owner,'presentation_version',6)
+        version=version or f'chat_assertions/{selected}'
+        selection_version=selection_version or f'chat_evidence/{selected}'
         record,view=self.owner.planning.read_record(token,run,evidence_only=True)
         if view.response_version!=request.expected_evidence_version:raise ConfigurationError('EVIDENCE_VERSION_CONFLICT',409)
         winner=view.result.winner_option_id if view.result else None
         evidence=project_evidence(record,view,option_id=request.option_id or winner,include_comparisons=True)
         context=None
-        if version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6'):
+        if version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6','chat_assertions/7'):
             from app.application.chat_context import resolve_context
-            request,scope,context=resolve_context(request,evidence,'chat_resolution/3' if version=='chat_assertions/3' else 'chat_resolution/4')
+            request,scope,context=resolve_context(request,evidence,'chat_resolution/5' if version=='chat_assertions/7' else 'chat_resolution/3' if version=='chat_assertions/3' else 'chat_resolution/4')
         else:scope=resolve_question(request,evidence)
         option=request.option_id or scope.option_id
         if scope.option_id and not scope.clarification:
             evidence=project_evidence(record,view,option_id=option,include_comparisons=True)
         if scope.ingredient_id is not None and not scope.clarification:
             evidence=project_evidence(record,view,option_id=option,ingredient_id=scope.ingredient_id,include_comparisons=True)
-        if version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6'):
+        if version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6','chat_assertions/7'):
             from app.application.conversational_evidence import select_evidence
             if context:context=context.model_copy(update={'option_id':evidence.option.option_id if evidence.option else None})
             return evidence,select_evidence(evidence,request,scope,context,selection_version)
@@ -121,7 +124,7 @@ class ConversationalChat:
                 diag.model!=record.profile.model or diag.resolved_model!=record.profile.model or not 1<=diag.attempts<=record.profile.completion_limit or record.output is None:
                 raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
             try:
-                if record.validator_version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6'):
+                if record.validator_version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6','chat_assertions/7'):
                     from app.application.chat_assertions import semantic_answer
                     expected=semantic_answer(record.output,plan,diag)
                 else:expected=model_answer(record.output,plan,diag)
@@ -155,9 +158,9 @@ class ConversationalChat:
                     claimed=ChatGeneration(generation_id=uuid4(),actor_id=actor,store_id=store,run_id=run,key_digest=kd,
                         request_digest=fingerprint,request=request,profile=self.owner.profile,
                         evidence_digest=digest('chat-evidence',evidence),plan_digest=digest('chat-plan',plan),
-                        process=current_process(),claim_token=uuid4(),created_at=self.clock(),prompt_version='conversational_chat_prompt/5',
-                        validator_version='chat_assertions/6',schema_version='conversational_assertions/2')
-                    claimed=claimed.model_copy(update={'selection_version':'chat_evidence/6'})
+                        process=current_process(),claim_token=uuid4(),created_at=self.clock(),prompt_version='conversational_chat_prompt/6' if plan.version=='chat_evidence/7' else 'conversational_chat_prompt/5',
+                        validator_version='chat_assertions/7' if plan.version=='chat_evidence/7' else 'chat_assertions/6',schema_version='conversational_assertions/2')
+                    claimed=claimed.model_copy(update={'selection_version':plan.version})
                     repo.accept(claimed);inserted=True
                 session.info['chat_accept']=inserted
                 session.commit()

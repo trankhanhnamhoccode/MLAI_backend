@@ -68,7 +68,7 @@ def test_development_tradeoff_wording_replayed_offline_through_as03(conversation
     result=response.json()['data'];assert result['source']=='model' and len(result['claims'])==8
     assert 'balanced, protected trừ lean' in result['answer'] and 'mô phỏng' in result['answer']
     assert state[5].post(path,headers=headers,json=body).json()['data']==result and provider.calls==1
-    output=Path('runtime/assistant-test/l32/offline-pair-replay.json');output.parent.mkdir(parents=True,exist_ok=True)
+    output=Path('runtime/assistant-test/l4/legacy-v3-pair-replay.json');output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(dict(mode='OFFLINE_FAKE_PROVIDER',note='Wording form observed in L3.1 development attempt4; rebound to new synthetic scoped fact IDs, not another live call or rewritten original final.',request=body,final=result,replay_completions=0),ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 
 

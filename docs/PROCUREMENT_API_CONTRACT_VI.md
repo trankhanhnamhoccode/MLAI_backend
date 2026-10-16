@@ -1646,6 +1646,21 @@ inferred entity/reference repair or relaxation of slots/extra-claim checks.
 Finite complex/proof grammar remains a supported subset; deterministic checking
 is not proof of general language entailment. Reviewer production is OFF/absent.
 
+CURRENT FACT L4 candidate (explicit application composition, V6 remains default):
+selection7/prompt6/validator7/renderer8/resolver5 retain the same AS03 wire and rights.
+Simple detail may group equal retained Product/path assessments or paired deltas;
+typed members and reference union cover every replaced obligation, never an average,
+BASE extrapolation or whole-Menu pass with missing/excluded/exception rows. Technical
+detail retains individual rows. BE supplies complete bounded group wording; proposed
+slots and actual prose are independently checked. Unknown prose still regenerates
+once or falls back. Captured names or deterministic local/strategy labels replace
+opaque IDs in prose; structured IDs/references remain authoritative, no live-name read.
+New renderer8 clarification uses the already-existing diagnostics disposition
+CLARIFICATION. Older stored FALLBACK diagnostics stay unchanged and replay exactly.
+Resolver5 recognizes a failed-run outcome question; actual failure comes only from
+retained status, never the user's wording. No new request/configuration field is
+exposed by HTTP; no endpoint/migration/OpenAPI delta or default-presentation change.
+
 Procurement why distinguishes proposed quantity, retained simulation factors where
 available and missing causal/zero-purchase evidence. No pair delta or simulation
 row establishes why an exact purchase is optimal. Missing factors are not invented.

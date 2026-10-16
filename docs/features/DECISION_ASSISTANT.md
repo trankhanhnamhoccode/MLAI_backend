@@ -348,6 +348,106 @@ was relabelled. New acceptance harness/tests/docs remain WIP; no L4/FE/deploymen
 Review artifacts stay in ignored runtime/assistant-test/L32-V6-acceptance-1; the
 scoped review ZIP can be removed without losing original source or evidence.
 
+## L4 quality evaluation and explicit candidate presentation
+
+CURRENT FACT after acceptance checkpoint464dec8dc5c04f2f773ce4cedcee26e342151f57:
+V6 remains the default. `AssistantChat(..., presentation_version=7)` explicitly
+selects candidate191b9bd60ce5256cf1fa4a50e9a159852effb6b1d1d98debe3e431fb3932cf77,
+selection7/prompt6/validator7/renderer8/resolver5/assertions2. No private config,
+public DTO/endpoint, permission or migration change. Default composition is unchanged.
+
+`chat_readability` groups only exact members from verified retained projections.
+Requirement groups need complete declared Product/path coverage, no exclusions,
+matching target/unit, PASS and known zero shortfall; missing/exception rows stay
+explicit. Equal Product/unit/delta across paths can group with every original path;
+different values stay separate. Group models reject duplicates, mixed semantics
+and altered reference unions. BE creates wording; model slots and complete prose
+are checked independently. There is no fact-ID whitelist, arithmetic, averaging,
+metric rewrite or removal of main obligations. Technical detail keeps individual
+rows. Boundary grouping preserves evaluated-only, finite certificate and global
+optimality limits. Named nonwinner remains a viewed option, not a recommendation.
+
+Labels derive from captured identity/scope: unique bounded captured name, otherwise
+local deterministic ordinal; option source strategies label deduplicated baskets.
+Ordinal labels do not rank business quality. Product gaps carry Product identity
+in addition to actual option ID; labels are generated per identity, avoiding ambiguous
+string replacement for duplicate names. IDs remain in typed fields/references.
+Instruction-like labels are treated as untrusted and use local labels; this finite
+screen is not a general injection proof. No current catalogue names are read.
+Renderer8 sets clarification disposition=CLARIFICATION (enum already existed).
+Old renderer/validator/resolver versions remain pinned; frozen V6 and resolver4
+copies preserve canonical replay. Resolver5 adds failed-run outcome wording while
+still reporting retained status when the user incorrectly presumes a failure.
+
+Evaluation corpus `tests/fixtures/assistant_l4/corpus.json` freezes36 scenarios,
+original18 development/18 evaluation split, criteria and six live scenarios before
+candidate runtime changes. Labels are Codex-authored, not independent human review.
+Eight evaluation cases used during development/evaluator correction are explicitly
+exposed in exposure.json; remaining10 are9 offline checks and1 real SQL authority
+gate, not statistically independent unseen evidence. The hand-authored20/35g,
+zero/unknown, negative/zero/mixed-path and missing/exception variants are projected
+contract inputs with new synthetic identity/references, never forged retained SQL
+runs, new engine outputs or real facts. Real HTTP live uses the existing consistent
+retained20/20g fixture. No solver/forecast or zero-purchase scenario is run in chat.
+
+Offline baseline34 pass/1 failed-run intent gap/1 separate SQL; candidate35 pass/1
+SQL. Ten explicitly labelled assertion probes (1 valid/9 invalid, repair disabled)
+show0FA/0FR for both; these counts are not36-scenario model accuracy. Initial two
+null-pointer metric failures were evaluator bugs: a reference resolving to null is
+valid unavailable evidence, not dangling. Logs/results are retained, labels unchanged.
+Exposed E08 failed-run wording motivated versioned resolver5, with positive/negative
+tests. Post-live fixture audit found reversed-pair context still pointed forward,
+so the initial negative case exercised missing comparison. E06 is now exposed;
+context and independent value/path oracles are corrected with4 passing regressions.
+Audited offline results replace the earlier metric interpretation, not original
+files; app191b9bd6 and all live traces remain unchanged. Scope/reference security is separately covered through actual HTTP/SQL,
+fresh-session equality, current-right/Store denial and replay with0 new calls.
+
+Paired six live scenarios/full four-turn chain: baseline9 completions,7 ACCEPTED,
+1 REGENERATED and1 clarification; candidate8 completions,8 ACCEPTED/1 clarification.
+All final material prose/coverage reviewed against sealed facts, not just slots or
+pytest lifecycle. Baseline raw7 is a valid comma/colon mechanistic paraphrase falsely
+rejected; saved-raw replay shows validator7 inherits this limitation. Candidate
+canonical live wording success is not broader entailment improvement. No historical
+response, label or old ledger is relabelled. No model reviewer is used.
+
+Observed character counts proof522→408, comparison564→308, no-winner469→344;
+quantity38→50 and why235→263 are not uniformly improved. Baseline input22209/
+output4544, USD0.0180227; candidate20133/3159, USD0.0139374. Total reduction partly
+reflects one fewer regeneration; average input per completion slightly increases.
+Completion median2625ms baseline versus2834.5ms candidate, application-response
+median5172ms versus3889ms; single samples and provider variability preclude a general
+latency claim. L4 ledger17/24 calls, USD0.0319601 known, no unknown, reservations
+USD0.2390064/0.50;7 slots unused. Old30/30 and11/16 groups, including5 unused slots
+and historical unknown reservations, remain separate and unchanged.
+
+Focused verification: initial19 unit/API, later40 focused unit/API and17 SQL; final
+affected20 unit/API and3 SQL pass. Separate budget3 pass/live6 skip without opt-in.
+Baseline live6 lifecycle cases pass79.98s; candidate6 pass68.40s. OpenAPI exact diff0,
+76 operations/69 paths/head0030. No full suite. One old regression output writer
+overwrote its historical pair artifact; new output was preserved separately and
+original restored from a hash-verified review ZIP. Old callers now target L4;
+all1939 prior artifact bytes verify unchanged after recovery.
+
+DECISION FOR THIS EVALUATION: keep V6 default. Candidate passes finite technical
+gates and improves three readability strata, but remaining evaluation cases do not
+show a correctness advantage; inherited paraphrase rejection, offline-only20/35 and
+small live sample limit replacement evidence. Candidate remains explicit WIP for
+review, not disabled-provider naturalness evidence, production readiness or L5.
+
+### Why-quantity evidence audit
+
+CURRENT FACT `planning_inspection_projection.ingredient_detail` already exposes
+proposed purchases, captured stock, daily balances and related Product fulfilled
+contributions/recipe IDs/dates. Chat selects quantity and one matching daily row;
+contributions are projected but not selected. They could contextualize simulation
+consumption; they do not establish why an exact purchase was selected. Captured
+BOM/recipe/source issues and strategy diagnostics/proof describe admission/search,
+not a per-line causal or zero-purchase certificate. No such certificate was identified
+in the inspected typed retained contracts. This is a scoped source/schema audit,
+not exhaustive knowledge of all possible engine outputs. Missing exact rationale
+remains explicit; chat does not run a new engine or invent counterfactual evidence.
+
 ## Legacy review and future slices
 
 HISTORICAL INFORMATION: read-only reference audit at

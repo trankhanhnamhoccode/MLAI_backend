@@ -7,6 +7,9 @@ from app.application.contracts.planning_configuration import ConfigurationError
 
 
 def resolve_context(request,evidence,version='chat_resolution/4'):
+    if version=='chat_resolution/4':
+        from app.application.chat_context_v4 import resolve_context as legacy
+        return legacy(request,evidence)
     if version=='chat_resolution/3':
         from app.application.chat_context_v3 import resolve_context as legacy
         return legacy(request,evidence)
@@ -86,7 +89,7 @@ def resolve_context(request,evidence,version='chat_resolution/4'):
         if any(p in q for p in ('dat hon','tradeoff','trade-off','duoc loi gi','so sanh','so voi')):intent='comparison'
         elif any(p in q for p in ('vi sao chon','tai sao chon','why selected')):intent='proof'
         elif any(p in q for p in ('rui ro','risk','du lieu con thieu','missing data')):intent='limitations'
-        elif any(p in q for p in ('winner','vuong','khong chon duoc')):intent='outcome'
+        elif any(p in q for p in ('winner','vuong','khong chon duoc','run loi','run that bai','failed run')):intent='outcome'
         elif ingredient or any(p in q for p in ('can mua','mua bao nhieu','ton bao nhieu')) and 'ke hoach' not in q:intent='ingredient'
         elif any(p in q for p in ('ton bao nhieu','bao nhieu tien','het bao nhieu')):intent='cost'
         else:intent=next((k for k,words in INTENTS if any(w in q for w in words)),'unsupported')

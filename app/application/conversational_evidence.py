@@ -12,6 +12,7 @@ from app.application.planning_serialization import digest
 
 
 def display_fact(card,locale='vi'):
+    if card.presentation is not None:return card.presentation
     vi=locale=='vi';label=card.label or ('nguyên liệu đang xem' if vi else 'the viewed Ingredient')
     if card.kind=='stock_lot':return (f'Tồn đã chụp của {label}, lô {card.entity_id}: {card.display} {card.unit}' if vi else f'Captured stock for {label}, lot {card.entity_id}: {card.display} {card.unit}')
     if card.kind in ('daily_shortage','daily_ending'):
@@ -27,6 +28,9 @@ def display_fact(card,locale='vi'):
 
 
 def select_evidence(evidence,request,scope,context,version='chat_evidence/3'):
+    if version=='chat_evidence/7':
+        from app.application.chat_readability import select_readable
+        return select_readable(evidence,request,scope,context)
     plan=select_chat_evidence(evidence,request,scope)
     q=normalized(request.question);o=evidence.overview;cards=list(plan.facts);required=[]
     def add(kind,meaning,pointer,*,value=None,unit=None,entity=None,path=None,label=None):

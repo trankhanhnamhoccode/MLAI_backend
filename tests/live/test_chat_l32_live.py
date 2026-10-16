@@ -106,7 +106,7 @@ def run_case(assistant,case,monkeypatch,*,audit_final=None):
     original_inspect=chat_assertions.inspect_output;checks=[]
     def capture(output,plan,locale,**kwargs):
         result=original_inspect(output,plan,locale,**kwargs)
-        checks.append(dict(validator_version='chat_assertions/6' if plan.version=='chat_evidence/6' else 'chat_assertions/5' if plan.version=='chat_evidence/5' else 'chat_assertions/4',input=output.model_dump(mode='json'),
+        checks.append(dict(validator_version='chat_assertions/'+plan.version.split('/')[-1],input=output.model_dump(mode='json'),
             required=list(plan.required),facts=[f.model_dump(mode='json') for f in plan.facts],
             failures=list(result.failures),disposition=result.disposition,
             verified_output=result.output.model_dump(mode='json') if result.output else None))

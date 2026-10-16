@@ -1,0 +1,16 @@
+{
+ "corpus":"assistant_quality_corpus/1",
+ "original_split":{"development":18,"evaluation":18},
+ "exposed_development":[
+  {"id":"E04","reason":"Missing-assessment fixture exercised by development grouping regression before final evaluation."},
+  {"id":"E05","reason":"Exception fixture exercised by development grouping regression before final evaluation."},
+  {"id":"E07","reason":"Different-path fixture exercised by development grouping regression before final evaluation."},
+  {"id":"E12","reason":"Duplicate-label fixture used to detect/fix identity-based label rendering."},
+  {"id":"E08","reason":"Observed failed-run question coverage gap used to add resolver5 intent; old resolver4 pinned."},
+  {"id":"E02","reason":"Evaluation exposed evaluator null-pointer false failure; metric corrected without changing expected label/runtime."},
+  {"id":"E09","reason":"Evaluation exposed evaluator null-pointer false failure; metric corrected without changing expected label/runtime."},
+  {"id":"E06","reason":"Post-live fixture audit found reversed pair context still pointed in the original direction, exercising missing comparison instead of negative deltas. Fixture context and independent value/path oracles corrected; expected labels and app source unchanged."}
+ ],
+ "remaining_evaluation_ids":["E01","E03","E10","E11","E13","E14","E15","E16","E17","E18"],
+ "limit":"Do not call exposed cases untouched holdout. Remaining cases are developer-authored finite evaluation, not independent human labels or statistically independent unseen evidence. E17 is checked separately through real SQL/HTTP authority gates."
+}

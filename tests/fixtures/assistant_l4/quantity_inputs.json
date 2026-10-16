@@ -1,0 +1,8 @@
+{
+ "version":"synthetic_projected_input/1",
+ "provenance":"Codex-authored offline DecisionEvidence contract variants derived from existing synthetic fixture, not newly computed PlanningRuns, independent truth or engine outputs. Not used to forge retained SQL records.",
+ "different_milk":{"00000000-0000-0000-0000-0000000000c8":"20","00000000-0000-0000-0000-0000000000c9":"35"},
+ "zero":"known empty purchase lines",
+ "unknown":"purchase lines unavailable (null)",
+ "live_limit":"Real HTTP/persistence live subset uses the existing consistent retained20/20g fixture.20/35 detection is offline projected-contract coverage only."
+}

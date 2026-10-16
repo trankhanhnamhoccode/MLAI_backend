@@ -44,10 +44,18 @@ engine/provider network. Cold misses no longer require cached verification. See
   unit/API34 pass. All saved finals fresh-persisted/replay0/GET405. Budget is
   exhausted by attempts, not dollars: known0.0551248 plus unknown reserve0.0281184.
   No real/unseen evidence, reviewer model, new route/migration or whole-chat PASS.
-- L4 pending: separately approved frozen-evidence live evaluation, cost/attempt
-  caps, raw/final diagnostics and legacy regression corpus/paraphrase coverage.
-  Narrow separately authorized synthetic summary/chat smokes retain every attempt,
-  raw/final diagnostics and price/token/attempt guards; they do not complete L4.
+- L4 finite evaluation complete with limits, implementation WIP: V6 default retained;
+  explicit candidate7 adds typed grouping, local labels, consistent clarification
+  diagnostics and resolver5 failed-run intent.36 frozen scenarios originally18/18;
+  eight evaluation cases exposed to development, remaining9 offline/1 SQL pass
+  both versions. Candidate35 pass/1 separate security gate; baseline34 pass/1 intent
+  coverage gap/1 security gate. Six paired synthetic live scenarios and full4-turn
+  chain: baseline9 calls versus candidate8;17/24 total, USD0.0319601 known,
+  reservations0.2390064/0.50. Candidate improves proof/comparison/no-winner prose,
+  not uniformly quantity/why. Inherited valid-paraphrase false rejection remains;
+  no independent human/unseen/general grounding claim or automatic default switch.
+ 20/35g detection is offline projection-only; live retains the existing20/20g Run.
+  Broader quality/real-data evidence and review precede any default/integration choice.
 - L5 pending: FE/browser/runtime integration and broader operational acceptance.
   Summary HTTP/owned-DB revocation/fresh retained reads/restart are L2 acceptance,
   not a claim that chat/whole FE or production deployment is verified.

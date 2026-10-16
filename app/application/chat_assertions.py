@@ -30,6 +30,10 @@ class Inspection:
 
 
 def surface_error(assertion,card,locale,*,wrong_number=False):
+    if card.presentation is not None:
+        # Group/label prose is checked as a complete clause independently from
+        # typed slots. No fact-ID whitelist, partial-token or numeric-only pass.
+        return None if normalized(assertion.text).rstrip('.! ')==normalized(card.presentation).rstrip('.! ') else 'UNVERIFIED_PRESENTATION'
     text=assertion.text.strip()
     if text.endswith('?'):return 'NOT_AN_ANSWER'
     q=normalized(text)
@@ -134,13 +138,16 @@ def surface_error(assertion,card,locale,*,wrong_number=False):
 
 
 def inspect_output(output,plan,locale,*,allow_repair=True):
+    if plan.version=='chat_evidence/6':
+        from app.application.chat_assertions_v6 import inspect_output as legacy
+        return legacy(output,plan,locale,allow_repair=allow_repair)
     if plan.version=='chat_evidence/5':
         from app.application.chat_assertions_v5 import inspect_output as legacy
         return legacy(output,plan,locale,allow_repair=allow_repair)
     if plan.version=='chat_evidence/4':
         from app.application.chat_assertions_v4 import inspect_output as legacy
         return legacy(output,plan,locale,allow_repair=allow_repair)
-    if plan.version!='chat_evidence/6':
+    if plan.version!='chat_evidence/7':
         from app.application.chat_assertions_v3 import inspect_output as legacy
         return legacy(output,plan,locale,allow_repair=allow_repair)
     output=SemanticOutput.model_validate(output);facts={f.fact_id:f for f in plan.facts}
@@ -190,13 +197,16 @@ def inspect_output(output,plan,locale,*,allow_repair=True):
 
 
 def semantic_answer(output,plan,diagnostics):
+    if plan.version=='chat_evidence/6':
+        from app.application.chat_assertions_v6 import semantic_answer as legacy
+        return legacy(output,plan,diagnostics)
     if plan.version=='chat_evidence/5':
         from app.application.chat_assertions_v5 import semantic_answer as legacy
         return legacy(output,plan,diagnostics)
     if plan.version=='chat_evidence/4':
         from app.application.chat_assertions_v4 import semantic_answer as legacy
         return legacy(output,plan,diagnostics)
-    if plan.version!='chat_evidence/6':
+    if plan.version!='chat_evidence/7':
         from app.application.chat_assertions_v3 import semantic_answer as legacy
         return legacy(output,plan,diagnostics)
     checked=inspect_output(output,plan,plan.fallback.locale,allow_repair=False)
