@@ -2,6 +2,14 @@
 
 ## Source v? ?i?m b?t ??u
 
+CURRENT FACT S1 isolated WIP: the source OpenAPI now admits summary `/2` renderer,
+prompt and validator values in three existing fields; paths/DTO fields remain
+unchanged. The added `summary_narrative_fake_provider` example is labelled offline
+projection; older examples keep their original pins. See the
+[canonical summary contract](../PROCUREMENT_API_CONTRACT_VI.md#185-as01as02--current-fact-summary-contract)
+and [feature limits](../features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative).
+This WIP does not update a published ZIP, FE or runtime8103.
+
 CURRENT FACT: combined backend c? **76 operations / 69 paths**, migration head
 `l5_20261016_assistant_f4` (merge0030 v? f4_20261016_metadata_v2). Recovery checkpoint
 `2e4a048` ???c merge gi? l?ch s? v?i Assistant main `e499112` t?i `e48c74a`.

@@ -38195,7 +38195,10 @@
           },
           "renderer_version": {
             "type": "string",
-            "const": "plan_summary_renderer/1",
+            "enum": [
+              "plan_summary_renderer/1",
+              "plan_summary_renderer/2"
+            ],
             "title": "Renderer Version",
             "default": "plan_summary_renderer/1"
           }
@@ -38276,13 +38279,19 @@
           },
           "prompt_version": {
             "type": "string",
-            "const": "plan_summary_prompt/1",
+            "enum": [
+              "plan_summary_prompt/1",
+              "plan_summary_prompt/2"
+            ],
             "title": "Prompt Version",
             "default": "plan_summary_prompt/1"
           },
           "validator_version": {
             "type": "string",
-            "const": "summary_presentation_guard/1",
+            "enum": [
+              "summary_presentation_guard/1",
+              "summary_narrative_guard/2"
+            ],
             "title": "Validator Version",
             "default": "summary_presentation_guard/1"
           },

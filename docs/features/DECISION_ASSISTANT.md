@@ -41,6 +41,75 @@ The [Planning contract §18](../PROCUREMENT_API_CONTRACT_VI.md#decision-assistan
 owns current summary/chat requests/responses/errors/lifecycle. Existing C08 remains the
 structured explanation in §15.3. ADR-001/004/011/020–022 govern retained authority.
 
+## CURRENT FACT — S1 bounded plan narrative
+
+New composition selects `summary_profile/2`; SUMMARY_LLM_ENABLED remains OFF.
+AS01/AS02 reuse the existing durable lifecycle, current rights, exact retained
+evidence and receipts. Profile/1 still reads and renders its original six-family
+deterministic/presentation output. Profile/2 uses prompt `plan_summary_prompt/2`,
+internal schema `summary_narrative/2`, renderer `plan_summary_renderer/2` and
+validator `summary_narrative_guard/2`. These pins participate in generation identity;
+an old key replays its old result even after settings change. No migration is needed.
+
+BE `communication_plan` selects outcome/recommendation, viewed-option identity and
+exact costs/budget, per-Product/path assessment counts, computed/excluded scope,
+retained forecast horizon when present, search/proof and relevant limitations.
+Failed retained winners remain diagnostic; no eligible candidate, blocked
+computation and execution error have different messages. Incomplete/unproven
+search is a separate proof statement, never an infeasibility conclusion. Empty
+retained purchases mean no additional purchase, not no plan. Missing option costs
+are unavailable, not zero. Unknown fee coverage differs from retained payable fees
+whose delivery classification is unavailable. Nonterminating money displays as
+an exact fraction; no quantity totals across units or invented daily demand.
+
+Provider input is task/language/detail_level/instruction plus selected fact IDs,
+families, issued evidence IDs and licensed complete clause surfaces. No raw
+package, source text, captured entity names, question/history or operational data
+outside these selected facts is sent. Output is `{schema_version,headline,summary,
+key_points,warning_summary}`: each section has family and clauses containing
+`{fact_id,text,evidence_ids}`. Headline maps to outcome, summary to cost, three
+supporting points to requirements/coverage/proof, warning_summary to limitations.
+The model returns the text and bindings. This is bounded narrative wording,
+with licensed sentence variants and within-family composition, rather than the
+old ordering/tone schema. It is deliberately **not unrestricted prose**: a correct
+paraphrase outside this vocabulary falls back. It does not claim general entailment
+or demonstrated Gemini language quality.
+
+The summary-specific validator matches each entire clause to its selected semantic
+fact, family and exact references, requires every material fact once, and rejects
+extra/repeated/misplaced clauses. Matching numbers or existing evidence IDs alone
+never suffices. Wrong winner/entity/currency/amount/units, polarity, scope, proof,
+actual-versus-simulated meaning or unsupported causes cannot pass. No substring
+repair, grammar inherited from chat, model reviewer, regeneration or business
+recomputation is used. All new-mode failures render the complete deterministic
+profile/2 plan; no long universal disclaimer is forced beyond the short simulation
+boundary and applicable retained limitations.
+
+Public SummaryAnswer keeps schema_version `plan_summary/1`, its existing fields
+and six claims. Internal sections are flattened to those families; FE can display
+`answer`, `claims[].text/evidence_ids`, `references`, existing source and diagnostics.
+The historical wire value `model_presentation` also denotes accepted profile/2
+narrative; distinguish it using renderer/prompt/validator versions. The only public
+schema delta is additive enum values in those three existing version fields. No
+new public DTO fields or endpoint. Older results keep their original version labels.
+Fresh reads reconstruct clause bindings and reconcile the full retained answer
+against its pinned plan; GET and replay never call a provider. Current authorization
+is repeated immediately before provider dispatch, publication and delivery; provider
+work holds no Session. Lost-ACK/fencing/process recovery retain the original policy.
+
+HISTORICAL INFORMATION / reference only: the user supplied the newly placed
+`backend/shelfcash_legacy_review.zip`, archive SHA256
+`8c58050723d2b9dc7837859679ee9a65c758482a17e5475496bf33f9ad272a9a`.
+Its WORKTREE_STATUS identifies clean main `cac7c5a6a46c5751063be6b27866e3672acd2e2a`,
+collected 2026-10-07. Eight selected summary/communication/style/narrative/test/status
+entries were verified against MANIFEST hashes. It arrived without the `(5)` suffix;
+that filename alone is not an identity claim. Only communication priorities and
+provenance distinctions informed S1; no adapter/registry/engine/guard pipeline was
+ported. In particular, its no-recommendation → infeasible wording is not adopted.
+
+S1 is offline/fake-provider evidence only. S2 model configuration and pending live
+acceptance are in the [runbook](../runbooks/FULL_TEST_FLOW.md#summary-narrative-s1).
+
 ## Internal boundary
 
 `PublicPlanning.assistant_evidence(token,run_id,option_id=None,ingredient_id=None)`
@@ -586,8 +655,9 @@ cost/attempt caps and raw/final diagnostics; L5 HTTP/FE/security/restart integra
 Broader free-prose acceptance, Vietnamese/English paraphrase coverage and quality
 remain L4 requirements. L3 tests exercise bounded paraphrases/negation/compound
 clauses and conservative rejection; they do not prove general NLP correctness.
-L2 summary still rejects all free provider assertions by schema and only uses
-presentation ordering/tone. Chat transport/prompt/validation do not change it.
+Historical profile/1 summary rejects all free provider assertions and only uses
+presentation ordering/tone. New profile/2 bounded narrative is described above;
+chat transport/prompt/validation do not control summary behavior.
 Explanation of existing verified Runs needs no merge from data-readiness/challenger;
 new data admission/forecast quality evidence remains separately scoped.
 

@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     summary_llm_enabled: bool = False
     summary_model: str | None = None
     summary_providers: tuple[str,...] = ()
-    summary_max_tokens: int = Field(default=256,ge=64,le=1024)
+    summary_max_tokens: int = Field(default=3072,ge=64,le=4096)
     summary_input_bytes: int = Field(default=16000,ge=1000,le=64000)
     summary_timeout_seconds: float = Field(default=20,gt=0,le=30)
     summary_deadline_seconds: float = Field(default=25,gt=0,le=60)

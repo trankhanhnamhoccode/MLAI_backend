@@ -1,5 +1,15 @@
 # Remaining work and acceptance gates
 
+## CURRENT FACT / pending acceptance — S1 plan narrative
+
+Isolated S1 WIP implements backend communication selection, bounded clause prose,
+exact claim/reference validation, deterministic fallback and pinned old/new replay
+on the existing AS01/AS02 lifecycle. No new endpoint/migration or default provider
+activation. S1 verification is offline/fake-provider; general paraphrase acceptance
+and Gemini quality remain unverified. [Feature](features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative)
+owns behavior; [runbook](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1) owns the
+S2 acceptance matrix. No S2 live call, FE change, commit/merge/deploy follows S1.
+
 ## CURRENT FACT - L5 backend source integration
 
 Decision Assistant L4.1 checkpoint1f9b5c5 is integrated with main base8b09685 in an

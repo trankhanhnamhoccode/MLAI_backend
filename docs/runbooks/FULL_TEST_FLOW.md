@@ -1,5 +1,68 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="summary-narrative-s1"></a>
+## CURRENT FACT — S1 offline summary narrative / S2 pending
+
+Use the isolated `backend-plan-summary-narrative` checkout and its own `.venv`.
+The S1-owned container `shelfcash-summary-s1-postgres`, named volume
+`shelfcash-summary-s1-pgdata`, loopback5443, database `shelfcash_assistant_test` and
+limited `shelfcash_assistant_tester` are separate from every other session/runtime.
+Private credentials are retained under ignored runtime/s1/private. The ignored
+provision/runner adapts existing scripts.assistant_test_database/assistant_tests
+with only owned names/volume/path/port changed. It checks exact target and connected
+DB/user/privileges before supported dev reset/migration. Never copy a sibling URL.
+No `.env` copy/edit, provider credentials, live HTTP provider or email is needed.
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_summary_narrative.py tests/unit/test_plan_summary.py tests/api/test_plan_summary_openapi.py -q -p no:cacheprovider --tb=short
+.venv/Scripts/python.exe -B -m runtime.s1.test tests/integration/test_summary_narrative.py tests/integration/test_assistant_summary.py -q -p no:cacheprovider --tb=short --show-capture=no
+```
+
+The runner is local verification output, not portable provisioned infrastructure.
+On a fresh checkout provision a new owned target via the existing tooling, verify
+identity/limited role and configure its private runner; do not reuse5443 by guessing
+credentials or alter another session's database. Test fixtures own guarded resets;
+fresh Sessions assert generation/receipt/Planning state, not merely HTTP success.
+Unit/API checks require no DB. Commands/results/remaining limits belong to the
+conversation; this runbook does not record aggregate PASS history.
+
+Manual offline review: use `summary_case` in tests/unit/test_plan_summary.py,
+`communication_plan`/`deterministic_narrative`/`render_narrative`, or the explicit
+FakeNarrative in tests/integration/test_summary_narrative.py. Compare each displayed
+claim and issued reference to retained facts. Mark every sample deterministic or
+fake-provider; those examples do not establish live Gemini quality. Cold GET/retry
+must return the same generation/text without an additional provider invocation.
+
+S2 configuration, **not enabled or called in S1**: SUMMARY_LLM_ENABLED=true,
+SUMMARY_MODEL=google/gemini-2.5-flash, SUMMARY_PROVIDERS=[] for explicit default
+OpenRouter routing with fallback disabled (or an explicitly approved pinned route),
+SUMMARY_MAX_TOKENS=3072 (max4096), SUMMARY_INPUT_BYTES=16000,
+SUMMARY_TIMEOUT_SECONDS=20, SUMMARY_DEADLINE_SECONDS=25. Use the existing private
+OPENROUTER_API_KEY. CHAT_* and Import Qwen remain independently configured/OFF.
+Old256-token overrides may truncate narrative plus bindings and correctly fallback;
+no automatic retry after an ambiguous billable attempt. A key alone never enables
+summary. S2 still needs explicit data/model/call/cost authorization before dispatch.
+The historical assistant_live_smoke harness explicitly constructs profile/1; it
+does not certify profile/2 narrative. Use AS01 with the new composition for S2,
+then AS02/same-key replay to verify retained text without another provider call.
+
+| S2 pending gate | Acceptance evidence required |
+| --- | --- |
+| Completed winner + paid purchase | Vietnamese text preserves selected/viewed option, exact outlay/currency, scope; accepted rate and reader quality reviewed |
+| Zero purchase | Valid plan says no additional purchase; no invented no-purchase comparison or missing-plan claim |
+| No eligible / incomplete / blocked / execution error | Distinct status, proof scope and diagnostic reference semantics; no winner-null → infeasible inference |
+| Partial/excluded and hypothetical capture | Exclusions remain unevaluated, no full-scope assertion; current hypothetical stock not historical stock |
+| Unknown fee/missing facts/exact fractions | Unknown is not zero; payable fees not relabelled delivery; no mixed-unit totals or invented daily demand |
+| Hostile provider output / injection | Incorrect clauses, numbers, entities, references or removed obligations fallback; no source instructions followed |
+| Timeout/schema/truncation/model-route mismatch | Complete deterministic fallback, safe versioned diagnostics, measured tokens/latency/cost and no blind retry |
+| Rights/replay/restart | Current authority before dispatch/publication/delivery, no extra provider on GET/replay, old response/pins unchanged |
+
+Conservative licensed clauses may reject good Vietnamese paraphrases. S2 must
+measure this limitation explicitly; offline fake acceptance is not natural-language
+or production readiness. No universal disclaimer, model reviewer or entailment
+project is introduced. [Feature](../features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative)
+owns the actual prompt/input/output and versioning behavior.
+
 <a id="recovery-handoff"></a>
 ## CURRENT FACT — recovery + Assistant handoff integration
 

@@ -1,5 +1,19 @@
 # Current state
 
+## CURRENT FACT — S1 bounded plan narrative (isolated WIP)
+
+Status: OFFLINE VERIFIED ? LIVE ACCEPTANCE PENDING.
+
+New `summary_profile/2` composition uses backend-selected retained facts and
+versioned summary-specific clause/reference reconciliation. AS01/AS02 fields and
+76 operations/69 paths remain; only three existing version fields admit `/2` values.
+Deterministic fallback and original profile/1 receipt/replay remain available.
+SUMMARY/CHAT flags remain independently OFF; Import and forecast defaults unchanged.
+Work is isolated from main/runtime8103; offline/fake-provider verification is not
+Gemini live quality or deployment acceptance. Scope, input/output and conservative
+wording limits: [canonical feature](features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative).
+S2 requires separate authorization and the [pending matrix](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1).
+
 ## CURRENT FACT - Decision Assistant L5 combined source
 
 Assistant checkpoint L4.1 `1f9b5c5` after L4 `46d15459` is integrated with local main
