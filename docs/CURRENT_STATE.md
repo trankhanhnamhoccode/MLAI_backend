@@ -1,18 +1,24 @@
 # Current state
 
-## CURRENT FACT — S2 bounded summary acceptance (isolated WIP)
+## CURRENT FACT — bounded owner summary S3 source
 
-S1 checkpoint93d6ecb remains OFFLINE VERIFIED. S2 composition now pins profile/4,
-prompt/3 and compact internal schema/3, with renderer/2 and semantic guard/2.
-On the final source, synthetic A/B/C/D/F were Gemini/Google accepted; E correctly
-fell back after the model omitted reference-only coverage. Earlier HTTP400/schema
-failures and unknown cost reservations remain retained. AS01/AS02 fields/routes
-stay76/69; only the existing prompt_version enum gains /3. No migration or business
-calculation change. Providers remain independently OFF, old receipts replay unchanged.
-Codex grading supports GO WITH LIMITS for a bounded S3 trial, not unrestricted
-prose, independent human/whole-FE or production acceptance. Current source is WIP;
-main/runtime8103 and other worktrees are unchanged. Canonical scope and limitations:
-[feature](features/DECISION_ASSISTANT.md#current-fact--s2-gemini-acceptance-and-limits).
+New application generations use profile/6, selection/2, prompt/5, compact schema/3,
+renderer/4 and owner guard/4. Original S1/S2/S2.1 implementations and receipts stay
+pinned and readable. Required warning qualifiers and distinct purchase-line scope
+are verified offline/fake-provider, including real AS01/PostgreSQL persistence,
+AS02, fresh process, replay/security and recovery. No business computation,
+permission, migration or public field/route change. OpenAPI stays76/69 with additive
+existing version enums. Main integration status is recorded by the enclosing Git
+history and review manifest; runtime8103 is not restarted/migrated/activated.
+Historical S2.1 Gemini acceptance belongs only to fingerprint
+05d778b47a229f70bd859dc8903e916cabaef0c52ac9ed9052d42a1fd7573110,
+profile/5. Final S3 source has no live-provider acceptance. S2/S2.1 artifacts and
+closed ledgers are unchanged. Providers remain OFF; Chat V6/candidate8, Import,
+Forecast host/C test-only and main PDF behavior are preserved. No browser, owner
+human UX or production acceptance is claimed.
+[Feature](features/DECISION_ASSISTANT.md#current-fact--bounded-owner-summary)
+owns selection, configuration and limits; [handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md)
+owns the FE entrypoint.
 
 ## CURRENT FACT - Decision Assistant L5 combined source
 

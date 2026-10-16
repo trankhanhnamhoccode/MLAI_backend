@@ -160,7 +160,7 @@ def test_mode_config_and_wire_contract_leave_chat_and_import_defaults_alone():
     from app.config import Settings
     settings=Settings(_env_file=None)
     selected=profile_from_settings(settings)
-    assert selected.version=='summary_profile/4' and not selected.enabled
+    assert selected.version=='summary_profile/6' and not selected.enabled
     assert settings.summary_max_tokens==3072
     assert settings.chat_llm_enabled is False and settings.import_llm_suggestions_enabled is False
 

@@ -1,17 +1,16 @@
 # Remaining work and acceptance gates
 
-## CURRENT FACT / limits — S2 bounded plan narrative
+## CURRENT FACT / limits — bounded owner summary integration
 
-S1 is checkpointed locally at93d6ecb. S2 final-source synthetic live matrix has
-five Gemini/Google accepted cases and one correct coverage fallback. Compact
-provider schema fixes the observed nested-schema serving rejection; numeric,
-entity, reference and obligation guards remain strict. Cold/read/replay/security
-and recovery use owned PostgreSQL with fake faults, not paid fault injections.
-GO WITH LIMITS is proposed for a separately authorized bounded S3 trial. Natural
-unrestricted paraphrases, independent human grading and production/FE acceptance
-remain pending. [Feature](features/DECISION_ASSISTANT.md#current-fact--s2-gemini-acceptance-and-limits)
-owns behavior; [runbook](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1) owns commands
-and guards. S2 implementation remains WIP; no S2 commit/push/merge/deploy or S3 start.
+S3 source completes important-warning and distinct-purchase-line acceptance with
+offline/fake-provider tests. Profile/6 preserves historical profile/5 and earlier
+replay. Final-source live Gemini, independent owner UX, browser/FE integration and
+production acceptance remain unverified. Historical S2.1 live evidence is pinned
+to its original fingerprint; closed ledgers are not reopened. Local integration
+does not push remote, deploy/restart runtime8103 or enable providers. Operator
+activation is a separate authorized step, using the
+[feature](features/DECISION_ASSISTANT.md#current-fact--bounded-owner-summary) and
+[runbook](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1). No new engine work follows.
 
 ## CURRENT FACT - L5 backend source integration
 

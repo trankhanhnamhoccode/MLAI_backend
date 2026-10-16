@@ -1807,8 +1807,9 @@ identity=EvidenceIdentity (Run/Store/request/input/result/aggregate versions/dig
 temporal capture times), option_id nullable, locale/detail_level, source:
 deterministic_fallback|model_presentation, presentation:{ordering,tone}, answer,
 claims:[{family,text,evidence_ids}], references:EvidenceReference[], diagnostics,
-renderer_version. Sáu families required: outcome,cost,requirements,coverage,proof,
-limitations; outcome đứng đầu. Typed exact numbers/currency/units từ evidence được
+renderer_version. Historical profile/1 có sáu families required: outcome,cost,requirements,coverage,proof,
+limitations; outcome đứng đầu. Current profile/6 chọn required/optional/detail-only
+facts; claims có thể lặp family hoặc không có family không áp dụng. Typed exact numbers/currency/units từ evidence được
 server format, assessments theo Product/path, không tổng cup/piece hay g/ml.
 Winner explanation chỉ trong evaluated candidates; finite certificate và UNPROVEN
 giữ nguyên scope. Với profile/1, khi có retained pairwise deltas, summary lấy một cặp liên quan
@@ -1850,7 +1851,7 @@ retained clauses. Fallback mới là deterministic profile/2, không relabel b�
 Chi tiết input/output/limits ở [feature](features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative),
 offline/manual/S2 gates ở [runbook](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1).
 
-CURRENT FACT S2: composition hiện tại chọn summary_profile/4, reasoning disabled,
+HISTORICAL INFORMATION S2 checkpoint070a721: composition chọn summary_profile/4, reasoning disabled,
 prompt plan_summary_prompt/3 và internal schema summary_narrative/3. Google đã
 reject nested schema cũ vì quá nhiều serving states. Compact output chỉ gồm
 clauses `{fact_id,text}`; BE gắn issued references và dùng lại full-clause guard/2
@@ -1862,12 +1863,24 @@ E fallback vì model thiếu reference-only clause. Đây không phải bằng c
 unrestricted paraphrase hoặc independent human/production acceptance. Chi tiết
 và giới hạn ở [feature S2](features/DECISION_ASSISTANT.md#current-fact--s2-gemini-acceptance-and-limits).
 
+CURRENT FACT S3: new startup composition uses summary_profile/6, selection/2,
+prompt/5, compact schema/3, renderer/4 and owner guard/4. Required warnings and
+distinct purchase-line qualifiers participate in coverage. Unknown warnings retain
+neutral referenced wording; warnings never change eligibility. At most three lines
+keep original ordinals/arrival dates/quantity/unit, never deduplicating purchases
+as Ingredient totals; shortened lists require a qualifier. Full details stay in
+retained C03/C05/C08. Optional omissions remain valid; diagnostic-only facts are
+not model input. Old profile/5 and prior receipts retain exact original text/pins.
+Public fields/routes/permissions stay unchanged; existing version enums expand.
+[Canonical feature](features/DECISION_ASSISTANT.md#current-fact--bounded-owner-summary)
+owns selection/configuration and historical live-evidence limits.
+
 Diagnostics có disposition=ACCEPTED|FALLBACK, reason=NONE|MODEL_DISABLED|
 PROVIDER_UNAVAILABLE|SCHEMA_REJECTED|GROUNDING_REJECTED|INPUT_LIMIT|
 PROCESS_INTERRUPTED; requested/resolved model/provider nullable, attempts/input/
 output tokens khi biết, prompt/validator versions. Model OFF không gọi provider;
 schema failure, route/model substitution, timeout hoặc vượt bounds trả deterministic
-answer đủ sáu families, không repair/removal. Không raw payload/secrets/provider
+answer đủ các obligations của pinned profile (profile/1 có sáu families), không repair/removal. Không raw payload/secrets/provider
 stacktrace trong response/log mặc định. Đã verify fake transport, chưa live Qwen.
 
 Một generation pin actor/Store/Run + request + evidence digest + profile/schema/

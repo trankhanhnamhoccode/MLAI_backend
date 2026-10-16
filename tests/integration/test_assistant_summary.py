@@ -34,6 +34,8 @@ def assistant(env, request):
         # Separate recovery/handoff integration instance; never reuse sibling L5 DB.
         ('shelfcash_integration_test', 'shelfcash_integration_tester', '127.0.0.1', 5442),
         ('shelfcash_assistant_test', 'shelfcash_assistant_tester', '127.0.0.1', 5443),
+        # This task's S3 disposable target; never reset retained live state5443.
+        ('shelfcash_assistant_test', 'shelfcash_assistant_tester', '127.0.0.1', 5445),
     }, 'Only the owned Assistant or L5 disposable target'
     owner=setup(env)
     record=retained_record(getattr(request,'param','stock'),actor_id=owner.user_id)

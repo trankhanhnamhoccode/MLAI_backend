@@ -1,9 +1,12 @@
 # Domain model and business meaning
 
-CURRENT FACT assistant L2: summary is retained presentation of PlanningRun evidence,
-not a new Decision, purchase order or inventory fact. Six material claim families
-are server-rendered with exact retained values/provenance; optional model chooses
-bounded presentation only. Failed/unknown/no-winner/partial and proof scope remain
+CURRENT FACT: summary is retained presentation of PlanningRun evidence,
+not a new Decision, purchase order or inventory fact. Historical L2 uses six
+material claim families. Current owner profile/6 selects required, optional and
+detail-only facts across those families; claims may repeat a family or omit an
+inapplicable family. BE owns selection, exact values, references and layout;
+optional model wording is reconciled with finite sentence grammars and typed
+slots. Detail-only diagnostic facts are not provider input. Failed/unknown/no-winner/partial and proof scope remain
 distinct. Generation state is separate from PlanningRun status; provider failure
 can yield a deterministic completed summary without changing Run outcome. Workflow:
 [Planning §18](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).

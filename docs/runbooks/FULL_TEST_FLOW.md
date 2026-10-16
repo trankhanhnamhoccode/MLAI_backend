@@ -1,7 +1,7 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
 <a id="summary-narrative-s1"></a>
-## CURRENT FACT — S1 offline summary narrative / S2 controlled acceptance
+## CURRENT FACT — summary verification and closed S2/S2.1 acceptance
 
 Use the isolated `backend-plan-summary-narrative` checkout and its own `.venv`.
 The S1-owned container `shelfcash-summary-s1-postgres`, named volume
@@ -33,7 +33,7 @@ claim and issued reference to retained facts. Mark every sample deterministic or
 fake-provider; those examples do not establish live Gemini quality. Cold GET/retry
 must return the same generation/text without an additional provider invocation.
 
-S2 uses an explicit temporary application profile; runtime flags stay OFF.
+HISTORICAL INFORMATION: S2 used an explicit temporary application profile; runtime flags stay OFF.
 Equivalent configuration: SUMMARY_LLM_ENABLED=true,
 SUMMARY_MODEL=google/gemini-2.5-flash, SUMMARY_PROVIDERS=[] for explicit default
 OpenRouter routing with fallback disabled (or an explicitly approved pinned route),
@@ -75,7 +75,7 @@ the journal. No reuse/reset of earlier L3/L4 ledgers; lock/crash/unknown cost fa
 closed, no automatic regeneration or transport retry. Stop if remaining attempt
 slots or money cannot cover reservation; the allowance is not a spending target.
 
-Final composition profile/4 disables reasoning and uses compact schema/3 with
+Historical S2 composition profile/4 disables reasoning and uses compact schema/3 with
 prompt/3. The old nested schema failed Google's serving-state limit; local guards
 remain unchanged. A/B/C/D/F were live accepted; E correctly fell back on missing
 reference-only coverage. Naturalness/free paraphrases remain limited, and grading
@@ -100,6 +100,69 @@ the live prompt requests licensed clauses; this is not general paraphrase
 acceptance or production readiness. No universal disclaimer, model reviewer or entailment
 project is introduced. [Feature](../features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative)
 owns the actual prompt/input/output and versioning behavior.
+
+HISTORICAL INFORMATION S2.1: profile/5 uses owner selection/1, prompt/4, compact schema/3,
+renderer/3 and owner guard/3. Same owned DB, retained synthetic Runs and exact
+target guard; no reset after matrix creation. Run offline/fake faults without
+provider credentials or paid retries:
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_owner_summary.py tests/unit/test_summary_s21_budget.py tests/unit/test_summary_narrative.py tests/unit/test_plan_summary.py tests/api/test_plan_summary_openapi.py -q -p no:cacheprovider --tb=short --show-capture=no
+.venv/Scripts/python.exe -B -X utf8 -m scripts.summary_s21_verify
+.venv/Scripts/python.exe -B -X utf8 -m scripts.summary_s21_live --prepare
+```
+
+Historical paid invocation (each case A–F once):
+`python -B -X utf8 -m scripts.summary_s21_live --allow-paid-s21-max-10-usd-0.15 --case A`.
+This command is provenance, not permission to repeat calls. S2 and S2.1 ledgers
+are separately closed by STOP.json. S2.1 reserves three attempt slots/USD0.025
+before dispatch, holds unknown reservations and forbids repeated unchanged cases;
+maximum10 attempts/USD0.15, cap1200, Google only, reasoning disabled, no fallback.
+Metadata validates at most three eligible bounded-price routes before dispatch.
+Never delete STOP or reuse another ledger to bypass these limits.
+
+Actual AS01/application calls, fresh-session equality, AS02 and replay are captured
+in ignored runtime/s21-summary. Offline verify checks rights/isolation, concurrency,
+lost ACK/stale writer, real process death/restart, cold reads and old profiles.
+Only required omissions fail coverage; detail-only facts are not provider input.
+Review original request.json for exact system/user/schema, rather than rebuilding
+historical prompts. Required review ZIP runtime/shelfcash_S2_1_summary_review.zip
+contains preserved evidence, raw/final, before/after audit and Codex grading.
+Deleting that ZIP does not delete original source/evidence. No human UX acceptance
+or unrestricted linguistic capability is implied; S3 needs separate authorization.
+
+CURRENT FACT S3 verification: new profile/6 (selection2/prompt5/renderer4/guard4,
+compact schema3) uses offline/fake-provider acceptance only. Source integration
+keeps old profile/5 implementation unchanged. Never rerun S2/S2.1 live/prepare/
+verify tools to overwrite historical artifacts; closed budgets are not reopened.
+`scripts.summary_s3_verify` uses the already-owned retained5443 target without reset,
+reads original A–F and historical generations and creates a new synthetic warning
+Run through capture/pipeline/persistence. It writes only runtime/s3-summary.
+Private URL is read from the explicit owned source checkout, never a guessed DB.
+It asserts AS01 → fresh Session → AS02 → replay, model-OFF fallback, current rights,
+Store isolation, no engine rerun on cold read, fencing/concurrency/lost ACK and
+OS-proven dead-process recovery. Supplementary unit cases own purchase-line
+variants, unknown warnings, assumptions, mixed units and missing/unsafe names.
+
+```powershell
+python -B -m pytest tests/unit/test_owner_summary_v2.py tests/unit/test_owner_summary.py tests/unit/test_summary_narrative.py tests/unit/test_plan_summary.py tests/api/test_plan_summary_openapi.py tests/unit/test_application_contracts.py -q -p no:cacheprovider --tb=short --show-capture=no
+python -B -X utf8 -m scripts.summary_s3_verify
+```
+
+Resetting pytest uses a separate S3 disposable PostgreSQL container/volume,
+loopback5445, shelfcash_assistant_test/shelfcash_assistant_tester. Provision/runner
+adapt existing assistant-test tools with exact owned names/port/private path;
+connected database/role/limited flags are checked before supported reset/migration.
+Never run reset fixtures on retained5443, PDF5444 or other agents' databases.
+Unit/API/architecture tests do not need a DB. Important integration milestone
+verification may broaden once to the full suite; rerun affected failures only.
+
+Activation/disable: [feature](../features/DECISION_ASSISTANT.md#current-fact--bounded-owner-summary)
+lists exact Settings defaults and explicit Gemini/Google example. Set Summary flag
+only after separate authorization and restart the application to load new Settings;
+AS01 is synchronous, no new worker. Disable flag plus authorized restart leaves
+retained receipts/history readable. Chat/Import/email remain independent. This
+runbook does not authorize paid calls, restart/deploy or automatic enablement.
 
 <a id="recovery-handoff"></a>
 ## CURRENT FACT — recovery + Assistant handoff integration

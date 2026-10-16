@@ -19,6 +19,12 @@ OLD_VERSIONS = dict(renderer='plan_summary_renderer/1', prompt='plan_summary_pro
 
 
 def versions(profile: SummaryProfile) -> dict[str, str]:
+    if profile.version=='summary_profile/6':
+        from app.application.owner_summary_v2 import OWNER_VERSIONS
+        return OWNER_VERSIONS
+    if profile.version=='summary_profile/5':
+        from app.application.owner_summary import OWNER_VERSIONS
+        return OWNER_VERSIONS
     if profile.version == 'summary_profile/4':
         return {**VERSIONS,'prompt':'plan_summary_prompt/3','schema':'summary_narrative/3'}
     return VERSIONS if profile.version in {'summary_profile/2','summary_profile/3'} else OLD_VERSIONS

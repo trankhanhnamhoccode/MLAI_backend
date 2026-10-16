@@ -43,8 +43,8 @@ structured explanation in §15.3. ADR-001/004/011/020–022 govern retained auth
 
 ## CURRENT FACT — S1 bounded plan narrative
 
-S1 composition selected `summary_profile/2`; current S2 composition selects
-`summary_profile/4` as described below. SUMMARY_LLM_ENABLED remains OFF.
+S1 composition selected `summary_profile/2`; S2 selected `summary_profile/4`;
+current S3 composition selects `/6` as described below. SUMMARY_LLM_ENABLED remains OFF.
 AS01/AS02 reuse the existing durable lifecycle, current rights, exact retained
 evidence and receipts. Profile/1 still reads and renders its original six-family
 deterministic/presentation output. Profile/2 uses prompt `plan_summary_prompt/2`,
@@ -114,7 +114,7 @@ acceptance are in the [runbook](../runbooks/FULL_TEST_FLOW.md#summary-narrative-
 ## CURRENT FACT — S2 Gemini acceptance and limits
 
 S1 checkpoint `93d6ecb` is OFFLINE VERIFIED; its old generation formats remain
-supported. S2 final runtime composition uses summary_profile/4, prompt
+supported. HISTORICAL INFORMATION: S2 checkpoint `070a721` uses summary_profile/4, prompt
 plan_summary_prompt/3, internal schema summary_narrative/3, unchanged renderer
 plan_summary_renderer/2 and unchanged summary_narrative_guard/2. Profile/3 pins
 reasoning disabled while preserving the old nested schema; profile/4 also uses
@@ -157,6 +157,76 @@ runtime activation follows automatically. Providers remain OFF by default; Chat,
 Import and forecast configuration are unchanged. See the
 [runbook](../runbooks/FULL_TEST_FLOW.md#summary-narrative-s1) for exact opt-in,
 budget/target guards and reproducible offline/live checks.
+
+<a id="current-fact--s21-owner-summary-selection"></a>
+## CURRENT FACT — bounded owner summary
+
+Application composition selects `summary_profile/6`, `owner_summary_selection/2`,
+`plan_summary_prompt/5`, compact `summary_narrative/3`, renderer/4 and
+`summary_owner_guard/4`. No env selector, worker, engine, migration, permission,
+route or public field is added. Existing version enums are extended. Historical
+profiles/1–5 keep original implementations, selected facts, text and exact replay.
+
+BE selects required/optional/detail-only facts. Model input has only selected
+required/optional examples and typed money slots, status/outcome/winner/viewed
+context; references remain BE-owned. Full packages, notice messages, diagnostic
+detail-only facts and current catalog lookups are excluded. Required omission or
+unsupported sentence falls back; optional omission is valid. Finite complete
+grammars retain exact money/currency/entity/unit/role; other sentence variants are
+bounded. This does not implement general entailment, free prose or a model judge.
+
+One option shared by multiple strategies is called the proposed option. The
+viewed nonwinner qualifier remains required. Purchase summaries show at most three
+safe captured-name lines in original order, never deduplicating equal quantity/
+Ingredient/unit when suppliers/terms/dates differ or even when values coincide.
+Each sentence retains original line ordinal and exact quantity/unit/arrival date.
+Collection-level `/option/purchases` and captured-name references are the supported
+evidence granularity; ordinal identifies the member, no new index-pointer contract.
+A required qualifier says quantities are per line, not Ingredient totals. Missing/
+unsafe labels or more than three lines require an abbreviated-list qualifier and
+detail link instruction. No pack conversion, totals across units, order creation
+or receipt is inferred. All canonical purchase details remain in retained C03/C05.
+
+C08 collects retained capture problems, forecast/result warnings and BOM/option
+engine warnings. Selection also inspects forecast and viewed-option notices.
+Known BASELINE_FALLBACK, FORECAST_TRAINING_OVERLAP,
+FORECAST_TRAINING_BOUNDS_UNKNOWN and OFFER_OMITTED get short verified qualifiers.
+Matching codes are grouped as categories without asserting a shared root cause or
+counting independent entities; references cover all retained occurrences. Unknown
+codes get a neutral required notice to review details; original untrusted messages
+are never echoed. Unknown assumptions similarly retain a neutral qualifier;
+routine capture assumptions remain detail-only, while hypothetical-stock warning
+stays required. Warnings do not become blockers or change eligibility. Full
+warnings, issues and assumptions remain accessible through retained detail reads.
+
+Requirements refer only to evaluated Product/path scope. Missing-recipe grouping
+requires exact Product/code/affected-date evidence. Scope never claims successful
+computation. One plain search limitation preserves UNPROVEN; finite certification
+does not imply global optimality. Zero purchase remains a valid plan, without an
+invented stock-sufficiency cause. Failed diagnostic amounts remain detail-only;
+blocked unknown fee is not zero. Deterministic fallback retains these obligations.
+
+Configuration is startup Settings: SUMMARY_LLM_ENABLED=false, SUMMARY_MODEL unset,
+SUMMARY_PROVIDERS=[] (explicit OpenRouter default routing, no fallback),
+SUMMARY_MAX_TOKENS=3072, SUMMARY_INPUT_BYTES=16000, timeout20/deadline25 seconds.
+An explicitly authorized operator can set model `google/gemini-2.5-flash`, providers
+`["Google"]`, tokens1200, timeout30/deadline35, with existing private
+OPENROUTER_API_KEY. Key presence alone enables nothing. Startup composition chooses
+profile/6 for new generations, including model-OFF fallback; AS02 and old receipts
+use retained pins without provider calls. Invalid/missing provider configuration
+degrades to deterministic fallback. Settings changes require an authorized process
+restart. Disable by SUMMARY_LLM_ENABLED=false and restart; retained rows need no
+rollback/migration. Chat/Import/email flags remain independent. No restart occurs
+as part of local source integration, no paid-call authorization is implied.
+
+HISTORICAL INFORMATION: S2.1 six synthetic Gemini/Google cases were accepted only
+on fingerprint05d778b47a229f70bd859dc8903e916cabaef0c52ac9ed9052d42a1fd7573110
+(profile/5, selection/1, prompt/4, renderer/3, guard/3). Original artifacts/closed
+ledgers remain unchanged. S3 source changes warnings/shortlist and is verified
+offline/fake-provider only. Codex grading is not independent owner UX acceptance.
+No browser/whole-FE, final-source live Gemini or production readiness claim.
+Current [runbook](../runbooks/FULL_TEST_FLOW.md#summary-narrative-s1) owns verification
+commands, owned targets and activation boundaries.
 
 ## Internal boundary
 

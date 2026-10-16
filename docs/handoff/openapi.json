@@ -38197,7 +38197,9 @@
             "type": "string",
             "enum": [
               "plan_summary_renderer/1",
-              "plan_summary_renderer/2"
+              "plan_summary_renderer/2",
+              "plan_summary_renderer/3",
+              "plan_summary_renderer/4"
             ],
             "title": "Renderer Version",
             "default": "plan_summary_renderer/1"
@@ -38282,7 +38284,9 @@
             "enum": [
               "plan_summary_prompt/1",
               "plan_summary_prompt/2",
-              "plan_summary_prompt/3"
+              "plan_summary_prompt/3",
+              "plan_summary_prompt/4",
+              "plan_summary_prompt/5"
             ],
             "title": "Prompt Version",
             "default": "plan_summary_prompt/1"
@@ -38291,7 +38295,9 @@
             "type": "string",
             "enum": [
               "summary_presentation_guard/1",
-              "summary_narrative_guard/2"
+              "summary_narrative_guard/2",
+              "summary_owner_guard/3",
+              "summary_owner_guard/4"
             ],
             "title": "Validator Version",
             "default": "summary_presentation_guard/1"
