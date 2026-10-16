@@ -12,6 +12,95 @@ business seed or customer onboarding changes. See [local setup/recovery](runbook
 consent to that Store, initial `menu.read`; current grants remain Owner-managed.
 Browser FE and business-feature acceptance remain separate gates.
 
+CURRENT FACT F4: source is integrated into main local; isolated C0 test opt-in reaches the real ForecastRun/Planning worker
+and retained public reads; production/default serving remains host, C1 exploratory.
+F3 checkpoint `5a8e0a8` is PARTIAL19/24 synthetic, not production/real-impact acceptance.
+F4 local checkpoint is `8f4d908`; technical test-only acceptance VERIFIED, product
+activation NOT IMPLEMENTED, production promotion LOCKED. F4.1 profiling COMPLETE
+for its frozen offline subset (one attempt21.5297089s, one Planning/one inference,
+zero native solves). A remains INCOMPLETE/no winner, so exact output equivalence
+and native solver latency are unverified. Schema/conversion and semantic revalidation
+costs are measured; optimization, representative C latency and general F3 timeout
+attribution require separate work. Old/new claims stay consumed; no retry or business
+optimization in F4.1. F4.1 checkpoint is `b9ec978`. F4.2 checkpoint `8537e12` reuses the static
+quantity adapter with differential/fixed-output checks; six uninstrumented Planning
+runs show lower median18.8043 to 10.6877s on one fixture, unchanged selected facts but
+changed deadline coverage/proof. No broader validator refactor or production claim;
+representative quality/latency/activation gates remain. See [F4.2](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4-2);
+Local main integration is verified; no next slice, promotion, deployment or demo
+restart/migration is authorized. See the
+[canonical F4 boundary/gates](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
+and [F4 verification](runbooks/FULL_TEST_FLOW.md#forecast-f4). The single metadata2
+migration head follows0027; future integration of Assistant/import migrations still
+requires graph review. Preserve historical replay source/artifacts; representative
+latency/real-data eligibility, browser/recovery/rollback and explicit demo activation
+authorization remain. No FE delta is required for this unchanged public API.
+
+## ACCEPTED DECISION / CURRENT FACT — forecast engine challenger
+
+Phạm vi E1 được người dùng duyệt: giữ BE host và toàn bộ Planning business authority;
+forecast engine mới qua adapter riêng, không LLM/OpenRouter trong E1–E5. E1 COMPLETE
+compatibility/protocol; E2 COMPLETE internal typed opt-in adapter với pinned installed
+forecast-only source/dependencies, native fixed inference và private retained replay.
+Tiny synthetic correctness VERIFIED; không production integration/accuracy/promotion.
+Main/demo/customer DB và serving artifacts giữ nguyên; E1–E4/admission checkpoint local
+`eaf40b9`, merge main readiness tại `1c48162`; thay đổi tiếp theo giữ WIP để review.
+
+[FORECAST_ENGINE_INTEGRATION](features/FORECAST_ENGINE_INTEGRATION.md) là canonical
+owner của matrix, data/artifact inventory, replay/availability/reconstruction/CQR
+boundaries, benchmark/promotion và các gates E1–E5. E2 native correctness VERIFIED;
+E3 PARTIAL: causal training/scoring harness và A/B/C native synthetic replay VERIFIED;
+real accuracy REAL_BENCHMARK_BLOCKED, promotion INSUFFICIENT_EVIDENCE.
+E4 PARTIAL: counterfactual shared-facts host Planning + fixed-basket realized harness;
+bounded execution INCOMPLETE khi chạm wall budget, checkpoints giữ nguyên, không
+thay fixtures/search resources để tìm kết quả đẹp. Real impact REAL_IMPACT_BLOCKED.
+E5 production activation/promotion NOT_STARTED; isolated technical integration is
+covered separately by the explicit F4 scope above. Thiếu authorized unseen demand/
+vintages/calendar và historical operational snapshots chặn real quality/impact claims.
+Không mở production serving. CURRENT FACT: A/B demo hồi cứu manifest/2
+đã chạy và replay8 checkpoints VERIFIED trên baseline đến08/07, với declarations
+được duyệt theo dataset hash. Đây là EXPLORATORY A/B, không phải bằng chứng C.
+C tại /2 vẫn BLOCKED (calendar vintages/native train minimum). CURRENT FACT /3:
+user-authorized calendar assumption và point window20 ngày đủ native support84+,
+giữ calibration28 và strict holdout quarantine. A/B/C đã chạy mới cùng scope/masks,
+420 forecasts và exact replay12 checkpoints VERIFIED, exploratory only; không chọn
+winner từ aggregate khi Product/horizon regressions còn hiện diện. /2 và E3/E4 cũ
+nguyên bytes. E4 bộ mới vẫn BLOCKED và không chạy; không có POS09–15/07 để score.
+Exact selection/metrics tại [canonical integration](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab).
+Current /3 support/results/limits tại [demo A/B/C](features/FORECAST_ENGINE_INTEGRATION.md#demo-abc-v3);
+checkpoint A/B/admission `c4ff88a`, exploratory /3 checkpoint `a863fb5`.
+CURRENT FACT F1: generic read-only historical replay verified12 checkpoints/4 artifacts,
+typed budget representation fixed without changing original identities; independent
+1176-group metric audit agrees. H6 advantage is closure-concentrated (106.484% of net
+B−C benefit); quantile undercoverage precedes point/sorting. No model improvement
+or general superiority proven. F1 checkpoint `6a50d815ba983f511a92388b2ade18d6fd6b4b93`;
+E5/promotion NOT_STARTED. CURRENT FACT F2: authorized shared closure comparison and
+one endpoint residual-quantile variant completed in one3.844s batch,0 boosters/
+point/CQR fits,4 endpoint artifacts on exact retained /3 origins. No anchor/feature
+search or fresh data found/assumed; all evaluation remains exposed development.
+C1 improves aggregate endpoints/coverage while preserving P50/CQR but fails frozen
+validation subgroup guard; retain C0 endpoints. Common-policy B has lower exposed
+evaluation point error; no serving winner is selected. No-fit replay, independent
+1540-group score audit and original-file preservation verified. F2 checkpoint is
+`fcb33abb9c2316d41d564d5653233f6dc4e80a5e`.
+Details and limits: [canonical F2](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f2).
+CURRENT FACT F3: authorized counterfactual host Planning on retained F2 B/C0/C1,
+two chronological origins/four explicit synthetic fixtures/three arms; main
+comparison B_COMMON vs C0_COMMON, C1 not selected. Source-faithful real impact is
+still BLOCKED. Single300s hard-capped batch PARTIAL with19/24 retained cases,
+5 missing, no resumed batch.50 native solve attempts recorded, no forecast fits.
+Both finite-oracle cases pass without upgrading native proof. Common baskets on
+24/06 yield identical fixed-basket observed service; on01/07 scarce_purchase B
+buys3 packs/63 VND vs C0/C1 4 packs/83 VND, but censored truth blocks realized
+evaluation. No empirical production winner, savings or inventory-impact claim.
+F3 is checkpointed at `5a8e0a8`; [canonical F3](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3)
+owns assumptions, resources, proof/partial results and replay limits.
+HISTORICAL INFORMATION: F3 checkpoint described F4 as NOT_STARTED/unauthorized;
+that status is superseded by the isolated test-only F4 acceptance above. Product
+activation/promotion still requires reviewed forecast choice, provenance/availability,
+operational completeness and the remaining runtime/browser/rollback gates.
+No main/FE integration or automatic deployment is authorized.
+
 ## CURRENT FACT / PROPOSAL — data readiness D1–D5
 
 ACCEPTED DECISION: readiness theo facts/semantics của action/scope, không yêu cầu
@@ -34,12 +123,10 @@ runtime/config/DB/artifacts và mọi challenger WIP được bảo toàn.
 CURRENT FACT — source integration giữ73 operations/66 paths/head0027; final focused
 gate chạy riêng PostgreSQL5437 (limited integration role), không đổi demo8103.
 
-PROPOSAL — benchmark tiếp theo chỉ sau checkpoint E4/dataset-admission WIP riêng,
-merge main readiness mới vào challenger và reconcile eligibility/protocol/warnings.
-Không sửa frozen E3/E4/admission rules ngầm; semantics đổi cần manifest/protocol
-version mới. Hai arms cần cùng observations/origins/masks/declarations/resources;
-thiếu facts có thể BLOCKED, không fill giả. Benchmark không cần promote challenger
-vào main. Nhiệm vụ tích hợp này không sửa/merge challenger hoặc Decision Assistant.
+CURRENT FACT — checkpoint E4/admission và merge main readiness vào challenger đã
+hoàn tất trong nhiệm vụ riêng; manifest/2 A/B và kết quả được mô tả tại canonical
+integration phía trên. Không sửa frozen E3/E4 hoặc gộp các protocol. C/E4 trên bộ
+mới vẫn BLOCKED; E5/promotion và Decision Assistant không thuộc execution này.
 
 D5 không bao gồm FE/browser E2E hoặc real accuracy/savings. Các hạng mục đó chưa
 nghiệm thu, không là blocker cho backend-only acceptance. D3 deadline instability

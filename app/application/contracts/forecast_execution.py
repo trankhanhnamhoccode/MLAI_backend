@@ -61,8 +61,8 @@ def _schema_version(value: object) -> object:
 class PreparedForecastInput(Contract):
     """By-value capture. Empty/sparse observations do not establish model readiness."""
 
-    schema_version: Annotated[Literal[1, 2], BeforeValidator(_schema_version)] = 1
-    demand_policy: Literal['observed_sales_v1', 'causal_stockout_v1'] = 'observed_sales_v1'
+    schema_version: Annotated[Literal[1, 2, 3], BeforeValidator(_schema_version)] = 1
+    demand_policy: Literal['observed_sales_v1', 'causal_stockout_v1', 'engine_native_reconstruction_v1'] = 'observed_sales_v1'
     request: ForecastExecutionInput
     timezone: Annotated[str, StringConstraints(min_length=1, max_length=64)]
     products: tuple[CapturedForecastProduct, ...]
@@ -75,6 +75,9 @@ class PreparedForecastInput(Contract):
         if self.schema_version == 1:
             if self.demand_policy != 'observed_sales_v1' or self.demand_records or any(r.is_stockout is not None for r in self.observations):
                 raise ValueError('Version 1 retains observed sales semantics')
+        elif self.schema_version == 3:
+            if self.demand_policy != 'engine_native_reconstruction_v1' or self.demand_records:
+                raise ValueError('Version 3 retains raw observations; native boundary owns reconstruction')
         elif self.demand_policy != 'causal_stockout_v1':
             raise ValueError('Version 2 requires explicit causal stockout policy')
         try:

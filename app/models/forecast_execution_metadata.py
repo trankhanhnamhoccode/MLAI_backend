@@ -15,7 +15,7 @@ class ForecastExecutionMetadata(Base):
         ForeignKeyConstraint(['forecast_run_id','store_id'], ['forecast_runs.id','forecast_runs.store_id'],
             name='fk_forecast_execution_metadata_run_store', ondelete='RESTRICT'),
         CheckConstraint("jsonb_typeof(details_json) = 'object'", name='ck_forecast_execution_metadata_object'),
-        CheckConstraint("details_json ? 'schema_version' AND jsonb_typeof(details_json->'schema_version') = 'number' AND details_json->>'schema_version' = '1'", name='ck_forecast_execution_metadata_version'),
+        CheckConstraint("details_json ? 'schema_version' AND jsonb_typeof(details_json->'schema_version') = 'number' AND details_json->>'schema_version' IN ('1','2')", name='ck_forecast_execution_metadata_version'),
     )
     forecast_run_id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True)
     store_id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), nullable=False)

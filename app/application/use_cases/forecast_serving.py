@@ -64,7 +64,11 @@ class ForecastServing:
         self.engine=engine
         self.execution=TrainedForecastExecutionUseCases(engine,artifacts)
 
-    def prepare(self,store,start,product_ids=None,*,accepted_serving=None):
+    def acceptance_pin(self,facts,store,start):
+        return None
+
+    def prepare(self,store,start,product_ids=None,*,accepted_serving=None,challenger_test=None):
+        if challenger_test is not None:raise AuthError('CHALLENGER_RUNTIME_UNAVAILABLE',503)
         with self.engine.connect().execution_options(isolation_level='REPEATABLE READ',postgresql_readonly=True) as connection:
             with auth_session(connection) as s:
                 facts=load_readiness(s,store)

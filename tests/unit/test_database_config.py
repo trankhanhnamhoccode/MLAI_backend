@@ -107,6 +107,18 @@ def test_integration_reset_requires_exact_dedicated_role():
             database_url="postgresql+psycopg://admin:dummy@127.0.0.1:5432/shelfcash_integration_test"))
 
 
+@pytest.mark.parametrize('environment,role,port,allowed',[
+    ('test','shelfcash_challenger_tester',5438,True),
+    ('test','admin',5438,False),('test','shelfcash_challenger_tester',5432,False),
+    ('development','shelfcash_challenger_tester',5438,False)])
+def test_challenger_requires_own_environment_role_and_port(environment,role,port,allowed):
+    settings=Settings(_env_file=None,environment=environment,
+        database_url=f'postgresql+psycopg://{role}:dummy@127.0.0.1:{port}/shelfcash_challenger_test')
+    if allowed:validate_reset_target(settings)
+    else:
+        with pytest.raises(ValueError):validate_reset_target(settings)
+
+
 @pytest.mark.parametrize('role', ['shelfcash_readiness_tester', 'admin', 'shelfcash_local_tester'])
 def test_readiness_reset_requires_exact_dedicated_role(role):
     settings = Settings(_env_file=None, environment='test',

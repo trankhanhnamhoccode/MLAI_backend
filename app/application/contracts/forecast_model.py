@@ -3,7 +3,8 @@ from datetime import date
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BeforeValidator, Field, model_validator
+from pydantic import BeforeValidator, Field, model_validator, model_serializer
+from app.application.contracts.forecast_challenger import ChallengerEvidence
 
 from app.application.contracts.common import Contract, NonnegativeDecimal
 from app.application.contracts.forecast_execution import PreparedForecastInput, ForecastWarning
@@ -117,14 +118,29 @@ class ArtifactManifest(Contract):
 
 
 class ExecutionDetails(Contract):
-    schema_version: Version = 1
+    schema_version: Annotated[Literal[1,2], BeforeValidator(_integer_version)] = 1
     selection_reason: Literal['TRAINED_SELECTED', 'NO_ARTIFACT', 'ARTIFACT_MISSING',
-                              'NOT_READY_HISTORY', 'BASELINE_SELECTED', 'LEGACY_BASELINE']
+                              'NOT_READY_HISTORY', 'BASELINE_SELECTED', 'LEGACY_BASELINE', 'CHALLENGER_TEST_SELECTED']
     candidate_artifact_identity: Digest | None = None
     postprocessing_version: Version = 1
     raw_crossings: Count = 0
     negative_values: Count = 0
     warnings: tuple[ForecastWarning, ...] = ()
+    challenger_evidence: ChallengerEvidence | None = None
+
+    @model_validator(mode='after')
+    def versioned_challenger(self):
+        if (self.selection_reason=='CHALLENGER_TEST_SELECTED') != (self.schema_version==2):
+            raise ValueError('Challenger requires metadata/2')
+        if self.challenger_evidence is not None and self.schema_version!=2:
+            raise ValueError('Legacy metadata cannot contain challenger evidence')
+        return self
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy(self,handler):
+        result=handler(self)
+        if result.get('challenger_evidence') is None:result.pop('challenger_evidence',None)
+        return result
 
 
 class ModelForecastRunResult(Contract):

@@ -1,0 +1,17 @@
+# E2 CPython3.11 fixed inference/build environment. Install only in its own venv.
+# Install the local non-editable forecast snapshot wheel separately (--no-deps).
+annotated-types==0.8.0
+lightgbm==4.6.0
+numpy==2.2.6
+pandas==2.2.3
+pydantic==2.13.5
+pydantic-core==2.46.5
+python-dateutil==2.9.0.post0
+pytz==2026.5
+scipy==1.17.1
+setuptools==82.0.0
+six==1.17.0
+typing-extensions==4.16.0
+typing-inspection==0.4.4
+tzdata==2026.5
+wheel==0.45.1

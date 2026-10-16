@@ -23,6 +23,119 @@ same Store through Owner invitation and authenticated synthetic holder acceptanc
 initial grant `menu.read` only. Targeted private delivery touches only this
 invitation; replay preserves later grant changes/revocation and credentials.
 
+CURRENT FACT F4 (source integrated into main local, runtime test-only/OFF): C0 explicit internal composition
+connects canonical observations → pinned native inference → retained ForecastRun →
+unchanged host Planning worker → durable PlanningRun/C03/C08. Default startup stays
+host; C1 experimental, production LOCKED. Private acceptance/2, raw input schema3
+and execution metadata2 preserve older serializers/digests. Dedicated limited-role
+PostgreSQL test target is loopback5438; constraint-only head
+`f4_20261016_metadata_v2` follows0027. No production/FE/API DTO or permission change.
+F3 checkpoint `5a8e0a8` remains PARTIAL19/24 synthetic, not real impact acceptance.
+F4 is committed locally at `8f4d90838cfe7898cf3fbbe0e0784ca136dad8cf`; technical
+test-only acceptance VERIFIED, product activation NOT IMPLEMENTED, promotion LOCKED.
+F4.1 profiling COMPLETE for the frozen offline subset: new explicit authorization,
+one attempt21.5297089s, one Planning/one native inference/zero native solves; old
+mismatch/startup-failure claims and receipts preserved. Planning remains INCOMPLETE
+with no winner; output equivalence and general F3 timeout attribution are unverified.
+Measured schema/semantic-validation costs are documented; no business optimization.
+Windows job-tree cleanup verified; no retry. F4.1 checkpoint `b9ec9782a398722ef1705edbd51f70d1d7c35358`.
+F4.2 checkpoint `8537e122f28ded9b48bdc14d651cf7ecee38d1a2` reuses static quantity
+TypeAdapter. Combined-source integration unit/API and dedicated PostgreSQL checks
+pass; the runbook owns invocation counts and historical route-inventory test drift.
+No API/config/default model change, no demo migration/restart or activation. Six isolated
+Planning calls complete in109.0109421s shared compute; median18.8043 to 10.6877s,
+fixed/selected exact facts match, search coverage/proof differ. First-pair CPU noise
+and one-fixture/three-repeat limits apply; no production latency or C-vs-B claim.
+See [F4.2 scope/results](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4-2).
+Canonical [F4 behavior and limits](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
+and [verification/setup](runbooks/FULL_TEST_FLOW.md#forecast-f4) own the details.
+
+## CURRENT FACT — forecast challenger E1–E4 (isolated branch)
+
+E1 compatibility/protocol và E2 internal adapter COMPLETE trong worktree riêng
+`backend-forecast-engine-challenger`, branch `feat/forecast-engine-challenger`, từ
+main052cddee. Host và engine62b94fa đã static trace; legacycac7c5a chỉ qua review ZIP.
+Canonical [Forecast integration](features/FORECAST_ENGINE_INTEGRATION.md) sở hữu
+matrix, native reconstruction/CQR/artifact/runtime identity, benchmark và E1–E5
+gates. E2 có typed raw capture, pinned forecast-only wheel/dependencies, strict
+artifact/calendar guards, private immutable evidence/cache và exact replay. Native
+inference/public-stage equivalence/cache/fresh-process replay đã verify trên tiny
+synthetic correctness artifact; không accuracy/calibration/promotion proof.
+
+ACCEPTED DECISION theo yêu cầu E1: BE làm host, forecast mới qua adapter riêng;
+giữ BOM/loss/Product serving/FEFO/procurement/requirements/winner/retained Planning.
+E1–E5 không LLM/OpenRouter. Production serving/public API/permissions, FE, engine
+source và runtime/DB người dùng không đổi. E2 production mode bị khóa, CLI OFF mặc
+định, không operational DB caller. E2 checkpoint local
+`b92d2c43cbf82e8308043f60630c9f83f65abefb`; E3 harness checkpoint local
+`c2544c1025815bd0ccef9acb524f6f265dd03c45`.
+E3 PARTIAL: causal A/B/C harness, bounded native residual/point/CQR fits,
+paired scoring và fresh-process replay VERIFIED trên synthetic corpus riêng.
+Không dùng nhãn holdout để fit; weather excluded; production LOCKED.
+Real accuracy `REAL_BENCHMARK_BLOCKED` / `INSUFFICIENT_EVIDENCE`: chưa có dữ liệu
+real unseen được phép, historical vintages và sourced operating calendar đủ điều kiện.
+E4 PARTIAL / COUNTERFACTUAL_SYNTHETIC: detached harness dùng host BOM/procurement/2/
+serving/FEFO/comparison/selector, tách forecast design paths khỏi fixed-basket observed
+realized evaluation. Bounded manifest INCOMPLETE do wall budget; giữ checkpoints,
+không kéo dài hoặc thay fixtures. Real impact REAL_IMPACT_BLOCKED; E4/admission đã
+checkpoint local `eaf40b9`, giữ nguyên trạng thái INCOMPLETE. E5 activation chưa thực hiện. Canonical Forecast integration sở hữu
+commands/limits; không thay public API/schema/permissions hay DB.
+
+CURRENT FACT — challenger đã merge main readiness `869eaec` tại `1c48162`.
+Manifest `causal_benchmark/2` chạy riêng A/B trên baseline demo đến08/07, với ba
+declarations được người dùng chấp thuận và pin raw-bundle hash. A/B offline outputs
+và fresh-process replay8 checkpoints VERIFIED; kết quả EXPLORATORY, không phải real
+accuracy/C evidence. A/B/admission đã checkpoint `c4ff88a` trước protocol mới.
+CURRENT FACT /3: user-approved hash-bound calendar DEMO_RETROSPECTIVE_ASSUMPTION
+và windows train O−48/point20/calibration28 giữ strict support/quarantine. A/B/C đã
+chạy cùng experiment mới,420 forecasts,24 boosters/8 postprocess fits,~72s; fresh-process
+replay12 checkpoints/4 native artifacts và future-label invariance VERIFIED,0 retrain.
+C có aggregate improvement nhưng có Product/horizon regressions và interval limits;
+EXPLORATORY, no automatic winner, promotion LOCKED. E4 trên bộ mới vẫn BLOCKED;
+không chạy Planning/E4. Canonical [current /3 evidence](features/FORECAST_ENGINE_INTEGRATION.md#demo-abc-v3)
+sở hữu assumptions/windows/trade-offs và F1 diagnosis. CURRENT FACT F1: /3 đã
+checkpoint exploratory tại `a863fb5`; generic replay sửa typed resource-budget
+round-trip và dùng verified historical source riêng với current loader,12 checkpoints/
+4 artifacts khớp dedicated verifier,0 retrain/original writes. Independent audit khớp
+1176 metric groups. Undercoverage tồn tại trước point/sorting; chưa xác định nguyên
+nhân learning/calibration. H6 đóng góp106.484% lợi thế B−C, tập trung closure30/06;
+bỏ H6 hoặc ngày này thì B có MAE tốt hơn. Official package scores vẫn tái lập được,
+không chứng minh learned-model superiority. /3 holdout là exposed development
+evidence cho mọi F2 dựa trên findings. F1 checkpoint local
+`6a50d815ba983f511a92388b2ade18d6fd6b4b93`.
+CURRENT FACT F2: offline protocol `forecast_f2/1` đã chạy một batch trên retained
+artifacts/predictions /3, shared eligible closure policy và một endpoint residual
+nearest-rank variant,0 booster/point/CQR fits và4 endpoint artifacts, parent3.844s.
+Không có POS09–15/07/fresh labels; cả validation/evaluation là exposed development.
+B common closure evaluation MAE3.7491 so C0/C1 4.2723; validation C0/C1 4.5849 so
+B5.0141. C1 giữ P50/CQR, cải thiện aggregate endpoint pinball và open evaluation
+coverage20.3125→53.125%, nhưng fail frozen validation subgroup guard (H7 và12
+Product×horizon cells): giữ C0 cho endpoints, không chọn C1 hoặc promote B/C.
+F2 fresh-process replay0 fits và independent1540-group Decimal audit VERIFIED;
+1234 files gốc giữ SHA-256. [Canonical F2](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f2)
+sở hữu method, overlap calibration/CQR, regressions, budget và limits;
+[runbook F2](runbooks/FULL_TEST_FLOW.md#forecast-f2) sở hữu commands/evidence.
+Canonical [original A/B evidence](features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab)
+sở hữu exact selection, origins, metrics và limits; [runbook](runbooks/FULL_TEST_FLOW.md#challenger-demo-ab)
+sở hữu commands. F2 đã checkpoint local `fcb33abb9c2316d41d564d5653233f6dc4e80a5e`.
+CURRENT FACT F3: user-authorized `planning_f3/1` dùng đúng retained F2 B_COMMON/
+C0_COMMON và C1_COMMON exploratory sensitivity, common F3_SYNTHETIC operational
+fixtures tại hai origins cuối24/06,01/07; source-faithful vẫn BLOCKED, không dùng
+snapshot08/07 làm historical stock. Host BOM/procurement/2/serving/FEFO/selector
+giữ nguyên. Một hard300s batch dừng PARTIAL,19/24 cases giữ lại,5 cases không chạy
+tiếp;≤144 native-solve budget,50 attempted solves có resource receipt. 24/06 các
+case có winner giữ cùng baskets/realized metrics giữa arms. 01/07 scarce_purchase:
+B3 packs/63 VND, C0/C1 4 packs/83 VND; realized NOT_EVALUATED vì censored truth.
+Ba tight-budget cases24/06 không winner; không thay bằng zero recommendation.
+Finite oracles stock/scarce pass trên domain1/5, không nâng native proof.
+Dedicated fresh-process replay đã verify toàn bộ19 retained cases/9 realized
+ledgers trong53.5s,0 solves/fits, báo rõ5 missing; read-only metrics ở namespace
+F3 verifications, không giả final report của batch bị timeout.
+[Canonical F3](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3) sở hữu setup,
+limits/proof/partial results; [runbook](runbooks/FULL_TEST_FLOW.md#forecast-f3) sở hữu
+commands/evidence. F3 checkpoint `5a8e0a8`; F4 test-only integration is described above,
+promotion LOCKED.
+
 ## CURRENT FACT — Data Readiness D1–D5 tích hợp main local
 
 Isolated `backend-data-readiness` / `feat/data-readiness` từ main052cddee, D1 committed

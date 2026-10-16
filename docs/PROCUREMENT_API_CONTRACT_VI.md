@@ -1,5 +1,14 @@
 # Planning — configuration, computation and retained results
 
+CURRENT FACT F4, isolated challenger test composition only: existing C02/C03/C08
+can retain a pinned synthetic C0 forecast with actual model/artifact identity;
+host defaults, public DTOs/routes and current authorization stay unchanged.
+Sanitized execution failures distinguish CHALLENGER_ARTIFACT_MISSING, CHALLENGER_DATA_BLOCKED,
+CHALLENGER_RUNTIME_UNAVAILABLE, CHALLENGER_ARTIFACT_CORRUPT and
+CHALLENGER_TECHNICAL_FAILURE. No fallback or production eligibility is implied.
+[Forecast integration](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4) owns
+the opt-in/versioned private capture contract; retained GET never recomputes.
+
 CURRENT FACT D3 trên nhánh data-readiness: new C02 acceptance pin private
 offer_eligibility/1; known local missing offer facts/bound được omit có retained
 identity/version/reason, không tự loại Product nếu alternatives hoặc stock vẫn đủ.

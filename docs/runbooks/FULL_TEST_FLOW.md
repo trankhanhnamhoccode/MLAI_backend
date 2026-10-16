@@ -1,5 +1,664 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="forecast-f4"></a>
+## CURRENT FACT — F4 isolated technical acceptance
+
+[Canonical F4](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4) owns the
+test-only admission/versioning/rollback boundaries. F3 is checkpointed at `5a8e0a8`,
+PARTIAL19/24 synthetic; never resume its five missing cases. F4 is locally committed
+at `8f4d90838cfe7898cf3fbbe0e0784ca136dad8cf`; F4.1 checkpoint is `b9ec978`.
+F4.2 checkpoint is `8537e12`; source is integrated into main local.
+Default app composition remains host, C1 experimental, production LOCKED, browser
+E2E unverified. No provider, FE or demo8103 startup is part of this workflow.
+
+Clone setup uses CPython3.11.9 and the committed vendor snapshot, installed as a
+non-editable wheel. The F4 lock records the verified host/auth/native test environment.
+No training is needed or authorized:
+
+```powershell
+py -3.11 -m venv .venv
+.venv/Scripts/python.exe -m pip install -r scripts/requirements-forecast-challenger-f4-test.lock.txt
+.venv/Scripts/python.exe -m pip install --no-deps -e .
+.venv/Scripts/python.exe -m pip wheel --no-deps --no-build-isolation --wheel-dir runtime/challenger/wheels ./vendor/forecast_challenger
+.venv/Scripts/python.exe -m pip install --no-deps runtime/challenger/wheels/shelfcash_forecast_challenger_snapshot-0.1.0+62b94fa.e2-py3-none-any.whl
+```
+
+Native acceptance additionally needs the original synthetic constant artifact directory
+`runtime/challenger/artifacts/0c3c2b7539c0050bdf52fbfffa56f6ddac03c68654b3462ad1d2f2626896d936/`
+with its canonical manifest, eleven hash-verified files and unchanged booster text.
+The isolated host-LightGBM regression additionally reads `host-model.json` and
+`checkpoint.json` under `runtime/challenger/benchmarks/fits/12aceff4a568a50967aa253ead93d37a67b244b746f430b0da4af133a89bd0ad/`.
+These model payloads are not in the review ZIP or Git: copy these exact retained
+inputs from the authorized workspace/backup; `source-artifacts.json` in F4 evidence
+lists SHA-256. Do not substitute a research artifact, regenerate models or disable
+checks if the files are absent. The tiny native fixture rebinds synthetic scope/
+runtime into a new disposable test artifact; it never trains or promotes.
+
+PostgreSQL17 runs in its own Compose named volume, loopback5438. First-time setup:
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.setup_challenger_test
+```
+
+This generates private local credentials under ignored `runtime/challenger/f4/private`;
+it refuses to overwrite an existing setup. Runtime uses only
+`shelfcash_challenger_test` / `shelfcash_challenger_tester`, with no superuser,
+createdb/createrole/replication/bypassrls or CONNECT to other connectable databases.
+`scripts.dev.validate_reset_target` explicitly allowlists this name/role/test-only
+environment/port; `scripts.test_challenger` validates the URL before connecting,
+checks actual identity/privileges, then runs tests sequentially against that DB.
+It disables provider/email/worker flags. Never point these checks at development,
+demo, Assistant/import DBs or another port. No runtime role credentials belong in Git.
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.test_challenger tests/integration/test_planning_challenger.py tests/integration/test_challenger_migration.py -q
+.venv/Scripts/python.exe -B -m scripts.test_challenger tests/integration/test_planning_public.py::test_real_baseline_worker_stock_and_retained_poll tests/integration/test_planning_public.py::test_receipt_retained_queued_replay_and_original_presence tests/integration/test_planning_public_security.py::test_store_membership_read_is_not_creator_only_and_foreign_hidden -q
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_planning_challenger.py tests/unit/test_forecast_serialization.py tests/unit/test_database_config.py tests/unit/test_planning_public_contract.py tests/unit/test_forecast_execution.py tests/unit/test_forecast_model_contracts.py tests/unit/test_forecast_stockout.py tests/unit/test_forecast_baseline.py tests/unit/test_planning_run.py tests/api/test_planning_public_openapi.py tests/api/test_planning_inspection_exports_openapi.py -q
+.venv/Scripts/python.exe -B -m scripts.verify_challenger_openapi
+git diff --check
+```
+
+HISTORICAL INFORMATION - original F4 checks:230 unique unit/API and18 unique PostgreSQL checks passed, counting
+overlapping focused reruns once. The PG set includes14 F4 cases, one empty-DB
+constraint roundtrip, and three existing host/public regressions (baseline worker,
+receipt/replay and foreign-Store read). After small fixes only affected checks were
+rerun; these counts are targeted coverage, not a full-suite result. Unit/API coverage
+includes one actual frozen host LightGBM inference with the C package import blocked.
+Existing host training/evaluation/persistence suites that fit models were not run.
+
+Actual native acceptance: real pinned package, public C02 session/Origin/CSRF, actual
+PlanningExecution, retained ForecastRun/PlanningRun, C03/C08, fresh Session and spawned
+process read. Stock-only synthetic case has zero purchase/fee/outlay, exact100%
+service and requested LOW54/BASE66/HIGH78; factual seventh-day closure is applied
+once, CQR7..15 does not replace quantiles9/11/13. Separate fault injection covers
+dependency/native errors, artifact mutation/missing, source-code pin change, lost
+commit ACK and concurrent claims. Actual process test kills an owner after durable
+claim, then verifies recovery by a new worker instance and stale/terminal fences;
+it does not prove death during native inference or an HTTP server restart. Public
+security uses current grants/Store membership; no real-user credentials are bundled.
+
+Migration `f4_20261016_metadata_v2` follows0027; it only widens the metadata version
+constraint. Dedicated DB upgrade→downgrade0027→upgrade passed with no application
+rows. Other-branch Assistant revisions are left untouched; reconcile lineage before
+any later main integration. Historical schema1/metadata1/capture1 bytes keep their
+serializers; old native experiment replay still needs its original source/runtime.
+
+OpenAPI compared against local main `b0db90cedd3962d8cb2e3f2dfe4696ec83b4e52a`:
+73 operations, unchanged SHA-256
+`7a6d13ca1e7bafdee247504e9a0fa131c28c9796a0436691dfa309a847fbd366`.
+Private acceptance/input/metadata versions and safe failure codes are the only
+contract extensions; no new public fields/routes or FE model choice.
+
+HISTORICAL INFORMATION: the F4 and first F4.1 profiling claims are consumed. F4's original `scripts.profile_planning_f4`
+receipt is unchanged: admission mismatch after2.6144s, zero Planning/inference/fits.
+F4.1 preflight verified a new synthetic fixture's provenance, unchanged boosters,
+full runtime/dependency/source/input/calendar/scope/units and admission before claim.
+The old failure came from lexical first-cache selection, not runtime eligibility.
+[Canonical profiling table](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
+owns exact identities, timings and limits.
+
+The following are **historical executed commands, not rerun instructions**:
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.profile_planning_f4_1 prepare
+.venv/Scripts/python.exe -B -m scripts.profile_planning_f4_1 run --identity b6ab729e05bc00c5d960ab1adcb4c91725fc3b31c01e9db226fb367a99230cd1
+```
+
+Preflight2.0398202s and preclaim verification0.7703720s are separate from compute.
+The one new batch exited1/PARTIAL_ERROR at0.1060025s on the immediate-parent PID
+assertion, before child claim, heavy imports, Planning or inference. At that point, business
+stage/cold-warm/repeated-validation timings were unmeasured. That attempt ran no further compute,
+F3 resume, training, network/provider or DB workload was run. Do not remove markers,
+repeat these commands or expand budgets. A new explicit authorization and frozen
+experiment would be required to measure stages after the tooling startup fix.
+
+Read-only inspection commands (PowerShell; do not terminate unrelated processes):
+
+```powershell
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'profile_planning_f4_1' } | Select-Object ProcessId,ParentProcessId,Name
+Get-Content runtime/challenger/f4_1/compute-claim.json
+Get-Content runtime/challenger/f4_1/experiments/b6ab729e05bc00c5d960ab1adcb4c91725fc3b31c01e9db226fb367a99230cd1/receipt.json
+```
+
+A noncompute venv subprocess reproduced immediate parent != controller owner.
+The fixed helper checks existing ProcessIdentity host/PID/birth and ALIVE, fails
+closed for old claims without incarnation, and keeps exclusive markers. Executed
+pre-fix tooling is copied under the original experiment's `executed-source/`;
+current WIP does not match that frozen source and cannot silently replay it.
+Inspection/probe files under `runtime/challenger/f4_1` are not compute receipts.
+
+Tooling-only regression, zero Planning/native execution/training/DB:
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_planning_profile_observer.py tests/unit/test_forecast_serialization.py tests/unit/test_forecast_stockout.py tests/unit/test_forecast_model_contracts.py tests/unit/test_planning_public_contract.py -q --tb=short --junitxml=runtime/challenger/f4_1/final-tests.xml
+git diff --check
+```
+
+Observed:40 tests passed in the targeted group, then16 affected observer tests
+passed after adding the early consumed-guard regression (41 unique tests; overlap
+counted once). Coverage includes optional/nested instrumentation, alias restore,
+resource/exclusive claim limits, subprocess owner validation and fail-closed original
+artifact mismatch, plus legacy serialization/stockout/model/public contracts.
+Business/app/vendor source is unchanged from F4. Prior F4 PostgreSQL/native acceptance
+is historical evidence; it was not rerun for commit or these tooling-only changes.
+No full-suite, DB, new performance or trained-C latency claim follows from these tests.
+
+### CURRENT FACT — F4.1 completion authorization and verification
+
+The separately authorized completion experiment is
+`540bb41e97f5d95092362e17fb7e91d3162c0894d2a4791a9c0010b4e12d6850`;
+its shared120s group claim is also consumed. One attempt completed in21.5297089s,
+with one host Planning, one native inference, zero native solves and no retry.
+A is Planning INCOMPLETE/no winner; B is cold inference/cache miss; C is retained
+cache hit without inference. Profiling COMPLETE applies only to this frozen offline
+subset, not Planning completion, output equivalence or representative C acceptance.
+See the [canonical timing/call-count analysis](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4).
+
+Historical executed commands (do not repeat consumed compute):
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.profile_planning_f4_1_completion prepare
+.venv/Scripts/python.exe -B -m scripts.profile_planning_f4_1_completion run --identity 540bb41e97f5d95092362e17fb7e91d3162c0894d2a4791a9c0010b4e12d6850
+```
+
+Prepare reused the exact compatible artifact479704...13c4 and frozen F3/native
+inputs, checked typed scope/calendar, policy, hashes, artifact/native package/runtime,
+then froze all controller/observer/job-helper source. It retained provenance to the
+failed setup/receipt. No old marker or artifact manifest was changed. Separate
+noncompute preflight0.7570131s and process-tree probe1.3728544s fit within total
+setup2.1780951s; they are outside compute. Preclaim verification is recorded separately.
+
+The same venv interpreter/module starts probe and compute. Both verify claim owner
+incarnation/liveness. The launcher starts suspended, enters a kill-on-close Windows
+Job Object before resume, so descendant compute inherits ownership. Probe starts a
+noncompute descendant, terminates the job and verifies both actual Python identities
+DEAD, root exit and active count0. Compute ends at active count0 too. Timeout kills
+the owned job. New group/prepared markers are exclusive and prevent repeat execution;
+runner conservatively has no automatic retry despite permission for at most one
+provably startup-only retry with the same remaining ledger.
+
+Only affected checks were run for this controller/job change:
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_planning_profile_completion.py tests/unit/test_planning_profile_observer.py::test_limits_reject_before_extra_execution tests/unit/test_planning_profile_observer.py::test_actual_install_restores_host_aliases_without_execution -q --tb=short --junitxml=runtime/challenger/f4_1/completion/tests.xml
+git diff --check
+.venv/Scripts/python.exe -B -m scripts.review_planning_profile_completion
+```
+
+Seven focused tests passed, including actual noncompute Windows descendant cleanup,
+consumed-group rejection, source freeze/command path and resource caps/alias restore.
+No full41-check/F4/PostgreSQL gate or full suite was rerun; app/vendor/migrations and
+public API are unchanged. Tests/probes did not run Planning/inference. One separate
+authorized compute batch did so as recorded above. No business optimization followed.
+
+The completion review ZIP is `runtime/shelfcash_F4_1_completion_review.zip`.
+It includes changed tooling/tests/docs, selected dependencies, original old/new
+setup/claim/receipts, original timings, synthetic selection/output, frozen executed
+source, probes/tests, derived summary, commands and path/SHA-256 manifest. CRC,
+manifest/content/source/secret scans and Git ignore checks are required. Originals,
+README/manifest and verification receipts stay outside the temporary ZIP. Workbooks,
+weights, private config/credentials, DB dumps and large logs are excluded. Earlier
+transfer ZIPs had already been removed before this continuation; their source and
+all retained evidence remain intact. The new ZIP does not depend on their existence.
+
+### CURRENT FACT - F4.2 adapter reuse verification
+
+[Canonical F4.2](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4-2) owns
+invariants, source isolation, paired timings/search outcomes and limits. F4.1 is
+checkpointed at `b9ec9782a398722ef1705edbd51f70d1d7c35358`. The historical F4.1
+packaging tool expects its original WIP/HEAD and must not be rerun on this checkpoint.
+
+Historical benchmark commands (the separate180s group is now consumed):
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.benchmark_adapter_reuse freeze
+.venv/Scripts/python.exe -B -m scripts.benchmark_adapter_reuse run
+```
+
+Freeze archived only committed app/scripts to ignored arm directories, copied the
+candidate serving.py, verified that sole delta, retained input hashes and policy4s,
+and pinned interpreter/dependencies/controller/helper. Full source imports are
+verified per child. Fixed baskets0/3 run first; exact serialized output hashes must
+match across arms before any full Planning. Frozen full order is B,C,C,B,B,C.
+No cProfile/observer wraps, native forecast inference or DB writes. One shared wall
+clock covers fixed computation, all child startup and six Planning calls. Windows
+jobs are assigned before suspended launcher resume and kill the whole owned tree.
+Consumed marker prevents rerun; no automatic retry is implemented or used.
+
+Observed compute109.0109421s, six Planning, zero forecast inference, no retries;
+all owned jobs ended active0. Separate preflight6.1590110s. Baseline/candidate exact
+fixed results match; selected exact options also match in all three pairs, while
+coverage/proof and deadline outcomes differ. Candidate FINISHED all three; baseline
+INCOMPLETE all three. Keep every result/receipt, not only the fastest pair.
+OpenAPI checking overlapped the first pair and is documented as potential CPU noise.
+
+Executed focused checks:
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_serving_adapter_reuse.py tests/unit/test_serving.py tests/unit/test_serving_output_validation.py tests/unit/test_procurement_v2.py tests/unit/test_procurement_comparison.py tests/unit/test_forecast_serialization.py tests/unit/test_planning_profile_completion.py -q --tb=short --junitxml=runtime/challenger/f4_2/regressions.xml
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_adapter_benchmark.py -q --tb=short --junitxml=runtime/challenger/f4_2/tooling-tests.xml
+git diff --check
+.venv/Scripts/python.exe -B -m scripts.review_adapter_reuse
+```
+
+207 regression tests plus3 tooling/retained-native-output boundary tests passed.
+The retained challenger boundary validates existing input/output without inference;
+no artifact regeneration, training or PostgreSQL/native gate was required by this
+static adapter construction change. Host serving/procurement/comparison/serialization
+and negative tamper checks exercise the shared code. Adapter differential tests
+compare exact errors/results and concurrent mixed-context calls; construction is
+forbidden per-call in the dedicated test. Static NonnegativeDecimal validators
+have no request/config/thread dependency. No API/migration delta; OpenAPI generation
+in two isolated source processes yielded identical73-operation SHA-256 (recorded in
+`runtime/challenger/f4_2/openapi-check.json`). No provider/DB connection was needed.
+
+Review ZIP: `runtime/shelfcash_F4_2_review.zip`. Copy-only tool includes changed
+source/tests/docs, direct dependencies, docs delta, arm serving source, complete
+source/input/runtime hashes, setup/resource/commands, every paired result and
+selection, fixed outputs, focused test receipts and summary. No model weights,
+workbooks, secrets, DB dump or full runtime. CRC/hash/source/secret/ignore checks
+must pass. Original source/evidence, arm snapshots and manifest remain outside ZIP;
+deleting the ZIP removes only a transfer copy. F4.2 is checkpointed at `8537e12`;
+its historical review tool assumes the original WIP/HEAD and must not be rerun after
+checkpoint/main integration. Original evidence remains retained. No push/deploy/
+activation or FE/runtime8103/Assistant/import WIP changes.
+
+### CURRENT FACT - combined-source main integration verification
+
+[Canonical integration boundary](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
+owns runtime/promotion/dependency/rollback semantics. Local integration preserves
+main b0db90c's dev accounts/shutdown behavior and all untracked dts files. Source
+challenger and integration worktrees remain available. No Assistant/import branch
+or WIP is merged, no provider/SMTP/training/accuracy/profiling batch rerun.
+
+A new Compose project `shelfcash-forecast-integration-20261016` uses an independent
+named volume on the free loopback5438 port. Original F4 container/volume remains
+stopped and unchanged. Reproducible *first-time* provisioning from an integration
+checkout with empty private setup (not instructions to overwrite an existing setup):
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.setup_challenger_test --project-name shelfcash-forecast-integration-20261016
+```
+
+Effective identity is `shelfcash_challenger_test` / `shelfcash_challenger_tester`;
+validate_reset_target runs before connecting, connected DB/user and role flags are
+checked, role has no CONNECT to other databases and no superuser/createdb/createrole/
+replication/bypassrls. No other DB sessions existed before fresh migration. Tests
+reset only this disposable target sequentially through supported fixtures. Private
+credentials are generated under ignored runtime/challenger/f4/private, not printed
+or committed. Native input copies have source/hash provenance under ignored
+runtime/integration-forecast; no large runtime snapshots enter Git.
+
+Executed from the integration checkout using the existing challenger CPython3.11.9
+venv (same installed non-editable pinned wheel/lock); commands below use `$py` for
+that interpreter. Import checks confirmed `app` resolves to the integration source.
+No new hosted/service dependency is needed. The setup/tests work with a locally
+prepared `.venv` via the earlier lock/wheel instructions too.
+
+```powershell
+$py = '../backend-forecast-engine-challenger/.venv/Scripts/python.exe'
+& $py -B -m pytest tests/unit/test_serving_adapter_reuse.py tests/unit/test_serving.py tests/unit/test_serving_output_validation.py tests/unit/test_procurement_v2.py tests/unit/test_procurement_comparison.py tests/unit/test_forecast_serialization.py tests/unit/test_forecast_stockout.py tests/unit/test_forecast_baseline.py tests/unit/test_forecast_execution.py tests/unit/test_forecast_model_contracts.py tests/unit/test_forecast_challenger.py tests/unit/test_planning_challenger.py tests/unit/test_planning_public_contract.py tests/unit/test_planning_run.py tests/unit/test_database_config.py tests/unit/test_forecast_engine_protocol.py tests/unit/test_planning_profile_completion.py tests/unit/test_planning_profile_observer.py tests/unit/test_adapter_benchmark.py tests/api/test_planning_public_openapi.py tests/api/test_planning_inspection_exports_openapi.py -q --tb=short --junitxml=runtime/integration-forecast/unit-api.xml
+& $py -B -m scripts.test_challenger tests/integration/test_challenger_migration.py tests/integration/test_planning_challenger.py tests/integration/test_planning_public.py tests/integration/test_planning_public_security.py -q --tb=short --junitxml=runtime/integration-forecast/postgres.xml
+& $py -B -m scripts.test_challenger tests/integration/test_forecast_execution_s1_regression.py tests/integration/test_forecast_execution_flow.py::test_capture_execute_fresh_session_and_no_transaction_during_math tests/integration/test_forecast_execution_flow.py::test_replay_retained_not_operational_and_new_uuid tests/integration/test_forecast_execution_flow.py::test_retained_integrity_rejected -q --tb=short --junitxml=runtime/integration-forecast/legacy-forecast-pg.xml
+& $py -B -m pytest tests/api/test_forecast_optional_challenger.py tests/api/test_health.py -q --tb=short --junitxml=runtime/integration-forecast/optional-host.xml
+& $py -B -m pytest tests/api/test_health.py::test_only_intended_routes_exist -q --tb=short --junitxml=runtime/integration-forecast/health-inventory-fixed.xml
+& $py -B -m pytest tests/unit/test_challenger_setup.py -q --tb=short --junitxml=runtime/integration-forecast/setup-tests.xml
+git diff --check
+```
+
+Observed per invocation:514 unit/API tests +38 subtests passed (146.20s);
+53 PostgreSQL tests passed (313.22s); six legacy host persistence/replay tests passed
+(10.44s); optional-host/health initially2 passed/1 failed because the route inventory
+was stale, reproduced as one failure on pre-merge main. A first focused correction
+exposed stale method entries as well; the final inventory test passed (4.77s).
+Optional package-unavailable startup and health contract had already passed and
+were unchanged by the assertion fix. Setup-project tests2 passed (0.11s). Count
+unique successes519 unit/API plus59 PostgreSQL and38 subtests; overlapping reruns
+are not added. No full suite or browser E2E claim. Warnings about Import DTO schema
+shadowing and Starlette BlockingPortal deprecation are pre-existing, not suppressed.
+
+Fresh migration head, empty roundtrip0027/head, and retained metadata2 downgrade
+refusal with unchanged evidence/fresh Session were verified. Legacy rows/serialization,
+current rights/Store isolation, lost ACK, claim/recovery/stale/terminal fences and
+retained source integrity are covered by these selected tests. Normal host startup
+works while native challenger import and distribution metadata are blocked; retained
+host LightGBM regression also blocks that package. Native synthetic inference is
+actual acceptance evidence, not real quality/promotion evidence. OpenAPI from isolated
+main/integration source processes matches73 operations/66 paths and identical hash;
+no API/config/model registry dependency delta. Python AST/JSON/UTF8/file links/secrets
+checks passed. Scoped staged whitespace checks pass outside the pinned vendor snapshot;
+full git diff --check reports existing upstream trailing spaces/CRLF there. All29
+vendor payload hashes and source provenance match, so bytes were retained rather
+than normalized. DBs outside the owned integration project were not touched.
+
+Historical profiling/benchmark/review tools that freeze code identities still require
+their original source/environment and runtime inputs. Do not rerun them just because
+source is merged; no original manifest/hash/claim is updated. The shared host reuse
+optimization is active in source, while challenger remains explicit test-only/OFF.
+Activation requires separate product/runtime design and authorization, eligible data/
+artifact/provenance, representative performance, browser/recovery/rollback acceptance;
+no FE handoff is needed for this unchanged public surface.
+
+HISTORICAL INFORMATION: F4 packaging command below requires its original36-file
+WIP and must not be rerun after the F4 commit. The original ZIP is preserved; use
+the F4.1 copy-only command above for the current review.
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.review_challenger_f4
+```
+
+It copies explicit WIP source/tests, direct dependencies, canonical docs/delta,
+sanitized evidence/one synthetic trace and path/hash manifests into ignored
+`runtime/shelfcash_F4_review.zip`; checks secrets/CRC/hash/source correspondence
+and that nothing is staged. Original evidence remains under `runtime/challenger/f4`.
+Deleting that ZIP only deletes a temporary copy. Model payloads/wheel, workbooks,
+private config, DB dumps and large logs are excluded.
+
+<a id="forecast-f3"></a>
+## CURRENT FACT — F3 counterfactual Planning verification
+
+[Canonical F3](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3) owns operational
+admission, synthetic assumptions, frozen arms/limits and interpretation. F2 checkpoint
+is `fcb33abb9c2316d41d564d5653233f6dc4e80a5e`; F3 checkpoint is `5a8e0a8`.
+F4 source changes the adapter runtime identity; the commands below describe F3's
+original committed source/environment. Do not rewrite manifests to replay on F4.
+Source-faithful remains BLOCKED; these fixtures are explicitly F3_SYNTHETIC and do
+not use08/07 balances as historical June stock. Primary B_COMMON vs C0_COMMON;
+C1_COMMON sensitivity is not selected by forecast or impact evaluation.
+
+```powershell
+$f3Identity = 'e7aa4b531b6f7ed3fb355856fa5145bac0c7472d2df3da6bce7b7fa00afa9586'
+# Read-only admission check, no procurement or training.
+.venv/Scripts/python.exe -m scripts.planning_f3 --enable freeze
+# Fresh process, at most120s: exact fixed-basket evaluation, never re-optimize.
+.venv/Scripts/python.exe -m scripts.verify_planning_f3 --identity $f3Identity
+# Hand/finite oracles, identity/date/unit/mask/fee/mass/no-winner/tamper/budget checks.
+.venv/Scripts/python.exe -m pytest tests/unit/test_planning_f3.py -q
+git diff --check
+```
+
+The historical single batch command is
+`python -m scripts.planning_f3 --enable run --identity <f3Identity>`.
+Do not repeat it or remove/reset `runtime/challenger/f3/bounded-batch-start.json`,
+`execution-claim.json`, resource/progress or case receipts. Source changes/new
+identities are not a new authorization or budget. On timeout retain PARTIAL and
+all completed case files; missing cases are reported, never silently dropped or
+resumed. Freeze drafts without an execution claim were not run.
+
+Frozen population: two latest F2 origins24/06 and01/07, four fixtures/origin,
+three arms,24 runs; one hard300s parent/child batch,≤144 native solves,≤2 solves/
+strategy, cooperative host4s including strategy allocation/validation. Exact
+validation may overrun4s; report actual overrun rather than claiming a hard run SLA.
+Certification only for captured domains≤9 and disabled for tight budget. No cache/
+candidate carries across arms. Arm ordering rotates deterministically by case;
+one repetition only, no score-driven fixture changes/search or seed tuning.
+
+Outputs are hash envelopes in `runtime/challenger/f3/experiments/<f3Identity>/`:
+`setup.json` pins complete common snapshots, forecast-only bindings,102 upstream
+input hashes, host/F2/F3 source and runtime. Per-case JSON retains the full graph,
+strategy proof/search/gaps, actual timings, selected basket or null and separate
+realized result. Realized complete-primary truth is available only for24/06;
+01/07 has one censored outcome, so no complete realized ledger or filled0.
+No winner is not a zero-basket recommendation. The batch hit its hard deadline at
+parent300.016s:19 completed cases,50 native solve attempts,5 missing cases, no retry.
+It was killed before final `metrics.json`/`reconciliation.json` publication. Original
+per-case/oracle/resource/progress and PARTIAL run receipts remain authoritative.
+Read-only verified projection and replay receipt are in
+`runtime/challenger/f3/verifications/88b89d8dd839b44927156335658e54bc1203ae28e2b243029f9173c889108199/`
+(`metrics.json`, `replay.json`). Expected F3_COMPLETED_CASES_SEMANTIC_REPLAY_VERIFIED:
+19 cases,9 complete-primary realized ledgers,5 missing,0 noncomplete retained cases,
+0 procurement solves/fits/forbidden IO/original writes; actual53.5s. Semantic checks
+re-evaluate retained candidate/journal and winning baskets, comparison/selector and
+eligible truth; no new basket generation. Verifier source hash is separate from
+frozen execution source, both checked. It never claims the24-case manifest complete.
+The generic F3 replay path also revalidates fixed baskets but reconstructs nested
+graphs repeatedly; the dedicated verifier above is the verified120s path.
+
+15 F3 focused tests passed/58.73s. They use explicit hand/toy truth and a fault-injected
+no-incumbent generator for independent finite enumeration; these are not additional
+real-forecast benchmark trials or production proof. F2 checkpoint verification16
+passed/0.68s. No full suite, DB, provider/network/SMTP, app/runtime8103, forecast fit,
+external engine repository change, main/FE integration or F4 scope is authorized.
+
+<a id="forecast-f2"></a>
+## CURRENT FACT — F2 retained-array closure/endpoint verification
+
+[Canonical F2 design/results](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f2)
+owns method, selection rule, fit dependencies and limits. F1 is locally committed
+at `6a50d815ba983f511a92388b2ade18d6fd6b4b93`; F2 checkpoint is `fcb33ab`. No server, DB,
+provider/network/SMTP, Planning, external engine repo or other worktree is involved.
+The six raw files still provide POS through08/07 only; no fresh09–15/07 labels.
+All validation/evaluation is EXPOSED development evidence.
+
+```powershell
+$f2Identity = 'ee4d7cb4de28dabb842c8900b4ebb3b9b32e8f423bd5f6611395f539323ecbc7'
+# Read-only freeze verification: same identity/source/inputs, no fit.
+.venv/Scripts/python.exe -m scripts.forecast_f2 --enable freeze
+# Supported fresh-process verification: no fitting entrypoint may execute.
+.venv/Scripts/python.exe -m scripts.forecast_f2 --enable replay --identity $f2Identity
+# Focused F2 invariants, arithmetic, causal windows, tamper, replay and batch guards.
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_f2.py -q
+# Affected F1/demo regressions (no booster training).
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_f2.py tests/unit/test_forecast_f1.py tests/unit/test_demo_calendar_abc.py tests/unit/test_forecast_benchmark.py -q
+git diff --check
+```
+
+Historical first and only batch invocation was
+`python -m scripts.forecast_f2 --enable run --identity <f2Identity>`.
+**Do not run it again.** Global `runtime/challenger/f2/bounded-batch-start.json`
+and per-experiment exclusive `execution-claim.json` are consumed evidence. Changed
+source/identity, missing outputs or PARTIAL status do not authorize another batch.
+Never remove/reset those markers/ledgers or chain more budget. Pre-fit admission
+drafts with no execution claim remain unexecuted; only the identity above was run.
+The parent deducts preflight elapsed time from its300s subprocess deadline, kills
+and waits on timeout, and retains a PARTIAL receipt; child offline guard denies
+DB/provider imports, network and grandchildren. Per-origin parameters/evidence and
+resource ledgers are published as completed, so a partial batch stays inspectable.
+
+Expected freeze: F2_FROZEN_BEFORE_ENDPOINT_FITS, version forecast_f2/1,
+0 booster/point/CQR fits, maximum4 endpoint artifacts. Actual run:
+F2_EXPLORATORY_COMPLETE,4 fitted origins/28 horizon statistics, parent3.844s,
+compute1.641s,0 forbidden attempts. Parameters13,295 bytes, fit evidence694,010 bytes;
+all source boosters/point/CQR reused, no new model binaries. Expected replay:
+F2_READONLY_REPLAY_VERIFIED,4 origins,0 endpoint/booster/point/CQR fits/original writes.
+The worker fail-fast forbids fitting even though parameter arithmetic is checked.
+
+All results are hash envelopes under `runtime/challenger/f2/experiments/<f2Identity>/`:
+
+- Read `admission.json` for frozen method/windows/source+94 input hashes and budget.
+- Read `summary.json` for package-native/common-policy comparisons, open/closed
+  metrics, validation guard failures and C0 decision; `metrics.json` has1540 populated
+  Product/horizon/Product×horizon groups. `predictions.json`/`stages.json` retain raw,
+  before-policy, corrected and final arrays separately.
+- `<origin>-parameters.json` and `<origin>-fit-evidence.json` bind ranks/residuals,
+  support, causal labels and parent artifact identities. Endpoint fit windows overlap
+  parent's CQR data; do not describe them as independent split-conformal calibration.
+- `execution.json`, `run-receipt-f98aaf0c7a4994482712970454534383656f6eaccb5450261402b12db08d84f8.json`,
+  `replay-receipt-d5702dedf43dd92de85b1923425af93a1604845605d609adf5f8b5ae075faabb.json`
+  and `verification-4339557169a457471ea8771dd1373164e1ed095fb9302cdae3e117dc16b77b3b.json`
+  record actual budget, no-fit replay, independent Decimal scoring/paired masks and
+  preservation of1234 original files including six workbooks.
+
+Actual focused combined gate70 passed/6.00s before the two additional quarantine/
+selection tests; latest F2-only gate16 passed/0.74s includes those tests. Coverage
+overlaps; do not sum repeated runs. Original /3 historical generic replay was also
+rechecked against its dedicated verifier:12 checkpoints/4 native artifacts and35
+identical earlier predictions after140 future-label changes,0 fitting/forbidden IO.
+No full suite, DB/browser or accuracy-generalization claim. OpenAPI unchanged.
+
+The requested temporary review ZIP is `runtime/shelfcash_F2_review.zip`: source/tests/
+docs, direct review dependencies, small admission/parameters/metrics/replay receipts,
+README and SHA-256 manifest only. It is ignored by Git and contains copies; deleting
+it after transfer does not delete any original source/evidence. No other F2 ZIP,
+workbook/model/.env/DB/credential/large-log inclusion is authorized.
+
+<a id="challenger-demo-abc"></a>
+## CURRENT FACT — offline demo A/B/C protocol /3
+
+[Canonical design/results](../features/FORECAST_ENGINE_INTEGRATION.md#demo-abc-v3)
+owns the typed calendar assumption, native support matrix, frozen windows/model
+settings, Product/horizon trade-offs and limits. A/B/admission checkpoint is `c4ff88a`;
+/3 exploratory checkpoint is `a863fb5b1a85c1fba3455628853fb4f76eb0a467`.
+F1 loader/diagnostics checkpoint is `6a50d81`. Use only the challenger's pinned venv.
+Do not start DB/app/provider/SMTP/Planning/E4 or change another worktree.
+
+```powershell
+# HISTORICAL first-execution commands at the /3 checkpoint, not F1 verification.
+# Read six pinned source hashes, retain a separate typed calendar declaration,
+# inspect exact native tables with all booster training forbidden (zero fits).
+.venv/Scripts/python.exe -m scripts.prepare_demo_abc
+# Freeze /3 before fits. This is a separate experiment from A/B /2 and E3/E4 /1.
+.venv/Scripts/python.exe -m scripts.run_demo_abc freeze
+# One first execution only; completed locally, do not rerun for verification.
+.venv/Scripts/python.exe -m scripts.run_demo_abc run
+```
+
+Expected support: SUPPORT_VERIFIED_NO_FITS, native min train dates/Product84/91/98/105;
+point minimum68 tasks/14 dates per horizon and CQR108/109/109/74 tasks. All original
+model/support minima remain; no future POS is synthesized. Declaration actor is the
+conversation user, identifier unknown/null; actual receipt time is separate from
+synthetic assumed availability. Only sourced closed/holiday fields are assumed;
+weather/promotion remain excluded. All-unknown/duplicate/formula/calendar-sale
+conflicts and source/scope/hash drift reject. Projection/native admission refuse
+production use. Six files are pinned for provenance, not forecast requirements.
+
+Freeze expected identity is `e8fd6eea4f2528bdd9d83a95b6ffcabc84017228c04f2e347ea5a80ce1524e54`.
+Inputs/declaration/support are in
+`runtime/challenger/demo-abc/inputs/57249b1b53513eb9d5ea34304d4e3197271d08ccfa77341634e01efcba0b8f3a`.
+Outputs are in `runtime/challenger/benchmarks/experiments/<identity>`; fit tables,
+raw stages, boosters and point/CQR artifacts retain distinct content identities.
+Expected run status EXPLORATORY,140 outputs per arm,24 booster fits/8 postprocess,
+no failures/fallback. Actual cooperative wall72.047s. Parent deadline300s includes
+startup; the child guard forbids DB/provider imports, network and grandchildren
+after standard-library platform preflight. No additional trials/repeats or batch.
+
+`bounded-batch-start.json` and resource ledgers must never be removed/reset to
+resume. A second run rejects BATCH_ALREADY_ATTEMPTED. On hard timeout keep PARTIAL
+cases/receipts and identify missing cases; do not chain another300s batch. Source,
+runtime, dataset or declaration mismatch requires review/new protocol identity,
+not an overwrite of old outputs. Support inspection does not fit models and does
+not consume or restart the single forecast batch.
+
+CURRENT FACT — F1 generic replay preserves the identity-bearing int/float budget
+representation through full typed validation and exact canonical round-trip. It
+executes explicitly pinned historical source with the current plan loader, not
+current inference masquerading as original source. Original experiment/fit/artifact
+files and resource ledgers stay unchanged. Do not use direct current
+`run_demo_abc replay`/`verify_demo_abc` for this historical experiment.
+
+```powershell
+# Current supported verification: replay only, no fit or benchmark execution.
+$f1Experiment = 'e8fd6eea4f2528bdd9d83a95b6ffcabc84017228c04f2e347ea5a80ce1524e54'
+.venv/Scripts/python.exe -m scripts.forecast_benchmark --enable replay --experiment $f1Experiment --compare-dedicated
+# Independent arithmetic and stage/feature diagnosis from retained arrays, no predict/fit.
+.venv/Scripts/python.exe -m scripts.forecast_diagnostics --experiment $f1Experiment
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_f1.py tests/unit/test_demo_calendar_abc.py tests/unit/test_forecast_benchmark.py -q
+```
+
+Expected READONLY_GENERIC_REPLAY_VERIFIED:12 checkpoints/4 native artifacts; nested
+historical REPLAY_AND_FUTURE_LABEL_INVARIANCE_VERIFIED with140 altered future labels,
+35 identical earlier outputs;0 fits/forbidden IO/original writes. Parent deadline120s.
+New receipt: `runtime/challenger/f1/replays/2c3239d2345d0ff66ee747c48afefba1413bfe41be3e88d30e2a3c9857d74096/replay.json`.
+Expected INDEPENDENT_METRICS_AND_STAGE_AUDIT_VERIFIED:1176 groups,0 training;
+five diagnostic envelopes under
+`runtime/challenger/f1/diagnostics/00c733d0082cd2d4e03309627207d965a4d4fe202ebc471c93fa025746655a3a/`.
+Actual focused result56 passed. This is targeted verification, not full regression.
+
+Historical source registration is explicit and fail-closed. The already captured
+snapshot under `runtime/challenger/replay-sources/8e999717cde0bfdac94e3348ef8cb015eae9ec685013a263101ec2695cd9dcad`
+binds original raw bytes, trusted Git commit, experiment and original environment.
+It was captured before F1 edits with:
+`python -m scripts.forecast_replay_source --commit a863fb5b1a85c1fba3455628853fb4f76eb0a467 --experiment <identity>`.
+Do not recapture a modified checkout or rewrite its manifest. If missing, recover
+those original bytes from a reliable copy at that commit and verify all original
+source/environment pins before registration. Missing/ambiguous snapshots, changed
+Git/source/artifact/plan/runtime fail; no automatic fallback or budget reset.
+Schema round-trip coverage spans /1,/2,/3, while actual historical execution here
+is verified only for the pinned /3 run. The canonical integration owns F1 findings
+and bounded F2 proposals. /3 holdout is exposed development evidence for F2;
+new data/scope/budget and authorization must be frozen before any new fitting.
+
+Focused regression commands:
+
+```powershell
+.venv/Scripts/python.exe -m pytest tests/unit/test_demo_calendar_abc.py tests/unit/test_demo_benchmark_v2.py tests/unit/test_forecast_benchmark.py tests/unit/test_forecast_challenger.py tests/unit/test_forecast_engine_protocol.py -q
+.venv/Scripts/python.exe -m pytest tests/unit/test_demo_calendar_abc.py tests/unit/test_demo_workbook_admission.py -q
+git diff --check
+```
+
+Coverage: typed assumption/exact fields/hash/scope, missing/conflicting/unknown/formula
+calendar and production rejection, exact windows/config freeze, unchanged84-date
+gate per Product, native cache copies/future-label invariance, budget round-trip
+identity, adapter/artifact guards and prior A/B admission. Run only affected tests
+after a small verification repair. This is not full pytest, DB integration or a
+public API/persistence acceptance claim. No public DTO/routes changed. Preserve
+all658 pre-task runtime/workbook file hashes; no customer rows/model bytes enter Git.
+
+<a id="challenger-demo-ab"></a>
+## CURRENT FACT — offline challenger A/B demo verification
+
+Use the challenger worktree/private pinned venv. This path never starts the server,
+DB, provider, email, workers or Planning. [Canonical integration](../features/FORECAST_ENGINE_INTEGRATION.md#demo-baseline-ab)
+owns exact files, admission matrix, dates/results and remaining declarations.
+The user approved Asia/Ho_Chi_Minh, benchmark-only t1–t5 and retrospective next-run
+POS availability for this raw-bundle hash only. Keep those declarations under ignored
+runtime; do not copy them to another bundle or reinterpret them as historical vintages.
+
+```powershell
+.venv/Scripts/python.exe -m scripts.prepare_demo_benchmark --uploads runtime/uploads --inventory-only
+.venv/Scripts/python.exe -m scripts.prepare_demo_benchmark --uploads runtime/uploads --declarations runtime/challenger/dataset-admission/approved-baseline-declarations.json
+$demoAdmission = 'runtime/challenger/dataset-admission/datasets/571fb650d4a867e7e8e51e485fc83b960dc5c1dd4aa52ab260d9a924c67ad21d/admission.json'
+# Existing completed batch: replay, never train again merely to verify.
+.venv/Scripts/python.exe -m scripts.run_demo_benchmark --mode replay --admission $demoAdmission
+# A first execution in a fresh owned runtime only:
+.venv/Scripts/python.exe -m scripts.run_demo_benchmark --admission $demoAdmission
+```
+
+Preparation writes hash envelopes `sources/selection/normalized/operational-evidence/
+config/admission/dataset/plan.json`; read them through BenchmarkStorage, not directly
+as raw dataset DTOs. Printed IDs may change if admission code changes. The original
+batch used admission7fda37d4; the current calendar-consumer fix produces571fb650
+with identical dataset/plan bytes. It reuses the same experiment, not a new run.
+The old admission correctly refuses execution against changed admission source.
+
+The parent enforces300s wall for the single forecast batch (120s for replay), including
+startup, kills/waits on timeout, and the child guard forbids grandchildren after
+Windows standard-library platform metadata preflight. No extra trials/repeats or
+planning solves. A retained `bounded-batch-start.json` refuses another run; do not
+delete it or the resource receipts to reset the budget. Deadline/failure leaves
+PARTIAL/INCOMPLETE retained cases; inspect rather than silently restart. Existing
+run replay expects `PAIRED_REPLAY_VERIFIED`,8 checkpoints,0 native C artifacts,
+and zero DB/provider/network/process attempts. Run remains EXPLORATORY A/B only.
+
+Focused regression commands (coverage overlaps, do not add totals):
+
+```powershell
+.venv/Scripts/python.exe -m pytest tests/unit/test_demo_benchmark_v2.py tests/unit/test_demo_workbook_admission.py tests/unit/test_forecast_benchmark.py tests/unit/test_planning_impact.py -q
+.venv/Scripts/python.exe -m pytest tests/unit/test_forecast_eligibility.py tests/unit/test_contextual_readiness.py tests/unit/test_offer_admission.py tests/unit/test_forecast_engine_protocol.py tests/unit/test_forecast_challenger.py tests/unit/test_forecast_benchmark.py -q
+```
+
+Coverage includes action-scoped optional inputs, hash-bound declarations, distinct
+v1/v2/source identities, paired primary masks/validation-only selection, holdout
+quarantine, native strict guards, retained/offer policy and synthetic E4 hand oracles.
+Offline guard tests deny SQLAlchemy import, sockets and subprocess launches in
+separate processes. No new PostgreSQL persistence claim is made; D2–D5 integration
+DB evidence remains inherited, not rerun here. No full-suite/browser/real-quality gate.
+The original E4 manifest remains incomplete and was not resumed on supplied files.
+
+The pinned forecast venv lacks httpx/argon2 for app/OpenAPI tests. Read-only use of
+the existing complete backend interpreter, with bytecode/cache writes disabled,
+verified the challenger source's3 configuration/OpenAPI cases:
+
+```powershell
+../backend/.venv/Scripts/python.exe -B -m pytest tests/api/test_planning_configuration_openapi.py -q -p no:cacheprovider
+```
+
+OpenAPI matches current main source exactly (73 operations/66 paths); handoff JSON
+differs only by its intentional `x-shelfcash-provenance` annotation. No new public
+API delta. Workbook and535 pre-batch artifact/experiment file hashes are checked
+without altering originals. Private verification outputs live under
+`runtime/verification/challenger-main-readiness`; do not commit private runtime data.
+
 <a id="data-readiness-d5"></a>
 ## CURRENT FACT — D5 backend acceptance VERIFIED
 

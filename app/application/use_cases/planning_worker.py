@@ -85,7 +85,9 @@ class PlanningExecution:
                 # Short current authority transaction; never held during forecast.
                 with auth_session(self.engine) as s:self.authority(s,claimed)
                 try:
-                    preparation=self.forecast.prepare(record.store_id,record.request.forecast_start_date,accepted_serving=record.public_acceptance.serving)
+                    pin=record.public_acceptance.challenger_test
+                    preparation=self.forecast.prepare(record.store_id,record.request.forecast_start_date,
+                        accepted_serving=record.public_acceptance.serving,**({'challenger_test':pin} if pin else {}))
                 except AuthError as error:
                     if error.code!='NO_COMPUTABLE_PRODUCTS':raise
                     preparation=served=None
@@ -108,6 +110,14 @@ class PlanningExecution:
             elif isinstance(error,ForecastExecutionError):code='FORECAST_EXECUTION_FAILED'
             elif isinstance(error,(ArtifactError,ModelBoundaryError)):code='MODEL_ARTIFACT_INVALID'
             elif isinstance(error,RetainedInputError):code='RESULT_INTEGRITY_UNAVAILABLE'
+            from app.application.contracts.forecast_challenger import ChallengerError
+            from app.application.use_cases.planning_challenger import safe_failure
+            cause=error
+            while cause is not None:
+                if isinstance(cause,ChallengerError):
+                    code=safe_failure(cause).code
+                    break
+                cause=cause.__cause__
             if isinstance(error,PlanningPersistenceError) and isinstance(error.__cause__,AuthError):code=error.__cause__.code
             actual=self.runs.read(record.store_id,record.run_id).record
             if actual.status in ('completed','failed'):
