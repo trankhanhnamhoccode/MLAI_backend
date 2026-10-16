@@ -1,5 +1,17 @@
 # Current state
 
+## CURRENT FACT — mutation recovery
+
+Import review confirmation replays its durable receipt before the completion/CAS
+guard in both transactions, after current authorization and preview/write checks.
+Canonical Import commit reconciles only recognized SQLAlchemy/psycopg uncertain
+commit errors; post-commit programming errors remain errors without rewriting
+completed state. No API/schema/grant change. Existing operation-specific readers
+and replay do not certify a negative outcome after lost client intent; empty lists,
+missing receipts and revoked replay rights cannot fence a late request.
+Source/FE pin comparison, reproduced defects, targeted verification/limits and
+unimplemented discovery proposals: [FE019 recovery audit](reports/FE_019_BACKEND_RECOVERY_AUDIT.md).
+
 ## CURRENT FACT — local shutdown watcher
 
 Local runtime retries transient Windows PermissionError during atomic status-file

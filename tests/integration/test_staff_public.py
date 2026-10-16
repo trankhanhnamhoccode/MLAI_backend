@@ -149,6 +149,60 @@ def test_grants_http_cas_replace_empty_noop_retry_current_authority(staff_env):
     assert env[5].put(path,headers=request_headers,json=body).status_code==404
 
 
+def test_grants_lost_ack_replay_preserves_later_change_and_current_authority(staff_env, monkeypatch):
+    from sqlalchemy.exc import OperationalError
+    ctx = staff_env
+    data, raw = create(ctx)
+    assert accept_http(ctx, data, raw).status_code == 201
+    owner_session(ctx)
+    env, _, owner, _, _, headers = ctx
+    listing = f'/api/v1/stores/{owner.store_id}/memberships'
+    member = env[5].get(listing).json()['data']['items'][0]
+    mid = UUID(member['membership_id'])
+    path = listing + f'/{mid}/permissions'
+    key = str(uuid4())
+    request_headers = {**headers, 'Idempotency-Key': key, 'If-Match': member['version']}
+    body = dict(grants=['inventory.read', 'menu.read'], reason='Synthetic lost acknowledgment')
+    original = Session.commit
+    injected = []
+
+    def lost_ack(session):
+        changing = any(isinstance(row, StaffRequestReceipt) and row.operation.endswith('/permissions')
+                       for row in session.new)
+        original(session)
+        if changing and not injected:
+            injected.append(True)
+            raise OperationalError('synthetic lost ACK', {}, Exception('synthetic'))
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Session, 'commit', lost_ack)
+        assert env[5].put(path, headers=request_headers, json=body).status_code == 503
+    assert injected
+    with Session(env[1]) as fresh:
+        assert tuple(fresh.scalars(select(MembershipGrant.permission).where(
+            MembershipGrant.membership_id == mid).order_by(MembershipGrant.permission))) == ('inventory.read', 'menu.read')
+        event_count = fresh.scalar(select(func.count()).select_from(PermissionEventRecord))
+    current = env[5].get(listing).json()['data']['items'][0]
+    later = env[5].put(path, headers={**headers, 'Idempotency-Key': str(uuid4()), 'If-Match': current['version']},
+                      json=dict(grants=[], reason='Later explicit removal'))
+    assert later.status_code == 200, later.text
+    with ThreadPoolExecutor(2) as pool:
+        replays = list(pool.map(lambda _: env[5].put(path, headers=request_headers, json=body), range(2)))
+    assert all(r.status_code == 200 for r in replays)
+    assert replays[0].json()['data'] == replays[1].json()['data']
+    assert replays[0].json()['data']['membership']['grants'] == body['grants']
+    assert env[5].get(listing).json()['data']['items'][0]['grants'] == []
+    conflict = env[5].put(path, headers=request_headers, json={**body, 'reason': 'Changed intent'})
+    assert conflict.status_code == 409 and conflict.json()['error']['code'] == 'IDEMPOTENCY_KEY_REUSED'
+    with Session(env[1]) as fresh:
+        assert fresh.scalar(select(func.count()).select_from(MembershipGrant).where(MembershipGrant.membership_id == mid)) == 0
+        assert fresh.scalar(select(func.count()).select_from(PermissionEventRecord)) == event_count + 1
+        own = fresh.scalar(select(StoreMembership).where(StoreMembership.user_id == owner.user_id))
+        own.active = False
+        fresh.commit()
+    assert env[5].put(path, headers=request_headers, json=body).status_code == 404
+
+
 @pytest.mark.parametrize("change,code", [({"role":"OWNER"},"VALIDATION_ERROR"),({"grants":["unknown"]},"UNKNOWN_PERMISSION"),({"grants":["menu.read","menu.read"]},"VALIDATION_ERROR"),({"grants":["menu.read","inventory.read"]},"VALIDATION_ERROR"),({"permission_catalog_version":"old"},"PERMISSION_CATALOG_CHANGED")])
 def test_create_rejects_invalid_fields(staff_env,change,code):
     env,_,owner,_,_,headers=staff_env

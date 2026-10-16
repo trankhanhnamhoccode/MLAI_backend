@@ -118,6 +118,8 @@ def test_all_domains_rollback_if_last_declaration_writer_fails(imp,monkeypatch):
         assert s.get(ImportJob,UUID(response.json()["data"]["job_id"])).status=="failed"
 
 def test_mixed_commit_lost_ack_is_reconciled_and_public_count_scope_invalidates_on_new_lot(imp,monkeypatch):
+    import psycopg
+    from sqlalchemy.exc import OperationalError
     from app.models.import_staging import ImportAudit
     from app.application.use_cases.public_reads import PublicReads
     from app.application.use_cases.stock_writes import StockWrites
@@ -127,7 +129,10 @@ def test_mixed_commit_lost_ack_is_reconciled_and_public_count_scope_invalidates_
     def commit_lost(session):
         success=any(isinstance(r,ImportAudit) and r.kind=="IMPORT_CANONICAL_COMMITTED" for r in session.new)
         original(session)
-        if success and not lost:lost.append(True);raise RuntimeError("Synthetic committed response loss")
+        if success and not lost:
+            lost.append(True)
+            raise OperationalError(None, None, psycopg.OperationalError('Synthetic lost COMMIT acknowledgment'),
+                                   connection_invalidated=True)
     monkeypatch.setattr(Session,"commit",commit_lost)
     key=str(uuid4())
     accepted=commit(imp,ident,read,revision,key=key)

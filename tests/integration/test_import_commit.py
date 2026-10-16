@@ -88,6 +88,71 @@ def test_http_commit_fresh_rows_retained_completion_and_same_key_retry(imp, monk
     assert all(a["can_execute"] and a["result_assessment"] == "NOT_ASSESSED" for a in result["readiness"]["actions"])
 
 
+@pytest.mark.parametrize("revoke", [False, True])
+def test_concurrent_review_replay_after_canonical_commit_keeps_receipt(imp, monkeypatch, revoke):
+    """A delayed review retry must not lose its receipt to a later commit."""
+    from threading import Event
+    from app.application.use_cases import import_staging
+    from app.models.import_staging import ImportReceipt
+
+    ident = analyzed(imp)
+    approved(imp, ident)
+    read = previewed(imp, ident)
+    # Set the helper's mapping pin before sharing the request across threads.
+    read["_mapping_revision"] = imp[0][5].get(
+        f"/api/v1/imports/{ident}/mapping-summary"
+    ).json()["data"]["mapping_revision"]
+    key = str(uuid4())
+    captured, resume = Event(), Event()
+    original = import_staging.capture_read_set
+
+    def delayed_capture(*args, **kwargs):
+        result = original(*args, **kwargs)
+        captured.set()
+        assert resume.wait(30), "review continuation was not released"
+        return result
+
+    with ThreadPoolExecutor(1) as pool:
+        with monkeypatch.context() as patch:
+            patch.setattr(import_staging, "capture_read_set", delayed_capture)
+            delayed = pool.submit(confirm, imp, ident, read, key)
+            assert captured.wait(30), "review did not reach detached capture"
+        try:
+            accepted = confirm(imp, ident, read, key)
+            assert accepted.status_code == 200, accepted.text
+            finished(imp, ident, commit(imp, ident, read, accepted.json()["data"]["import_revision"]))
+            if revoke:
+                from app.models import StoreMembership
+                from app.models.auth import MembershipGrant
+                from app.domain.permissions import PERMISSIONS
+                with Session(imp[0][1]) as fresh:
+                    member = fresh.scalar(select(StoreMembership).where(StoreMembership.store_id == imp[1].store_id))
+                    member.role = "STAFF"
+                    for permission in sorted(PERMISSIONS - {"import.commit"}):
+                        fresh.add(MembershipGrant(membership_id=member.id, permission=permission))
+                    fresh.commit()
+        finally:
+            resume.set()
+        replay = delayed.result(timeout=30)
+
+    if revoke:
+        assert replay.status_code == 403, replay.text
+        assert replay.json()["error"]["code"] == "PERMISSION_DENIED"
+    else:
+        assert replay.status_code == 200, replay.text
+        assert replay.json()["data"] == accepted.json()["data"]
+        assert replay.headers["etag"] == accepted.headers["etag"]
+        assert confirm(imp, ident, read).json()["error"]["code"] == "IMPORT_STATE_CONFLICT"
+    with Session(imp[0][1]) as fresh:
+        assert fresh.scalar(select(func.count()).select_from(ImportReceipt).where(
+            ImportReceipt.operation == f"POST:imports/{ident}/process:confirm_review"
+        )) == 1
+        assert fresh.scalar(select(func.count()).select_from(SalesDaily)) == 1
+        assert fresh.scalar(select(func.count()).select_from(ImportAudit).where(
+            ImportAudit.kind == "IMPORT_REVIEW_CONFIRMED"
+        )) == 1
+
+
 def test_excel_shared_values_reuse_12_and_zero_require_own_confirmation(imp, monkeypatch):
     from tests.unit.test_import_parser import workbook
     from tests.integration.test_import_field_value_bindings import review, shared, activate
@@ -255,12 +320,16 @@ def test_parallel_commit_acceptance_worker_retry_and_conflicting_payload(imp):
 
 
 def test_uncertain_commit_after_durable_write_reconciles_without_repeat(imp, monkeypatch):
+    import psycopg
+    from sqlalchemy.exc import OperationalError
     original = Session.commit; raised = []
     def lost(self):
         has_success = any(isinstance(r, ImportAudit) and r.kind == "IMPORT_CANONICAL_COMMITTED" for r in self.new)
         original(self)
         if has_success and not raised:
-            raised.append(True); raise RuntimeError("Synthetic lost acknowledgment after actual DB COMMIT")
+            raised.append(True)
+            raise OperationalError(None, None, psycopg.OperationalError('Synthetic lost COMMIT acknowledgment'),
+                                   connection_invalidated=True)
     ident, read, revision = ready(imp)
     response = commit(imp, ident, read, revision); assert response.status_code == 202
     monkeypatch.setattr(Session, "commit", lost)
@@ -270,6 +339,78 @@ def test_uncertain_commit_after_durable_write_reconciles_without_repeat(imp, mon
         assert fresh.scalar(select(func.count()).select_from(SalesDaily)) == 1
         assert fresh.scalar(select(func.count()).select_from(ImportAudit).where(ImportAudit.kind == "IMPORT_CANONICAL_COMMITTED")) == 1
     assert imp[0][5].get("/api/v1/imports/" + ident + "/completion").status_code == 200
+
+
+def test_programming_error_after_durable_commit_is_not_reconciled_as_success(imp, monkeypatch):
+    ident, read, revision = ready(imp)
+    response = commit(imp, ident, read, revision)
+    assert response.status_code == 202, response.text
+    original = imp[2]._execute_commit
+    failure = RuntimeError('Synthetic programming failure after verified commit')
+
+    def broken_continuation(*args):
+        original(*args)
+        raise failure
+
+    monkeypatch.setattr(imp[2], '_execute_commit', broken_continuation)
+    with pytest.raises(RuntimeError) as raised:
+        imp[2].run_one()
+    assert raised.value is failure
+    # A programming failure does not undo or recompute committed business state.
+    with Session(imp[0][1]) as fresh:
+        assert fresh.get(ImportJob, UUID(response.json()['data']['job_id'])).status == 'completed'
+        assert fresh.scalar(select(func.count()).select_from(SalesDaily)) == 1
+    assert imp[0][5].get(f'/api/v1/imports/{ident}/completion').status_code == 200
+    assert imp[2].run_one() is None
+
+
+def test_lost_commit_acceptance_ack_reload_readback_and_exact_replay(imp, monkeypatch):
+    from sqlalchemy.exc import OperationalError
+    from app.application.use_cases.import_staging import ImportStaging
+    from app.models.import_staging import ImportReceipt
+
+    ident, read, revision = ready(imp)
+    key = str(uuid4())
+    original = Session.commit
+    raised = []
+
+    def lost_ack(session):
+        accepting = any(isinstance(row, ImportReceipt) and row.operation.endswith('/process:commit')
+                        for row in session.new)
+        original(session)
+        if accepting and not raised:
+            raised.append(True)
+            raise OperationalError('synthetic acceptance ACK loss', {}, Exception('synthetic'))
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Session, 'commit', lost_ack)
+        assert commit(imp, ident, read, revision, key=key).status_code == 503
+    assert raised
+    with Session(imp[0][1]) as fresh:
+        job = fresh.scalar(select(ImportJob).where(ImportJob.operation == 'import_commit'))
+        jid = job.id
+        assert job.status == 'queued'
+        receipt = fresh.scalar(select(ImportReceipt).where(ImportReceipt.operation.endswith('/process:commit')))
+        retained = receipt.record_json
+        assert retained['job_id'] == str(jid)
+        assert fresh.scalar(select(func.count()).select_from(SalesDaily)) == 0
+    # New application object has no in-memory intent; retained I04/J01 still
+    # distinguish durable acceptance from canonical completion.
+    restarted = ImportStaging(imp[0][2], imp[0][0])
+    imp[0][5].app.state.import_staging = restarted
+    observed = imp[0][5].get(f'/api/v1/imports/{ident}')
+    assert observed.status_code == 200 and observed.json()['data']['status'] == 'committing'
+    assert imp[0][5].get(f'/api/v1/jobs/{jid}').json()['data']['status'] == 'queued'
+    assert imp[0][5].get(f'/api/v1/imports/{ident}/completion').status_code == 409
+    replay = commit(imp, ident, read, revision, key=key)
+    assert replay.status_code == 202 and replay.json()['data'] == retained
+    assert restarted.run_one() == jid
+    assert restarted.run_one() is None
+    assert commit(imp, ident, read, revision, key=key).json()['data'] == retained
+    assert imp[0][5].get(f'/api/v1/imports/{ident}/completion').json()['data']['outcome'] == 'committed'
+    with Session(imp[0][1]) as fresh:
+        assert fresh.scalar(select(func.count()).select_from(SalesDaily)) == 1
+        assert fresh.scalar(select(func.count()).select_from(ImportJob).where(ImportJob.operation == 'import_commit')) == 1
 
 
 def test_recipe_creates_reserved_ingredient_and_preserves_zero_loss_then_blocks_overlap(imp):

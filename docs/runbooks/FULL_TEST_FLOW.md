@@ -2634,6 +2634,17 @@ docker compose up -d --wait --wait-timeout 90 postgres
 Chọn targeted tests cho slice nhỏ theo AGENTS; không cộng các lần chạy overlap
 thành tổng test độc lập. Full suite cho release chứa thay đổi rộng schema/quyền/
 transaction. Quan sát commands/results trong hội thoại, không dùng PASS lịch sử.
+Recovery mutation dùng original key/body/CAS sau current authorization và đọc
+retained state riêng với current state; không suy rollback từ empty list/404/403
+hoặc thiếu receipt. Import acceptance202 chưa chứng minh canonical commit.
+Kiểm manual: giữ import ID trước dispatch, cố ý bỏ receipt phía client, đọc I04/J01
+rồi I06; replay exact intent phải giữ job/commit identity và không thêm canonical
+rows. Với T03 dùng T01/T02; với N13 dùng N12/N14 và không restore grants bị đổi sau
+receipt. Không gửi lại key mới khi outcome còn unknown; không fault-inject demo.
+Focused PostgreSQL regressions và recovery matrix/giới hạn nằm trong
+[FE019 audit](../reports/FE_019_BACKEND_RECOVERY_AUDIT.md); chỉ dùng dedicated guarded
+test DB/limited role, providers và background workers OFF. Fault injection sau
+COMMIT/fresh Session và process death là các loại evidence riêng biệt.
 OpenAPI check giữ fixture original10/10 `tests/fixtures/openapi_20261010.json`,
 pinned SHA/provenance ở compatibility changelog; output runtime/verification/openapi.
 Baseline32 →54 operations (22 thêm,6 đổi I01-I05/M04, không bỏ) là inventory của

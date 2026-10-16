@@ -111,6 +111,32 @@ def test_lost_ack_reconciles_same_receipt_and_revoke_blocks_replay(env,monkeypat
     assert create(env,csrf,key).status_code==404
 
 
+def test_reload_empty_discovery_does_not_fence_late_store_creation(env):
+    """Reload readback is current state, never a terminal negative receipt."""
+    from app.models.store_creation import StoreCreationReceipt
+    from app.infrastructure.auth_crypto import digest
+
+    csrf = holder(env)
+    key = str(uuid4())
+    # Simulate an old dispatch reaching BE only after reload discovery.
+    assert env[6].get('/api/v1/stores').json()['data']['items'] == []
+    with Session(env[0]) as fresh:
+        assert fresh.scalar(select(StoreCreationReceipt).where(
+            StoreCreationReceipt.key_digest == digest(key)
+        )) is None
+    late = create(env, csrf, key)
+    assert late.status_code == 201, late.text
+    sid = late.json()['data']['store_id']
+    # Client has discarded the original response/key/body: discovery can locate
+    # the Store, but cannot identify the original logical intent from its name.
+    discovered = env[6].get('/api/v1/stores').json()['data']['items']
+    assert [item['store_id'] for item in discovered] == [sid]
+    assert env[6].get(f'/api/v1/stores/{sid}').status_code == 200
+    with Session(env[0]) as fresh:
+        assert fresh.scalar(select(func.count()).select_from(Store)) == 1
+        assert fresh.scalar(select(func.count()).select_from(StoreCreationReceipt)) == 1
+
+
 def test_receipt_retention_schema_parity_and_no_destructive_downgrade(env):
     from alembic import command
     from alembic.autogenerate import compare_metadata
