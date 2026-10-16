@@ -2,6 +2,13 @@
 
 ## CURRENT FACT — isolated assistant L2 schema
 
+CURRENT FACT L4.1 adds only internal retained version8 (selection8/prompt7/
+validator8/resolver5, renderer9 for new deterministic receipts). Version7 and6
+remain pinned with absent optional fields elided as before. Actual test factory
+uses PlanningRunUseCases.accept/claim/retain/finalize with captured input/exact
+pipeline and fresh read;20/35 outputs are computed, not JSON quantity patches.
+No column, migration, trigger, endpoint, retained-row rewrite or default6 change.
+
 CURRENT FACT L4 candidate keeps head0030 and all columns/triggers. Explicit
 presentation7 generations pin selection7/prompt6/validator7/resolver5 and renderer8.
 Internal grouped cards carry typed original members, exact semantic values and

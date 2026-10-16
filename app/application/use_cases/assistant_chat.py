@@ -16,7 +16,7 @@ from app.repositories.assistant_message import MessageRepository
 
 class AssistantChat:
     def __init__(self, planning, profile=None, provider=None,*,presentation_version=6):
-        if presentation_version not in (6,7):raise ValueError('Unsupported presentation version')
+        if presentation_version not in (6,7,8):raise ValueError('Unsupported presentation version')
         self.presentation_version=presentation_version
         self.planning,self.auth,self.engine=planning,planning.auth,planning.engine
         from app.application.contracts.chat_generation import ChatProfile
@@ -35,8 +35,8 @@ class AssistantChat:
         if conversational:
             from app.application.use_cases.conversational_chat import ConversationalChat
             _,plan=ConversationalChat(self).prepare(token,run_id,request,
-                'chat_assertions/7' if conversational==8 else 'chat_assertion_grammar/2' if conversational==2 else 'chat_assertions/3',
-                'chat_evidence/7' if conversational==8 else 'chat_evidence/2' if conversational in (2,3) else 'chat_evidence/3')
+                'chat_assertions/8' if conversational==9 else 'chat_assertions/7' if conversational==8 else 'chat_assertion_grammar/2' if conversational==2 else 'chat_assertions/3',
+                'chat_evidence/8' if conversational==9 else 'chat_evidence/7' if conversational==8 else 'chat_evidence/2' if conversational in (2,3) else 'chat_evidence/3')
             diagnostics=plan.fallback.diagnostics.model_copy(update={'validator_version':f'decision_chat_renderer/{conversational}'})
             return plan.fallback.model_copy(update={'diagnostics':diagnostics})
         record,view=self.planning.read_record(token,run_id,evidence_only=True)
@@ -101,7 +101,7 @@ class AssistantChat:
         # New model-OFF work uses the same resolver/evidence-family fallback.
         # Retained /1 renderer receipts keep their original interpretation.
         renderer=prior.record_json.get('response',{}).get('diagnostics',{}).get('validator_version') if prior else None
-        use_new_renderer=8 if renderer=='decision_chat_renderer/8' or (prior is None and self.presentation_version==7) else 4 if prior is None or renderer=='decision_chat_renderer/4' else 3 if renderer=='decision_chat_renderer/3' else 2 if renderer=='decision_chat_renderer/2' else False
+        use_new_renderer=9 if renderer=='decision_chat_renderer/9' or (prior is None and self.presentation_version==8) else 8 if renderer=='decision_chat_renderer/8' or (prior is None and self.presentation_version==7) else 4 if prior is None or renderer=='decision_chat_renderer/4' else 3 if renderer=='decision_chat_renderer/3' else 2 if renderer=='decision_chat_renderer/2' else False
         answer=self._answer(token,run_id,request,use_new_renderer)
         with auth_session(self.engine) as session:
             current_actor,current_store=self._authority(session,token,run_id,csrf)

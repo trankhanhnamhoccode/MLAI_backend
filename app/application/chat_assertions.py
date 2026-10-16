@@ -30,6 +30,17 @@ class Inspection:
 
 
 def surface_error(assertion,card,locale,*,wrong_number=False):
+    if card.kind=='mechanistic' and card.label and card.path:
+        # One full alternate grammatical construction, derived from this scoped
+        # retained row. No wildcard/token stripping or slot-only acceptance.
+        expected=display_fact(card,locale).rstrip('.')
+        if locale=='vi':
+            prefix=f'Mô phỏng {card.label}, {card.path}: '
+            if expected.startswith(prefix):
+                body=expected[len(prefix):].split('; ')
+                if len(body)==3:
+                    alternate=f'Mô phỏng cho {card.label}, {card.path}, {body[0]}, {body[1]} và {body[2]}'
+                    if normalized(assertion.text).rstrip('.! ')==normalized(alternate).rstrip('.! '):return None
     if card.presentation is not None:
         # Group/label prose is checked as a complete clause independently from
         # typed slots. No fact-ID whitelist, partial-token or numeric-only pass.
@@ -138,6 +149,9 @@ def surface_error(assertion,card,locale,*,wrong_number=False):
 
 
 def inspect_output(output,plan,locale,*,allow_repair=True):
+    if plan.version=='chat_evidence/7':
+        from app.application.chat_assertions_v7 import inspect_output as legacy
+        return legacy(output,plan,locale,allow_repair=allow_repair)
     if plan.version=='chat_evidence/6':
         from app.application.chat_assertions_v6 import inspect_output as legacy
         return legacy(output,plan,locale,allow_repair=allow_repair)
@@ -147,7 +161,7 @@ def inspect_output(output,plan,locale,*,allow_repair=True):
     if plan.version=='chat_evidence/4':
         from app.application.chat_assertions_v4 import inspect_output as legacy
         return legacy(output,plan,locale,allow_repair=allow_repair)
-    if plan.version!='chat_evidence/7':
+    if plan.version!='chat_evidence/8':
         from app.application.chat_assertions_v3 import inspect_output as legacy
         return legacy(output,plan,locale,allow_repair=allow_repair)
     output=SemanticOutput.model_validate(output);facts={f.fact_id:f for f in plan.facts}
@@ -197,6 +211,9 @@ def inspect_output(output,plan,locale,*,allow_repair=True):
 
 
 def semantic_answer(output,plan,diagnostics):
+    if plan.version=='chat_evidence/7':
+        from app.application.chat_assertions_v7 import semantic_answer as legacy
+        return legacy(output,plan,diagnostics)
     if plan.version=='chat_evidence/6':
         from app.application.chat_assertions_v6 import semantic_answer as legacy
         return legacy(output,plan,diagnostics)
@@ -206,7 +223,7 @@ def semantic_answer(output,plan,diagnostics):
     if plan.version=='chat_evidence/4':
         from app.application.chat_assertions_v4 import semantic_answer as legacy
         return legacy(output,plan,diagnostics)
-    if plan.version!='chat_evidence/7':
+    if plan.version!='chat_evidence/8':
         from app.application.chat_assertions_v3 import semantic_answer as legacy
         return legacy(output,plan,diagnostics)
     checked=inspect_output(output,plan,plan.fallback.locale,allow_repair=False)

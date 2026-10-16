@@ -107,7 +107,7 @@ class FactCard(DTO):
 
 
 class ChatEvidencePlan(DTO):
-    version: Literal['chat_evidence/1','chat_evidence/2','chat_evidence/3','chat_evidence/4','chat_evidence/5','chat_evidence/6','chat_evidence/7']='chat_evidence/1'
+    version: Literal['chat_evidence/1','chat_evidence/2','chat_evidence/3','chat_evidence/4','chat_evidence/5','chat_evidence/6','chat_evidence/7','chat_evidence/8']='chat_evidence/1'
     resolver_version: Literal['chat_resolution/2','chat_resolution/3','chat_resolution/4','chat_resolution/5']='chat_resolution/2'
     identity: EvidenceIdentity
     intent: str
@@ -162,9 +162,9 @@ class ChatGeneration(DTO):
     profile: ChatProfile
     evidence_digest: str
     plan_digest: str
-    selection_version: Literal['chat_evidence/2','chat_evidence/3','chat_evidence/4','chat_evidence/5','chat_evidence/6','chat_evidence/7']='chat_evidence/2'
-    prompt_version: Literal['conversational_chat_prompt/1','conversational_chat_prompt/2','conversational_chat_prompt/3','conversational_chat_prompt/4','conversational_chat_prompt/5','conversational_chat_prompt/6']='conversational_chat_prompt/2'
-    validator_version: Literal['chat_assertion_grammar/1','chat_assertion_grammar/2','chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6','chat_assertions/7']='chat_assertion_grammar/2'
+    selection_version: Literal['chat_evidence/2','chat_evidence/3','chat_evidence/4','chat_evidence/5','chat_evidence/6','chat_evidence/7','chat_evidence/8']='chat_evidence/2'
+    prompt_version: Literal['conversational_chat_prompt/1','conversational_chat_prompt/2','conversational_chat_prompt/3','conversational_chat_prompt/4','conversational_chat_prompt/5','conversational_chat_prompt/6','conversational_chat_prompt/7']='conversational_chat_prompt/2'
+    validator_version: Literal['chat_assertion_grammar/1','chat_assertion_grammar/2','chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6','chat_assertions/7','chat_assertions/8']='chat_assertion_grammar/2'
     schema_version: Literal['conversational_output/1','conversational_assertions/2']='conversational_output/1'
     process: ProcessIdentity
     claim_token: UUID

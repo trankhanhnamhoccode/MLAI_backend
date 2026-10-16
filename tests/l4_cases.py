@@ -36,7 +36,7 @@ def build(spec,version='chat_evidence/6',*,question=None,context=None):
         req=req.model_copy(update={'context':ChatContext(run_id=UUID(int=99999),evidence_version='f'*64)})
     if variant=='infeasible' and 'nguyên liệu' in req.question:
         req=req.model_copy(update={'ingredient_id':evidence.overview.ingredients[0].ingredient_id})
-    effective,scope,ctx=resolve_context(req,evidence,'chat_resolution/5' if version=='chat_evidence/7' else 'chat_resolution/4')
+    effective,scope,ctx=resolve_context(req,evidence,'chat_resolution/5' if version in ('chat_evidence/7','chat_evidence/8') else 'chat_resolution/4')
     if scope.ingredient_id and not scope.clarification:
         evidence=project_evidence(record,view,ingredient_id=scope.ingredient_id,option_id=scope.option_id,include_comparisons=True)
     # These changes are explicit synthetic projection inputs, NOT altered retained

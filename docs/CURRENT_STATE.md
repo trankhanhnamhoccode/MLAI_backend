@@ -2,6 +2,27 @@
 
 ## CURRENT FACT - Decision Assistant L3.2 retained chat / L2 summary
 
+CURRENT FACT L4.1 focused acceptance WIP after L4 checkpoint
+46d15459d40f006152f51a4101a9563cc96eb150: derived candidate8 source
+2d7e2c938baea975c39175fe3b699cb062fddc4a2f99352b62ba776c54246a4f pins
+prompt7/validator8/selection8/renderer9/resolver5/assertions2. V6 remains default;
+candidate8 is eligible for explicit controlled trial within this verified scope.
+One complete mechanistic paraphrase construction is accepted with full numbers/
+units/entity/date/path checks; old6/7 outcomes remain pinned. Simple why keeps
+quantity/missing-rationale mandatory and arbitrary daily row optional; technical
+or explicit path/date retains relevant factors. No causal/zero-purchase inference.
+Actual capture/engine/PlanningRun persistence generates fresh milk20g/condensed35g
+from supplier pack10g/17.5g, not patched result JSON. Real HTTP/DB/live four turns
+verify20→35 identity/provenance; failed/partial and actual mixed-path pair also pass.
+Live5 ACCEPTED/1 deterministic clarification in5 new completions, no regeneration,
+fallback/provider failure. L4 group22/24, known USD0.0419410, reservations0.3093024/
+0.50;2 slots unused. This slice costs0.0099809; older groups remain unchanged.
+Final22 focused units pass; prior37 unit/API+3 opt-in skips, milk SQL1 and affected
+mixed/failed HTTP/SQL2 pass. OpenAPI unchanged76/69/head0030. Old6/7 generation replay,
+fresh-session equality, replay0 and current-right/Store isolation verified. Finite
+Codex-authored review, not general entailment/production readiness. No L5/default,
+FE/deploy change; L4.1 remains WIP.
+
 CURRENT FACT L4 evaluation WIP after acceptance checkpoint464dec8dc5c04f2f773ce4cedcee26e342151f57:
 default remains V6. Explicit application composition presentation_version=7 selects
 candidate191b9bd60ce5256cf1fa4a50e9a159852effb6b1d1d98debe3e431fb3932cf77,

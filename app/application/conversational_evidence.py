@@ -29,6 +29,9 @@ def display_fact(card,locale='vi'):
 
 def select_evidence(evidence,request,scope,context,version='chat_evidence/3'):
     if version=='chat_evidence/7':
+        from app.application.chat_readability_v7 import select_readable
+        return select_readable(evidence,request,scope,context)
+    if version=='chat_evidence/8':
         from app.application.chat_readability import select_readable
         return select_readable(evidence,request,scope,context)
     plan=select_chat_evidence(evidence,request,scope)

@@ -1661,6 +1661,21 @@ Resolver5 recognizes a failed-run outcome question; actual failure comes only fr
 retained status, never the user's wording. No new request/configuration field is
 exposed by HTTP; no endpoint/migration/OpenAPI delta or default-presentation change.
 
+CURRENT FACT L4.1 derived candidate8 is explicit application composition only;
+V6 stays default. Selection8/prompt7/validator8/renderer9/resolver5 preserve AS03
+wire/authority. For simple purchase-why, quantity and missing exact-rationale
+boundary are main obligations; an arbitrary first LOW/day row is optional support.
+Technical or explicitly requested path/date factors remain required when retained.
+Unknown quantity/cause never becomes zero or an existing purchase. One complete
+mechanistic sentence construction may use commas/"và" instead of canonical
+colon/semicolons; every retained material amount/unit/name/path/date/simulation
+scope must match, and typed slots remain independently checked. No wildcard,
+fact-ID exemption or causal/actual assertion allowed. Prior version7/6 replay
+retains original required factors/validator behavior and stored diagnostics.
+New renderer9 clarification uses CLARIFICATION; historical replies are immutable.
+Focused synthetic HTTP/DB/live acceptance supports explicit trial in this scope,
+not unrestricted grounding, production readiness, automatic default selection or L5.
+
 Procurement why distinguishes proposed quantity, retained simulation factors where
 available and missing causal/zero-purchase evidence. No pair delta or simulation
 row establishes why an exact purchase is optimal. Missing factors are not invented.

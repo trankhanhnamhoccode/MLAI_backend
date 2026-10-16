@@ -435,6 +435,84 @@ show a correctness advantage; inherited paraphrase rejection, offline-only20/35 
 small live sample limit replacement evidence. Candidate remains explicit WIP for
 review, not disabled-provider naturalness evidence, production readiness or L5.
 
+### L4.1 focused acceptance of the derived candidate
+
+CURRENT FACT L4 checkpoint46d15459d40f006152f51a4101a9563cc96eb150 preserves
+candidate7 and all historical evaluation. L4.1 source
+2d7e2c938baea975c39175fe3b699cb062fddc4a2f99352b62ba776c54246a4f is derived
+candidate8, not a new PASS label for old7. Versions selection8/prompt7/validator8/
+renderer9/resolver5/assertions2; V6 default unchanged, explicit presentation8 only.
+Frozen `chat_assertions_v7` and `chat_readability_v7` retain old generation7 plans,
+obligations/rendering and paraphrase rejection. Version6 remains pinned too.
+
+Saved L4 baseline raw7 contains all20/20/0g values, Sữa tươi, LOW/2026-10-08 and
+simulated scope; its comma/"và" construction is semantically equivalent to the
+canonical colon/semicolon construction. Validator8 derives exactly this complete
+alternate grammar from each scoped card, with no wildcard, token removal or
+fact-ID/slot bypass. Offline saved-raw replay rejects unchanged on6/7, accepts8.
+Minimal pairs reject wrong requested/available/shortage quantities, unit/entity/
+path/date, negation/polarity, omitted numbers, causal/optimality/actual additions.
+The reusable sanitized fixture carries original validation input/provenance;
+it is not a new provider response or independent human label.
+
+Simple why no longer requires the first arbitrary LOW/day row. Quantity and the
+explicit missing exact causal/zero-purchase evidence boundary remain mandatory;
+retained daily factor remains available as support with resolvable references.
+Technical detail and explicit path/date requests retain relevant required factors.
+Live fresh-milk why voluntarily includes its factor; condensed-milk why safely
+omits it. This is main/support separation, not fabricated cause, aggregate or
+silent truncation. Missing evidence remains explicit. No new engine work in chat.
+
+`tests/assistant_l41_cases.py` creates actual synthetic PlanningRuns through
+accepted setup, capture, existing exact engine and accept/claim/retain/finalize,
+then full validation/fresh read. The supplier inputs are10g and17.5g packs with
+20g demand/BASE95: both need two packs, yielding20g fresh and35g condensed milk.
+No output quantity JSON patch/model_construct bypass. Captured labels/forecast
+metadata are explicit synthetic test inputs. Mixed comparison uses explicit
+custom BASE40 (default remains approved BASE95), p25 half/p75 double and native
+search to produce distinct baskets. The engine supplies to-minus-from lean minus
+balanced/protected: cost−5VND; Product0 BASE/HIGH−5 and LOW0cup; Product1 BASE−2.5,
+HIGH−17.5 and LOW0cup. Grouping joins only exact matching members. Failed fixture
+injects a protected-search failure, retaining diagnostic incumbent/other exact
+facts without promoting an actionable recommendation. Missing failed-detail
+admission and exceptions/exclusions/duplicate labels have focused offline tests.
+
+Focused live acceptance is PASS WITH LIMITS on frozen source2d7e2c93:5 model
+ACCEPTED/1 deterministic CLARIFICATION,0 regeneration/repair/trim/fallback, no
+provider failure. Full four turns clarify two milk candidates, resume fresh20g,
+retain fresh why topic, switch to condensed35g with its own identity/fact/refs.
+Failed response distinguishes execution error/diagnostic winner, retained protected
+rejection/gaps9.5/19cup; mixed response preserves distinct−2.5/−17.5/0 values/path
+and simulated scope. Codex reviewed raw/final/material facts/main coverage,
+separate from3 lifecycle test cases passing125.27s; no independent human/model judge.
+Every final checks fresh-session receipt equality, same-key/body replay0 calls,
+each revoked right403 and inactive/other Store404. GET405 is only a negative method
+probe, AS03 has no message GET endpoint. Offline real SQL also creates6/7 generations
+on the same valid20/35 Run then replays byte-equivalent results with8 selected.
+
+This slice used5 new calls18–22 in the SAME L4-quality-evaluation-1 group, cost
+USD0.0099809, no unknown usage. Aggregate22/24, known USD0.0419410, full reservations
+USD0.3093024/0.50;2 slots remain unused. No new budget, reset/refund or transfer from
+the5 unused L3.2 acceptance slots. Prior L4 baseline/candidate17 calls and older
+unknown reservations stay unchanged. Configured Gemini2.5Flash/Google/default
+OpenRouter routing and preflight/byte/token/pricing caps unchanged; no429/timeouts.
+
+Verification: final22 focused units pass9.95s; earlier affected37 unit/API pass/
+3 opt-in skips38.24s. Milk HTTP/SQL1 pass42.27s and affected mixed/failed HTTP/SQL2
+pass74.80s. An initial unit helper used resolver4 for8; corrected helper picks5.
+Mixed fixture initially collapsed all baskets at BASE95, then a proposed default40
+was correctly rejected by the policy guard. Explicit custom40 fixed fixture setup;
+separate affected1 pass44.05s before HTTP assertions. Failed logs and prior outputs
+remain, no contract weakened. OpenAPI exact diff0,76/69/head0030. No full suite.
+
+DECISION FOR FOCUSED ACCEPTANCE: candidate8 is eligible for explicit controlled
+trial within verified scope; V6 stays default. Finite paraphrase grammar, synthetic
+evidence, generic quantity wording and sometimes technical/long mixed-path prose
+remain limits. No general entailment, production readiness, real-customer result
+or superiority claim. L4.1 changes stay WIP; no L5/FE/default/deployment action.
+Review `runtime/assistant-test/l41/index.json` and the scoped ignored acceptance
+ZIP; all historical evidence bytes remain unchanged and originals stay outside ZIP.
+
 ### Why-quantity evidence audit
 
 CURRENT FACT `planning_inspection_projection.ingredient_detail` already exposes

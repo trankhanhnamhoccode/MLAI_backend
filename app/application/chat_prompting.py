@@ -79,9 +79,9 @@ def compose(plan, request):
     # negative example. Neither has a fact_id and neither is a citation source.
     examples = [dict(id=f'{intent}:{variant}:{detail}:positive/1', role='style_only', text=positive),
                 dict(id=f'{intent}:{variant}:{detail}:avoid/1', role='avoid', text=style.avoid)]
-    grouped=plan.version=='chat_evidence/7'
+    grouped=plan.version in ('chat_evidence/7','chat_evidence/8')
     if grouped:instruction+=' Grouped facts carry every original member; preserve their entire wording and scope. For facts with presentation, copy wording exactly; do not shorten mandatory qualifiers or member lists.'
-    return dict(version='conversational_chat_prompt/6' if grouped else PROMPT_VERSION, intent=intent, instruction=instruction,
+    return dict(version='conversational_chat_prompt/7' if plan.version=='chat_evidence/8' else 'conversational_chat_prompt/6' if grouped else PROMPT_VERSION, intent=intent, instruction=instruction,
         example_version=EXAMPLE_VERSION, examples=examples,
         context=plan.fallback.context.model_dump(mode='json') if plan.fallback.context else {},
         evidence_state=state,

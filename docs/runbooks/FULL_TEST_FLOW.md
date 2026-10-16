@@ -317,6 +317,54 @@ Exact commands/results and phase source/version/usage/latency are under ignored
 runtime/assistant-test/l4/index.json and L4-quality-evaluation-1. Review ZIP is scoped,
 ignored and deletable without losing originals; no secrets, DB dumps or whole runtime.
 
+### L4.1 focused acceptance — remaining L4 budget only
+
+CURRENT FACT checkpoint L4 `46d15459d40f006152f51a4101a9563cc96eb150`;
+derived candidate8 source2d7e2c938baea975c39175fe3b699cb062fddc4a2f99352b62ba776c54246a4f,
+prompt7/validator8/selection8/renderer9/resolver5/assertions2. Default6 unchanged.
+Explicit `AssistantChat(...,presentation_version=8)` supports controlled trial;
+no public request/config field, migration/endpoint or OpenAPI delta.
+
+```powershell
+& $assistantPython -B -m pytest tests/unit/test_assistant_l41.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_assistant_l41.py -q -p no:cacheprovider --tb=short
+# Historical executed paid acceptance, not an instruction to consume spare slots:
+& $assistantPython -B -m scripts.conversational_l41_live --freeze-source
+& $assistantPython -B -m scripts.conversational_l41_live --allow-paid-l41-remaining-l4-max-24-usd-0.50
+```
+
+The new opt-in uses ONLY existing L4-quality-evaluation-1 reservations/cap24/USD0.50.
+Before this slice17 calls;5 new calls18–22 cost USD0.0099809, aggregate22/24 known
+USD0.0419410/full reservations0.3093024, unknown0.2 slots unused. Old L3.2 group
+11/16 and its5 unused slots are not consumed/transferred. Unknown reservation,
+crash lock and429 whole-group stop remain unchanged. No new budget or blind retry.
+
+Factories create actual validated retained20/35g, failed/partial and mixed-path
+Runs through capture/exact pipeline/PlanningRun persistence in guarded assistant
+DB only. Different pack inputs cause20/35; no output patch. Mixed uses explicit
+custom BASE40, never altering default BASE95. Test engine execution authors Runs,
+not chat/replay behavior. No production data/development DB/forecast training.
+Protocol/expected oracles freeze in tests/fixtures/assistant_l41/protocol.json.
+
+Final22 unit tests pass; earlier37 unit/API+3 live skips;20/35 four-turn HTTP/DB fake
+wording1 pass with old6/7 generation replay, affected mixed/failed HTTP/SQL2 pass.
+OpenAPI diff0. Live3 lifecycle scenarios pass125.27s,6 finals:5 ACCEPTED and1
+CLARIFICATION, no regeneration/fallback. All four turns execute20→35 with different
+scoped refs; every final verifies current rights/Store isolation, fresh response
+equality and POST replay0 calls. No message GET resource;405 is a negative probe.
+Quality review is Codex-authored against all raw/final prose/facts, not pytest or
+independent human/model grading. Saved raw7 offline replay is explicit old6/7
+reject/new8 accept; new minimal pairs retain material prose/slot protection.
+Simple why factors are support unless explicit path/date or technical detail;
+quantity/missing exact-rationale boundary always remain main obligations.
+
+Retain failed helper/fixture logs: offline resolver mapping corrected to5; mixed
+default40 was blocked correctly, then valid custom40 used. Evidence/old results
+are never relabelled. Read `runtime/assistant-test/l41/index.json`, quality-review,
+resource-ledger and new live phase `L4-quality-evaluation-1/l41-candidate8`.
+Focused acceptance PASS WITH LIMITS allows explicit trial only. No full suite,
+default selection, general entailment/production readiness, FE/deployment or L5.
+
 ## CURRENT FACT — setup khách hàng từ số0
 
 Checkout chính: `D:\hocc_bk\ai\proj\projectMLAI\backend`, main, `.venv` riêng.

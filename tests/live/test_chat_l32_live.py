@@ -81,11 +81,12 @@ def test_l32_live_as03(assistant,case,monkeypatch):
     run_case(assistant,case,monkeypatch)
 
 
-def run_case(assistant,case,monkeypatch,*,audit_final=None):
+def run_case(assistant,case,monkeypatch,*,audit_final=None,record_factory=None):
     state,base,summary,headers,body,path=assistant
-    record=retained_record('infeasible',actor_id=base.actor_id) if case in ('no_winner','why_missing') else realistic_record(actor_id=base.actor_id)
+    record=record_factory(state[1],base.actor_id) if record_factory else retained_record('infeasible',actor_id=base.actor_id) if case in ('no_winner','why_missing') else realistic_record(actor_id=base.actor_id)
     row=row_for(record)
-    with Session(state[1]) as s:s.add(PlanningRun(**vars(row)));s.commit()
+    if not record_factory:
+        with Session(state[1]) as s:s.add(PlanningRun(**vars(row)));s.commit()
     from dotenv import dotenv_values
     values=dotenv_values('.env')
     # Same already-authorized configured model as L3.1; production never inherits

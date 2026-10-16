@@ -1,5 +1,6 @@
 """L4 deterministic presentation over retained facts; never recomputes business metrics."""
 from collections import Counter,defaultdict
+import re
 from app.application.assistant_chat_rendering import normalized
 from app.application.contracts.chat_generation import FactCard,FactGroup,GroupMember
 from app.application.contracts.assistant_chat import ChatClaim,ChatDiagnostics
@@ -117,6 +118,13 @@ def select_readable(evidence,request,scope,context):
                 'Only evaluated options are compared; search has no complete retained finite-domain certificate or global optimality proof')
             ids={c.fact_id for c in boundary};cards=[c for c in cards if c.fact_id not in ids]+[group_card('boundary',boundary,text)]
     required=tuple(c.fact_id for c in cards if c.fact_id in baseline.required or c.group is not None or c.kind=='gap')
+    # A first arbitrary LOW/day row is context, not an answer to an exact purchase
+    # cause. Keep it as optional support for simple why, required for technical or
+    # explicitly requested path/date. No invented aggregation or causal relation.
+    question=normalized(request.question)
+    explicit_factor_scope=bool(re.search(r'\b(low|base|high|\d{4}-\d{2}-\d{2})\b',question))
+    if request.detail_level=='simple' and not explicit_factor_scope and scope.intent=='ingredient':
+        required=tuple(k for k in required if next(c for c in cards if c.fact_id==k).kind!='mechanistic')
     safety=baseline.safety_claims
     pair=next((p for p in o.comparisons or () if (p.from_option_id,p.to_option_id)==scope.comparison_pair),None)
     if pair and scope.intent=='comparison':
@@ -125,11 +133,11 @@ def select_readable(evidence,request,scope,context):
             f'Compare {options[pair.to_option_id]} minus {options[pair.from_option_id]}; fulfilled quantities are simulated.'),evidence_ids=refs),)
     fallback=baseline.fallback
     if fallback.kind=='clarification':
-        fallback=fallback.model_copy(update={'diagnostics':ChatDiagnostics(reason='EVIDENCE_INSUFFICIENT',validator_version='decision_chat_renderer/8',disposition='CLARIFICATION')})
+        fallback=fallback.model_copy(update={'diagnostics':ChatDiagnostics(reason='EVIDENCE_INSUFFICIENT',validator_version='decision_chat_renderer/9',disposition='CLARIFICATION')})
     elif cards:
         claims=tuple(ChatClaim(text=display_fact(c,request.locale).rstrip('.')+'.',evidence_ids=c.evidence_ids) for c in cards if c.fact_id in required)+safety
         used={i for c in claims for i in c.evidence_ids}
         fallback=fallback.model_copy(update={'answer':'\n\n'.join(c.text for c in claims),'claims':claims,
-            'references':tuple(r for r in evidence.references if r.evidence_id in used),
-            'diagnostics':ChatDiagnostics(reason='MODEL_DISABLED',validator_version='decision_chat_renderer/8')})
-    return baseline.model_copy(update={'version':'chat_evidence/7','resolver_version':'chat_resolution/5','facts':tuple(cards),'required':required,'safety_claims':safety,'fallback':fallback})
+            'references':tuple(r for r in evidence.references if r.evidence_id in used or any(r.evidence_id in c.evidence_ids for c in cards)),
+            'diagnostics':ChatDiagnostics(reason='MODEL_DISABLED',validator_version='decision_chat_renderer/9')})
+    return baseline.model_copy(update={'version':'chat_evidence/8','resolver_version':'chat_resolution/5','facts':tuple(cards),'required':required,'safety_claims':safety,'fallback':fallback})

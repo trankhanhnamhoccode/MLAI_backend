@@ -57,6 +57,15 @@ engine/provider network. Cold misses no longer require cached verification. See
  20/35g detection is offline projection-only; live retains the existing20/20g Run.
   Broader quality/real-data evidence and review precede any default/integration choice.
 - L5 pending: FE/browser/runtime integration and broader operational acceptance.
+  L4.1 focused acceptance is PASS WITH LIMITS after L4 checkpoint46d15459;
+  derived candidate8 (prompt7/validator8/selection8/renderer9/resolver5) qualifies
+  for explicit controlled trial in the verified scope, with V6 still default.
+  Capture/engine/persistence factory proves20g/35g across all4 real HTTP/DB/live
+  turns; actual failed/partial and mixed-path comparison preserve scope.5 accepted/
+  1 clarification,5 calls, USD0.0099809; shared L4 now22/24, known0.0419410,
+  reservations0.3093024/0.50.2 unused, no new group or older-slot transfer.
+  Full-clause paraphrase fix and optional simple why factors keep old6/7 replay.
+  Finite quality review and focused security/persistence checks do not authorize L5.
   Summary HTTP/owned-DB revocation/fresh retained reads/restart are L2 acceptance,
   not a claim that chat/whole FE or production deployment is verified.
 

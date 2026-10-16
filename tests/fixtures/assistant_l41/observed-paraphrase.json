@@ -1,0 +1,104 @@
+{
+  "provenance": "Saved L4 baseline attempt7 validation input and facts, copied verbatim for reusable offline regression; not a new provider response.",
+  "check": {
+    "validator_version": "chat_assertions/6",
+    "input": {
+      "assertions": [
+        {
+          "fact_id": "f-f1e4db689d00ea2f564e",
+          "value": "20",
+          "unit": "g",
+          "entity_id": null,
+          "path": null,
+          "option_role": "recommended",
+          "polarity": "affirmed",
+          "text": "Lượng mua đề xuất là 20 g."
+        },
+        {
+          "fact_id": "f-5c4ff0f5c5e9a2561d89",
+          "value": null,
+          "unit": null,
+          "entity_id": "00000000-0000-0000-0000-0000000000c8",
+          "path": "LOW / 2026-10-08",
+          "option_role": null,
+          "polarity": "affirmed",
+          "text": "Mô phỏng cho Sữa tươi, LOW / 2026-10-08, yêu cầu 20 g, có sẵn 20 g và thiếu 0 g."
+        },
+        {
+          "fact_id": "f-41e7ff2056a2ffe44094",
+          "value": null,
+          "unit": null,
+          "entity_id": null,
+          "path": null,
+          "option_role": null,
+          "polarity": "unavailable",
+          "text": "Không có bằng chứng nhân quả hoặc so sánh không mua để giải thích lý do mua; lượng mua chỉ là đề xuất đã lưu."
+        }
+      ]
+    },
+    "required": [
+      "f-f1e4db689d00ea2f564e",
+      "f-5c4ff0f5c5e9a2561d89",
+      "f-41e7ff2056a2ffe44094"
+    ],
+    "facts": [
+      {
+        "fact_id": "f-f1e4db689d00ea2f564e",
+        "kind": "purchase_quantity",
+        "meaning": "proposed purchase quantity per retained line, not an actual receipt",
+        "display": "20",
+        "unit": "g",
+        "entity_id": null,
+        "path": null,
+        "requested": null,
+        "lost_sales": null,
+        "service_percent": null,
+        "option_role": "recommended",
+        "evidence_ids": [
+          "ev-23aec562943cfa4a9d2e4882e17ab276d91f70c32e18a6ded055f4b78f75270d",
+          "ev-515d868bc740d7f02490342711f56a50b6151df4245874b3dec08e37b5d116fd",
+          "ev-fc2cc0b968d7ca2fb8daad67f06043fe7d081ce96d237960d7b8a97952438589",
+          "ev-f73ec8deb8e3059d932bf7295f4db256ebe37a09d68e1f1ef5b1285bbca5004c"
+        ]
+      },
+      {
+        "fact_id": "f-5c4ff0f5c5e9a2561d89",
+        "kind": "mechanistic",
+        "meaning": "Mô phỏng Sữa tươi, LOW / 2026-10-08: yêu cầu 20 g; có sẵn 20 g; thiếu 0 g",
+        "display": null,
+        "unit": null,
+        "entity_id": "00000000-0000-0000-0000-0000000000c8",
+        "path": "LOW / 2026-10-08",
+        "requested": null,
+        "lost_sales": null,
+        "service_percent": null,
+        "option_role": null,
+        "evidence_ids": [
+          "ev-d093c587a329d7dbbdd7e791e4432e3de42cf6b87fffed476feb697a91828c06"
+        ],
+        "label": "Sữa tươi"
+      },
+      {
+        "fact_id": "f-41e7ff2056a2ffe44094",
+        "kind": "detail_unknown",
+        "meaning": "Evidence đang dùng chưa có bằng chứng nhân quả hoặc so sánh không mua để giải thích lý do mua; lượng mua chỉ là đề xuất đã lưu.",
+        "display": null,
+        "unit": null,
+        "entity_id": null,
+        "path": null,
+        "requested": null,
+        "lost_sales": null,
+        "service_percent": null,
+        "option_role": null,
+        "evidence_ids": [
+          "ev-eed983489f92a29dc550e791c12556d813cca0e6af8163f0e50cd5dcf55ef77b"
+        ]
+      }
+    ],
+    "failures": [
+      "1:UNVERIFIED_MATERIAL_PROSE:fact=f-5c4ff0f5c5e9a2561d89"
+    ],
+    "disposition": "FALLBACK",
+    "verified_output": null
+  }
+}
