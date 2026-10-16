@@ -189,10 +189,9 @@ supported, with old V4 replay retained. Two other valid nonnumeric V5 paraphrase
 were rejected (attempts22/27); regeneration27->28 also returns an unknown fact ID.
 No-winner fallback is factually scoped, not accepted model wording. V6 fixes
 those2 bounded variants offline:24 unit and3 actual AS03/PG fake-provider replay
-tests pass, including immutable V5 replay. Current source2e06f304 (prompt5/
-validator6/plan6/renderer7) has live acceptance PENDING; no paid V6 evaluation
-after30/30. Never relabel V5 raw/final results after this offline replay. Do not relabel
-old replies or call this a full final-source matrix PASS.
+tests pass, including immutable V5 replay. Source2e06f304 (prompt5/
+validator6/plan6/renderer7) was live PENDING at checkpoint a29ae1f3; no further
+call belongs to this exhausted group. Never relabel these old raw/final results.
 
 Every saved final checks fresh-session persisted response, equal POST replay with0
 additional completions and GET405/no generation. Owned test cleanup leaves head0030
@@ -225,6 +224,48 @@ accepts and one legitimate unsupported paraphrase. Current L3.2 finite offline
 probe has0 false accepts/0 false rejects; this does not prove general NLP correctness. Context, repair,
 regeneration and old pinned receipt compatibility have separate SQL tests. L2
 summary remains ordering/tone presentation; no production reviewer is enabled.
+
+### V6 acceptance — separate authorized group
+
+CURRENT FACT `L32-V6-acceptance-1` is separate from the closed30-attempt ledger.
+It permits16 completions including regeneration, USD0.30 total conservative
+reservation, USD0.0140592 per call at unchanged24000-byte/36864-token conservative
+input and1200 output bounds/pricing caps. A durable exclusive/fsynced reservation
+precedes each completion. Unknowns retain full reservation, crash lock fails closed,
+429 stops the entire group without retries/model/provider change. Old groups are
+never reset, refunded or appended. Ordinary pytest skips all8 new live cases.
+
+```powershell
+# Offline tests and separately guarded owned-DB fake-provider harness:
+& $assistantPython -B -m pytest tests/unit/test_chat_v6_acceptance_budget.py tests/unit/test_chat_l32_budget.py tests/unit/test_chat_l32_final_paraphrases.py tests/live/test_chat_v6_acceptance.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_chat_v6_acceptance_harness.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m pytest tests/unit/test_chat_v6_acceptance_findings.py -q -p no:cacheprovider --tb=short
+# Executed acceptance commands below are historical, not a request to rerun:
+& $assistantPython -B -m scripts.conversational_v6_acceptance --freeze-source
+& $assistantPython -B -m scripts.conversational_v6_acceptance --allow-paid-l32-v6-acceptance-1-max-16-usd-0.30
+```
+
+Frozen source2e06f304 has finite synthetic live PASS WITH LIMITS:9 ACCEPTED,
+1 REGENERATED,1 deterministic clarification; all4 conversation turns executed.
+Raw10 omitted simulation numbers with correct slots, so the independent prose
+check rejected it; raw11 restored complete scoped facts. No production source or
+fixture change. Fresh-session equality, POST replay0 and rights/Store denials were
+checked on all11 finals. No message GET exists;405 is a negative method check.
+Live8 lifecycle cases pass109.45s; Codex-authored quality review is separate.
+Offline13 passed/8 skipped, fake HTTP harness2 passed, observed omission test1 passed.
+An initial harness403 expectation for inaccessible Store failed2 tests, corrected
+to documented404 before live; logs remain, no authorization contract change.
+
+New group used11/16 calls, cost USD0.0203539, no unknown usage; all reservations
+USD0.1546512/0.30,5 slots unused.26263 input/4990 output tokens, resolved
+Google/google/gemini-2.5-flash, completion latency2077..5858ms/median3733. No new429
+or timeout. Stop after completed matrix rather than consume remaining slots.
+Review `runtime/assistant-test/L32-V6-acceptance-1/index.json`, quality-review and
+resource-ledger, with original requests/facts/prompt/schema/raw/finals/traces.
+Old artifacts remain bytes-identical; missing original HTTP/header bytes are
+explicit, never reconstructed. Verbose proof/comparison, opaque option labels,
+clarification disposition mismatch and finite-language limits remain. No full
+suite, real/unseen-data claim, L4, reviewer model, FE/runtime deployment.
 
 ## CURRENT FACT — setup khách hàng từ số0
 

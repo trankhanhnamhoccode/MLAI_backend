@@ -159,7 +159,7 @@ for every attempt. The historical14-case Codex-authored wording probe reports0 f
 and1 legitimate unsupported paraphrase. This is a finite limitation, not a change
 to the valid label or proof of general quality. L4 remains pending.
 
-CURRENT FACT L3.2 WIP, after L3.1 checkpoint44b451893e7cc4735b6d79d9410db1ba95e0dcac: AS03 keeps its route and authority/lifecycle.
+CURRENT FACT L3.2 checkpoint a29ae1f3db9d850d65dbb17a92d534f94cca235f, after L3.1 checkpoint44b451893e7cc4735b6d79d9410db1ba95e0dcac: AS03 keeps its route and authority/lifecycle.
 `chat_context` resolves bounded structured context: Run/evidence version, viewed
 option/pair, Ingredient/Product identity and pending original question/candidates.
 Retained partial-name matches are candidates: "milk" can match two captured milk
@@ -281,7 +281,7 @@ deltas, Product/path and the retained positive cost role; no global ranking/caus
 When purchase evidence is unavailable, its missing-cause qualifier does not assert
 that a proposed quantity exists. V3/V4 code remains pinned for old receipts.
 
-Most recently evaluated V5 source0e3199d201853962b40222d3f11079309b8779286e36a8023b3978227eb3a8b5
+HISTORICAL INFORMATION: evaluated V5 source0e3199d201853962b40222d3f11079309b8779286e36a8023b3978227eb3a8b5
 is PARTIAL, not a full live PASS:11 completions produced7 ACCEPTED,1 REGENERATED,
 1 FALLBACK and1 deterministic clarification. The final context turn switching to
 condensed milk was not executed after the shared30-attempt cap was reached.
@@ -294,8 +294,8 @@ V6 now accepts the exact scoped omission variant and an optional colon before th
 exact option rejection reason, with whole-clause/slot/polarity checks retained.
 24 unit tests and3 real AS03/owned-PG fake-provider replay tests pass, including
 V5 pinned replay. Observed wording is rebound to fresh synthetic scoped refs;
-original raw22/27 and V5 outcomes are unchanged. Current source2e06f304 live
-acceptance is PENDING because shared attempts are exhausted; no V6 paid call.
+original raw22/27 and V5 outcomes are unchanged. V6 live acceptance was PENDING
+at checkpoint because the old shared attempts were exhausted.
 Proof/comparison are correct but verbose for simple detail. No unsupported material
 claim was observed in reviewed finals; this finite check is not general safety.
 
@@ -310,6 +310,43 @@ Linked SQL28 passed before V5; V5 focused12 pass/1 test-fixture expectation fail
 then affected V4-pinned replay1 passed. Unit/API34 pass; ordinary live8 skipped.
 V4 live8 lifecycle cases passed; V5 live7 passed/1 partly executed context case
 skipped at cap. Those pytest results are not model-quality grades. No full suite.
+
+CURRENT FACT: separately authorized group `L32-V6-acceptance-1` evaluates the same
+V6 fingerprint2e06f304211cbd999ce88625fcbfde01e2a57800bd785d3e9fe2d07cb8f5a3a7,
+prompt5/validator6/selection6/renderer7/assertions2. Source, actual prompt/schema,
+fixtures, harness and Codex-authored expected matrix were frozen before live.
+Finite synthetic acceptance is PASS WITH LIMITS: seven standalone cases plus all
+four context turns produced9 ACCEPTED/1 REGENERATED/1 clarification. The first
+condensed-milk raw omitted required simulation requested/available/shortage prose
+despite exact typed slots; rejection was correct. One bounded regeneration
+restored complete evidence/proposal/causal-boundary prose. Saved-raw offline replay
+reproduces reject/accept, with positive/omission/wrong-Ingredient regression; no
+application source/fixture fix or further paid rerun was needed.
+
+The four turns clarify ambiguous milk, resume the original purchase question for
+fresh milk, retain its why topic, then switch to condensed milk's own fact IDs and
+simulation. Both synthetic quantities are20 g, so identity/provenance rather than
+numeric inequality establishes the switch. Every final checks each required right
+revoked (replay/new key403), inactive/other Store membership404, fresh-session
+persisted equality and same-key/body POST replay with0 additional completions.
+GET405 is a negative method probe; AS03 has no message GET endpoint.
+
+New ledger11/16 attempts, known USD0.0203539, unknown0, full reservations0.1546512
+under USD0.30;5 slots remain unused after the matrix completed. Resolved model
+google/gemini-2.5-flash/provider Google,26263 input/4990 output tokens; completion
+latency2077..5858ms (median3733). No429/timeouts. Old ledger30/30 and its two
+unknown reservations remain byte-identical. New offline13 pass/8 opt-in skips,
+fake HTTP four-turn/authority harness2 pass, observed omission regression1 pass;
+live8 lifecycle cases pass separately from manual Codex raw/prose quality review.
+Initial harness expectation403 for inaccessible Store was corrected to contracted404;
+failed and passing logs are preserved. No full suite or independent human/model judge.
+
+Limits remain: verbose proof/comparison at simple detail, opaque option IDs in
+no-winner wording, clarification kind with diagnostic disposition=FALLBACK, and
+finite paraphrase support rather than general entailment. No historical response
+was relabelled. New acceptance harness/tests/docs remain WIP; no L4/FE/deployment.
+Review artifacts stay in ignored runtime/assistant-test/L32-V6-acceptance-1; the
+scoped review ZIP can be removed without losing original source or evidence.
 
 ## Legacy review and future slices
 

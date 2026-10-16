@@ -24,14 +24,22 @@ engine/provider network. Cold misses no longer require cached verification. See
   accepted; tradeoff false reject/unknown timeout then freeze2 HTTP429). No paid
   retry/model change. Final context/pair fixes are offline-only; current limits
   and cost are in the feature/runbook, separate from original NOT_PASSED.
-- L3.2 WIP: dynamic intent/evidence/detail prompts, two placeholder examples,
+- L3.2 checkpoint a29ae1f3: dynamic intent/evidence/detail prompts, two placeholder examples,
   resumed why/context and explicit slots/null/polarity, comparative sign/cost-role
   checks and V3/V4/V5 pinned replay. Current prompt5/validator6/plan6, renderer7.
   Evaluated V5 live PARTIAL:11 completions,7 accepted/1 regenerated/1 fallback/
   1 clarification; last context entity switch unexecuted at shared cap30/30.
   Fixed14-case Codex-labelled offline corpus0FA/0FR;2 additional valid live
   paraphrases rejected in V5, fixed offline in V6 with24 unit/3 real AS03-PG
-  fake replay tests. Current V6 live PENDING at exhausted cap. Proof/comparison remain verbose. Linked SQL28 pass;
+  fake replay tests. V6 was PENDING at that checkpoint; prior results stay historical.
+  Separate L32-V6-acceptance-1 now passes the frozen V6 synthetic matrix with limits:
+  11/16 completions,9 accepted/1 regenerated/1 clarification, all4 conversation turns.
+  Correct slots with omitted simulation prose were rejected then regenerated;
+  no application source change. All11 finals checked current rights/Store isolation,
+  fresh persistence and replay0. Known USD0.0203539, reservations0.1546512/0.30,
+  no unknown usage,5 unused slots. Quality review is Codex-authored, not human-panel
+  evaluation. Proof/comparison remain verbose, opaque option IDs and clarification
+  disposition mismatch remain. New acceptance harness/tests/docs are WIP. Linked SQL28 pass;
   V5 focused12 pass plus affected V4 replay1 pass after test expectation fix;
   unit/API34 pass. All saved finals fresh-persisted/replay0/GET405. Budget is
   exhausted by attempts, not dollars: known0.0551248 plus unknown reserve0.0281184.

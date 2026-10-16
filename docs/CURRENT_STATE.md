@@ -22,7 +22,7 @@ HTTP429 on freeze2 budget. Paid work stopped; no blind retry/model change. Known
 cost USD0.0065817 plus unknown-call reservation USD0.0281184 gives USD0.0347001
 upper bound. Final context/semantic and proof-assessment fixes (plan/3, renderer/4) have offline evidence, not a fresh full
 live subset. Original artifacts remain byte-identical. See feature/runbook.
-CURRENT FACT L3.2 WIP adds intent/evidence/detail prompt composition with two
+CURRENT FACT L3.2 checkpoint a29ae1f3db9d850d65dbb17a92d534f94cca235f adds intent/evidence/detail prompt composition with two
 versioned placeholder examples, resolved original questions/purchase_rationale,
 scoped simulation factors without invented causality and pinned V3/V4 replay.
 New work pins prompt5/validator6/selection6, renderer7, assertions2; no new route or
@@ -31,16 +31,26 @@ prose keeps exact pair cost role/sign/direction. Public API delta remains only t
 additive context.topic value. Fixed14-case Codex-labelled offline corpus0FA/0FR.
 Owned assistant SQL resumed: linked28 pass; V5 focused12 pass plus one added V4
 replay test expectation corrected and affected1 pass. V5 unit/API34 pass.
-Last evaluated V5 source0e3199d2 live PARTIAL:11 completions,7 accepted responses,1 regenerated,
+HISTORICAL INFORMATION V5 source0e3199d2 live PARTIAL:11 completions,7 accepted responses,1 regenerated,
 1 fallback and1 deterministic clarification; final entity-switch turn unexecuted.
 Two valid V5 live paraphrases were conservatively rejected, separate from the
 fixed14-case corpus. V6 fixes their closed meaning/punctuation variants offline
 without changing V5 replay:24 unit tests and3 real AS03/PostgreSQL fake-provider
-replay tests pass. Current source2e06f304 has live acceptance PENDING; no paid
-call after the cap. Old V5 results remain PARTIAL, not relabelled. Shared L3.1/L3.2 cap30/30 is exhausted.
+replay tests pass. The checkpoint correctly recorded V6 live PENDING at that time.
+Old V5 results remain PARTIAL, not relabelled. Shared L3.1/L3.2 cap30/30 is exhausted.
 Known USD0.0551248 plus unchanged unknown reservation USD0.0281184 gives upper
-USD0.0832432. All finals checked through fresh Session/replay0/GET405. No further
-paid call, original result relabeling or general language/real-customer safety claim.
+USD0.0832432; that group is unchanged and closed.
+CURRENT FACT V6 source2e06f304 live PASS WITH LIMITS on the separately authorized
+L32-V6-acceptance-1 synthetic matrix:11/16 completions,9 ACCEPTED/1 REGENERATED/
+1 deterministic clarification, all four conversation turns executed. Raw10 omitted
+required simulation prose despite correct slots; rejected and regenerated correctly.
+No application/fixture change after freeze. Known USD0.0203539, no unknown usage,
+full reservations USD0.1546512 under USD0.30;5 attempts remain unused. Resolved
+Google/google/gemini-2.5-flash. All11 finals have current-right/Store denial checks,
+fresh-session equality and POST replay0. AS03 has no GET message endpoint;405 is
+only a negative method probe. Codex-authored quality review is separate from8
+lifecycle tests passing. No full suite, general entailment or real-customer claim.
+Acceptance harness/docs/tests changes remain WIP; no push/deploy/L4.
 Explicit synthetic Gemini smoke exercised actual AS01/AS02: first routing guard
 fallback corrected, second accepted;2 calls,$0.0003932 total API-reported cost.
 This verifies constrained presentation, not unrestricted prose or customer data.
