@@ -1,7 +1,7 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
 <a id="summary-narrative-s1"></a>
-## CURRENT FACT — S1 offline summary narrative / S2 pending
+## CURRENT FACT — S1 offline summary narrative / S2 controlled acceptance
 
 Use the isolated `backend-plan-summary-narrative` checkout and its own `.venv`.
 The S1-owned container `shelfcash-summary-s1-postgres`, named volume
@@ -33,20 +33,57 @@ claim and issued reference to retained facts. Mark every sample deterministic or
 fake-provider; those examples do not establish live Gemini quality. Cold GET/retry
 must return the same generation/text without an additional provider invocation.
 
-S2 configuration, **not enabled or called in S1**: SUMMARY_LLM_ENABLED=true,
+S2 uses an explicit temporary application profile; runtime flags stay OFF.
+Equivalent configuration: SUMMARY_LLM_ENABLED=true,
 SUMMARY_MODEL=google/gemini-2.5-flash, SUMMARY_PROVIDERS=[] for explicit default
 OpenRouter routing with fallback disabled (or an explicitly approved pinned route),
-SUMMARY_MAX_TOKENS=3072 (max4096), SUMMARY_INPUT_BYTES=16000,
-SUMMARY_TIMEOUT_SECONDS=20, SUMMARY_DEADLINE_SECONDS=25. Use the existing private
+SUMMARY_MAX_TOKENS=1200, SUMMARY_INPUT_BYTES=16000,
+SUMMARY_TIMEOUT_SECONDS=30, SUMMARY_DEADLINE_SECONDS=35. Use the existing private
 OPENROUTER_API_KEY. CHAT_* and Import Qwen remain independently configured/OFF.
 Old256-token overrides may truncate narrative plus bindings and correctly fallback;
 no automatic retry after an ambiguous billable attempt. A key alone never enables
-summary. S2 still needs explicit data/model/call/cost authorization before dispatch.
+summary. User-authorized S2 permits only this synthetic matrix,16 attempts/USD0.30;
+it does not authorize a new batch, real business data or another model/provider.
 The historical assistant_live_smoke harness explicitly constructs profile/1; it
 does not certify profile/2 narrative. Use AS01 with the new composition for S2,
 then AS02/same-key replay to verify retained text without another provider call.
 
-| S2 pending gate | Acceptance evidence required |
+CURRENT FACT S2 tools use the same owned5443 DB without reset on exit, so live
+generations, receipts and earlier source results remain retained. Preparation
+creates synthetic A/D/F through canonical capture/pipeline/persistence and B/C/E
+from previously verified retained fixtures, then verifies fresh facts/oracles.
+Cold Assistant reads do not rerun engines. The source snapshot/fingerprint covers
+app code, matrix factory and paid runner; metadata, profile, schema, prompt and
+all expected/forbidden claims are frozen before each source's first call.
+
+```powershell
+.venv/Scripts/python.exe -B -X utf8 -m scripts.summary_s2_live --prepare
+# Separate explicit single-case paid opt-in; never run blindly in a retry loop:
+.venv/Scripts/python.exe -B -X utf8 -m scripts.summary_s2_live --allow-paid-s2-max-16-usd-0.30 --case A
+.venv/Scripts/python.exe -B -X utf8 -m scripts.summary_s2_verify
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_summary_s2_budget.py tests/unit/test_summary_narrative.py tests/unit/test_plan_summary.py tests/api/test_plan_summary_openapi.py tests/unit/test_fe_handoff.py -q -p no:cacheprovider --tb=short
+```
+
+The isolated S2 ledger under ignored runtime/s2-summary counts OpenRouter requests
+and conservatively tracks Google internal route attempts. Reserve three attempt
+slots and USD0.025 before dispatch: three eligible routes, each at most16KiB plus
+1,024 conservative input-token overhead and1,200 output tokens, at capped0.30/2.50
+USD per million. Successful reported cost settles only known usage; unknown errors
+retain the reservation. Two early errors were conservatively topped up after
+internal route retries became visible, preserving original reserved amounts in
+the journal. No reuse/reset of earlier L3/L4 ledgers; lock/crash/unknown cost fails
+closed, no automatic regeneration or transport retry. Stop if remaining attempt
+slots or money cannot cover reservation; the allowance is not a spending target.
+
+Final composition profile/4 disables reasoning and uses compact schema/3 with
+prompt/3. The old nested schema failed Google's serving-state limit; local guards
+remain unchanged. A/B/C/D/F were live accepted; E correctly fell back on missing
+reference-only coverage. Naturalness/free paraphrases remain limited, and grading
+is Codex-only. Requested CASE_REVIEW.md contains unchanged raw text, full delivered
+summaries, exact-source labels, grading and ledger accounting. Final mock fault,
+rights/isolation, fresh-process and old-generation checks add no paid call.
+
+| S2 gate | Current result and acceptance boundary |
 | --- | --- |
 | Completed winner + paid purchase | Vietnamese text preserves selected/viewed option, exact outlay/currency, scope; accepted rate and reader quality reviewed |
 | Zero purchase | Valid plan says no additional purchase; no invented no-purchase comparison or missing-plan claim |
@@ -57,9 +94,10 @@ then AS02/same-key replay to verify retained text without another provider call.
 | Timeout/schema/truncation/model-route mismatch | Complete deterministic fallback, safe versioned diagnostics, measured tokens/latency/cost and no blind retry |
 | Rights/replay/restart | Current authority before dispatch/publication/delivery, no extra provider on GET/replay, old response/pins unchanged |
 
-Conservative licensed clauses may reject good Vietnamese paraphrases. S2 must
-measure this limitation explicitly; offline fake acceptance is not natural-language
-or production readiness. No universal disclaimer, model reviewer or entailment
+Conservative licensed clauses reject the independently correct out-of-vocabulary
+cost paraphrase in the offline probe. No live false rejection was observed, but
+the live prompt requests licensed clauses; this is not general paraphrase
+acceptance or production readiness. No universal disclaimer, model reviewer or entailment
 project is introduced. [Feature](../features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative)
 owns the actual prompt/input/output and versioning behavior.
 

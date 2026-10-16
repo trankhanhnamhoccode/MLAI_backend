@@ -1850,6 +1850,18 @@ retained clauses. Fallback mới là deterministic profile/2, không relabel b�
 Chi tiết input/output/limits ở [feature](features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative),
 offline/manual/S2 gates ở [runbook](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1).
 
+CURRENT FACT S2: composition hiện tại chọn summary_profile/4, reasoning disabled,
+prompt plan_summary_prompt/3 và internal schema summary_narrative/3. Google đã
+reject nested schema cũ vì quá nhiều serving states. Compact output chỉ gồm
+clauses `{fact_id,text}`; BE gắn issued references và dùng lại full-clause guard/2
+và renderer/2. Local bounds, đủ mọi selected facts, numbers/entities/units/polarity
+và scoped bindings vẫn bắt buộc. Profile/1-/3 và receipt cũ giữ nguyên meaning/pins.
+Public delta so S1 chỉ thêm plan_summary_prompt/3 vào prompt_version hiện có;
+không thêm field/route/grant. Final-source synthetic live A/B/C/D/F accepted,
+E fallback vì model thiếu reference-only clause. Đây không phải bằng chứng
+unrestricted paraphrase hoặc independent human/production acceptance. Chi tiết
+và giới hạn ở [feature S2](features/DECISION_ASSISTANT.md#current-fact--s2-gemini-acceptance-and-limits).
+
 Diagnostics có disposition=ACCEPTED|FALLBACK, reason=NONE|MODEL_DISABLED|
 PROVIDER_UNAVAILABLE|SCHEMA_REJECTED|GROUNDING_REJECTED|INPUT_LIMIT|
 PROCESS_INTERRUPTED; requested/resolved model/provider nullable, attempts/input/

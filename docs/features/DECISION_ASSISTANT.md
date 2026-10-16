@@ -43,7 +43,8 @@ structured explanation in §15.3. ADR-001/004/011/020–022 govern retained auth
 
 ## CURRENT FACT — S1 bounded plan narrative
 
-New composition selects `summary_profile/2`; SUMMARY_LLM_ENABLED remains OFF.
+S1 composition selected `summary_profile/2`; current S2 composition selects
+`summary_profile/4` as described below. SUMMARY_LLM_ENABLED remains OFF.
 AS01/AS02 reuse the existing durable lifecycle, current rights, exact retained
 evidence and receipts. Profile/1 still reads and renders its original six-family
 deterministic/presentation output. Profile/2 uses prompt `plan_summary_prompt/2`,
@@ -109,6 +110,53 @@ ported. In particular, its no-recommendation → infeasible wording is not adopt
 
 S1 is offline/fake-provider evidence only. S2 model configuration and pending live
 acceptance are in the [runbook](../runbooks/FULL_TEST_FLOW.md#summary-narrative-s1).
+
+## CURRENT FACT — S2 Gemini acceptance and limits
+
+S1 checkpoint `93d6ecb` is OFFLINE VERIFIED; its old generation formats remain
+supported. S2 final runtime composition uses summary_profile/4, prompt
+plan_summary_prompt/3, internal schema summary_narrative/3, unchanged renderer
+plan_summary_renderer/2 and unchanged summary_narrative_guard/2. Profile/3 pins
+reasoning disabled while preserving the old nested schema; profile/4 also uses
+compact output. Original profiles/1 and /2 keep their prior transport and pins.
+
+Google rejected the nested S1 provider schema with a too-many-states error.
+The new wire grammar is one flat clauses array of `{fact_id,text}`; provider
+schema omits nested length constraints. Local CompactNarrative still enforces
+bounds, and BE binds each fact to its issued references before the same full
+clause/family/coverage reconciliation. Unknown IDs, missing obligations, altered
+amounts/entities/units/polarity or unlicensed assertions still fail. This reduces
+provider grammar complexity and output tokens without accepting weaker claims.
+The model sees selected fact IDs, families and licensed surfaces; references
+remain backend-owned. Public fields are unchanged; prompt_version additionally
+admits plan_summary_prompt/3. No endpoint, permission, migration or engine change.
+
+CURRENT FACT: the six-case persisted synthetic A?F matrix was evaluated through
+real AS01/auth/CSRF/application validation with Gemini 2.5 Flash via pinned Google,
+no provider fallback, price ceiling and 1,200-token output cap. On the final source,
+A/B/C/D/F were accepted. E omitted the required reference-only fact; the full
+correct deterministic fallback was published. This is a model coverage failure,
+not an observed false rejection. Two earlier HTTP400 attempts remain separately
+recorded, with unknown costs still reserved; no retry on an unchanged error.
+Raw/final/source/validation/cost evidence and the requested CASE_REVIEW.md are
+under ignored runtime/s2-summary. No live result is relabelled as a later source.
+
+Codex grading finds factual/status/proof boundaries supported on these fixtures;
+naturalness/usefulness are limited by licensed sentences, technical proof wording,
+slash-joined strategy aliases and counts that do not replace Product-level detail.
+In blocked Runs, “phạm vi đã tính” describes retained computed input scope and can
+be misread as successful completion; the outcome must remain visible alongside it.
+The correct out-of-vocabulary cost paraphrase probe is rejected offline. The live
+prompt asks for licensed clauses, so five accepted cases do not establish free
+paraphrase acceptance. Grading is by Codex, not independent human review.
+
+Recommendation: GO WITH LIMITS for a bounded S3 trial showing current status,
+claims/references and fallback diagnostics; unrestricted prose, final owner-facing
+UX acceptance and production readiness remain unverified. No S3 action or live
+runtime activation follows automatically. Providers remain OFF by default; Chat,
+Import and forecast configuration are unchanged. See the
+[runbook](../runbooks/FULL_TEST_FLOW.md#summary-narrative-s1) for exact opt-in,
+budget/target guards and reproducible offline/live checks.
 
 ## Internal boundary
 

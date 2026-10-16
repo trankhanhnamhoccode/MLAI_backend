@@ -25,3 +25,19 @@ class SummaryNarrative(DTO):
 
     def sections(self) -> tuple[NarrativeSection, ...]:
         return (self.headline, self.summary, *self.key_points, self.warning_summary)
+
+
+class CompactClause(DTO):
+    fact_id: str = Field(min_length=1,max_length=80)
+    text: str = Field(min_length=1,max_length=2000)
+
+
+class CompactNarrative(DTO):
+    clauses: tuple[CompactClause,...] = Field(min_length=1,max_length=32)
+
+
+def compact_provider_schema():
+    """Small provider grammar; all local bounds/obligations still enforced."""
+    return dict(type='object',additionalProperties=False,required=['clauses'],properties=dict(
+        clauses=dict(type='array',items=dict(type='object',additionalProperties=False,
+            required=['fact_id','text'],properties=dict(fact_id=dict(type='string'),text=dict(type='string'))))))

@@ -1,14 +1,17 @@
 # Remaining work and acceptance gates
 
-## CURRENT FACT / pending acceptance — S1 plan narrative
+## CURRENT FACT / limits — S2 bounded plan narrative
 
-Isolated S1 WIP implements backend communication selection, bounded clause prose,
-exact claim/reference validation, deterministic fallback and pinned old/new replay
-on the existing AS01/AS02 lifecycle. No new endpoint/migration or default provider
-activation. S1 verification is offline/fake-provider; general paraphrase acceptance
-and Gemini quality remain unverified. [Feature](features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative)
-owns behavior; [runbook](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1) owns the
-S2 acceptance matrix. No S2 live call, FE change, commit/merge/deploy follows S1.
+S1 is checkpointed locally at93d6ecb. S2 final-source synthetic live matrix has
+five Gemini/Google accepted cases and one correct coverage fallback. Compact
+provider schema fixes the observed nested-schema serving rejection; numeric,
+entity, reference and obligation guards remain strict. Cold/read/replay/security
+and recovery use owned PostgreSQL with fake faults, not paid fault injections.
+GO WITH LIMITS is proposed for a separately authorized bounded S3 trial. Natural
+unrestricted paraphrases, independent human grading and production/FE acceptance
+remain pending. [Feature](features/DECISION_ASSISTANT.md#current-fact--s2-gemini-acceptance-and-limits)
+owns behavior; [runbook](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1) owns commands
+and guards. S2 implementation remains WIP; no S2 commit/push/merge/deploy or S3 start.
 
 ## CURRENT FACT - L5 backend source integration
 

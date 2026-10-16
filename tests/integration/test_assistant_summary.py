@@ -294,7 +294,12 @@ service.create(os.environ['ASSISTANT_SESSION'],UUID(os.environ['ASSISTANT_RUN'])
             'ASSISTANT_SESSION':token,'ASSISTANT_KEY':headers['Idempotency-Key'],'ASSISTANT_CSRF':headers['X-CSRF-Token']})
     assert child.returncode==17,child.stderr
     with Session(env[1]) as s:
-        row=s.scalar(select(PlanSummaryGeneration));ident=row.id
+        from app.infrastructure.auth_crypto import digest as key_digest
+        row=s.scalar(select(PlanSummaryGeneration).join(PlanSummaryReceipt,
+            PlanSummaryReceipt.generation_id==PlanSummaryGeneration.id).where(
+            PlanSummaryReceipt.actor_id==record.actor_id,PlanSummaryReceipt.run_id==record.run_id,
+            PlanSummaryReceipt.key_digest==key_digest(headers['Idempotency-Key'])))
+        ident=row.id
         assert row.status=='running'
     read=env[5].get(path+'/'+str(ident))
     assert read.status_code==200 and read.json()['data']['status']=='running'

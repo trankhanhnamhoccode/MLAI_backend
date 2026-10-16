@@ -17,7 +17,7 @@ def test_summary_routes_security_and_typed_wire():
     assert set(schemas['SummaryExpression']['properties'])=={'ordering','tone'}
     assert schemas['SummaryAnswer']['properties']['source']['enum']==['deterministic_fallback','model_presentation']
     assert schemas['SummaryAnswer']['properties']['renderer_version']['enum']==['plan_summary_renderer/1','plan_summary_renderer/2']
-    assert schemas['SummaryDiagnostics']['properties']['prompt_version']['enum']==['plan_summary_prompt/1','plan_summary_prompt/2']
+    assert schemas['SummaryDiagnostics']['properties']['prompt_version']['enum']==['plan_summary_prompt/1','plan_summary_prompt/2','plan_summary_prompt/3']
     assert schemas['SummaryDiagnostics']['properties']['validator_version']['enum']==['summary_presentation_guard/1','summary_narrative_guard/2']
     assert paths['/api/v1/procurement-plans/{plan_id}/explanation']['get']['operationId']=='C08'
     chat=paths['/api/v1/procurement-plans/{plan_id}/assistant/messages']['post']

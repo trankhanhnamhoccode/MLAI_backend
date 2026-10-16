@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from app.application.contracts.decision_evidence import DecisionEvidence
 from app.application.contracts.plan_summary import BlockKey, SummaryAnswer, SummaryClaim, SummaryDiagnostics, SummaryRequest, SummaryProfile
 from app.application.contracts.summary_narrative import NarrativeClause, NarrativeSection, SummaryNarrative
+from app.application.contracts.summary_narrative import CompactNarrative
 from app.application.plan_summary_rendering import DEFAULT_EXPRESSION
 
 VERSIONS = dict(renderer='plan_summary_renderer/2', prompt='plan_summary_prompt/2',
@@ -18,11 +19,24 @@ OLD_VERSIONS = dict(renderer='plan_summary_renderer/1', prompt='plan_summary_pro
 
 
 def versions(profile: SummaryProfile) -> dict[str, str]:
-    return VERSIONS if profile.version == 'summary_profile/2' else OLD_VERSIONS
+    if profile.version == 'summary_profile/4':
+        return {**VERSIONS,'prompt':'plan_summary_prompt/3','schema':'summary_narrative/3'}
+    return VERSIONS if profile.version in {'summary_profile/2','summary_profile/3'} else OLD_VERSIONS
 
 
 def diagnostics_v2(diagnostics: SummaryDiagnostics) -> SummaryDiagnostics:
-    return diagnostics.model_copy(update={'prompt_version': VERSIONS['prompt'], 'validator_version': VERSIONS['validator']})
+    prompt=diagnostics.prompt_version if diagnostics.prompt_version=='plan_summary_prompt/3' else VERSIONS['prompt']
+    return diagnostics.model_copy(update={'prompt_version': prompt, 'validator_version': VERSIONS['validator']})
+
+
+def expand_compact(plan: tuple['CommunicationFact',...], compact: CompactNarrative) -> SummaryNarrative:
+    expected={f.fact_id:f for f in plan}
+    if any(c.fact_id not in expected for c in compact.clauses):raise ValueError('Unknown compact fact binding')
+    def section(family):
+        return NarrativeSection(family=family,clauses=tuple(NarrativeClause(fact_id=c.fact_id,text=c.text,
+            evidence_ids=expected[c.fact_id].evidence_ids) for c in compact.clauses if expected[c.fact_id].family==family))
+    return SummaryNarrative(schema_version='summary_narrative/2',headline=section('outcome'),summary=section('cost'),
+        key_points=tuple(section(k) for k in ('requirements','coverage','proof')),warning_summary=section('limitations'))
 
 
 @dataclass(frozen=True)

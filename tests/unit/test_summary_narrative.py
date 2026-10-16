@@ -160,7 +160,7 @@ def test_mode_config_and_wire_contract_leave_chat_and_import_defaults_alone():
     from app.config import Settings
     settings=Settings(_env_file=None)
     selected=profile_from_settings(settings)
-    assert selected.version=='summary_profile/2' and not selected.enabled
+    assert selected.version=='summary_profile/4' and not selected.enabled
     assert settings.summary_max_tokens==3072
     assert settings.chat_llm_enabled is False and settings.import_llm_suggestions_enabled is False
 
@@ -173,3 +173,26 @@ def test_offline_failure_retains_versioned_deterministic_fallback(content,reason
     assert result.diagnostics.reason==reason
     answer=render_narrative(evidence,request,result.diagnostics)
     assert answer.source=='deterministic_fallback' and replay_narrative(evidence,request,answer)==answer
+
+
+@pytest.mark.parametrize('kind',['stock','purchase','infeasible','failed-partial'])
+def test_compact_schema_preserves_full_semantic_guard_and_issued_references(kind):
+    from app.application.contracts.summary_narrative import CompactNarrative,compact_provider_schema
+    from app.application.summary_narrative import expand_compact,versions
+    evidence,request,old=summary_case(kind)
+    narrative=proposed(evidence,request)
+    compact=CompactNarrative(clauses=tuple(dict(fact_id=c.fact_id,text=c.text) for s in narrative.sections() for c in s.clauses))
+    selected=SummaryProfile(enabled=True,model='synthetic-qwen',providers=('SYNTHETIC_PROVIDER',),version='summary_profile/4',max_tokens=1200)
+    transport=Transport(compact.model_dump(mode='json'))
+    result=OpenRouterSummaryProvider(SecretStr('synthetic'),opener=transport).present(payload_for(evidence,request,old,selected),selected)
+    assert result.compact==compact and result.narrative is None
+    assert result.diagnostics.prompt_version=='plan_summary_prompt/3'
+    expanded=expand_compact(communication_plan(evidence,request),result.compact)
+    answer=render_narrative(evidence,request,result.diagnostics,expanded)
+    assert answer.claims==reconcile_narrative(communication_plan(evidence,request),narrative)
+    assert replay_narrative(evidence,request,answer)==answer
+    assert versions(selected)['schema']=='summary_narrative/3'
+    assert 'maxItems' not in json.dumps(compact_provider_schema())
+    changed=compact.model_dump(mode='json');changed['clauses'][0]['text']='Đã mua hàng thực tế với xác suất 99%.'
+    with pytest.raises(ValueError):
+        reconcile_narrative(communication_plan(evidence,request),expand_compact(communication_plan(evidence,request),CompactNarrative(**changed)))

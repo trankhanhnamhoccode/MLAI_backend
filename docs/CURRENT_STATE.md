@@ -1,18 +1,18 @@
 # Current state
 
-## CURRENT FACT — S1 bounded plan narrative (isolated WIP)
+## CURRENT FACT — S2 bounded summary acceptance (isolated WIP)
 
-Status: OFFLINE VERIFIED ? LIVE ACCEPTANCE PENDING.
-
-New `summary_profile/2` composition uses backend-selected retained facts and
-versioned summary-specific clause/reference reconciliation. AS01/AS02 fields and
-76 operations/69 paths remain; only three existing version fields admit `/2` values.
-Deterministic fallback and original profile/1 receipt/replay remain available.
-SUMMARY/CHAT flags remain independently OFF; Import and forecast defaults unchanged.
-Work is isolated from main/runtime8103; offline/fake-provider verification is not
-Gemini live quality or deployment acceptance. Scope, input/output and conservative
-wording limits: [canonical feature](features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative).
-S2 requires separate authorization and the [pending matrix](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1).
+S1 checkpoint93d6ecb remains OFFLINE VERIFIED. S2 composition now pins profile/4,
+prompt/3 and compact internal schema/3, with renderer/2 and semantic guard/2.
+On the final source, synthetic A/B/C/D/F were Gemini/Google accepted; E correctly
+fell back after the model omitted reference-only coverage. Earlier HTTP400/schema
+failures and unknown cost reservations remain retained. AS01/AS02 fields/routes
+stay76/69; only the existing prompt_version enum gains /3. No migration or business
+calculation change. Providers remain independently OFF, old receipts replay unchanged.
+Codex grading supports GO WITH LIMITS for a bounded S3 trial, not unrestricted
+prose, independent human/whole-FE or production acceptance. Current source is WIP;
+main/runtime8103 and other worktrees are unchanged. Canonical scope and limitations:
+[feature](features/DECISION_ASSISTANT.md#current-fact--s2-gemini-acceptance-and-limits).
 
 ## CURRENT FACT - Decision Assistant L5 combined source
 

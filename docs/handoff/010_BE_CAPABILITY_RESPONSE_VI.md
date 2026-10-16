@@ -10,6 +10,12 @@ projection; older examples keep their original pins. See the
 and [feature limits](../features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative).
 This WIP does not update a published ZIP, FE or runtime8103.
 
+CURRENT FACT S2 WIP additionally admits prompt_version `plan_summary_prompt/3`.
+The `summary_narrative_gemini_s2` row is a labelled synthetic real-Gemini AS01
+example on profile/4; historical rows keep their original text/pins. Current
+[S2 acceptance and limits](../features/DECISION_ASSISTANT.md#current-fact--s2-gemini-acceptance-and-limits)
+are Codex-graded, not independent human or production acceptance.
+
 CURRENT FACT: combined backend c? **76 operations / 69 paths**, migration head
 `l5_20261016_assistant_f4` (merge0030 v? f4_20261016_metadata_v2). Recovery checkpoint
 `2e4a048` ???c merge gi? l?ch s? v?i Assistant main `e499112` t?i `e48c74a`.

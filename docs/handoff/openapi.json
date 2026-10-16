@@ -38281,7 +38281,8 @@
             "type": "string",
             "enum": [
               "plan_summary_prompt/1",
-              "plan_summary_prompt/2"
+              "plan_summary_prompt/2",
+              "plan_summary_prompt/3"
             ],
             "title": "Prompt Version",
             "default": "plan_summary_prompt/1"
