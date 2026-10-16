@@ -73,7 +73,7 @@ def test_worker_persists_consistent_column_metadata_and_cannot_owner_approve_wit
     assert ';PRIOR_SUGGESTION_REASON:' + before['suggestion_reason'] in issue['suggestion_reason']
     assert not issue['ignored'] and issue['resolution'] is None
     if header == 'SLX':
-        assert 'CURATED:tabular.sales/1:' in issue['suggestion_reason']
+        assert 'CURATED:tabular.sales/2:' in issue['suggestion_reason']
     assert_persisted(imp, ident, issue)
     assert 'column:2' in reject_unreviewed(imp, ident)
 

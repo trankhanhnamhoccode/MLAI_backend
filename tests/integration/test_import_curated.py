@@ -27,7 +27,7 @@ def test_curated_proposals_cannot_activate_or_preview_without_semantic_review(im
     quantity = next(i for i in listing(imp, ident) if i["source_header"] == "SL")
     assert quantity["target_field"] == "sales.quantity"
     assert quantity["status"] == "needs_confirmation" and quantity["field_category"] == "B"
-    assert "CURATED:tabular.sales/1:quantity" in quantity["suggestion_reason"]
+    assert "CURATED:tabular.sales/2:quantity" in quantity["suggestion_reason"]
     declared = declare_context(imp, ident)
     profile = declared["profile_proposals"][0]
     assert "column:2" in profile["missing_fields"]
