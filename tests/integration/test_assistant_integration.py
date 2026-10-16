@@ -156,10 +156,10 @@ def test_retained_schema3_metadata2_cold_assistant_and_migration_guard(env,monke
     (ROOT/'metadata2-assistant.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2),encoding='utf8')
 
 
-def test_assistant_parent_upgrade_preserves_real_receipts(env):
+def test_assistant_parent_upgrade_preserves_real_receipts(env,request):
     command.downgrade(migration_config(),'base')
     command.upgrade(migration_config(),'0030_conversational_chat')
-    state,record,summary,headers,body,path=assistant.__wrapped__(env)
+    state,record,summary,headers,body,path=assistant.__wrapped__(env,request)
     response=state[5].post(path,headers=headers,json=body)
     assert response.status_code==200,response.text
     from app.application.use_cases.assistant_chat import AssistantChat

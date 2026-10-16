@@ -1,5 +1,22 @@
 # Remaining work and acceptance gates
 
+## CURRENT FACT / limits — bounded owner summary integration
+
+S3 local integration completes important-warning and distinct-purchase-line acceptance with
+offline/fake-provider tests. Profile/6 preserves historical profile/5 and earlier
+replay. Final-source live Gemini, independent owner UX, browser/FE integration and
+production acceptance remain unverified. Historical S2.1 live evidence is pinned
+to its original fingerprint; closed ledgers are not reopened. Local integration
+does not push remote, deploy/restart runtime8103 or enable providers. Operator
+activation is a separate authorized step, using the
+[feature](features/DECISION_ASSISTANT.md#current-fact--bounded-owner-summary) and
+[runbook](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1). No new engine work follows.
+
+TECHNICAL DEBT: broad regression still has historical pre-Assistant schema/head
+assertions and feature-specific DB/runtime fixture prerequisites. These existing
+main-base failures are separate from passing affected summary verification; no
+test or applied migration is weakened to hide them.
+
 ## CURRENT FACT - L5 backend source integration
 
 Decision Assistant L4.1 checkpoint1f9b5c5 is integrated with main base8b09685 in an

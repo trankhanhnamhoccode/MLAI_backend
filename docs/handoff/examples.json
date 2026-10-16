@@ -1,8 +1,8 @@
 {
   "provenance": {
     "source": "Enclosing Git commit; final ZIP PROVENANCE.json pins exact final main SHA",
-    "verification": "Fresh combined-source synthetic HTTP/PostgreSQL on dedicated loopback5442 limited integration role",
-    "providers": "OFF",
+    "verification": "Fresh combined-source synthetic HTTP/PostgreSQL on dedicated loopback5442 limited integration role; S1 summary_narrative_fake_provider row is separately labelled offline projection",
+    "providers": "Historical examples OFF; S1 row fake-provider; explicitly labelled S2 row real Gemini/Google synthetic; labelled S2.1 row real Gemini/Google synthetic",
     "browser_acceptance": "NOT_RUN",
     "secret_headers": "Intentionally omitted; idempotency keys here are synthetic non-secret intent IDs"
   },
@@ -1032,6 +1032,791 @@
         "reason_omitted_vs_null_equivalent": true,
         "reader": "/api/v1/imports/9da04151-1ecf-4978-89c4-6c2adb1dcb30/completion"
       }
+    },
+    {
+      "operation_id": "AS01",
+      "example": "summary_narrative_fake_provider",
+      "verification": "S1 synthetic fake-provider projection, not a live Gemini or browser response",
+      "method": "POST",
+      "path": "/api/v1/procurement-plans/00000000-0000-0000-0000-000000001b5a/assistant/summary",
+      "body": {
+        "expected_evidence_version": "58e394d93bed777b25f698150678e30ce842c1c2ecac875a0bf8463915ccff32",
+        "option_id": null,
+        "locale": "vi",
+        "detail_level": "simple"
+      },
+      "headers": {
+        "Idempotency-Key": "00000000-0000-0000-0000-000000000386"
+      },
+      "response": {
+        "data": {
+          "generation_id": "00000000-0000-0000-0000-000000000385",
+          "run_id": "00000000-0000-0000-0000-000000001b5a",
+          "status": "completed",
+          "created_at": "2026-10-08T00:00:01Z",
+          "finished_at": "2026-10-08T00:00:01Z",
+          "result": {
+            "schema_version": "plan_summary/1",
+            "identity": {
+              "run_id": "00000000-0000-0000-0000-000000001b5a",
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "aggregate_digest": "58e394d93bed777b25f698150678e30ce842c1c2ecac875a0bf8463915ccff32",
+              "input_digest": "e0d279ddc61f35cca259f737f917a35976b14b997ffd08ce17a62f67a2ad95b6",
+              "result_digest": "0cc0f2af5f1faa5b03d29af55ef4c25b873b18d78eb574afcd45ec5667be699a",
+              "request_digest": "dc7495f9558ee209d6677f871a4377cdffda6076611de9900c5944985fd6beb9",
+              "storage_version": "planning_storage/1",
+              "package_schema_version": 1,
+              "result_schema_version": "operational_pipeline/2",
+              "capture_schema_version": "operational_capture/2",
+              "accepted_at": "2026-10-07T23:59:59Z",
+              "started_at": "2026-10-07T23:59:59Z",
+              "finished_at": "2026-10-08T00:00:01Z",
+              "captured_at": "2026-10-08T00:00:00Z"
+            },
+            "option_id": "cmp1_aed8ebc43e1b6d7f617016c35fe21978c89e6ccaa4651e1bfa3e0ece107b11ed",
+            "locale": "vi",
+            "detail_level": "simple",
+            "source": "model_presentation",
+            "presentation": {
+              "ordering": [
+                "outcome",
+                "cost",
+                "requirements",
+                "coverage",
+                "proof",
+                "limitations"
+              ],
+              "tone": "plain"
+            },
+            "answer": "Phương án tinh gọn/cân bằng/bảo vệ được khuyến nghị cho kế hoạch này.\n\nPhương án đang xem cần tổng chi 10 VND: tiền mua 10 VND, phí phải trả 0 VND. Giới hạn ngân sách đã lưu là 10 VND.\n\nCó 2 đánh giá đạt, 0 chưa đạt, 0 chưa đánh giá theo từng món và đường nhu cầu.\n\nPhạm vi đã tính gồm 2 trong tổng số 2 món.\n\nKết quả tìm kiếm còn thiếu chứng nhận đầy đủ trong miền đã lưu. Việc so sánh chỉ bao gồm các phương án đã đánh giá, không chứng minh tối ưu toàn cục.\n\nKết quả mô phỏng chưa tạo đơn mua và không phản ánh tiêu thụ thực tế.",
+            "claims": [
+              {
+                "family": "outcome",
+                "text": "Phương án tinh gọn/cân bằng/bảo vệ được khuyến nghị cho kế hoạch này.",
+                "evidence_ids": [
+                  "ev-4cb0a45df1bd8478e35a03a2643ad881078618c723bc5b018b79056ad085a067",
+                  "ev-0b6dfa898f9b0966c2210f7b2b4498c48f60e5744105cc3f1310e29d63632eee",
+                  "ev-1c7354df442e285023f80c8e7f2c70baa3f4f0d8fb7c65173486b201e58a0300"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Phương án đang xem cần tổng chi 10 VND: tiền mua 10 VND, phí phải trả 0 VND. Giới hạn ngân sách đã lưu là 10 VND.",
+                "evidence_ids": [
+                  "ev-df5b1c20ae1eeef70c4526ca7997c9ac63527712667d4e30cbc69b7f4575beed",
+                  "ev-e8cb8a24080982275c8072c263602bf236735b48ab15b592d0b24e8555e3231d",
+                  "ev-835e102d5e4672f937490c60cf4c72973af1e13acd7becc83a2474efc8285e82"
+                ]
+              },
+              {
+                "family": "requirements",
+                "text": "Có 2 đánh giá đạt, 0 chưa đạt, 0 chưa đánh giá theo từng món và đường nhu cầu.",
+                "evidence_ids": [
+                  "ev-ad03e5e8b59e11cfcd895f693b62c9f9fa5317d9926c5cdd32b4c7eacc490fd6"
+                ]
+              },
+              {
+                "family": "coverage",
+                "text": "Phạm vi đã tính gồm 2 trong tổng số 2 món.",
+                "evidence_ids": [
+                  "ev-28022f1c3f3d2c6fd4582f4f0505d7dbfa36bba5eda08f8b8076007198e48ea9"
+                ]
+              },
+              {
+                "family": "proof",
+                "text": "Kết quả tìm kiếm còn thiếu chứng nhận đầy đủ trong miền đã lưu. Việc so sánh chỉ bao gồm các phương án đã đánh giá, không chứng minh tối ưu toàn cục.",
+                "evidence_ids": [
+                  "ev-1ffb1de20a99aaab45891584c879efc01e1c900347a46f86b97ca4fed5e87702",
+                  "ev-2aee7b8202f445a9be51bcc758facc82cd4bb195f3453836492b0510a4b99bbd"
+                ]
+              },
+              {
+                "family": "limitations",
+                "text": "Kết quả mô phỏng chưa tạo đơn mua và không phản ánh tiêu thụ thực tế.",
+                "evidence_ids": [
+                  "ev-137bd9ce95e095bd629986f1db340847947bb901085329b36397268772716a19",
+                  "ev-58c176015eab78f85f6f5b33026a44146e45adfc70e4ef2a8d27ba7892b1304c"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "evidence_id": "ev-4cb0a45df1bd8478e35a03a2643ad881078618c723bc5b018b79056ad085a067",
+                "pointer": "/overview/recommendation_available",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-835e102d5e4672f937490c60cf4c72973af1e13acd7becc83a2474efc8285e82",
+                "pointer": "/overview/configuration",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-28022f1c3f3d2c6fd4582f4f0505d7dbfa36bba5eda08f8b8076007198e48ea9",
+                "pointer": "/overview/scope",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-1ffb1de20a99aaab45891584c879efc01e1c900347a46f86b97ca4fed5e87702",
+                "pointer": "/overview/strategies",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-1c7354df442e285023f80c8e7f2c70baa3f4f0d8fb7c65173486b201e58a0300",
+                "pointer": "/overview/options",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-0b6dfa898f9b0966c2210f7b2b4498c48f60e5744105cc3f1310e29d63632eee",
+                "pointer": "/overview/explanation",
+                "source": "retained_C08"
+              },
+              {
+                "evidence_id": "ev-2aee7b8202f445a9be51bcc758facc82cd4bb195f3453836492b0510a4b99bbd",
+                "pointer": "/overview/selection_proof",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-137bd9ce95e095bd629986f1db340847947bb901085329b36397268772716a19",
+                "pointer": "/overview/assumptions",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-58c176015eab78f85f6f5b33026a44146e45adfc70e4ef2a8d27ba7892b1304c",
+                "pointer": "/overview/omissions",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-df5b1c20ae1eeef70c4526ca7997c9ac63527712667d4e30cbc69b7f4575beed",
+                "pointer": "/option/option_id",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-e8cb8a24080982275c8072c263602bf236735b48ab15b592d0b24e8555e3231d",
+                "pointer": "/option/costs",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-ad03e5e8b59e11cfcd895f693b62c9f9fa5317d9926c5cdd32b4c7eacc490fd6",
+                "pointer": "/option/requirements_assessment",
+                "source": "retained_C03"
+              }
+            ],
+            "diagnostics": {
+              "disposition": "ACCEPTED",
+              "reason": "NONE",
+              "prompt_version": "plan_summary_prompt/2",
+              "validator_version": "summary_narrative_guard/2",
+              "requested_model": "synthetic-summary",
+              "resolved_model": null,
+              "resolved_provider": null,
+              "attempts": 1,
+              "input_tokens": null,
+              "output_tokens": null
+            },
+            "renderer_version": "plan_summary_renderer/2"
+          },
+          "error_code": null
+        },
+        "meta": {
+          "request_id": "synthetic-narrative-example"
+        },
+        "error": null
+      }
+    },
+    {
+      "operation_id": "AS01",
+      "example": "summary_narrative_gemini_s2",
+      "verification": "S2 synthetic AS01 real Gemini/Google on final profile4 source; Codex grading only",
+      "method": "POST",
+      "path": "/api/v1/procurement-plans/db5ee8f7-f8b5-454c-9cd9-f9f4f0ad9f6c/assistant/summary",
+      "body": {
+        "expected_evidence_version": "646df0c693034c95bc12912118aeadd2695240a727445f701a7fcc5298f0f3c1",
+        "option_id": null,
+        "locale": "vi",
+        "detail_level": "simple"
+      },
+      "headers": {
+        "Idempotency-Key": "5ffdf6e9-b3fd-4dcc-8293-fd3d5b613916"
+      },
+      "response": {
+        "data": {
+          "generation_id": "8491013e-edc1-4f30-b03d-3d346b44a6cb",
+          "run_id": "db5ee8f7-f8b5-454c-9cd9-f9f4f0ad9f6c",
+          "status": "completed",
+          "created_at": "2026-10-10T02:00:00Z",
+          "finished_at": "2026-10-10T02:00:00Z",
+          "result": {
+            "schema_version": "plan_summary/1",
+            "identity": {
+              "run_id": "db5ee8f7-f8b5-454c-9cd9-f9f4f0ad9f6c",
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "aggregate_digest": "646df0c693034c95bc12912118aeadd2695240a727445f701a7fcc5298f0f3c1",
+              "input_digest": "9995c851b4ac5628d9285dfd57d202a36d6459c7070c980223b7c0720166b989",
+              "result_digest": "f86c3bf855037452a3cdea1c7d54390fbe69fcfc2571c946d2e252ece4a3e549",
+              "request_digest": "dc7495f9558ee209d6677f871a4377cdffda6076611de9900c5944985fd6beb9",
+              "storage_version": "planning_storage/1",
+              "package_schema_version": 1,
+              "result_schema_version": "operational_pipeline/2",
+              "capture_schema_version": "operational_capture/2",
+              "accepted_at": "2026-10-08T00:00:00Z",
+              "started_at": "2026-10-08T00:00:00Z",
+              "finished_at": "2026-10-08T00:00:00Z",
+              "captured_at": "2026-10-08T00:00:00Z"
+            },
+            "option_id": "cmp1_946c480de804be643984aa3453d5b93a49e85758310e7bb9af6693e923fbad1d",
+            "locale": "vi",
+            "detail_level": "simple",
+            "source": "model_presentation",
+            "presentation": {
+              "ordering": [
+                "outcome",
+                "cost",
+                "requirements",
+                "coverage",
+                "proof",
+                "limitations"
+              ],
+              "tone": "plain"
+            },
+            "answer": "Phương án tinh gọn/cân bằng/bảo vệ được khuyến nghị cho kế hoạch này.\n\nPhương án đang xem cần tổng chi 6.75 VND: tiền mua 6 VND, phí phải trả 0.75 VND. Giới hạn ngân sách đã lưu là 10 VND.\n\nCó 2 đánh giá đạt, 0 chưa đạt, 0 chưa đánh giá theo từng món và đường nhu cầu.\n\nPhạm vi đã tính gồm 2 trong tổng số 2 món. Khoảng dự báo đã lưu từ 2026-10-08 đến 2026-10-14.\n\nKết quả tìm kiếm còn thiếu chứng nhận đầy đủ trong miền đã lưu. Việc so sánh chỉ bao gồm các phương án đã đánh giá, không chứng minh tối ưu toàn cục.\n\nPhí phải trả đã được lưu nhưng chưa xác định là phí giao hàng. Kết quả mô phỏng chưa tạo đơn mua và không phản ánh tiêu thụ thực tế.",
+            "claims": [
+              {
+                "family": "outcome",
+                "text": "Phương án tinh gọn/cân bằng/bảo vệ được khuyến nghị cho kế hoạch này.",
+                "evidence_ids": [
+                  "ev-1c29ccea2f490bc792d6fe50955ba6fdc5651c704f5b4cab1c7427f91677b605",
+                  "ev-c8beb2c6c1ff2844904dd0e17f532abd26b09e399ef0db5489b3bf2194d405ce",
+                  "ev-45f5987ed8ad09929e6982abde33430f9744e44e6954084f41ac982bca7515fb"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Phương án đang xem cần tổng chi 6.75 VND: tiền mua 6 VND, phí phải trả 0.75 VND. Giới hạn ngân sách đã lưu là 10 VND.",
+                "evidence_ids": [
+                  "ev-22b343c40a60a8a07d3e823d9b03821b6d07018e53805ae899c91c9b19b436fd",
+                  "ev-70db952db00cd331b863c26105d8e519687bd387aaf5aff9aff5d775bd2fed8a",
+                  "ev-a48515a4c9ffeff9c8a07b81f47ad922060800fd7edf5012408a3d1d80378863"
+                ]
+              },
+              {
+                "family": "requirements",
+                "text": "Có 2 đánh giá đạt, 0 chưa đạt, 0 chưa đánh giá theo từng món và đường nhu cầu.",
+                "evidence_ids": [
+                  "ev-74aa994f8ce873d3b675f4ebc8df08ad4dc9196a3270abd63c5e7fda8877e867"
+                ]
+              },
+              {
+                "family": "coverage",
+                "text": "Phạm vi đã tính gồm 2 trong tổng số 2 món. Khoảng dự báo đã lưu từ 2026-10-08 đến 2026-10-14.",
+                "evidence_ids": [
+                  "ev-c9d1ec6e4f8f105e64f5bfa20f9bee7b3287f06371e7b47f57a586d5b35742f2",
+                  "ev-99fb556a723d709017100ac956a37bc050be7a6bd5f0b4b62e282913ff47a8ba"
+                ]
+              },
+              {
+                "family": "proof",
+                "text": "Kết quả tìm kiếm còn thiếu chứng nhận đầy đủ trong miền đã lưu. Việc so sánh chỉ bao gồm các phương án đã đánh giá, không chứng minh tối ưu toàn cục.",
+                "evidence_ids": [
+                  "ev-1c767c4d0442da031f549109f17975ef1fcb38d661a8e581c2473f97bbada4d8",
+                  "ev-6f86241269a9e7919876dfe79c710efca40c9e8fda26507efcc7ae5a631699cd"
+                ]
+              },
+              {
+                "family": "limitations",
+                "text": "Phí phải trả đã được lưu nhưng chưa xác định là phí giao hàng. Kết quả mô phỏng chưa tạo đơn mua và không phản ánh tiêu thụ thực tế.",
+                "evidence_ids": [
+                  "ev-70db952db00cd331b863c26105d8e519687bd387aaf5aff9aff5d775bd2fed8a",
+                  "ev-ccf376aaecca2f9b486591e1fbc0d812a645f0951ec361c84c5a229c7afe083d",
+                  "ev-7f410f73aac50bf760c7bf314e7745ea53988e78106865257327d67e47a64b24"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "evidence_id": "ev-1c29ccea2f490bc792d6fe50955ba6fdc5651c704f5b4cab1c7427f91677b605",
+                "pointer": "/overview/recommendation_available",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-a48515a4c9ffeff9c8a07b81f47ad922060800fd7edf5012408a3d1d80378863",
+                "pointer": "/overview/configuration",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-c9d1ec6e4f8f105e64f5bfa20f9bee7b3287f06371e7b47f57a586d5b35742f2",
+                "pointer": "/overview/scope",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-99fb556a723d709017100ac956a37bc050be7a6bd5f0b4b62e282913ff47a8ba",
+                "pointer": "/overview/forecast",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-1c767c4d0442da031f549109f17975ef1fcb38d661a8e581c2473f97bbada4d8",
+                "pointer": "/overview/strategies",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-45f5987ed8ad09929e6982abde33430f9744e44e6954084f41ac982bca7515fb",
+                "pointer": "/overview/options",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-c8beb2c6c1ff2844904dd0e17f532abd26b09e399ef0db5489b3bf2194d405ce",
+                "pointer": "/overview/explanation",
+                "source": "retained_C08"
+              },
+              {
+                "evidence_id": "ev-6f86241269a9e7919876dfe79c710efca40c9e8fda26507efcc7ae5a631699cd",
+                "pointer": "/overview/selection_proof",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-ccf376aaecca2f9b486591e1fbc0d812a645f0951ec361c84c5a229c7afe083d",
+                "pointer": "/overview/assumptions",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-7f410f73aac50bf760c7bf314e7745ea53988e78106865257327d67e47a64b24",
+                "pointer": "/overview/omissions",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-22b343c40a60a8a07d3e823d9b03821b6d07018e53805ae899c91c9b19b436fd",
+                "pointer": "/option/option_id",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-70db952db00cd331b863c26105d8e519687bd387aaf5aff9aff5d775bd2fed8a",
+                "pointer": "/option/costs",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-74aa994f8ce873d3b675f4ebc8df08ad4dc9196a3270abd63c5e7fda8877e867",
+                "pointer": "/option/requirements_assessment",
+                "source": "retained_C03"
+              }
+            ],
+            "diagnostics": {
+              "disposition": "ACCEPTED",
+              "reason": "NONE",
+              "prompt_version": "plan_summary_prompt/3",
+              "validator_version": "summary_narrative_guard/2",
+              "requested_model": "google/gemini-2.5-flash",
+              "resolved_model": "google/gemini-2.5-flash",
+              "resolved_provider": "Google",
+              "attempts": 1,
+              "input_tokens": 650,
+              "output_tokens": 443
+            },
+            "renderer_version": "plan_summary_renderer/2"
+          },
+          "error_code": null
+        },
+        "meta": {
+          "request_id": "synthetic-s2-example"
+        },
+        "error": null
+      }
+    },
+    {
+      "operation_id": "AS01",
+      "example": "summary_owner_gemini_s21",
+      "method": "POST",
+      "path": "/api/v1/procurement-plans/db5ee8f7-f8b5-454c-9cd9-f9f4f0ad9f6c/assistant/summary",
+      "body": {
+        "expected_evidence_version": "646df0c693034c95bc12912118aeadd2695240a727445f701a7fcc5298f0f3c1",
+        "option_id": null,
+        "locale": "vi",
+        "detail_level": "simple"
+      },
+      "headers": {
+        "Idempotency-Key": "d69fc5d8-a738-4f15-9260-131067a3a249"
+      },
+      "response": {
+        "data": {
+          "generation_id": "c6b951ee-0cbb-48b1-8257-2ac47113a9ef",
+          "run_id": "db5ee8f7-f8b5-454c-9cd9-f9f4f0ad9f6c",
+          "status": "completed",
+          "created_at": "2026-10-10T02:00:00Z",
+          "finished_at": "2026-10-10T02:00:00Z",
+          "result": {
+            "schema_version": "plan_summary/1",
+            "identity": {
+              "run_id": "db5ee8f7-f8b5-454c-9cd9-f9f4f0ad9f6c",
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "aggregate_digest": "646df0c693034c95bc12912118aeadd2695240a727445f701a7fcc5298f0f3c1",
+              "input_digest": "9995c851b4ac5628d9285dfd57d202a36d6459c7070c980223b7c0720166b989",
+              "result_digest": "f86c3bf855037452a3cdea1c7d54390fbe69fcfc2571c946d2e252ece4a3e549",
+              "request_digest": "dc7495f9558ee209d6677f871a4377cdffda6076611de9900c5944985fd6beb9",
+              "storage_version": "planning_storage/1",
+              "package_schema_version": 1,
+              "result_schema_version": "operational_pipeline/2",
+              "capture_schema_version": "operational_capture/2",
+              "accepted_at": "2026-10-08T00:00:00Z",
+              "started_at": "2026-10-08T00:00:00Z",
+              "finished_at": "2026-10-08T00:00:00Z",
+              "captured_at": "2026-10-08T00:00:00Z"
+            },
+            "option_id": "cmp1_946c480de804be643984aa3453d5b93a49e85758310e7bb9af6693e923fbad1d",
+            "locale": "vi",
+            "detail_level": "simple",
+            "source": "model_presentation",
+            "presentation": {
+              "ordering": [
+                "outcome",
+                "cost",
+                "requirements",
+                "coverage",
+                "proof",
+                "limitations"
+              ],
+              "tone": "plain"
+            },
+            "answer": "Có phương án mua hàng được đề xuất cho kế hoạch này. Tổng chi dự kiến cho phương án được đề xuất là 6.75 VND, gồm 6 VND tiền mua và 0.75 VND phí phải trả. Đề xuất mua 20 g “Sữa tươi”. Đề xuất mua 20 g “Sữa đặc”.\n\nPhương án đáp ứng các yêu cầu đã được đánh giá trong phạm vi này.\n\nPhạm vi kế hoạch gồm 2/2 món.\n\nĐề xuất dựa trên các phương án đã đánh giá; vẫn có thể còn phương án khác chưa được tìm thấy.",
+            "claims": [
+              {
+                "family": "outcome",
+                "text": "Có phương án mua hàng được đề xuất cho kế hoạch này.",
+                "evidence_ids": [
+                  "ev-1c29ccea2f490bc792d6fe50955ba6fdc5651c704f5b4cab1c7427f91677b605",
+                  "ev-c8beb2c6c1ff2844904dd0e17f532abd26b09e399ef0db5489b3bf2194d405ce"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Tổng chi dự kiến cho phương án được đề xuất là 6.75 VND, gồm 6 VND tiền mua và 0.75 VND phí phải trả.",
+                "evidence_ids": [
+                  "ev-22b343c40a60a8a07d3e823d9b03821b6d07018e53805ae899c91c9b19b436fd",
+                  "ev-70db952db00cd331b863c26105d8e519687bd387aaf5aff9aff5d775bd2fed8a"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Đề xuất mua 20 g “Sữa tươi”.",
+                "evidence_ids": [
+                  "ev-0537ce2f8c29587795c66fcaa5b98e36e96d3ad98eb11daa255a9024521119f9",
+                  "ev-58b033501937f145887bfb19a095893efec3676850dcf9b84a472ad30fff9677"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Đề xuất mua 20 g “Sữa đặc”.",
+                "evidence_ids": [
+                  "ev-0537ce2f8c29587795c66fcaa5b98e36e96d3ad98eb11daa255a9024521119f9",
+                  "ev-58b033501937f145887bfb19a095893efec3676850dcf9b84a472ad30fff9677"
+                ]
+              },
+              {
+                "family": "requirements",
+                "text": "Phương án đáp ứng các yêu cầu đã được đánh giá trong phạm vi này.",
+                "evidence_ids": [
+                  "ev-74aa994f8ce873d3b675f4ebc8df08ad4dc9196a3270abd63c5e7fda8877e867"
+                ]
+              },
+              {
+                "family": "coverage",
+                "text": "Phạm vi kế hoạch gồm 2/2 món.",
+                "evidence_ids": [
+                  "ev-c9d1ec6e4f8f105e64f5bfa20f9bee7b3287f06371e7b47f57a586d5b35742f2"
+                ]
+              },
+              {
+                "family": "proof",
+                "text": "Đề xuất dựa trên các phương án đã đánh giá; vẫn có thể còn phương án khác chưa được tìm thấy.",
+                "evidence_ids": [
+                  "ev-1c767c4d0442da031f549109f17975ef1fcb38d661a8e581c2473f97bbada4d8",
+                  "ev-6f86241269a9e7919876dfe79c710efca40c9e8fda26507efcc7ae5a631699cd"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "evidence_id": "ev-1c29ccea2f490bc792d6fe50955ba6fdc5651c704f5b4cab1c7427f91677b605",
+                "pointer": "/overview/recommendation_available",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-c9d1ec6e4f8f105e64f5bfa20f9bee7b3287f06371e7b47f57a586d5b35742f2",
+                "pointer": "/overview/scope",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-1c767c4d0442da031f549109f17975ef1fcb38d661a8e581c2473f97bbada4d8",
+                "pointer": "/overview/strategies",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-c8beb2c6c1ff2844904dd0e17f532abd26b09e399ef0db5489b3bf2194d405ce",
+                "pointer": "/overview/explanation",
+                "source": "retained_C08"
+              },
+              {
+                "evidence_id": "ev-6f86241269a9e7919876dfe79c710efca40c9e8fda26507efcc7ae5a631699cd",
+                "pointer": "/overview/selection_proof",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-58b033501937f145887bfb19a095893efec3676850dcf9b84a472ad30fff9677",
+                "pointer": "/overview/ingredients",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-22b343c40a60a8a07d3e823d9b03821b6d07018e53805ae899c91c9b19b436fd",
+                "pointer": "/option/option_id",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-70db952db00cd331b863c26105d8e519687bd387aaf5aff9aff5d775bd2fed8a",
+                "pointer": "/option/costs",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-0537ce2f8c29587795c66fcaa5b98e36e96d3ad98eb11daa255a9024521119f9",
+                "pointer": "/option/purchases",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-74aa994f8ce873d3b675f4ebc8df08ad4dc9196a3270abd63c5e7fda8877e867",
+                "pointer": "/option/requirements_assessment",
+                "source": "retained_C03"
+              }
+            ],
+            "diagnostics": {
+              "disposition": "ACCEPTED",
+              "reason": "NONE",
+              "prompt_version": "plan_summary_prompt/4",
+              "validator_version": "summary_owner_guard/3",
+              "requested_model": "google/gemini-2.5-flash",
+              "resolved_model": "google/gemini-2.5-flash",
+              "resolved_provider": "Google",
+              "attempts": 1,
+              "input_tokens": 1132,
+              "output_tokens": 302
+            },
+            "renderer_version": "plan_summary_renderer/3"
+          },
+          "error_code": null
+        },
+        "meta": {
+          "request_id": "synthetic-s21-review"
+        },
+        "error": null
+      },
+      "provenance": "Synthetic real Gemini/Google S2.1 A; Codex review, not human UX/production acceptance"
+    },
+    {
+      "operation_id": "AS01",
+      "example": "summary_owner_s3_warning_fake",
+      "method": "POST",
+      "path": "/api/v1/procurement-plans/4654be39-78fe-49f6-bd90-e462d0efe702/assistant/summary",
+      "body": {
+        "expected_evidence_version": "cce6ff9abd8b2ac13e2e7c9106d0c31695d172be776cdc3b5c372d86507d171e",
+        "option_id": null,
+        "locale": "vi",
+        "detail_level": "simple"
+      },
+      "response": {
+        "data": {
+          "generation_id": "856d0f8d-b163-47fc-b8fc-d74ff67f15aa",
+          "run_id": "4654be39-78fe-49f6-bd90-e462d0efe702",
+          "status": "completed",
+          "created_at": "2026-10-10T02:00:00Z",
+          "finished_at": "2026-10-10T02:00:00Z",
+          "result": {
+            "schema_version": "plan_summary/1",
+            "identity": {
+              "run_id": "4654be39-78fe-49f6-bd90-e462d0efe702",
+              "store_id": "00000000-0000-0000-0000-000000000001",
+              "aggregate_digest": "cce6ff9abd8b2ac13e2e7c9106d0c31695d172be776cdc3b5c372d86507d171e",
+              "input_digest": "0afd21624bd5c5fe15b259380a48689ef39280b50092a1395bde1a8fdfc5edc0",
+              "result_digest": "a9f9ef49d4a893f80357f21f3162295859cc1d954e0a537386e1ffe3644ec65d",
+              "request_digest": "dc7495f9558ee209d6677f871a4377cdffda6076611de9900c5944985fd6beb9",
+              "storage_version": "planning_storage/1",
+              "package_schema_version": 1,
+              "result_schema_version": "operational_pipeline/2",
+              "capture_schema_version": "operational_capture/2",
+              "accepted_at": "2026-10-08T00:00:00Z",
+              "started_at": "2026-10-08T00:00:00Z",
+              "finished_at": "2026-10-08T00:00:00Z",
+              "captured_at": "2026-10-08T00:00:00Z"
+            },
+            "option_id": "cmp1_879a179ad57b8f2ca785adb8d915772c0d2028460f80d205865fd30569b19353",
+            "locale": "vi",
+            "detail_level": "simple",
+            "source": "model_presentation",
+            "presentation": {
+              "ordering": [
+                "outcome",
+                "cost",
+                "requirements",
+                "coverage",
+                "proof",
+                "limitations"
+              ],
+              "tone": "plain"
+            },
+            "answer": "Có phương án mua hàng được đề xuất cho kế hoạch này. Tổng chi dự kiến cho phương án được đề xuất là 10 VND. Các lượng mua đề xuất dưới đây thuộc từng dòng mua, không phải tổng lượng theo nguyên liệu. Dòng mua số 1: đề xuất 20 g “Sữa tươi”, dự kiến nhận ngày 2026-10-08. Dòng mua số 2: đề xuất 20 g “Sữa đặc”, dự kiến nhận ngày 2026-10-08.\n\nPhương án đáp ứng các yêu cầu đã được đánh giá trong phạm vi này.\n\nPhạm vi kế hoạch gồm 2/2 món.\n\nĐề xuất dựa trên các phương án đã đánh giá; vẫn có thể còn phương án khác chưa được tìm thấy.\n\nDự báo đã dùng phương pháp dự phòng; cần xem giới hạn dự báo trong chi tiết. Kế hoạch có thông tin lưu ý đã ghi nhận; cần xem chi tiết trước khi quyết định mua hàng.",
+            "claims": [
+              {
+                "family": "outcome",
+                "text": "Có phương án mua hàng được đề xuất cho kế hoạch này.",
+                "evidence_ids": [
+                  "ev-94b481622cd007193809cfe36dd396d6aac3c0fa45e2a13dd4053121d8ac4913",
+                  "ev-994d61f09186a05d8107cd8c43f380fa6bfc3272afebd3611df290a4c771904e"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Tổng chi dự kiến cho phương án được đề xuất là 10 VND.",
+                "evidence_ids": [
+                  "ev-bedb279199e3bddcc6169c926401764e3b8313886234bc26b00c95eacab63978",
+                  "ev-58d6dd8e327bd19b4792ccf5a7def79b44521e86a45cac270fafde05c2ddd25b"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Các lượng mua đề xuất dưới đây thuộc từng dòng mua, không phải tổng lượng theo nguyên liệu.",
+                "evidence_ids": [
+                  "ev-bc17f7eaa40c0dde88355d6704105d9586398299bcb1e39e855a7ceafb74b88a",
+                  "ev-99c98133a249797d129bf7b5f1fe78714c690bdd006407a6cddd21f9b82dbae3"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Dòng mua số 1: đề xuất 20 g “Sữa tươi”, dự kiến nhận ngày 2026-10-08.",
+                "evidence_ids": [
+                  "ev-bc17f7eaa40c0dde88355d6704105d9586398299bcb1e39e855a7ceafb74b88a",
+                  "ev-99c98133a249797d129bf7b5f1fe78714c690bdd006407a6cddd21f9b82dbae3"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Dòng mua số 2: đề xuất 20 g “Sữa đặc”, dự kiến nhận ngày 2026-10-08.",
+                "evidence_ids": [
+                  "ev-bc17f7eaa40c0dde88355d6704105d9586398299bcb1e39e855a7ceafb74b88a",
+                  "ev-99c98133a249797d129bf7b5f1fe78714c690bdd006407a6cddd21f9b82dbae3"
+                ]
+              },
+              {
+                "family": "requirements",
+                "text": "Phương án đáp ứng các yêu cầu đã được đánh giá trong phạm vi này.",
+                "evidence_ids": [
+                  "ev-a7b86b851d46fcdc222dd27cf3f2c406622b0a254238fde088fc55c676a38dcc"
+                ]
+              },
+              {
+                "family": "coverage",
+                "text": "Phạm vi kế hoạch gồm 2/2 món.",
+                "evidence_ids": [
+                  "ev-fcf0f38b467650146967535f60cbfd53c9658b981c556bb46209626c942d3e0f"
+                ]
+              },
+              {
+                "family": "proof",
+                "text": "Đề xuất dựa trên các phương án đã đánh giá; vẫn có thể còn phương án khác chưa được tìm thấy.",
+                "evidence_ids": [
+                  "ev-307549c4b209eb1c444211f478983b4db61eacc0dad11443328a43755cc54a8a",
+                  "ev-c30748aa83cfd4b2700acd61074f63ff3d4bd5c9244b2585b59c8d78fcca66b0"
+                ]
+              },
+              {
+                "family": "limitations",
+                "text": "Dự báo đã dùng phương pháp dự phòng; cần xem giới hạn dự báo trong chi tiết.",
+                "evidence_ids": [
+                  "ev-994d61f09186a05d8107cd8c43f380fa6bfc3272afebd3611df290a4c771904e",
+                  "ev-670fa0a47ff9a99133dc13232e4f42ad7b2fcfbffe74ca09fc5b2313eefe9ceb"
+                ]
+              },
+              {
+                "family": "limitations",
+                "text": "Kế hoạch có thông tin lưu ý đã ghi nhận; cần xem chi tiết trước khi quyết định mua hàng.",
+                "evidence_ids": [
+                  "ev-994d61f09186a05d8107cd8c43f380fa6bfc3272afebd3611df290a4c771904e",
+                  "ev-670fa0a47ff9a99133dc13232e4f42ad7b2fcfbffe74ca09fc5b2313eefe9ceb"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "evidence_id": "ev-94b481622cd007193809cfe36dd396d6aac3c0fa45e2a13dd4053121d8ac4913",
+                "pointer": "/overview/recommendation_available",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-fcf0f38b467650146967535f60cbfd53c9658b981c556bb46209626c942d3e0f",
+                "pointer": "/overview/scope",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-670fa0a47ff9a99133dc13232e4f42ad7b2fcfbffe74ca09fc5b2313eefe9ceb",
+                "pointer": "/overview/forecast",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-307549c4b209eb1c444211f478983b4db61eacc0dad11443328a43755cc54a8a",
+                "pointer": "/overview/strategies",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-994d61f09186a05d8107cd8c43f380fa6bfc3272afebd3611df290a4c771904e",
+                "pointer": "/overview/explanation",
+                "source": "retained_C08"
+              },
+              {
+                "evidence_id": "ev-c30748aa83cfd4b2700acd61074f63ff3d4bd5c9244b2585b59c8d78fcca66b0",
+                "pointer": "/overview/selection_proof",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-99c98133a249797d129bf7b5f1fe78714c690bdd006407a6cddd21f9b82dbae3",
+                "pointer": "/overview/ingredients",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-bedb279199e3bddcc6169c926401764e3b8313886234bc26b00c95eacab63978",
+                "pointer": "/option/option_id",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-58d6dd8e327bd19b4792ccf5a7def79b44521e86a45cac270fafde05c2ddd25b",
+                "pointer": "/option/costs",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-bc17f7eaa40c0dde88355d6704105d9586398299bcb1e39e855a7ceafb74b88a",
+                "pointer": "/option/purchases",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-a7b86b851d46fcdc222dd27cf3f2c406622b0a254238fde088fc55c676a38dcc",
+                "pointer": "/option/requirements_assessment",
+                "source": "retained_C03"
+              }
+            ],
+            "diagnostics": {
+              "disposition": "ACCEPTED",
+              "reason": "NONE",
+              "prompt_version": "plan_summary_prompt/5",
+              "validator_version": "summary_owner_guard/4",
+              "requested_model": "S3-SYNTHETIC-d596d93b-9b6c-497a-b912-8a49e8e96087",
+              "resolved_model": null,
+              "resolved_provider": null,
+              "attempts": 1,
+              "input_tokens": null,
+              "output_tokens": null
+            },
+            "renderer_version": "plan_summary_renderer/4"
+          },
+          "error_code": null
+        },
+        "meta": {
+          "request_id": "synthetic-s3-offline"
+        },
+        "error": null
+      },
+      "provenance": "Synthetic S3 retained input → real HTTP/PostgreSQL → fake provider. NO live Gemini on profile/6."
     }
   ]
 }

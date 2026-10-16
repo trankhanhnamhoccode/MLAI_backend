@@ -1,4 +1,4 @@
-"""L2 summary boundary: provider controls presentation, never factual assertions."""
+"""Versioned public summary boundary; backend retains authority over every fact."""
 from typing import Literal
 from uuid import UUID
 from pydantic import AwareDatetime, Field, model_validator
@@ -35,19 +35,19 @@ class SummaryProfile(DTO):
     enabled: bool = False
     model: str = Field(min_length=1,max_length=200)
     providers: tuple[str,...] = ()
-    max_tokens: int = Field(default=256,ge=64,le=1024)
+    max_tokens: int = Field(default=256,ge=64,le=4096)
     input_bytes: int = Field(default=16000,ge=1000,le=64000)
     timeout_seconds: float = Field(default=20.0,gt=0,le=30)
     deadline_seconds: float = Field(default=25.0,gt=0,le=60)
     attempts: int = Field(default=1,ge=1,le=2)
-    version: Literal['summary_profile/1'] = 'summary_profile/1'
+    version: Literal['summary_profile/1','summary_profile/2','summary_profile/3','summary_profile/4','summary_profile/5','summary_profile/6'] = 'summary_profile/1'
 
 
 class SummaryDiagnostics(DTO):
     disposition: Literal['ACCEPTED','FALLBACK']
     reason: Literal['NONE','MODEL_DISABLED','PROVIDER_UNAVAILABLE','SCHEMA_REJECTED','GROUNDING_REJECTED','INPUT_LIMIT','PROCESS_INTERRUPTED']
-    prompt_version: Literal['plan_summary_prompt/1'] = 'plan_summary_prompt/1'
-    validator_version: Literal['summary_presentation_guard/1'] = 'summary_presentation_guard/1'
+    prompt_version: Literal['plan_summary_prompt/1','plan_summary_prompt/2','plan_summary_prompt/3','plan_summary_prompt/4','plan_summary_prompt/5'] = 'plan_summary_prompt/1'
+    validator_version: Literal['summary_presentation_guard/1','summary_narrative_guard/2','summary_owner_guard/3','summary_owner_guard/4'] = 'summary_presentation_guard/1'
     requested_model: str | None
     resolved_model: str | None = Field(default=None,max_length=200)
     resolved_provider: str | None = Field(default=None,max_length=200)
@@ -74,7 +74,7 @@ class SummaryAnswer(DTO):
     claims: tuple[SummaryClaim,...]
     references: tuple[EvidenceReference,...]
     diagnostics: SummaryDiagnostics
-    renderer_version: Literal['plan_summary_renderer/1'] = 'plan_summary_renderer/1'
+    renderer_version: Literal['plan_summary_renderer/1','plan_summary_renderer/2','plan_summary_renderer/3','plan_summary_renderer/4'] = 'plan_summary_renderer/1'
 
 
 class SummaryGeneration(DTO):

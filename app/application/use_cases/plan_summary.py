@@ -12,6 +12,10 @@ from app.application.contracts.plan_summary import (
 )
 from app.application.decision_evidence_projection import project_evidence
 from app.application.plan_summary_rendering import render_summary, DEFAULT_EXPRESSION
+from app.application.summary_narrative import versions, render_narrative, replay_narrative, diagnostics_v2,expand_compact,communication_plan
+from app.application.contracts.summary_narrative import SummaryNarrative
+from app.application.owner_summary import render_owner,replay_owner
+from app.application.owner_summary_v2 import render_owner as render_owner_v2,replay_owner as replay_owner_v2
 from app.application.planning_serialization import digest, canonical_bytes
 from app.application.use_cases.planning_public import READ_PERMISSIONS
 from app.infrastructure.database.auth_session import auth_session
@@ -71,7 +75,7 @@ class PlanSummaries:
             raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
         expected = digest('summary-identity',dict(actor=record.actor_id,run=record.run_id,store=record.store_id,
             request=record.request,profile=record.profile,evidence=record.evidence_digest,
-            renderer='plan_summary_renderer/1',prompt='plan_summary_prompt/1',schema='plan_summary/1',validator='summary_presentation_guard/1'))
+            **versions(record.profile)))
         if expected != record.identity_digest: raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
         if record.result:
             diagnostics=record.result.diagnostics
@@ -83,7 +87,12 @@ class PlanSummaries:
             if diagnostics.disposition=='ACCEPTED' and (not record.profile.enabled or diagnostics.reason!='NONE'):
                 raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
             expression = record.result.presentation
-            expected_result = render_summary(evidence,record.request,record.result.diagnostics,expression)
+            try:
+                expected_result = (replay_owner_v2(evidence,record.request,record.result) if record.profile.version=='summary_profile/6' else replay_owner(evidence,record.request,record.result) if record.profile.version=='summary_profile/5' else replay_narrative(evidence,record.request,record.result)
+                    if record.profile.version in {'summary_profile/2','summary_profile/3','summary_profile/4'} else
+                    render_summary(evidence,record.request,record.result.diagnostics,expression))
+            except ValueError as error:
+                raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503) from error
             if canonical_bytes(expected_result) != canonical_bytes(record.result):
                 raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
 
@@ -153,8 +162,7 @@ class PlanSummaries:
                 run = PlanningRepository(session).get(store,run_id)
                 if run.record_digest != request.expected_evidence_version: raise ConfigurationError('EVIDENCE_VERSION_CONFLICT',409)
                 identity = digest('summary-identity',dict(actor=actor.user_id,run=run_id,store=store,request=request,
-                    profile=self.profile,evidence=evidence_digest,renderer='plan_summary_renderer/1',prompt='plan_summary_prompt/1',
-                    schema='plan_summary/1',validator='summary_presentation_guard/1'))
+                    profile=self.profile,evidence=evidence_digest,**versions(self.profile)))
                 claimed = SummaryGeneration(generation_id=uuid4(),run_id=run_id,store_id=store,actor_id=actor.user_id,
                     identity_digest=identity,request=request,profile=self.profile,evidence_digest=evidence_digest,
                     process=current_process(),claim_token=uuid4(),created_at=self.clock(),finished_at=None,
@@ -187,27 +195,49 @@ class PlanSummaries:
             return existing
         try:
             profile,provider=claimed.profile,self.provider
+            narrative_mode = profile.version in {'summary_profile/2','summary_profile/3','summary_profile/4'}
+            owner_mode=profile.version in {'summary_profile/5','summary_profile/6'}
+            renderer = (render_owner_v2 if profile.version=='summary_profile/6' else render_owner) if owner_mode else render_narrative if narrative_mode else render_summary
             fallback_diagnostics = SummaryDiagnostics(disposition='FALLBACK',reason='MODEL_DISABLED',requested_model=None)
-            answer = render_summary(evidence,request,fallback_diagnostics)
+            if profile.version=='summary_profile/4':fallback_diagnostics=fallback_diagnostics.model_copy(update={'prompt_version':'plan_summary_prompt/3'})
+            answer = renderer(evidence,request,fallback_diagnostics)
             if profile.enabled:
                 try:
                     payload = payload_for(evidence,request,answer,profile)
+                    # Payload selection may take time. Repeat current rights at
+                    # dispatch, then release the connection before any network.
+                    with auth_session(self.engine) as session:
+                        self._authority(session,token,run_id,csrf)
+                        session.commit()
                     presented = provider.present(payload,profile)  # No Session or transaction alive here.
                     expression = SummaryExpression.model_validate(presented.expression.model_dump()) if presented.expression else DEFAULT_EXPRESSION
                     diagnostics = SummaryDiagnostics.model_validate(presented.diagnostics.model_dump())
-                    if diagnostics.disposition == 'ACCEPTED' and presented.expression is None:
+                    if diagnostics.disposition == 'ACCEPTED' and not (presented.compact if profile.version in {'summary_profile/4','summary_profile/5','summary_profile/6'} else presented.narrative if narrative_mode else presented.expression):
                         raise ValueError('Missing material presentation')
                     if diagnostics.requested_model != profile.model or diagnostics.resolved_model not in (None,profile.model):
                         raise ValueError('Provider model identity differs from accepted profile')
                     if profile.providers and diagnostics.resolved_provider is not None and diagnostics.resolved_provider not in profile.providers:
                         raise ValueError('Provider route differs from accepted profile')
+                    if owner_mode and diagnostics.disposition=='ACCEPTED':
+                        try:answer=renderer(evidence,request,diagnostics,presented.compact)
+                        except ValueError:diagnostics=diagnostics.model_copy(update={'disposition':'FALLBACK','reason':'GROUNDING_REJECTED'})
+                    elif narrative_mode:
+                        diagnostics = diagnostics_v2(diagnostics)
+                        if diagnostics.disposition == 'ACCEPTED':
+                            try:
+                                narrative = expand_compact(communication_plan(evidence,request),presented.compact) if profile.version=='summary_profile/4' else SummaryNarrative.model_validate(presented.narrative.model_dump())
+                                answer = render_narrative(evidence,request,diagnostics,narrative)
+                            except ValueError:
+                                diagnostics = diagnostics.model_copy(update={'disposition':'FALLBACK','reason':'GROUNDING_REJECTED'})
                 except (ValueError,ValidationError) as error:
                     diagnostics = SummaryDiagnostics(disposition='FALLBACK',reason='INPUT_LIMIT' if str(error)=='INPUT_LIMIT' else 'SCHEMA_REJECTED',requested_model=profile.model)
                     expression = DEFAULT_EXPRESSION
                 except (OSError,TimeoutError):
                     diagnostics = SummaryDiagnostics(disposition='FALLBACK',reason='PROVIDER_UNAVAILABLE',requested_model=profile.model)
                     expression = DEFAULT_EXPRESSION
-                answer = render_summary(evidence,request,diagnostics,expression)
+                if (not narrative_mode and not owner_mode) or diagnostics.disposition != 'ACCEPTED':
+                    if profile.version=='summary_profile/4':diagnostics=diagnostics.model_copy(update={'prompt_version':'plan_summary_prompt/3'})
+                    answer = renderer(evidence,request,diagnostics,expression) if not (narrative_mode or owner_mode) else renderer(evidence,request,diagnostics)
             self._publish(claimed,answer,token=token,csrf=csrf)
         except AuthError as primary:
             try: self._publish(claimed,error='AUTHORITY_CHANGED')

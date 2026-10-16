@@ -2,6 +2,45 @@
 
 ## Source v? ?i?m b?t ??u
 
+CURRENT FACT S1 isolated WIP: the source OpenAPI now admits summary `/2` renderer,
+prompt and validator values in three existing fields; paths/DTO fields remain
+unchanged. The added `summary_narrative_fake_provider` example is labelled offline
+projection; older examples keep their original pins. See the
+[canonical summary contract](../PROCUREMENT_API_CONTRACT_VI.md#185-as01as02--current-fact-summary-contract)
+and [feature limits](../features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative).
+This WIP does not update a published ZIP, FE or runtime8103.
+
+CURRENT FACT S2 WIP additionally admits prompt_version `plan_summary_prompt/3`.
+The `summary_narrative_gemini_s2` row is a labelled synthetic real-Gemini AS01
+example on profile/4; historical rows keep their original text/pins. Current
+[S2 acceptance and limits](../features/DECISION_ASSISTANT.md#current-fact--s2-gemini-acceptance-and-limits)
+are Codex-graded, not independent human or production acceptance.
+
+CURRENT FACT bounded summary: AS01 `POST /api/v1/procurement-plans/{plan_id}/assistant/summary`
+and AS02 `GET` at the same path plus `/{generation_id}` keep their public DTOs.
+AS01 body explicitly supplies expected_evidence_version from retained C03,
+option_id (null uses winner; explicit viewed option remains scoped), locale and
+detail_level. Current Store/session plus planning.result.read, budget.read and
+procurement.cost.read are all required; AS01 additionally needs exact Origin,
+fresh CSRF and UUID Idempotency-Key. Retain non-secret intent across uncertain
+delivery and replay same key/body; never create a new key silently. AS02/replay
+does not call a provider or change historical renderer. Fenced recovery and lost
+ACK semantics follow the canonical Planning contract.
+
+New composition is profile/6, selection/2, prompt/5, renderer/4, guard/4, compact
+internal schema/3. Render public result.answer and optionally claims/references,
+source and diagnostics; do not expect internal headline/key_points wire fields.
+model_presentation means bounded validated wording; deterministic_fallback remains
+usable when OFF/unavailable/rejected. New claims may repeat families or omit
+inapplicable ones. Required warning/line-scope qualifiers stay visible; list lines
+are not Ingredient totals. Summary never creates an order or mutates PlanningRun.
+Provider defaults remain OFF. `summary_owner_s3_warning_fake` is labelled offline
+fake-provider; old synthetic live examples retain original profile/4-/5 pins.
+[Feature](../features/DECISION_ASSISTANT.md#current-fact--bounded-owner-summary) owns
+config/limits; [Planning18](../PROCUREMENT_API_CONTRACT_VI.md#185-as01as02--current-fact-summary-contract)
+owns workflow/errors. Local integration does not certify FE/browser, final-source
+Gemini or production behavior and does not activate runtime8103.
+
 CURRENT FACT: combined backend c? **76 operations / 69 paths**, migration head
 `l5_20261016_assistant_f4` (merge0030 v? f4_20261016_metadata_v2). Recovery checkpoint
 `2e4a048` ???c merge gi? l?ch s? v?i Assistant main `e499112` t?i `e48c74a`.

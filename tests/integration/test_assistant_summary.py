@@ -25,7 +25,7 @@ from app.application.contracts.plan_summary import SummaryDiagnostics
 
 
 @pytest.fixture
-def assistant(env):
+def assistant(env, request):
     from sqlalchemy.engine import make_url
     target = make_url(env[0].database_url)
     assert (target.database, target.username, target.host, target.port) in {
@@ -33,9 +33,14 @@ def assistant(env):
         ('shelfcash_integration_test', 'shelfcash_integration_tester', '127.0.0.1', 5441),
         # Separate recovery/handoff integration instance; never reuse sibling L5 DB.
         ('shelfcash_integration_test', 'shelfcash_integration_tester', '127.0.0.1', 5442),
+        ('shelfcash_assistant_test', 'shelfcash_assistant_tester', '127.0.0.1', 5443),
+        # This task's S3 disposable target; never reset retained live state5443.
+        ('shelfcash_assistant_test', 'shelfcash_assistant_tester', '127.0.0.1', 5445),
+        # Separate S3 baseline comparison target, owned by this same task.
+        ('shelfcash_assistant_test', 'shelfcash_assistant_tester', '127.0.0.1', 5446),
     }, 'Only the owned Assistant or L5 disposable target'
     owner=setup(env)
-    record=retained_record(actor_id=owner.user_id)
+    record=retained_record(getattr(request,'param','stock'),actor_id=owner.user_id)
     row=row_for(record)
     with Session(env[1]) as s:
         s.add(Store(id=record.store_id,name='Frozen synthetic Store',timezone='UTC',currency='VND',active=True))
@@ -267,7 +272,8 @@ def test_additive_migration_parity_and_terminal_immutability(assistant):
     with pytest.raises(Exception):command.downgrade(migration_config(),'0027_self_service_stores')
 
 
-def test_dead_process_explicit_replay_never_reissues_provider_attempt(assistant):
+@pytest.mark.parametrize('profile_version',['summary_profile/1','summary_profile/2'])
+def test_dead_process_explicit_replay_never_reissues_provider_attempt(assistant,profile_version):
     env,record,service,headers,body,path=assistant
     code='''
 import os,json
@@ -283,16 +289,21 @@ engine=create_database_engine(Settings(_env_file=None))
 auth=AuthUseCases(engine,clock=lambda:datetime(2026,10,10,2,tzinfo=timezone.utc))
 class Crash:
  def present(self,*args):os._exit(17)
-service=PlanSummaries(PublicPlanning(auth,None),SummaryProfile(enabled=True,model='mock-qwen',providers=('mock',)),Crash(),clock=auth.clock)
+service=PlanSummaries(PublicPlanning(auth,None),SummaryProfile(enabled=True,model='mock-qwen',providers=('mock',),version=os.environ['SUMMARY_TEST_PROFILE']),Crash(),clock=auth.clock)
 service.create(os.environ['ASSISTANT_SESSION'],UUID(os.environ['ASSISTANT_RUN']),SummaryRequest(**json.loads(os.environ['ASSISTANT_BODY'])),os.environ['ASSISTANT_KEY'],os.environ['ASSISTANT_CSRF'])
 '''
     token=env[5].cookies.get('__Host-shelfcash_session') or env[5].cookies.get('shelfcash_dev_session')
     child=subprocess.run([sys.executable,'-B','-c',code],capture_output=True,text=True,timeout=30,
-        env={**os.environ,'ASSISTANT_RUN':str(record.run_id),'ASSISTANT_BODY':json.dumps(body),
+        env={**os.environ,'SUMMARY_TEST_PROFILE':profile_version,'ASSISTANT_RUN':str(record.run_id),'ASSISTANT_BODY':json.dumps(body),
             'ASSISTANT_SESSION':token,'ASSISTANT_KEY':headers['Idempotency-Key'],'ASSISTANT_CSRF':headers['X-CSRF-Token']})
     assert child.returncode==17,child.stderr
     with Session(env[1]) as s:
-        row=s.scalar(select(PlanSummaryGeneration));ident=row.id
+        from app.infrastructure.auth_crypto import digest as key_digest
+        row=s.scalar(select(PlanSummaryGeneration).join(PlanSummaryReceipt,
+            PlanSummaryReceipt.generation_id==PlanSummaryGeneration.id).where(
+            PlanSummaryReceipt.actor_id==record.actor_id,PlanSummaryReceipt.run_id==record.run_id,
+            PlanSummaryReceipt.key_digest==key_digest(headers['Idempotency-Key'])))
+        ident=row.id
         assert row.status=='running'
     read=env[5].get(path+'/'+str(ident))
     assert read.status_code==200 and read.json()['data']['status']=='running'

@@ -1534,7 +1534,7 @@ contains DTO-validated synthetic examples and the unchanged AS01/AS02/AS03 workf
 | Internal scoped evidence | IMPLEMENTED | Cold durable consistency checks; cache chỉ optimization; overview/option/Ingredient |
 | AS01/AS02 summary | IMPLEMENTED | PostgreSQL lifecycle/HTTP/deterministic fallback; fake-provider VERIFIED |
 | On-demand chat AS03 | IMPLEMENTED WIP | Scoped conversational prose/fallback, clarification/history, fenced provider lifecycle and immutable replay |
-| Unrestricted model prose / general entailment | UNAVAILABLE | L3 conservative assertion grammar; L2 summary still presentation ordering/tone only |
+| Unrestricted model prose / general entailment | UNAVAILABLE | L3 conservative assertion grammar; S1 summary uses a separate bounded clause vocabulary |
 | Backend integration / FE acceptance | BACKEND SOURCE INTEGRATED | L5 offline/fake-provider checks; browser/deployment PENDING, no new combined-source live call |
 | Chat what-if, ordering, config/inventory mutation | UNAVAILABLE | Không thuộc contract này |
 
@@ -1687,7 +1687,7 @@ deadline/price limits. Model OFF remains default. CHAT_COMPLETION_LIMIT defaults
 deadline/cost reservation. Metadata support/prices are preflighted before each
 completion, with no model/provider substitution. Only known schema-valid semantic
 failures may regenerate once; unknown transport billing is never blindly retried.
-Summary AS01/AS02 remain constrained presentation; Import is unchanged.
+Summary AS01/AS02 use the separately versioned bounded narrative in §18.5; Import is unchanged.
 
 Optional ChatRequest.context and response.context carry bounded Run/evidence,
 option/pair, Ingredient/Product IDs, pending original question/candidate IDs and
@@ -1807,11 +1807,12 @@ identity=EvidenceIdentity (Run/Store/request/input/result/aggregate versions/dig
 temporal capture times), option_id nullable, locale/detail_level, source:
 deterministic_fallback|model_presentation, presentation:{ordering,tone}, answer,
 claims:[{family,text,evidence_ids}], references:EvidenceReference[], diagnostics,
-renderer_version. Sáu families required: outcome,cost,requirements,coverage,proof,
-limitations; outcome đứng đầu. Typed exact numbers/currency/units từ evidence được
-server render, assessments theo Product/path, không tổng cup/piece hay g/ml.
+renderer_version. Historical profile/1 có sáu families required: outcome,cost,requirements,coverage,proof,
+limitations; outcome đứng đầu. Current profile/6 chọn required/optional/detail-only
+facts; claims có thể lặp family hoặc không có family không áp dụng. Typed exact numbers/currency/units từ evidence được
+server format, assessments theo Product/path, không tổng cup/piece hay g/ml.
 Winner explanation chỉ trong evaluated candidates; finite certificate và UNPROVEN
-giữ nguyên scope. Khi có retained pairwise deltas, summary lấy một cặp liên quan
+giữ nguyên scope. Với profile/1, khi có retained pairwise deltas, summary lấy một cặp liên quan
 option đang xem (hoặc cặp đầu ở overview), giữ chiều sau trừ trước, exact outlay
 và tối đa một Product/path service delta đáng chú ý; không nâng thành global ranking.
 Chưa có causal reasons, profit, actual outcomes hoặc zero-purchase baseline;
@@ -1822,19 +1823,64 @@ không xóa winner lịch sử hoặc nâng failed thành completed. Completed n
 vẫn không được mang winner. Temporal hypothetical-current-capture được cảnh báo
 rõ, không relabel current balances thành tồn lịch sử.
 
-L2 optional model chỉ trả SummaryExpression `{ordering:family[6],tone:plain|brief}`,
+HISTORICAL INFORMATION profile/1: optional model chỉ trả SummaryExpression `{ordering:family[6],tone:plain|brief}`,
 đủ mỗi family đúng một lần; không free text/claims/numbers/citations. Server chọn
 variant đã kiểm và render facts/refs. Đây là constrained presentation, không claim
 free-form Qwen summary quality. Raw assertions dù có đúng số/entity/citation cũng
 reject schema; không dùng numeric matching làm grounding. Mọi final result được
 đối chiếu lại renderer + pinned evidence khi fresh read, kể cả cache/replay.
 
+CURRENT FACT S1: composition mới dùng summary_profile/2 với bounded narrative,
+prompt/renderer `/2`, validator `summary_narrative_guard/2` và internal schema
+`summary_narrative/2`. Model trả text + fact/reference bindings trong headline,
+summary, ba key_points, warning_summary. BE chọn facts, format exact numbers và
+chỉ chấp nhận complete clauses thuộc vocabulary cho đúng fact/family/references;
+phải đủ mọi ý chính, không chỉ kiểm số hoặc ID tồn tại. Đây là diễn đạt bị giới hạn,
+không unrestricted prose hay general entailment. Câu ngoài vocabulary cũng fallback.
+Profile/2 chọn costs/budget, assessments, scope/horizon, proof và relevant warnings;
+không chọn pairwise deltas hoặc forecast metadata làm daily demand. Thiếu evidence
+giữ unavailable; zero purchase vẫn là phương án hợp lệ. Khi failed, reference option
+không trở thành recommendation; chưa chứng minh search không có nghĩa không khả thi.
+
+Public fields và plan_summary/1 giữ nguyên. `answer`/sáu `claims` chứa narrative đã
+validate; source `model_presentation` là wire value giữ lại cho accepted narrative.
+Delta duy nhất: renderer_version thêm plan_summary_renderer/2, prompt_version thêm
+plan_summary_prompt/2, validator_version thêm summary_narrative_guard/2. Không thêm
+route/field/grant. Receipt cũ vẫn trả nguyên result/pins cũ; GET/replay chỉ reconcile
+retained clauses. Fallback mới là deterministic profile/2, không relabel bản cũ.
+Chi tiết input/output/limits ở [feature](features/DECISION_ASSISTANT.md#current-fact--s1-bounded-plan-narrative),
+offline/manual/S2 gates ở [runbook](runbooks/FULL_TEST_FLOW.md#summary-narrative-s1).
+
+HISTORICAL INFORMATION S2 checkpoint070a721: composition chọn summary_profile/4, reasoning disabled,
+prompt plan_summary_prompt/3 và internal schema summary_narrative/3. Google đã
+reject nested schema cũ vì quá nhiều serving states. Compact output chỉ gồm
+clauses `{fact_id,text}`; BE gắn issued references và dùng lại full-clause guard/2
+và renderer/2. Local bounds, đủ mọi selected facts, numbers/entities/units/polarity
+và scoped bindings vẫn bắt buộc. Profile/1-/3 và receipt cũ giữ nguyên meaning/pins.
+Public delta so S1 chỉ thêm plan_summary_prompt/3 vào prompt_version hiện có;
+không thêm field/route/grant. Final-source synthetic live A/B/C/D/F accepted,
+E fallback vì model thiếu reference-only clause. Đây không phải bằng chứng
+unrestricted paraphrase hoặc independent human/production acceptance. Chi tiết
+và giới hạn ở [feature S2](features/DECISION_ASSISTANT.md#current-fact--s2-gemini-acceptance-and-limits).
+
+CURRENT FACT S3: new startup composition uses summary_profile/6, selection/2,
+prompt/5, compact schema/3, renderer/4 and owner guard/4. Required warnings and
+distinct purchase-line qualifiers participate in coverage. Unknown warnings retain
+neutral referenced wording; warnings never change eligibility. At most three lines
+keep original ordinals/arrival dates/quantity/unit, never deduplicating purchases
+as Ingredient totals; shortened lists require a qualifier. Full details stay in
+retained C03/C05/C08. Optional omissions remain valid; diagnostic-only facts are
+not model input. Old profile/5 and prior receipts retain exact original text/pins.
+Public fields/routes/permissions stay unchanged; existing version enums expand.
+[Canonical feature](features/DECISION_ASSISTANT.md#current-fact--bounded-owner-summary)
+owns selection/configuration and historical live-evidence limits.
+
 Diagnostics có disposition=ACCEPTED|FALLBACK, reason=NONE|MODEL_DISABLED|
 PROVIDER_UNAVAILABLE|SCHEMA_REJECTED|GROUNDING_REJECTED|INPUT_LIMIT|
 PROCESS_INTERRUPTED; requested/resolved model/provider nullable, attempts/input/
 output tokens khi biết, prompt/validator versions. Model OFF không gọi provider;
 schema failure, route/model substitution, timeout hoặc vượt bounds trả deterministic
-answer đủ sáu families, không repair/removal. Không raw payload/secrets/provider
+answer đủ các obligations của pinned profile (profile/1 có sáu families), không repair/removal. Không raw payload/secrets/provider
 stacktrace trong response/log mặc định. Đã verify fake transport, chưa live Qwen.
 
 Một generation pin actor/Store/Run + request + evidence digest + profile/schema/
