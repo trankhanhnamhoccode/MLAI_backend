@@ -68,6 +68,146 @@ Chi tiết đủ fields, validation, writer và gaps:
 Actual receipt Excel đã triển khai C3 tại mục16; A2 purchase history là record-only riêng.
 Không map các nhóm này sang inventory_count.
 
+<a id="catalog-menu-representation"></a>
+<a id="product-name-identity"></a>
+### ACCEPTED DECISION — Product recognition across files
+
+User-approved recognition priority: full Product name in the current Store first.
+Preserve size, variant and hot/cold distinctions exactly; do not reduce “Sinh tố
+dâu size L/S” to one Product. Source item code is secondary evidence to distinguish
+duplicate/ambiguous names, not a universal cross-file key. SKU is a Product attribute
+attached only after recognition, from an explicit source column or confirmed
+declaration; never copy source_business_key or infer SKU through fuzzy matching.
+Different files do not need the same item code/SKU to reference one Product.
+
+A unique full-name match in the authorized Store may yield a binding candidate;
+candidate is not binding/approval. Existing review/profile policy decides application.
+Compatible approved binding reuse precedes new matching; do not ask again merely
+because a file was re-exported. Missing size, duplicate names or near matches must
+remain choices/candidates for explicit selection, never silent merge/first result.
+Do not strip distinguishing qualifiers or treat a partial search result as exact.
+Source codes help only with attested meaning/binding; codes from unrelated sources
+are not automatically comparable. Candidate enumeration uses current Store/read
+permissions and does not disclose other Stores.
+
+CURRENT FACT: M04 IdentityBinding and profile IdentityRule already accept full-name
+source tokens, not only codes; names can link sales/recipe references to existing
+Products with different catalog source codes and unknown SKU. P01 supplies authorized
+Store-scoped menu/search choices; search results do not assert identity. Current M02
+identity issues do not yet project name-prioritized canonical candidates, so that
+projection is a remaining implementation gap against this accepted recognition
+policy. M2 resolved scope publishes already identified Products, not matching
+candidates; its new DTOs do not implement a candidate engine.
+Focused tests cover manual full-name binding/N5/reuse, size/temperature separation,
+partial/near/duplicate names staying unresolved, no SKU assignment and fresh-session
+canonical facts. Catalog ProductSource still has its current source-field requirements;
+do not turn those technical fields into a rule that every other file must map by code.
+
+### CURRENT FACT — Product catalog field sources
+
+Product catalog supports source_business_key/name/selling_unit/sku/price/strict bool
+active, including false. Source code and SKU are separate; no implicit code→SKU or
+sales-history→active. Current catalog source key still supports provenance/identity
+binding; full-name recognition above does not require every other file to share it.
+
+ACCEPTED DECISION / CURRENT FACT M1: products.sku stays required-nullable; existing
+shared_value accepts IMPORT_VALUE=null only for an explicitly confirmed homogeneous
+sheet. No PROFILE_CONSTANT/shared known SKU/blank/missing-value fallback or arbitrary
+nullable injection. Entity metadata does not replace row field sources. M1 rule
+changes retain N5; reuse requires a new value. M2 below expresses mixed fields by
+resolved Product IDs. Existing different metadata stays ENTITY_METADATA_CONFLICT,
+not a Product update/correction API.
+
+<a id="menu-status-proposal"></a>
+### ACCEPTED DECISION / CURRENT FACT — M2 Product-ID declarations
+
+M04 existing PATCH route accepts this typed resolution (example IDs illustrative):
+
+```json
+{"resolution":{"kind":"product_values","scope":"IMPORT_VALUE","target_field":"products.sku","values":[{"product_id":"00000000-0000-0000-0000-000000000001","value":"SKU-L"},{"product_id":"00000000-0000-0000-0000-000000000002","value":null}],"evidence_reference":"Explicit confirmed SKUs for the two identified Products"}}
+```
+
+Only targets products.sku and products.active. SKU is nonblank case-sensitive
+string1..64 or explicit null; active is strict boolean, not 0/1/string/null. Value
+key is mandatory. No generic field/nested injection or fuzzy/default/alias inference.
+Request has 1..1000 entries, each {product_id:UUID,value}; nonblank evidence required.
+Replace an active/SKU source column only with exact replace_source_column_index and
+acknowledgment=true; otherwise FIELD_SOURCE_CONFLICT409. The source column becomes
+explicit ignored mapping, raw evidence remains. There is one source per target;
+switching from scalar/column to Product-ID rule changes the reusable spec.
+
+ProfileSpec.shared_field_bindings stores requirement only:
+
+```json
+{"version":"product_field_value/1","scope":"IMPORT_VALUE","target_field":"products.active"}
+```
+
+SheetInfo.import_values stores typed ProductImportValue (same version/scope/target,
+declaration_id, values, evidence_reference). Values never persist as profile constants
+or automatically follow a renamed re-export. Legacy field_value/1 scalar rules and
+declarations retain behavior; both forms coexist through a version-discriminated
+boundary. Each target has separate coverage and its own declaration ID/evidence.
+
+M01.product_value_scopes contains sheet_id/profile_id, products[{product_id,
+source_token,name,reference_state:existing|reserved}], unresolved_tokens. It reads
+only the current sheet's existing manual bindings/reservations under current Store
+rights, including incomplete specs. This breaks the reserved-ID/spec completion
+cycle; it is not a candidate matcher or new identity store. M03 input_sources adds
+product_values for the two fields and explains scope/value constraints. Existing
+M01 shared_field_bindings/import_values/completion_guidance expose requirements and
+missing per-target values with profile/sheet/mapping action references.
+
+Product ID must be in current sheet rows and review scope: current Store canonical
+Product reached through existing binding, or reserved ID of this batch's Product
+proposal, without requiring prior canonical commit. Other Store/random/benchmark/
+unrelated IDs are out of scope. Names retain full size/variant/hot-cold and are
+manually resolved through current policy; IDs are a storage key after recognition,
+not a requirement that files share source codes/SKU.
+
+M04 returns409 specific coverage errors before persisting any declaration/rule:
+
+| Code | Meaning |
+| --- | --- |
+| PRODUCT_IDENTITY_UNRESOLVED | Source rows have missing/unresolved/ambiguous Product binding. |
+| PRODUCT_VALUES_MISSING | Target declaration omits one or more resolved Products. |
+| PRODUCT_VALUES_DUPLICATE_ID | Same Product declared more than once, equal values. |
+| PRODUCT_VALUES_CONFLICT | Same Product declared more than once with different values, including multiple source-row decisions. |
+| PRODUCT_VALUES_OUT_OF_SCOPE | Extra/unrelated/foreign-Store ID; no foreign-resource existence disclosure. |
+| FIELD_SOURCE_CONFLICT | Column replacement not acknowledged or competing source/mode. |
+
+Strict request typing rejects malformed values422 VALIDATION_ERROR. Coverage is
+rechecked on detached preview input; raw/declared provenance stays separate. Per-row
+FieldProvenance uses IMPORT_VALUE, declaration ID and actual declared value; Product
+entity_refs/source-key provenance link it to the reviewed identity. False declared
+against raw J=Đang bán is not labeled SOURCE_COLUMN. Raw original cells remain in
+staging and retained review evidence.
+
+New/changed reusable rule/source needs Owner N5 under existing full-spec/queue
+policy. Value-only edit under the same approved product_field_value/1 requirement
+keeps the binding, requires current mapping.propose/sensitive reads, changes CAS
+revisions and invalidates confirmation. No unnecessary N5 for new import values.
+Idempotent replay reauthorizes; stale/revoked/retired/job/commit fences remain.
+Owner approval does not create Product or grant Staff domain rights; preview,
+confirmation and atomic commit remain separate. Existing SKU/status conflicts
+cannot be overwritten through this declaration mechanism.
+
+CURRENT FACT original Menu: all ten rows catalog-only, exact source hash/cells,
+five unknown SKU null and five explicitly confirmed combo SKUs, status per prior
+user A2 authority for paused combos. Public Owner/preview/confirm/atomic commit and
+fresh-session exact fields/IDs/provenance verified in isolated Store. Renamed
+re-export requires declarations again, reuses one version, NO_OP/no duplicate.
+B/D/F/G/I remain raw, not recipes/discount/BOM; no business seed/benchmark UUIDs.
+[Pinned declarations](../tests/fixtures/import_menu_declarations.json),
+`tests/integration/test_import_menu_acceptance.py`,
+`tests/integration/test_import_product_values.py`,
+`tests/unit/test_import_product_values.py` own repeatable cases. Original attempts
+without these declarations still correctly block; they do not show unsupported
+catalog behavior. Test teardown cleans isolated DB, not a customer import.
+
+PROPOSAL only: finite Product status label normalization for source-only labels is
+not implemented. Menu's A2/J disagreement is represented by confirmed per-Product
+declarations. No matching/candidate projection, recipes or schema/writer extension.
+
 ## ACCEPTED DECISION / CURRENT FACT — A2 recorded support domains
 
 A2 thêm `calendar_events`, `promotion_observations`, `usage_history`,

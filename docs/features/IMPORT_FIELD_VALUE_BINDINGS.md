@@ -35,6 +35,17 @@ không chuyển ngầm thành null trong shared declaration. Zero/false giữ ng
 Không live lookup selling_unit/context currency để tự điền row. Units/conversion,
 requiredness, date/recipe periods, Store scope và permissions vẫn được kiểm.
 
+ACCEPTED DECISION / CURRENT FACT M1: products.sku hỗ trợ **IMPORT_VALUE=null only**
+cho toàn rows trong một sheet/import được xác nhận SKU chưa biết. SKU vẫn required;
+không khai báo không tự null. Không PROFILE_CONSTANT/non-null shared SKU hoặc mở
+các nullable fields khác. Blank string bị reject; metadata new-entity không thay
+nguồn field. Reusable spec chỉ giữ requirement, mỗi import phải khai báo lại.
+Existing SKU khác null vẫn ENTITY_METADATA_CONFLICT, không erase/correction. Source
+switch/rule edit vẫn N5 và current CAS/authorization/confirmation invalidation.
+Mixed per-key decisions không dùng scalar all-sheet unknown; M2 typed Product-ID
+declarations bên dưới giữ scope riêng. [Canonical examples/limits](../IMPORT_MAPPING_API_CONTRACT_VI.md#catalog-menu-representation)
+và [M2 contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#menu-status-proposal).
+
 Allowlist/scopes theo từng schema đã freeze trước edit tại
 [task notes](../runbooks/FULL_TEST_FLOW.md); bảng mọi field:
 [schema inventory](IMPORT_SCHEMA_INVENTORY.md). Scalar tối đa1000 chars, integer
@@ -53,6 +64,24 @@ label không reusable defaults. Nested declarations vẫn JSON column, có typed
 binding qua M04; không shared object/array hoặc arbitrary nested injection.
 Không expressions/executable transforms hoặc calendar/purchase/actual receipt intake.
 Chi tiết tại [setup/opening contract](../IMPORT_MAPPING_API_CONTRACT_VI.md#setup-identity-excel-opening-stock-và-lot-count--current-fact).
+
+## CURRENT FACT — M2 per-Product import values
+
+Existing M04 accepts product_values for products.sku/products.active only; no
+arbitrary object/array injection. Typed values by resolved canonical/reserved
+Product ID must exactly cover distinct Products in current sheet/review scope for
+each target. SKU string1..64/nonblank or explicit null, active strict bool. Missing,
+duplicate/conflicting, extra/foreign or unresolved IDs reject before mutation.
+Profile requirement uses product_field_value/1, IMPORT_VALUE, target only; batch
+holds declaration ID/typed list/evidence. Values do not reuse. Column replacement
+requires exact index+ack and reusable rule changes require Owner N5. Value edits
+under same approved rule keep pin and invalidate confirmation/current revisions.
+M01 scope publishes existing manual bindings/reservations even if spec incomplete;
+M03 advertises product_values. No new matcher, schema or canonical writer.
+Preview/source lineage keeps raw cell and declared value distinct; known existing
+SKU/status differences stay metadata conflicts, never erase/upsert. Original Menu
+ten-row catalog flow and renamed re-export NO_OP are verified in isolated test Store.
+Exact payloads/errors/permissions belong to [canonical M2](../IMPORT_MAPPING_API_CONTRACT_VI.md#menu-status-proposal).
 
 ## M03/M04/N5 và review
 

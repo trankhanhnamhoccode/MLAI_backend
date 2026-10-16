@@ -279,6 +279,8 @@ def options(schema=None):
                 description = "MOQ nguồn >0: PACKS phải nguyên; PHYSICAL_QUANTITY cần moq_unit và exact ceil thành minimum_order_packs. Zero basket vẫn hợp lệ."
             elif full == "supplier_terms.unit":
                 description = "Đơn vị vật lý của lượng trong một pack; không phải nhãn thùng/bao. Quy đổi có evidence tới Ingredient.base_unit."
+            elif full == "products.sku":
+                description = "SKU vẫn required-nullable. Shared IMPORT_VALUE chỉ nhận null tường minh cho toàn sheet hiện tại khi SKU chưa biết; không PROFILE_CONSTANT, không fallback hoặc xóa SKU existing."
             prop = model.model_json_schema()["properties"][key]
             bounds = tuple(f"{name}={p[name]}" for p in prop.get("anyOf", (prop,))
                            for name in ("minLength", "maxLength", "pattern") if name in p)
@@ -305,9 +307,11 @@ def options(schema=None):
                             if allowed_scopes(full)
                             else ("excel",)
                         )
-                    ),
+                    ) + (("product_values",) if full in ("products.sku", "products.active") else ()),
                     allowed_shared_scopes=allowed_scopes(full),
                     input_help=(
+                        "M04 product_values: khai báo theo Product ID đã bind/reserve trong sheet, đủ mỗi Product một lần; SKU string|null, active strict boolean. IMPORT_VALUE cần khai báo lại mỗi import; đổi rule cần Owner review, thay nguồn cột cần index/ack. "
+                        if full in ("products.sku", "products.active") else
                         "Cột có thể chứa tên/mã nguồn đã nối với IdentityRule hoặc reservation được duyệt; không bắt Excel chứa UUID. Mã lô phải xác định duy nhất, lot_code không tự là identity."
                         if key.endswith("_id") and key != "source_record_id"
                         else (

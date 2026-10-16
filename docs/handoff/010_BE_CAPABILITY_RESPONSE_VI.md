@@ -1,5 +1,16 @@
 # Phản hồi BE cho FE010 — canonical source handoff
 
+## CURRENT FACT — M2 Product declarations, local Menu checkpoint
+
+Source OpenAPI keeps73 operations/66 paths, adds M04 product_values typed variant,
+M01 product_value_scopes and versioned Product import-value requirements/values;
+M03 advertises product_values. FE manually identifies Products by full names/current
+bindings, reads existing/reserved IDs from M01, declares SKU/active per Product with
+exact coverage and source-switch acknowledgment, then existing Owner/preview/confirm/
+commit. Re-export needs new values; approved rule reuse needs no redundant N5.
+No FE/runtime deployment, new matcher, endpoint or schema. [Canonical M2](../IMPORT_MAPPING_API_CONTRACT_VI.md#menu-status-proposal)
+owns request examples, errors, permissions and original Menu acceptance limits.
+
 ## CURRENT FACT — Import I2 trên isolated source, chưa deploy
 
 [OpenAPI](openapi.json) của worktree feat/import-curated-templates giữ73 operations/

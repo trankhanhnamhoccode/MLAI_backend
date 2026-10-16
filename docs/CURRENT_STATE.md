@@ -1,5 +1,38 @@
 # Current state
 
+## CURRENT FACT — Menu M1/M2 after local Import checkpoint
+
+I1–I5.1 checkpoint `739e7480a5a6c0d8d69ea4654e090887341610f3`; M1/Menu/M2 form
+the next local Menu checkpoint, without main integration/push/deployment. M1 keeps explicit sheet-wide
+unknown products.sku IMPORT_VALUE=null. M2 implements fixed Product-ID declarations
+for products.sku (nonblank string≤64 or explicit null) and products.active (strict
+bool), via M04 product_values. Profile stores requirement only, batch stores values.
+M01 publishes already resolved/reserved Product scope even while spec incomplete;
+M03 advertises the typed source. Scope/coverage/replacement/current-rights/N5/
+replay/stale fences remain enforced. No database schema/writer or matching/candidate
+engine changes; public DTO additions are captured in source OpenAPI.
+
+Original Menu catalog acceptance now completes all ten original rows through public
+manual resolution → Owner → preview → confirmation → atomic commit on owned test
+DB/fresh Store. Original hash/raw cells unchanged. Full names/units/prices use Menu
+cells; [user declarations](../tests/fixtures/import_menu_declarations.json) pin five
+SKU unknown/null, earlier confirmed combo SKU t6..t10 and paused combos per A2
+authority. No code→SKU inference or active=true from sales history. N5/preview/
+confirmation write no canonical Products; fresh-session post-commit verifies each
+Product/Store/SKU/status/price/unit and source lineage. No Sales/Recipe facts created.
+Renamed original re-export reuses one approved version, requires both declarations
+again and returns NO_OP after explicit values, with exactly ten Products. Supported
+test fixture cleans DB afterward; this does not leave persistent demo data.
+
+Focused synthetic/negative HTTP and unit coverage includes reserved/foreign/unknown
+IDs, per-target missing/duplicate/extra/conflicting coverage, multiple row identities,
+column source conflict, existing metadata conflict, Staff CAS/revoke, stale
+confirmation, full-name L/S/temperature separation and approved reuse. No real
+provider/FE/development DB/full-suite acceptance. [Canonical contract](IMPORT_MAPPING_API_CONTRACT_VI.md#menu-status-proposal)
+owns DTO/workflow meaning; OpenAPI owns structure. Full-name recognition stays
+accepted policy; manual bindings work without common codes/SKU, and M02 automatic
+name-prioritized candidate projection remains outside this implementation.
+
 ## CURRENT FACT — Import I1–I5.1, isolated source acceptance
 
 Backend acceptance dùng public API/worker và owned PostgreSQL test, fake provider

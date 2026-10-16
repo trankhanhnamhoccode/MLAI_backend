@@ -223,6 +223,7 @@ def normalize(source, spec, import_values=()):
     from app.application.contracts.import_field_values import (
         ImportValue,
         ProfileConstant,
+        ProductImportValue, parse_import_value,
     )
 
     spec = dto.ProfileSpec.model_validate(spec.model_dump())
@@ -293,7 +294,7 @@ def normalize(source, spec, import_values=()):
             )
         )
     declarations = [
-        ImportValue.model_validate(v.model_dump() if isinstance(v, ImportValue) else v)
+        parse_import_value(v)
         for v in import_values
     ]
     by_target = {v.target_field: v for v in declarations}
@@ -311,7 +312,21 @@ def normalize(source, spec, import_values=()):
         if declaration is None:
             raise RowBlocked("MISSING_IMPORT_VALUE")
         field = rule.target_field.split(".", 1)[1]
-        value = declaration.value
+        if isinstance(declaration, ProductImportValue):
+            from app.application.import_product_values import value_for_product, ProductValuesError
+            if rule.version != 'product_field_value/1':
+                raise RowBlocked('FIELD_SOURCE_CONFLICT')
+            product_id = approved_identity(spec, 'product', values.get('source_business_key'))
+            if not product_id:
+                raise RowBlocked('PRODUCT_IDENTITY_UNRESOLVED')
+            try:
+                value = value_for_product(declaration, product_id)
+            except ProductValuesError as error:
+                raise RowBlocked(str(error)) from None
+        else:
+            if rule.version == 'product_field_value/1':
+                raise RowBlocked('FIELD_SOURCE_CONFLICT')
+            value = declaration.value
         raw = (
             "true"
             if value is True
@@ -325,7 +340,7 @@ def normalize(source, spec, import_values=()):
         provenance.append(
             dto.FieldProvenance(
                 field=field,
-                source_value=declaration.value,
+                source_value=value,
                 origin="SOURCE_EXPLICIT",
                 value_source=rule.scope,
                 declaration_id=declaration.declaration_id,
@@ -543,6 +558,19 @@ def make_preview(
     today = now.astimezone(ZoneInfo(store_timezone)).date()
     for sheet in sources:
         spec = specs[sheet["sheet_id"]]
+        product_value_error = None
+        from app.application.contracts.import_field_values import ProductImportValue, parse_import_value
+        from app.application.import_product_values import resolved_product_ids, validate_product_coverage, ProductValuesError
+        declarations = tuple(parse_import_value(v) for v in (import_values or {}).get(str(sheet['sheet_id']), ()))
+        if any(isinstance(v, ProductImportValue) for v in declarations):
+            try:
+                expected = resolved_product_ids(sheet['rows'], spec.field_bindings,
+                    spec.identity_rules + spec.aliases, spec.entity_proposals)
+                for declaration in declarations:
+                    if isinstance(declaration, ProductImportValue):
+                        validate_product_coverage(declaration, expected)
+            except ProductValuesError as error:
+                product_value_error = str(error)
         for source in sheet["rows"]:
             location = dto.SourceLocation(
                 file_id=sheet["file_id"],
@@ -553,6 +581,8 @@ def make_preview(
                 line_end=source["line_end"],
             )
             try:
+                if product_value_error:
+                    raise RowBlocked(product_value_error)
                 value, prov = normalize(
                     source, spec, (import_values or {}).get(str(sheet["sheet_id"]), ())
                 )

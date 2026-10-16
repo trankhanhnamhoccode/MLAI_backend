@@ -21038,7 +21038,8 @@
               "enum": [
                 "excel",
                 "binding",
-                "shared_value"
+                "shared_value",
+                "product_values"
               ]
             },
             "type": "array",
@@ -22846,7 +22847,10 @@
         "properties": {
           "version": {
             "type": "string",
-            "const": "field_value/1",
+            "enum": [
+              "field_value/1",
+              "product_field_value/1"
+            ],
             "title": "Version",
             "default": "field_value/1"
           },
@@ -26311,6 +26315,14 @@
       },
       "MappingSummary": {
         "properties": {
+          "product_value_scopes": {
+            "items": {
+              "$ref": "#/components/schemas/ProductValueScope"
+            },
+            "type": "array",
+            "title": "Product Value Scopes",
+            "default": []
+          },
           "import_id": {
             "type": "string",
             "format": "uuid",
@@ -30547,6 +30559,91 @@
         ],
         "title": "ProductDetail"
       },
+      "ProductFieldValue": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "product_id",
+          "value"
+        ],
+        "title": "ProductFieldValue"
+      },
+      "ProductImportValue": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "product_field_value/1",
+            "title": "Version",
+            "default": "product_field_value/1"
+          },
+          "scope": {
+            "type": "string",
+            "const": "IMPORT_VALUE",
+            "title": "Scope",
+            "default": "IMPORT_VALUE"
+          },
+          "target_field": {
+            "type": "string",
+            "enum": [
+              "products.sku",
+              "products.active"
+            ],
+            "title": "Target Field"
+          },
+          "declaration_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Declaration Id"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ProductFieldValue"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Values"
+          },
+          "evidence_reference": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Evidence Reference"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target_field",
+          "declaration_id",
+          "values",
+          "evidence_reference"
+        ],
+        "title": "ProductImportValue"
+      },
       "ProductMetadata-Input": {
         "properties": {
           "name": {
@@ -30910,6 +31007,149 @@
           "source_business_key"
         ],
         "title": "ProductSource"
+      },
+      "ProductValueReference": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "source_token": {
+            "type": "string",
+            "title": "Source Token"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "reference_state": {
+            "type": "string",
+            "enum": [
+              "existing",
+              "reserved"
+            ],
+            "title": "Reference State"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "product_id",
+          "source_token",
+          "name",
+          "reference_state"
+        ],
+        "title": "ProductValueReference"
+      },
+      "ProductValueScope": {
+        "properties": {
+          "sheet_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sheet Id"
+          },
+          "profile_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Id"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/ProductValueReference"
+            },
+            "type": "array",
+            "title": "Products",
+            "default": []
+          },
+          "unresolved_tokens": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unresolved Tokens",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sheet_id",
+          "profile_id"
+        ],
+        "title": "ProductValueScope"
+      },
+      "ProductValuesResolution": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "product_values",
+            "title": "Kind",
+            "default": "product_values"
+          },
+          "scope": {
+            "type": "string",
+            "const": "IMPORT_VALUE",
+            "title": "Scope",
+            "default": "IMPORT_VALUE"
+          },
+          "target_field": {
+            "type": "string",
+            "enum": [
+              "products.sku",
+              "products.active"
+            ],
+            "title": "Target Field"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ProductFieldValue"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Values"
+          },
+          "evidence_reference": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Evidence Reference"
+          },
+          "replace_source_column_index": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 255.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replace Source Column Index"
+          },
+          "acknowledgment": {
+            "type": "boolean",
+            "title": "Acknowledgment",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target_field",
+          "values",
+          "evidence_reference"
+        ],
+        "title": "ProductValuesResolution"
       },
       "ProfileConstant": {
         "properties": {
@@ -33108,6 +33348,9 @@
               },
               {
                 "$ref": "#/components/schemas/SharedValueResolution"
+              },
+              {
+                "$ref": "#/components/schemas/ProductValuesResolution"
               }
             ],
             "title": "Resolution",
@@ -33118,6 +33361,7 @@
                 "identity_binding": "#/components/schemas/IdentityBinding",
                 "ignored_optional_field": "#/components/schemas/Ignored",
                 "new_entity_proposal": "#/components/schemas/NewEntity-Input",
+                "product_values": "#/components/schemas/ProductValuesResolution",
                 "shared_value": "#/components/schemas/SharedValueResolution",
                 "sheet_type": "#/components/schemas/SheetTypeResolution",
                 "source_context": "#/components/schemas/SourceContext"
@@ -33156,6 +33400,9 @@
               },
               {
                 "$ref": "#/components/schemas/SharedValueResolution"
+              },
+              {
+                "$ref": "#/components/schemas/ProductValuesResolution"
               }
             ],
             "title": "Resolution",
@@ -33166,6 +33413,7 @@
                 "identity_binding": "#/components/schemas/IdentityBinding",
                 "ignored_optional_field": "#/components/schemas/Ignored",
                 "new_entity_proposal": "#/components/schemas/NewEntity-Output",
+                "product_values": "#/components/schemas/ProductValuesResolution",
                 "shared_value": "#/components/schemas/SharedValueResolution",
                 "sheet_type": "#/components/schemas/SheetTypeResolution",
                 "source_context": "#/components/schemas/SourceContext"
@@ -35263,7 +35511,21 @@
           },
           "import_values": {
             "items": {
-              "$ref": "#/components/schemas/ImportValue"
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ImportValue"
+                },
+                {
+                  "$ref": "#/components/schemas/ProductImportValue"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "version",
+                "mapping": {
+                  "field_value/1": "#/components/schemas/ImportValue",
+                  "product_field_value/1": "#/components/schemas/ProductImportValue"
+                }
+              }
             },
             "type": "array",
             "maxItems": 64,

@@ -181,6 +181,20 @@ giữ fixtures/cách chạy; exact invocations và limits thuộc conversation/i
 Không full repository suite/FE/live provider/main integration acceptance, không deploy
 I1–I5.1 được chốt thành local checkpoint trên base b0db90c; Menu acceptance là
 slice tiếp theo đã được người dùng cho phép, giữ thay đổi mới WIP để review.
+CURRENT FACT Menu M1/M2: original ten catalog rows now complete on owned test DB
+through public manual resolution/Owner/preview/confirm/atomic commit. Exact fields,
+Store/identity/provenance verified fresh; no code→SKU or sales→active inference.
+M2 typed Product-ID values for SKU/string|null and strict active bool solve mixed
+scope; approved spec holds requirement, import values must be redeclared on reuse.
+M01 publishes existing/reserved current-sheet scope, M03 explains source, no endpoint
+or matching/candidate engine/schema/writer added. Missing/duplicate/extra/conflicting/
+foreign/unresolved IDs, stale/revoke/source/existing metadata guards verified.
+Renamed original re-export reuses one version, NO_OP/no duplicate. Workbook bytes
+unchanged; recipes/discount facts remain raw. M1/Menu/M2 form the local Menu
+checkpoint after739e748, without main integration/push/runtime change. [Canonical M2](IMPORT_MAPPING_API_CONTRACT_VI.md#menu-status-proposal).
+Accepted full-name recognition preserves size/variant/hot-cold; manual binding/reuse
+works without common codes/SKU. M02 automatic name-prioritized candidate projection
+and finite status-label normalization are outside current scope.
 
 Chốt/push v1.0 trước rồi tách nhánh import: audit sáu workbook chỉ đọc, cải tiến
 deterministic mapping proposals và approved Store/source/report/version profile

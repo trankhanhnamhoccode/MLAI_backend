@@ -15,6 +15,7 @@ from sqlalchemy import select
 from app.application.contracts.auth import AuthError, Pagination
 from app.application.use_cases.auth import Actor
 from app.application.contracts import import_mapping as dto
+from app.application.contracts.import_field_values import parse_import_value
 from app.application.import_analysis import (
     discover,
     build_spec,
@@ -156,7 +157,7 @@ class ImportStaging:
         required.update(receipt_sensitive_reads(batch.analysis_json['sources'],
             {str(sh['sheet_id']):[i for i in issues if str(i.sheet_id)==str(sh['sheet_id']) and i.issue_type=='column']
                 for sh in batch.analysis_json['sheets']},
-            {str(sh['sheet_id']):tuple(dto.ImportValue.model_validate(v) for v in sh.get('import_values',()))
+            {str(sh['sheet_id']):tuple(parse_import_value(v) for v in sh.get('import_values',()))
                 for sh in batch.analysis_json['sheets']}))
         return tuple(sorted(required))
 
@@ -596,6 +597,8 @@ class ImportStaging:
             for c in contexts
         )
         return dto.MappingSummary(
+            product_value_scopes=tuple(self._product_value_scope(s, b, sh) for sh in sheets
+                if sh.selected_type == 'products' and not sh.ignored),
             import_id=b.id,
             analysis_id=b.analysis_id,
             mapping_revision=b.mapping_revision,
@@ -715,6 +718,51 @@ class ImportStaging:
                 can_inspect='import.read' in permissions,
                 can_request_preview=mutable and result.can_preview and 'import.preview' in permissions,
                 code='INSPECT_PREVIEW_ROW_DOMAIN_RESULTS' if preview_id else 'PREVIEW_NOT_RUN'))
+
+    def _product_value_scope(self, s, b, sheet):
+        from app.models import Product
+        p = s.get(ImportProfile, sheet.profile_id) if sheet.profile_id else None
+        if p and p.store_id != b.store_id:
+            raise AuthError('SOURCE_INTEGRITY_ERROR', 409)
+        data = dict(p.proposal_json) if p and p.import_id == b.id else {}
+        raw = data.get('spec') or data.get('base_spec') or {}
+        pin = next((r for r in b.analysis_json.get('bindings', ()) if r['sheet_id'] == str(sheet.sheet_id)), None)
+        if pin:
+            version = s.get(ImportProfileVersion, (UUID(pin['profile_id']), pin['version']))
+            if version and version.store_id == b.store_id:
+                raw = version.spec_json
+        identities = data.get('identities') or raw.get('identity_rules', ())
+        entities = data.get('entities') or raw.get('entity_proposals', ())
+        links = {}
+        for r in (*identities, *raw.get('aliases', ())):
+            if r['entity'] == 'product': links.setdefault(r['source_token'], set()).add(UUID(r['canonical_id']))
+        reservations = {}
+        for r in entities:
+            if r['entity'] == 'product':
+                ident = UUID(r['reserved_canonical_id'])
+                links.setdefault(r['source_business_key'], set()).add(ident)
+                if p and p.import_id == b.id: reservations[ident] = r['metadata']['name']
+        column = next((i.source_location.source_column_index for i in self._issues(b)
+            if i.sheet_id == sheet.sheet_id and i.issue_type == 'column'
+            and i.target_field == 'products.source_business_key'), None)
+        source = next(r for r in b.analysis_json['sources'] if r['sheet_id'] == str(sheet.sheet_id))
+        tokens = tuple(dict.fromkeys(c['raw'] for row in source['rows'] for c in row['cells']
+            if c['column_index'] == column and c['raw']))
+        products, unresolved = [], []
+        for token in tokens:
+            ids = links.get(token, set())
+            if len(ids) != 1:
+                unresolved.append(token); continue
+            ident = next(iter(ids))
+            product = s.scalar(select(Product).where(Product.id == ident, Product.store_id == b.store_id))
+            if product or ident in reservations:
+                products.append(dto.ProductValueReference(product_id=ident, source_token=token,
+                    name=product.name if product else reservations[ident],
+                    reference_state='existing' if product else 'reserved'))
+            else:
+                unresolved.append(token)
+        return dto.ProductValueScope(sheet_id=sheet.sheet_id, profile_id=sheet.profile_id,
+            products=tuple(products), unresolved_tokens=tuple(unresolved))
 
     def summary(self, token, ident, details=False, clean=False, file_id=None, sheet_id=None, review=True, status=None, origin=None):
         with auth_session(self.engine) as s:
@@ -1501,7 +1549,7 @@ class ImportStaging:
             if issue is None:
                 raise AuthError("RESOURCE_NOT_FOUND", 404)
             if isinstance(body, dto.ResolveRequest) and isinstance(
-                body.resolution, dto.SharedValueResolution
+                body.resolution, (dto.SharedValueResolution, dto.ProductValuesResolution)
             ):
                 return self._resolve_shared(s, b, actor, issue, body, op, kd, fp)
             if isinstance(body, dto.ResolveRequest) and isinstance(
@@ -2154,6 +2202,33 @@ class ImportStaging:
             ):
                 raise AuthError("SOURCE_INTEGRITY_ERROR", 409)
             existing = dto.ProfileSpec.model_validate(version.spec_json, context={"retained_evidence": True})
+        product_scoped = isinstance(choice, dto.ProductValuesResolution)
+        if product_scoped:
+            from app.models import Product
+            from app.application.import_product_values import (
+                resolved_product_ids, validate_product_coverage, ProductValuesError,
+            )
+            from app.application.import_preview import preview_record_sources
+            raw = next(source for source in b.analysis_json['sources'] if source['sheet_id'] == str(sheet.sheet_id))
+            record_sources, _ = preview_record_sources([raw])
+            field_bindings = tuple(dto.FieldBinding(
+                source_column_index=i.source_location.source_column_index, source_header=i.source_header or '',
+                target_field=i.target_field, requiredness='required', ignored=False)
+                for i in issues if i.sheet_id == sheet.sheet_id and i.issue_type == 'column' and i.target_field)
+            identities = tuple(dto.IdentityRule.model_validate(v) for v in data.get('identities', ()))
+            entities = tuple(dto.EntityReservation.model_validate(v) for v in data.get('entities', ()))
+            if existing:
+                identities = identities or existing.identity_rules + existing.aliases
+                entities = entities or existing.entity_proposals
+            try:
+                expected = resolved_product_ids(record_sources[0]['rows'], field_bindings, identities, entities)
+                validate_product_coverage(choice, expected)
+            except ProductValuesError as error:
+                raise AuthError(str(error), 409) from None
+            canonical = set(s.scalars(select(Product.id).where(Product.store_id == b.store_id, Product.id.in_(expected))))
+            reserved = {e.reserved_canonical_id for e in entities if e.entity == 'product'} if p and p.import_id == b.id else set()
+            if expected - canonical - reserved:
+                raise AuthError('PRODUCT_VALUES_OUT_OF_SCOPE', 409)
         rules = list(
             sheet.shared_field_bindings
             or (existing.shared_field_bindings if existing else ())
@@ -2167,15 +2242,19 @@ class ImportStaging:
             and current.scope == "IMPORT_VALUE"
             and choice.scope == "IMPORT_VALUE"
             and column is None
+            and current.version == ('product_field_value/1' if product_scoped else 'field_value/1')
         )
         declaration_id = uuid4()
         if choice.scope == "IMPORT_VALUE":
-            declaration = ImportValue(
+            declaration = (dto.ProductImportValue(
+                target_field=choice.target_field, declaration_id=declaration_id,
+                values=choice.values, evidence_reference=choice.evidence_reference,
+            ) if product_scoped else ImportValue(
                 target_field=choice.target_field,
                 declaration_id=declaration_id,
                 value=choice.value,
                 evidence_reference=choice.evidence_reference,
-            )
+            ))
             imports = sorted(
                 [
                     v
@@ -2185,7 +2264,8 @@ class ImportStaging:
                 + [declaration],
                 key=lambda v: v.target_field,
             )
-            rule = ImportValueRequirement(target_field=choice.target_field)
+            rule = ImportValueRequirement(target_field=choice.target_field,
+                version='product_field_value/1' if product_scoped else 'field_value/1')
         else:
             imports = [
                 v for v in sheet.import_values if v.target_field != choice.target_field

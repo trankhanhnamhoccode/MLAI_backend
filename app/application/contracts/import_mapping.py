@@ -341,6 +341,7 @@ from app.application.contracts.import_field_values import (
     SharedRule,
     ImportValue,
     SharedValueResolution,
+    ProductValuesResolution, ProductImportValue, BatchFieldValue,
 )
 
 Resolution = Annotated[
@@ -350,7 +351,7 @@ Resolution = Annotated[
     | Ignored
     | NewEntity
     | SheetTypeResolution
-    | SharedValueResolution,
+    | SharedValueResolution | ProductValuesResolution,
     # Shared source declarations remain separate from identity bindings.
     Field(discriminator="kind"),
 ]
@@ -671,7 +672,7 @@ class SheetInfo(DTO):
     ignored: bool = False
     ignore_reason: str | None = None
     shared_field_bindings: tuple[SharedRule, ...] = Field(default=(), max_length=64)
-    import_values: tuple[ImportValue, ...] = Field(default=(), max_length=64)
+    import_values: tuple[BatchFieldValue, ...] = Field(default=(), max_length=64)
 
     @field_validator("name", mode="before")
     @classmethod
@@ -812,7 +813,22 @@ class CompletionGuidance(DTO):
     preview: CompletionPreviewGuidance
 
 
+class ProductValueReference(DTO):
+    product_id: UUID
+    source_token: str
+    name: str
+    reference_state: Literal['existing', 'reserved']
+
+
+class ProductValueScope(DTO):
+    sheet_id: UUID
+    profile_id: UUID | None
+    products: tuple[ProductValueReference, ...] = ()
+    unresolved_tokens: tuple[str, ...] = ()
+
+
 class MappingSummary(DTO):
+    product_value_scopes: tuple[ProductValueScope, ...] = ()
     import_id: UUID
     analysis_id: UUID
     mapping_revision: str
@@ -860,7 +876,7 @@ class FieldOption(DTO):
     aliases: tuple[str, ...] = ()
     conditional_requirements: tuple[str, ...] = ()
     nullable: bool = False
-    input_sources: tuple[Literal["excel", "binding", "shared_value"], ...] = ("excel",)
+    input_sources: tuple[Literal["excel", "binding", "shared_value", "product_values"], ...] = ("excel",)
     allowed_shared_scopes: tuple[Literal["PROFILE_CONSTANT", "IMPORT_VALUE"], ...] = ()
     input_help: str = ""
     value_role: Literal[

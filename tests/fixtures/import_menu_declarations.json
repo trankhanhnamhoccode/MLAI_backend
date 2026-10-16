@@ -1,0 +1,20 @@
+{
+  "purpose": "Original user-created synthetic Menu baseline 08/07/2026. Explicit conversation decisions, not inferred codes/SKUs or status from sales. N5 remains separate.",
+  "menu_sha256": "6864dc86b9cbcca1b89ba875648be3bd31a86a9497c79620b2adc3cff872ba98",
+  "evidence": "Earlier Menu confirmation: stable Product codes and SKU t1..t10; superseded only for five POS items by explicit permission sku:null unknown/unconfirmed. Combo status: user explicitly chose A2, all five paused. Catalog-only scope includes all ten rows; no recipes/discount facts.",
+  "source_system_key": "USER_SYNTHETIC_MENU",
+  "report_type": "PRODUCT_CATALOG",
+  "source_identity_policy": "Stable catalog namespace chosen for isolated acceptance of the user-created synthetic source. Renamed export/correction is not a new source. Other dataset cutoffs require review of report relationship.",
+  "products_by_full_name": {
+    "Sinh tố chuối": {"sku": null, "active": true},
+    "Trà sữa trân châu": {"sku": null, "active": true},
+    "Cà phê sữa": {"sku": null, "active": true},
+    "Nước cam": {"sku": null, "active": true},
+    "Matcha latte": {"sku": null, "active": true},
+    "Combo Cặp Đôi": {"sku": "t6", "active": false},
+    "Combo Tươi Mát": {"sku": "t7", "active": false},
+    "Combo Latte Lovers": {"sku": "t8", "active": false},
+    "Combo Cà Phê Hội Bạn": {"sku": "t9", "active": false},
+    "Combo Nhóm 3 Đủ Vị": {"sku": "t10", "active": false}
+  }
+}

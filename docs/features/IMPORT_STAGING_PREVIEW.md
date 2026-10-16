@@ -1,5 +1,18 @@
 # S4.4 — Import staging/mapping/preview
 
+CURRENT FACT M2 completes original Menu catalog scope: ten original rows through
+manual Product resolution → Owner N5 → preview → confirmation → atomic commit,
+fresh-session exact Product/Store/SKU/status/price/unit and lineage. Raw source/hash
+unchanged; no recipes/discount facts. Product-ID declarations support mixed SKU/null
+and active true/false, including reserved IDs before canonical commit. Profile
+stores requirement, values are batch-only and required again on renamed re-export;
+reused same version gives NO_OP/no duplicate. M1 homogeneous unknown/null remains.
+Current permissions/CAS/conflict/replacement guards retained. [Canonical M2](../IMPORT_MAPPING_API_CONTRACT_VI.md#menu-status-proposal)
+owns source types/errors/FE flow; [recognition policy](../IMPORT_MAPPING_API_CONTRACT_VI.md#product-name-identity)
+prioritizes full names with size/variants/temperature. M01 resolved scope is not a
+new candidate projection. Tests use fresh isolated Store, provider OFF, no runtime FE;
+supported teardown removes test data afterward. No production deployment claim.
+
 CURRENT FACT I4 isolated source: M01 read-only completion_guidance phân loại manual
 issues, profile readiness/current actions, own submissions, batch declarations và
 I04 preview reference. Existing N5 đã bind batch gốc khi approve; Staff refetch rồi

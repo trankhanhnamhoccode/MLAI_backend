@@ -7,6 +7,10 @@ from app.main import create_app
 def test_import_operations_and_typed_variants_preserve_boundaries():
     spec = create_app(Settings(_env_file=None)).openapi()
     schemas = spec['components']['schemas']
+    assert schemas['ProductValuesResolution']['properties']['target_field']['enum'] == ['products.sku','products.active']
+    assert schemas['ProductImportValue']['properties']['version']['const'] == 'product_field_value/1'
+    assert 'product_value_scopes' in schemas['MappingSummary']['properties']
+    assert 'product_values' in schemas['FieldOption']['properties']['input_sources']['items']['enum']
     assert schemas['SemanticSuggestionsRequest']['properties']['sheet_ids']['minItems'] == 1
     assert schemas['SemanticSuggestionsRequest']['properties']['sheet_ids']['maxItems'] == 100
     assert schemas['SemanticSuggestionsRequest']['properties']['phase']['const'] == 'semantic_suggestions'
