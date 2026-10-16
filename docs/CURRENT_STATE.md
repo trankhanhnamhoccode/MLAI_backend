@@ -8,8 +8,14 @@ and execution metadata2 preserve older serializers/digests. Dedicated limited-ro
 PostgreSQL test target is loopback5438; constraint-only head
 `f4_20261016_metadata_v2` follows0027. No production/FE/API DTO or permission change.
 F3 checkpoint `5a8e0a8` remains PARTIAL19/24 synthetic, not real impact acceptance.
-One120s profiling batch failed admission at2.6144s/zero Planning executions;
-timing causes unresolved, no retry/optimization. F4 stays WIP for review.
+F4 is committed locally at `8f4d90838cfe7898cf3fbbe0e0784ca136dad8cf`; technical
+test-only acceptance VERIFIED, product activation NOT IMPLEMENTED, promotion LOCKED.
+F4.1 profiling COMPLETE for the frozen offline subset: new explicit authorization,
+one attempt21.5297089s, one Planning/one native inference/zero native solves; old
+mismatch/startup-failure claims and receipts preserved. Planning remains INCOMPLETE
+with no winner; output equivalence and general F3 timeout attribution are unverified.
+Measured schema/semantic-validation costs are documented; no business optimization.
+Windows job-tree cleanup verified; no retry. F4.1 tooling/docs remain WIP for review.
 Canonical [F4 behavior and limits](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
 and [verification/setup](runbooks/FULL_TEST_FLOW.md#forecast-f4) own the details.
 

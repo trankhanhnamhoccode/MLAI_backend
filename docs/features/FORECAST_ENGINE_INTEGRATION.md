@@ -38,7 +38,9 @@ integration compatibility and experiment protocol, not those existing contracts.
 F3 is checkpointed at `5a8e0a853519004237d4e0900a1266d0a69caac1`:
 implementation/retained semantic replay verified, benchmark PARTIAL19/24, synthetic
 operations only. Its consumed batch and five missing cases are not resumed. F4 is
-uncommitted review work on that checkpoint. Local main observed at
+checkpointed locally at `8f4d90838cfe7898cf3fbbe0e0784ca136dad8cf`; technical
+test-only acceptance VERIFIED, product activation NOT IMPLEMENTED, production
+promotion LOCKED. F4.1 tooling/docs remain uncommitted review work. Local main observed at
 `b0db90cedd3962d8cb2e3f2dfe4696ec83b4e52a` adds dev-account/shutdown tooling;
 no dependency required merging it. No fetch/push or main/demo modification.
 
@@ -96,13 +98,150 @@ change alters native adapter runtime identity: historical E2/F2/F3 source/runtim
 replay must use its original committed source/environment and retained receipts,
 not rewritten manifests or silent compatibility under F4 source.
 
-Profiling is **UNRESOLVED**: the single authorized hard120s batch consumed its
-claim, then stopped at2.6144s with ARTIFACT_RUNTIME_MISMATCH on an older retained
-artifact. Zero new Planning executions/inference/fits occurred in that batch; no
-cold/warm, solver, BOM, serving or storage timings were established. The selected
-artifact was not prechecked for compatibility. No retry, budget expansion or
-optimization followed. F3 timeout/INCOMPLETE causes remain unproven; batch caps are
-not per-request SLAs. Correctness tests below are independent of that consumed batch.
+Profiling is **COMPLETE for the frozen F4.1 offline subset**, with the limitations
+below; end-to-end/representative performance and general F3 timeout attribution
+remain unverified. HISTORICAL INFORMATION: F4's consumed batch
+stopped at2.6144s with ARTIFACT_RUNTIME_MISMATCH, zero Planning/inference/fits.
+The old script selected `sorted(runs/*/evidence.json)[0]`: lexical cache identity
+was mistaken for runtime/purpose eligibility. Its older synthetic artifact
+`d265dd9462a89495c1ca082ea1e22fcadbbdd5882d4833459aa43134c0c46416`
+has adapter digest `b42639dbc702211001c77c07bcf45a4df52b14e9c95be3d24488c6c3399dd323`;
+current adapter is `b7cc1b2c62bd63562dd1fdec88941a0542f93a17fc8150d2a460d0513a57a0e9`.
+Original artifacts, source pins and receipt are preserved; mismatch still fails closed.
+
+HISTORICAL INFORMATION — first F4.1 experiment: preflight used the verified no-training F4 fixture, preserving
+parent `0c3c2b75...936` and all three booster byte hashes. New synthetic artifact
+`4797048535f97542afa6ecc0f4881f42218ca2e92b2fc997cc5e0dffe2fb13c4`
+passed typed input/scope/unit/calendar, payload, native package/source/dependency
+and runtime admission before compute claim. Runtime is Python3.11.9 Windows AMD64,
+non-editable snapshot0.1.0+62b94fa.e2, engine commit62b94fa4d67cb04141d32be4e57d6f9740c2a8fc;
+full runtime/source/artifact identities are retained in frozen setup/preflight.
+No research relabelling, training, calibration or promotion occurred.
+
+The first F4.1 experiment is
+`b6ab729e05bc00c5d960ab1adcb4c91725fc3b31c01e9db226fb367a99230cd1`.
+It froze A=completed F3 June24 B_COMMON scarce_purchase (unchanged input, objective,
+4s solver policy, two solves/strategy, exact certification/domain); B=first synthetic
+native execution; C=identical retained cache read. Offline A and single-Product
+constant B/C are different workloads. DB capture/finalize/persistence/fresh Session
+were excluded in advance. No actual labels entered Planning input.
+
+| Observed stage | Elapsed seconds | Calls / result |
+| --- | ---: | --- |
+| Preflight, separate from compute | 2.0398202 | 1 successful preflight; zero Planning/inference |
+| Admission/artifact verification immediately before claim | 0.7703720 | 1 successful verification; zero Planning/inference |
+| Claimed compute, including failed child startup | 0.1060025 | 1 batch; PARTIAL_ERROR, exit1 |
+| Planning / native inference / native solves | Unmeasured | 0 / 0 / 0 reached |
+| Import split, prep/admission inside child, artifact load, validation/serialization, BOM, procurement, serving/FEFO, selector, filesystem retain/read | Unmeasured | No stage instrumentation installed |
+| Cold/warm cache hits/misses and repeated reconstruction/validation | Unmeasured | No observations; unavailable counts are not measured zero |
+| DB persistence, capture/finalize, retained DB fresh read | N/A | Not part of frozen offline workload |
+
+The child asserted immediate parent PID equals controller PID before its child
+claim or business imports. It failed there; no child-claim/progress/timings exists.
+A later **noncompute** subprocess probe reproduced different owner/immediate-parent
+PIDs through the Windows venv launcher. Tooling now verifies the existing OS process
+incarnation/liveness contract (host/PID/birth), rejecting missing, reused, foreign or
+unverifiable owners, instead of assuming direct parenthood. The executed tooling
+bytes are retained separately from this fixed WIP; frozen setup is not rewritten.
+The fix passed isolated subprocess tests; the separately authorized completion
+experiment below then exercised it in compute.
+
+### CURRENT FACT — F4.1 completion profiling
+
+The new explicit authorization has a separate group under
+`runtime/challenger/f4_1/completion`; neither earlier claim was reset. Experiment
+`540bb41e97f5d95092362e17fb7e91d3162c0894d2a4791a9c0010b4e12d6850`
+freezes the fixed controller/process-tree helper, original instrumentation/workload,
+the exact same compatible artifact/input and hashes/provenance to the failed experiment.
+It ran **one attempt**, no retry, in21.5297089s of the shared120s budget: **one host
+Planning execution, one native forecast inference, zero native MILP solves**. No training,
+calibration, network/provider or DB business write occurred. B/C are native execution/
+retained cache paths, not additional full Planning runs. Main/FE/default B remain unchanged.
+
+The launcher is created suspended, assigned to a Windows Job Object with
+KILL_ON_JOB_CLOSE before resume; timeout terminates the owned job, not only its
+launcher. A noncompute probe through the same interpreter/module/owner guard
+terminated four processes (launcher, child and descendant launch chain), verified
+both actual Python process incarnations DEAD and job active count0. Compute also
+ended with active count0. Exclusive group claim and prepared identity reject repeat
+execution. The controller conservatively implements no automatic retry; the user
+allowed at most one startup-only retry with shared accounting, but none was used.
+
+| Measurement | Calls | Inclusive seconds | Exclusive observed seconds |
+| --- | ---: | ---: | ---: |
+| Preflight, outside compute | 1 | 0.7570131 | N/A |
+| Noncompute tree probe, outside compute | 1 | 1.3728544 | N/A |
+| Full setup including freeze/probe, outside compute | 1 | 2.1780951 | N/A |
+| Preclaim verification, outside compute | 1 | 0.7076208 | N/A |
+| Claimed compute wall | 1 | 21.5297089 | N/A |
+| Launch to child entry / entry to imports complete | 1 / 1 | 0.4001412 / 1.4477047 | N/A |
+| A input preparation | 1 | 0.0156134 | 0.0156134 |
+| A host Planning | 1 | 16.0695954 | 0.0011004 |
+| A BOM | 8 | 0.3984304 | 0.3984304 |
+| A procurement orchestration | 1 | 7.2031168 | 4.8049704 |
+| A exact serving application | 7 | 6.8848416 | 5.9484231 |
+| A serving/FEFO domain | 7 | 0.2936612 | 0.2936612 |
+| A semantic procurement revalidation | 6 | 7.8809078 | 1.2112622 |
+| A semantic serving revalidation | 42 | 1.8682809 | 1.8682809 |
+| A comparison / selector | 1 / 1 | 4.2733332 / 4.5396861 | 0.8985504 / 0.8002860 |
+| A semantic comparison revalidation | 4 | 1.9727647 | 1.9727647 |
+| A result serialization / filesystem write | 1 / 1 | 0.0081405 / 0.0008482 | same |
+| A fresh filesystem read with semantic validation | 1 | 2.5727319 | 0.4445976 |
+| B whole cold native execute | 1 | 0.6673141 | 0.0183139 |
+| B admission (includes artifact loading) | 1 | 0.1021325 | 0.0947858 |
+| B artifact load / three booster loads | 1 / 3 | 0.0073467 / 0.0242632 | same |
+| B native inference | 1 | 0.4787913 | 0.4517846 |
+| B forecast validation / serialization-storage | 1 / 1 | 0.0027435 / 0.0218469 | same |
+| C whole warm retained-cache execute | 1 | 0.0919507 | 0.0036718 |
+| C admission / artifact load | 1 / 1 | 0.0769225 / 0.0082664 | 0.0686561 / 0.0082664 |
+| C retained lookup / output validation | 1 / 1 | 0.0098033 / 0.0015531 | same |
+| Native solve | 0 | Not reached | N/A |
+| DB persistence/capture/finalize/fresh Session | N/A | Excluded offline workload | N/A |
+
+Full precision, preclaim elapsed, remaining stage rows and function call counts are
+in `completion/summary.json` and the experiment's original `timings.json`. Inclusive
+rows overlap: do not sum them. Exclusive spans subtract only observed child spans,
+not all internal computation. A revalidation rows include the later retained JSON
+read; they must not be treated as a partition of the16.07s Planning call.
+
+**Confirmed cost in this instrumented workload:** `serving._quantity` is called8548
+times (5.1415899s inclusive); its source constructs a new
+`TypeAdapter(NonnegativeDecimal)` for each conversion. Across the profiled child,
+TypeAdapter initialization is called8556 times (4.5152906s inclusive), schema generation
+8594 times, Pydantic core validation26280 times (8218 primitive calls). Repeated
+ProcurementResult/Comparison/WinnerSelection boundary validation also reruns exact
+serving/evaluation: six procurement and42 serving checks, seven `_evaluate` calls.
+Comparison and selector include those checks; their time is not solely ranking.
+These are measured costs, not a decision to remove integrity checks or proof of
+safe caching. No business optimization was performed.
+
+NativeProductSearch construction ran three times (4.3375708s inclusive), including
+three model builds (3.1986261s). The unchanged cooperative4s policy expires before
+any native solve or finite enumeration vector; the retained procurement elapsed is
+7.1986476s with3.1986476s overrun. The host pipeline also performs required checks
+outside that search policy. A returns INCOMPLETE, all strategies UNPROVEN/
+CERTIFICATION_DEADLINE, one unique exact basket evaluation and **no winner**. The
+original retained F3 case was also INCOMPLETE but had a winner and three BALANCED
+enumeration vectors. Therefore exact_winner_facts_match_original=false: this run
+**does not establish output equivalence**. Observation overhead and scheduling can
+change cooperative-deadline search coverage; isolated observer/cProfile overhead and
+an uninstrumented counterfactual were not measured. The same source/input/policy
+does not imply the same time-limited output.
+
+Cold lookup missed once; its mandatory persisted-byte readback hit once; warm lookup
+hit once. Thus low-level counters are one miss/two hits, not two warm requests.
+Native demand reconstruction ran once, and warm execution loaded/verified the artifact
+and checked retained output without inference. OS file cache is uncontrolled; preflight
+already read payloads, and A ran before B in the same child. Constant synthetic timing
+is not representative latency for trained C or DB-backed end-to-end Planning.
+
+**Hypotheses / unverified:** repeated schema/DTO construction and semantic reconstruction
+are candidates for a separately authorized optimization study. This one instrumented
+fixture establishes their cost, not the cause of every F3 timeout. Native solve latency
+is unmeasured because no solve was invoked. Historical F3 remains PARTIAL19/24, with
+no replay/rerun/resume or new missing cases. Product activation NOT IMPLEMENTED,
+production promotion LOCKED; representative performance, real quality/operational
+inputs and browser/recovery gates remain before any demo activation decision.
 
 Current commands, verification scope and limitations:
 [F4 runbook](../runbooks/FULL_TEST_FLOW.md#forecast-f4). Production promotion remains

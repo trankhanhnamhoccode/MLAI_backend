@@ -5,7 +5,8 @@
 
 [Canonical F4](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4) owns the
 test-only admission/versioning/rollback boundaries. F3 is checkpointed at `5a8e0a8`,
-PARTIAL19/24 synthetic; never resume its five missing cases. F4 stays WIP for review.
+PARTIAL19/24 synthetic; never resume its five missing cases. F4 is locally committed
+at `8f4d90838cfe7898cf3fbbe0e0784ca136dad8cf`; F4.1 stays WIP for review.
 Default app composition remains host, C1 experimental, production LOCKED, browser
 E2E unverified. No provider, FE or demo8103 startup is part of this workflow.
 
@@ -87,14 +88,121 @@ OpenAPI compared against local main `b0db90cedd3962d8cb2e3f2dfe4696ec83b4e52a`:
 Private acceptance/input/metadata versions and safe failure codes are the only
 contract extensions; no new public fields/routes or FE model choice.
 
-The single profiling claim is consumed. `scripts.profile_planning_f4` stopped at
-artifact/runtime admission after2.6144s with zero Planning/inference/fits; no requested
-stage timing/cold-warm/Python-vs-native diagnosis was established. Do not rerun it,
-remove its claim or broaden its budget. No validation optimization was made. Timing,
-real unseen/vintage/operational quality, broader performance and browser E2E remain
-unverified; a batch cap is not an SLA.
+HISTORICAL INFORMATION: the F4 and first F4.1 profiling claims are consumed. F4's original `scripts.profile_planning_f4`
+receipt is unchanged: admission mismatch after2.6144s, zero Planning/inference/fits.
+F4.1 preflight verified a new synthetic fixture's provenance, unchanged boosters,
+full runtime/dependency/source/input/calendar/scope/units and admission before claim.
+The old failure came from lexical first-cache selection, not runtime eligibility.
+[Canonical profiling table](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
+owns exact identities, timings and limits.
 
-Review packaging (no execution/training):
+The following are **historical executed commands, not rerun instructions**:
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.profile_planning_f4_1 prepare
+.venv/Scripts/python.exe -B -m scripts.profile_planning_f4_1 run --identity b6ab729e05bc00c5d960ab1adcb4c91725fc3b31c01e9db226fb367a99230cd1
+```
+
+Preflight2.0398202s and preclaim verification0.7703720s are separate from compute.
+The one new batch exited1/PARTIAL_ERROR at0.1060025s on the immediate-parent PID
+assertion, before child claim, heavy imports, Planning or inference. At that point, business
+stage/cold-warm/repeated-validation timings were unmeasured. That attempt ran no further compute,
+F3 resume, training, network/provider or DB workload was run. Do not remove markers,
+repeat these commands or expand budgets. A new explicit authorization and frozen
+experiment would be required to measure stages after the tooling startup fix.
+
+Read-only inspection commands (PowerShell; do not terminate unrelated processes):
+
+```powershell
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'profile_planning_f4_1' } | Select-Object ProcessId,ParentProcessId,Name
+Get-Content runtime/challenger/f4_1/compute-claim.json
+Get-Content runtime/challenger/f4_1/experiments/b6ab729e05bc00c5d960ab1adcb4c91725fc3b31c01e9db226fb367a99230cd1/receipt.json
+```
+
+A noncompute venv subprocess reproduced immediate parent != controller owner.
+The fixed helper checks existing ProcessIdentity host/PID/birth and ALIVE, fails
+closed for old claims without incarnation, and keeps exclusive markers. Executed
+pre-fix tooling is copied under the original experiment's `executed-source/`;
+current WIP does not match that frozen source and cannot silently replay it.
+Inspection/probe files under `runtime/challenger/f4_1` are not compute receipts.
+
+Tooling-only regression, zero Planning/native execution/training/DB:
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_planning_profile_observer.py tests/unit/test_forecast_serialization.py tests/unit/test_forecast_stockout.py tests/unit/test_forecast_model_contracts.py tests/unit/test_planning_public_contract.py -q --tb=short --junitxml=runtime/challenger/f4_1/final-tests.xml
+git diff --check
+```
+
+Observed:40 tests passed in the targeted group, then16 affected observer tests
+passed after adding the early consumed-guard regression (41 unique tests; overlap
+counted once). Coverage includes optional/nested instrumentation, alias restore,
+resource/exclusive claim limits, subprocess owner validation and fail-closed original
+artifact mismatch, plus legacy serialization/stockout/model/public contracts.
+Business/app/vendor source is unchanged from F4. Prior F4 PostgreSQL/native acceptance
+is historical evidence; it was not rerun for commit or these tooling-only changes.
+No full-suite, DB, new performance or trained-C latency claim follows from these tests.
+
+### CURRENT FACT — F4.1 completion authorization and verification
+
+The separately authorized completion experiment is
+`540bb41e97f5d95092362e17fb7e91d3162c0894d2a4791a9c0010b4e12d6850`;
+its shared120s group claim is also consumed. One attempt completed in21.5297089s,
+with one host Planning, one native inference, zero native solves and no retry.
+A is Planning INCOMPLETE/no winner; B is cold inference/cache miss; C is retained
+cache hit without inference. Profiling COMPLETE applies only to this frozen offline
+subset, not Planning completion, output equivalence or representative C acceptance.
+See the [canonical timing/call-count analysis](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4).
+
+Historical executed commands (do not repeat consumed compute):
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.profile_planning_f4_1_completion prepare
+.venv/Scripts/python.exe -B -m scripts.profile_planning_f4_1_completion run --identity 540bb41e97f5d95092362e17fb7e91d3162c0894d2a4791a9c0010b4e12d6850
+```
+
+Prepare reused the exact compatible artifact479704...13c4 and frozen F3/native
+inputs, checked typed scope/calendar, policy, hashes, artifact/native package/runtime,
+then froze all controller/observer/job-helper source. It retained provenance to the
+failed setup/receipt. No old marker or artifact manifest was changed. Separate
+noncompute preflight0.7570131s and process-tree probe1.3728544s fit within total
+setup2.1780951s; they are outside compute. Preclaim verification is recorded separately.
+
+The same venv interpreter/module starts probe and compute. Both verify claim owner
+incarnation/liveness. The launcher starts suspended, enters a kill-on-close Windows
+Job Object before resume, so descendant compute inherits ownership. Probe starts a
+noncompute descendant, terminates the job and verifies both actual Python identities
+DEAD, root exit and active count0. Compute ends at active count0 too. Timeout kills
+the owned job. New group/prepared markers are exclusive and prevent repeat execution;
+runner conservatively has no automatic retry despite permission for at most one
+provably startup-only retry with the same remaining ledger.
+
+Only affected checks were run for this controller/job change:
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_planning_profile_completion.py tests/unit/test_planning_profile_observer.py::test_limits_reject_before_extra_execution tests/unit/test_planning_profile_observer.py::test_actual_install_restores_host_aliases_without_execution -q --tb=short --junitxml=runtime/challenger/f4_1/completion/tests.xml
+git diff --check
+.venv/Scripts/python.exe -B -m scripts.review_planning_profile_completion
+```
+
+Seven focused tests passed, including actual noncompute Windows descendant cleanup,
+consumed-group rejection, source freeze/command path and resource caps/alias restore.
+No full41-check/F4/PostgreSQL gate or full suite was rerun; app/vendor/migrations and
+public API are unchanged. Tests/probes did not run Planning/inference. One separate
+authorized compute batch did so as recorded above. No business optimization followed.
+
+The completion review ZIP is `runtime/shelfcash_F4_1_completion_review.zip`.
+It includes changed tooling/tests/docs, selected dependencies, original old/new
+setup/claim/receipts, original timings, synthetic selection/output, frozen executed
+source, probes/tests, derived summary, commands and path/SHA-256 manifest. CRC,
+manifest/content/source/secret scans and Git ignore checks are required. Originals,
+README/manifest and verification receipts stay outside the temporary ZIP. Workbooks,
+weights, private config/credentials, DB dumps and large logs are excluded. Earlier
+transfer ZIPs had already been removed before this continuation; their source and
+all retained evidence remain intact. The new ZIP does not depend on their existence.
+
+HISTORICAL INFORMATION: F4 packaging command below requires its original36-file
+WIP and must not be rerun after the F4 commit. The original ZIP is preserved; use
+the F4.1 copy-only command above for the current review.
 
 ```powershell
 .venv/Scripts/python.exe -B -m scripts.review_challenger_f4

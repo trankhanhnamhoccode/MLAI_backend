@@ -3,8 +3,14 @@
 CURRENT FACT F4: isolated C0 test opt-in reaches the real ForecastRun/Planning worker
 and retained public reads; production/default serving remains host, C1 exploratory.
 F3 checkpoint `5a8e0a8` is PARTIAL19/24 synthetic, not production/real-impact acceptance.
-Profiling consumed its sole batch at an artifact/runtime admission error, so timing
-diagnosis and optimization remain unresolved. F4 changes stay uncommitted for review;
+F4 local checkpoint is `8f4d908`; technical test-only acceptance VERIFIED, product
+activation NOT IMPLEMENTED, production promotion LOCKED. F4.1 profiling COMPLETE
+for its frozen offline subset (one attempt21.5297089s, one Planning/one inference,
+zero native solves). A remains INCOMPLETE/no winner, so exact output equivalence
+and native solver latency are unverified. Schema/conversion and semantic revalidation
+costs are measured; optimization, representative C latency and general F3 timeout
+attribution require separate work. Old/new claims stay consumed; no retry or business
+optimization. F4.1 changes stay uncommitted for review;
 no next slice, promotion, main merge-back or deployment is authorized. See the
 [canonical F4 boundary/gates](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
 and [F4 verification](runbooks/FULL_TEST_FLOW.md#forecast-f4). Before main integration:
@@ -70,10 +76,11 @@ buys3 packs/63 VND vs C0/C1 4 packs/83 VND, but censored truth blocks realized
 evaluation. No empirical production winner, savings or inventory-impact claim.
 F3 is checkpointed at `5a8e0a8`; [canonical F3](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f3)
 owns assumptions, resources, proof/partial results and replay limits.
-PROPOSAL F4 acceptance/integration remains NOT_STARTED/unauthorized: requires
-reviewed forecast choice, provenance/availability and operational completeness,
-public authorization/persistence/restart/replay/rollback acceptance before explicit
-promotion. No main/FE/DB integration or automatic deployment.
+HISTORICAL INFORMATION: F3 checkpoint described F4 as NOT_STARTED/unauthorized;
+that status is superseded by the isolated test-only F4 acceptance above. Product
+activation/promotion still requires reviewed forecast choice, provenance/availability,
+operational completeness and the remaining runtime/browser/rollback gates.
+No main/FE integration or automatic deployment is authorized.
 
 ## CURRENT FACT / PROPOSAL — data readiness D1–D5
 
