@@ -10,7 +10,11 @@ zero native solves). A remains INCOMPLETE/no winner, so exact output equivalence
 and native solver latency are unverified. Schema/conversion and semantic revalidation
 costs are measured; optimization, representative C latency and general F3 timeout
 attribution require separate work. Old/new claims stay consumed; no retry or business
-optimization. F4.1 changes stay uncommitted for review;
+optimization in F4.1. F4.1 checkpoint is `b9ec978`. F4.2 WIP reuses the static
+quantity adapter with differential/fixed-output checks; six uninstrumented Planning
+runs show lower median18.8043 to 10.6877s on one fixture, unchanged selected facts but
+changed deadline coverage/proof. No broader validator refactor or production claim;
+representative quality/latency/activation gates remain. See [F4.2](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4-2);
 no next slice, promotion, main merge-back or deployment is authorized. See the
 [canonical F4 boundary/gates](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
 and [F4 verification](runbooks/FULL_TEST_FLOW.md#forecast-f4). Before main integration:

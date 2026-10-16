@@ -16,11 +16,14 @@ from app.domain.decision.quantities import checked, display, ServingNumericError
 from app.domain.decision.serving import Stock, simulate
 
 
+_NONNEGATIVE_DECIMAL_ADAPTER = TypeAdapter(NonnegativeDecimal)
+
+
 def _quantity(value: Fraction) -> Quantity:
     checked(value)
     view = display(value)
     try:
-        TypeAdapter(NonnegativeDecimal).validate_python(view)
+        _NONNEGATIVE_DECIMAL_ADAPTER.validate_python(view)
     except ValidationError as error:
         if any(e['type'] != 'finite_number' for e in error.errors()):
             raise

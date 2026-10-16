@@ -40,7 +40,8 @@ implementation/retained semantic replay verified, benchmark PARTIAL19/24, synthe
 operations only. Its consumed batch and five missing cases are not resumed. F4 is
 checkpointed locally at `8f4d90838cfe7898cf3fbbe0e0784ca136dad8cf`; technical
 test-only acceptance VERIFIED, product activation NOT IMPLEMENTED, production
-promotion LOCKED. F4.1 tooling/docs remain uncommitted review work. Local main observed at
+promotion LOCKED. F4.1 is checkpointed at `b9ec9782a398722ef1705edbd51f70d1d7c35358`;
+F4.2 adapter reuse is uncommitted review work. Local main observed at
 `b0db90cedd3962d8cb2e3f2dfe4696ec83b4e52a` adds dev-account/shutdown tooling;
 no dependency required merging it. No fetch/push or main/demo modification.
 
@@ -248,6 +249,94 @@ Current commands, verification scope and limitations:
 LOCKED; no accuracy/real savings claim, browser E2E or production runtime acceptance.
 Rollback removes test composition and F4 caller wiring while preserving every
 ForecastRun/PlanningRun, artifact and receipt. Never downgrade away retained metadata2.
+
+<a id="forecast-f4-2"></a>
+## CURRENT FACT - F4.2 static quantity validator reuse
+
+F4.1 checkpoint is `b9ec9782a398722ef1705edbd51f70d1d7c35358`: its profiling is
+complete only for its frozen offline subset, whose Planning was INCOMPLETE/null
+winner. Historical timings/receipts/claims/source snapshots stay unchanged. F4.2
+changes only `serving._quantity`: a module-level TypeAdapter(NonnegativeDecimal)
+is reused for identical `validate_python(view)` calls. No quantity-result cache,
+Store/Run state, semantic-check removal or solver/objective/policy/proof change.
+
+The static type has only exact_decimal (rejects float/bool) and finite/nonnegative
+Decimal checks; it has no context/config/Store/thread-dependent validator. Adapter
+construction does not capture Decimal arithmetic context. Fraction checks and display
+use existing explicit local Decimal context, Quantity construction and ValidationError/
+ServingNumericError mapping stay unchanged. Differential corpus checks valid/invalid/
+extreme/zero/null/NaN/infinity/negative values and error classes/codes; four-thread
+mixed-precision calls match legacy outputs, with per-call TypeAdapter construction
+forbidden. Serving/FEFO, dated recipes/loss, arrivals/expiry, zero-purchase, tamper,
+procurement/comparison/serialization regressions pass. No bypass via model_construct.
+
+Experiment `fe46a91810c1c8c64b902196a1228d8dc0f82cd42fb33d27c648d83c760d483c`
+uses separate baseline/candidate source snapshots under ignored runtime. Baseline
+comes from Git archive of the F4.1 commit; candidate copies that snapshot and changes
+only serving.py to the working implementation. Child verifies every source hash and
+actual serving import path before business computation. Same interpreter/dependencies,
+retained forecast arrays/scarce_purchase domain5, requirements/objective/certification,
+solver4s/max2solves per strategy and finite proof policy. No cProfile/observer wraps.
+Every task starts a fresh process; imports/startup are excluded from the timed full
+Planning call, but included in the total hard-wall resource receipt. OS cache is
+uncontrolled, not an inference cold/warm experiment. No model payload is needed.
+
+One shared180s claim completed in **109.0109421s**, six full Planning executions
+(three per arm), zero native forecast inference/training/calibration/provider/network/
+DB business writes and zero retries. Preflight6.1590110s is separate. Fixed-basket
+business computations and all subprocess startup are included in109.01s. Owned Windows
+jobs contain launcher/descendants and end with active count0. The group is consumed;
+no resume/reset/extra repetition is permitted. Fixed results were compared before
+full Planning; any mismatch would stop the batch.
+
+| Pair / frozen order | Baseline full Planning seconds | Candidate full Planning seconds | Baseline / candidate vectors | Whole result |
+| --- | ---: | ---: | --- | --- |
+| 1, baseline then candidate | 18.8043399 | 10.6876613 | 12 / 15 | INCOMPLETE / FINISHED |
+| 2, candidate then baseline | 23.0927088 | 11.3115924 | 3 / 15 | INCOMPLETE / FINISHED |
+| 3, baseline then candidate | 16.7615610 | 9.7113067 | 2 / 15 | INCOMPLETE / FINISHED |
+| Median | 18.8043399 | 10.6876613 | N/A | 43.16% lower median candidate wall |
+| Range | 16.7615610 to 23.0927088 | 9.7113067 to 11.3115924 | N/A | Three observations per arm |
+
+All six runs called native procurement solve three times (forecast inference zero),
+all selected the same option token `cmp1_d836a7ad...7451bb1`. Within each pair the
+complete selected option JSON is equal, preserving basket/arrival/outlay, exact
+Product/Ingredient/daily service facts, requirements-related issues and provenance.
+Baseline overrun seconds were2.5021067/3.4862805/3.0283716; candidate0/0/0. Baseline
+proof is mixed in pair1 (LEAN UNPROVEN, others finite-domain certified), all UNPROVEN
+in pairs2/3. Candidate has COMPLETE_EXACT_ENUMERATION for all three strategies,
+15 vectors (5 each), always limited to CAPTURED_FINITE_DOMAIN_ONLY. Selector still
+reports BEST_EVALUATED_CANDIDATES_ONLY. More coverage within the unchanged deadline
+is a search outcome, not a semantic-rule change or global optimization certificate.
+Full result bytes are not claimed equal because timings/search/proof differ.
+
+Two single fixed-basket measurements isolate exact computation without search:
+zero packs0.3211523 to 0.1228501s, three packs0.3774243 to 0.1642788s. Both complete serialized
+candidate outputs have identical SHA-256 between arms, including exact services,
+costs and feasibility facts. These two timings are not whole Planning latency or
+statistical evidence. Dedicated non-timed tests prove no per-call adapter construction;
+F4.1's cProfile4.52s figure is not reused as uninstrumented construction latency.
+
+**Limits:** three repetitions, one machine/fixture, no statistical significance or
+production SLA. OpenAPI schema generation was run concurrently with the early
+benchmark/first pair and may have caused CPU contention; all pairs are reported,
+including the later reversed-order pair, with no rerun. At final inspection, Python workloads from import/Assistant worktrees were also
+observed; their overlap with timed runs is unknown and they were not interrupted.
+Background scheduling/OS cache remain uncontrolled. The intervention and fixed hashes support the narrow
+adapter-reuse improvement; they do not attribute every F3 timeout, prove all historical
+Planning outputs equal, or compare challenger forecast quality with B. Revalidation
+refactoring and broader runtime optimization were not performed.
+
+207 targeted regression checks plus3 tooling/retained-challenger checks passed;
+no full suite, PostgreSQL or native forecast acceptance rerun. OpenAPI73 operations
+and SHA-256 `7a6d13ca1e7bafdee247504e9a0fa131c28c9796a0436691dfa309a847fbd366`
+are unchanged versus the isolated baseline. No migration/API delta. Current native
+adapter/integration digests do not include serving.py and remain unchanged; whole
+Planning source snapshots do change, so historical F3/F4.1 replay still requires
+original pinned source, never rewritten manifests/artifacts. Product activation
+NOT IMPLEMENTED, promotion LOCKED; representative quality/performance, operational
+readiness, browser/recovery/rollback and explicit activation authorization remain.
+F4.2 source/tests/tooling/docs remain WIP; rollback is this one shared-host reuse
+change plus its tooling/docs, preserving all historical data/evidence.
 
 ## Source snapshots and trace reliability
 

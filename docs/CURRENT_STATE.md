@@ -15,7 +15,12 @@ one attempt21.5297089s, one Planning/one native inference/zero native solves; ol
 mismatch/startup-failure claims and receipts preserved. Planning remains INCOMPLETE
 with no winner; output equivalence and general F3 timeout attribution are unverified.
 Measured schema/semantic-validation costs are documented; no business optimization.
-Windows job-tree cleanup verified; no retry. F4.1 tooling/docs remain WIP for review.
+Windows job-tree cleanup verified; no retry. F4.1 checkpoint `b9ec9782a398722ef1705edbd51f70d1d7c35358`.
+F4.2 WIP reuses static quantity TypeAdapter;207+3 focused checks pass. Six isolated
+Planning calls complete in109.0109421s shared compute; median18.8043 to 10.6877s,
+fixed/selected exact facts match, search coverage/proof differ. First-pair CPU noise
+and one-fixture/three-repeat limits apply; no production latency or C-vs-B claim.
+See [F4.2 scope/results](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4-2).
 Canonical [F4 behavior and limits](features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4)
 and [verification/setup](runbooks/FULL_TEST_FLOW.md#forecast-f4) own the details.
 

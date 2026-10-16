@@ -6,7 +6,8 @@
 [Canonical F4](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4) owns the
 test-only admission/versioning/rollback boundaries. F3 is checkpointed at `5a8e0a8`,
 PARTIAL19/24 synthetic; never resume its five missing cases. F4 is locally committed
-at `8f4d90838cfe7898cf3fbbe0e0784ca136dad8cf`; F4.1 stays WIP for review.
+at `8f4d90838cfe7898cf3fbbe0e0784ca136dad8cf`; F4.1 checkpoint is `b9ec978`.
+F4.2 stays WIP for review.
 Default app composition remains host, C1 experimental, production LOCKED, browser
 E2E unverified. No provider, FE or demo8103 startup is part of this workflow.
 
@@ -199,6 +200,66 @@ README/manifest and verification receipts stay outside the temporary ZIP. Workbo
 weights, private config/credentials, DB dumps and large logs are excluded. Earlier
 transfer ZIPs had already been removed before this continuation; their source and
 all retained evidence remain intact. The new ZIP does not depend on their existence.
+
+### CURRENT FACT - F4.2 adapter reuse verification
+
+[Canonical F4.2](../features/FORECAST_ENGINE_INTEGRATION.md#forecast-f4-2) owns
+invariants, source isolation, paired timings/search outcomes and limits. F4.1 is
+checkpointed at `b9ec9782a398722ef1705edbd51f70d1d7c35358`. The historical F4.1
+packaging tool expects its original WIP/HEAD and must not be rerun on this checkpoint.
+
+Historical benchmark commands (the separate180s group is now consumed):
+
+```powershell
+.venv/Scripts/python.exe -B -m scripts.benchmark_adapter_reuse freeze
+.venv/Scripts/python.exe -B -m scripts.benchmark_adapter_reuse run
+```
+
+Freeze archived only committed app/scripts to ignored arm directories, copied the
+candidate serving.py, verified that sole delta, retained input hashes and policy4s,
+and pinned interpreter/dependencies/controller/helper. Full source imports are
+verified per child. Fixed baskets0/3 run first; exact serialized output hashes must
+match across arms before any full Planning. Frozen full order is B,C,C,B,B,C.
+No cProfile/observer wraps, native forecast inference or DB writes. One shared wall
+clock covers fixed computation, all child startup and six Planning calls. Windows
+jobs are assigned before suspended launcher resume and kill the whole owned tree.
+Consumed marker prevents rerun; no automatic retry is implemented or used.
+
+Observed compute109.0109421s, six Planning, zero forecast inference, no retries;
+all owned jobs ended active0. Separate preflight6.1590110s. Baseline/candidate exact
+fixed results match; selected exact options also match in all three pairs, while
+coverage/proof and deadline outcomes differ. Candidate FINISHED all three; baseline
+INCOMPLETE all three. Keep every result/receipt, not only the fastest pair.
+OpenAPI checking overlapped the first pair and is documented as potential CPU noise.
+
+Executed focused checks:
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_serving_adapter_reuse.py tests/unit/test_serving.py tests/unit/test_serving_output_validation.py tests/unit/test_procurement_v2.py tests/unit/test_procurement_comparison.py tests/unit/test_forecast_serialization.py tests/unit/test_planning_profile_completion.py -q --tb=short --junitxml=runtime/challenger/f4_2/regressions.xml
+.venv/Scripts/python.exe -B -m pytest tests/unit/test_adapter_benchmark.py -q --tb=short --junitxml=runtime/challenger/f4_2/tooling-tests.xml
+git diff --check
+.venv/Scripts/python.exe -B -m scripts.review_adapter_reuse
+```
+
+207 regression tests plus3 tooling/retained-native-output boundary tests passed.
+The retained challenger boundary validates existing input/output without inference;
+no artifact regeneration, training or PostgreSQL/native gate was required by this
+static adapter construction change. Host serving/procurement/comparison/serialization
+and negative tamper checks exercise the shared code. Adapter differential tests
+compare exact errors/results and concurrent mixed-context calls; construction is
+forbidden per-call in the dedicated test. Static NonnegativeDecimal validators
+have no request/config/thread dependency. No API/migration delta; OpenAPI generation
+in two isolated source processes yielded identical73-operation SHA-256 (recorded in
+`runtime/challenger/f4_2/openapi-check.json`). No provider/DB connection was needed.
+
+Review ZIP: `runtime/shelfcash_F4_2_review.zip`. Copy-only tool includes changed
+source/tests/docs, direct dependencies, docs delta, arm serving source, complete
+source/input/runtime hashes, setup/resource/commands, every paired result and
+selection, fixed outputs, focused test receipts and summary. No model weights,
+workbooks, secrets, DB dump or full runtime. CRC/hash/source/secret/ignore checks
+must pass. Original source/evidence, arm snapshots and manifest remain outside ZIP;
+deleting the ZIP removes only a transfer copy. F4.2 remains WIP; no commit/push,
+merge/deploy/activation, main/FE/runtime8103/Assistant/import changes.
 
 HISTORICAL INFORMATION: F4 packaging command below requires its original36-file
 WIP and must not be rerun after the F4 commit. The original ZIP is preserved; use
