@@ -3,6 +3,15 @@
 
 ## Authority, implemented scope and known drift
 
+CURRENT FACT: curated tabular.sales/2 recognizes `SL bán` only under sale-date/full
+Product header context; conflicting workflow or invalid sampled quantity leaves
+candidates/reason. This is lexical review evidence, not probability/business truth
+or a new build_spec auto-resolution whitelist. Full-row validators remain authority.
+The [natural synthetic fixture](../tests/fixtures/synthetic_cafe_human_v1/README.md)
+uses existing M04/manual identities/N5 and explicit structured declaration CSVs.
+Nested fee/scope values currently need source columns; scalar shared_value cannot
+inject arbitrary nested facts. No public DTO/route or permission delta for this demo.
+
 CURRENT FACT: I01-I06/M01-M04/N5/J01/H01/H02/R01 are wired with Store authorization,
 immutable staging/preview/provenance, manual/approved-profile deterministic flow,
 canonical fifteen-schema adapters and durable history/completion. Upload/review/save/
@@ -2120,6 +2129,56 @@ Owner-only mapping approval remains; Staff granted canonical actions can commit
 approvedmapping rows, no hidden escalation/automaticOwnerfactapproval.
 
 #### Setup identity, Excel opening stock và lot count — CURRENT FACT
+
+<a id="inventory-original-column-proposal"></a>
+CURRENT FACT original July08 inventory inspection: workbook03 stock sheet contains
+11 physical lots/10 Ingredients, milk split6+18 lít; each original name/quantity/unit/
+lot/HSD/location remains raw. A1 describes end-of-day count; A supplies only a date,
+not aware observed_at. A2 explicitly leaves received_date unknown/null. All food
+rows have source HSD; plastic cup expiry is blank and expiry_tracking=false was
+approved separately for this synthetic dataset. Warehouse location is raw evidence,
+not a supported canonical Lot field. Purchase/vendor sheets are excluded explicitly.
+
+M01/M04 inspection resolves Ingredient names against freshly imported same-Store
+catalog through existing manual binding. inventory_count requires known canonical
+lot IDs and cannot turn source lot labels into lots. OPENING_STOCK would mean an
+explicit first physical baseline, not an actual receipt; that interpretation/time
+and end-of-day timestamp were explicitly approved. Ten unmatched lots have approved
+unknown supplier/cost; LOT-515 requires separate review of linked PNK facts, not a
+shared null for all11. No timestamp, stock0,
+receipt date, supplier/cost or received purchase is inferred.
+
+CURRENT FACT representation gap: source F is the sole lot identifier column.
+TargetRequest maps one column to one target. lot_code and source_record_id are
+required row sources with no scalar allowlist; mapping F to either leaves the
+other missing. Source may support a reviewed dual role, but current API cannot
+express it. Preview remains blocked; no canonical stock/movement/receipt/history/
+vendor writes. This is not evidence that all inventory workflows are unsupported.
+
+ACCEPTED DESIGN, implementation paused by the user; not a current valid request:
+extend existing TargetRequest with optional
+typed opening_record_key={kind:"same_source_column",evidence_reference:Text}, only
+when primary target is opening_stock.lot_code. Example on that column mapping_id:
+
+```json
+{"target_field":"opening_stock.lot_code","opening_record_key":{"kind":"same_source_column","evidence_reference":"Owner confirms source lot codes are stable and unique record keys only in this approved baseline namespace; re-export retains identity"}}
+```
+
+It would retain two typed FieldBindings selecting the same physical source column
+(lot_code and source_record_id), no generated/composite/file/row key and no generic
+field-copy expression. Underlying normalization already reads indexed bindings;
+no writer/DDL/endpoint/identity store is needed. This rule requires explicit stable
+source namespace/key proof and Owner full-spec review, never universal lot-code
+identity. Add/remove/change must invalidate pin/preview/confirmation; reuse compares
+the entire rule and re-reads current cells. Duplicate keys/conflicting existing
+receipts remain blocked. Old requests/receipts must keep their fingerprints when
+the optional selector is absent. M03 must explain both roles; OpenAPI and positive/
+negative API/worker/Store/stale/revoked/replay tests are required before acceptance.
+CURRENT FACT: user reviewed this selector design, then paused further contract
+expansion for original workbook acceptance. Unfinished edits are retained outside
+the repo; no selector contract/runtime delta is currently implemented. Newly authored
+synthetic inputs carry source_record_id and lot_code in separate columns and use
+existing field bindings. Original workbooks remain unchanged references.
 
 ACCEPTED DECISION: lát import setup được người dùng duyệt, dùng writers hiện có;
 không mở Excel actual receipts, stockout hoặc forecast mới. Registry thêm

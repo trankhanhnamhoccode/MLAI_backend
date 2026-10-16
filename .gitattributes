@@ -1,0 +1,3 @@
+# These synthetic inputs have SHA-256 byte pins; preserve authored line endings.
+/tests/fixtures/synthetic_cafe_v1/dataset.json -text
+/tests/fixtures/synthetic_cafe_human_v1/*.csv -text

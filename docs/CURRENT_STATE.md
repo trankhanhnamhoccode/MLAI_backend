@@ -1,5 +1,83 @@
 # Current state
 
+## CURRENT FACT — natural Vietnamese synthetic cafe inputs
+
+[Human workbook fixture](../tests/fixtures/synthetic_cafe_human_v1/README.md)
+is a separate presentation of the frozen synthetic_cafe_v1 oracle: seven Vietnamese
+XLSX views, explicit structured CSV declarations, manifest field/row correspondence
+and hashes. External actuals and reconciliation are excluded from main uploads.
+No new facts, public DTO, endpoint, DDL or engine change. tabular.sales/2 adds
+contextual SL bán; sampled nonnumeric/negative/nonfinite quantities demote curated
+proposals to review candidates. Source/review/approval and validation stay separate.
+Targeted backend acceptance verifies existing manual M04/N5/preview/confirm/atomic commit,
+fresh canonical comparison and renamed profile reuse, then three supported BASELINE
+Planning scenarios. It does not activate/train LightGBM or certify browser support.
+Structured fees/scope remain column-source declarations; a generic nested manual
+form is not implemented. Exact run results/limits belong in the conversation.
+
+## CURRENT FACT — synthetic cafe dataset and paused original-stock extension
+
+The user paused further contract expansion solely to import original workbooks.
+Unfinished opening_record_key edits are retained in external recovery; production
+source remains at Ingredients/Recipes checkpoint4609a52. Original files are read-only
+references. The existing original-stock inspection/tests/docs WIP is preserved.
+Baseline/key scope and end-of-day23:59:59+07:00 were explicitly approved; ten unmatched
+lots have approved unknown supplier/cost. LOT-515 must instead review its exact
+purchase-history link (950 per cái); receive-date meaning remains unconfirmed.
+No common null declaration for all11 lots and no original stock commit.
+
+New [synthetic cafe inputs](../tests/fixtures/synthetic_cafe_v1/dataset.json) contain
+four distinct full-name Products (S/L, hot/cold), five Ingredients and one fictional
+Supplier. All facts are newly fabricated, including SKU, loss0/yield1/version1,
+prices and dated receipts.182 complete observed days,2026-04-19..2026-10-17, provide
+728 Product/day observations. Twenty native weekly backtest origins split10 validation/
+10 internal holdout; the separate28-row external week2026-10-18..24 is never imported
+or used for fitting, family selection, tuning, stock or features at cutoff.
+
+Main stock is an11-lot physical opening snapshot computed from recorded daily
+receipts/usage/expiry; purchase/usage imports remain record-only. Sufficient-stock
+scenario has a separate fictional last-day top-up and its own reconciliation.
+Procurement assumptions: budget5,000,000VND (negative case1VND), MOQ2packs, lead1day,
+food shelf14days, explicit capacities/supplier limits and complete known zero fees.
+Historical deliveries also obey whole packs/MOQ2; orders restore three nominal days
+of stock using only the prior closing balance, never future sales. The revised
+main fixture has597 recorded purchases and910 recorded uses, with exact conservation.
+The earlier July08 prototype was blocked by stock freshness versus DB system write
+timestamps; new fictional timeline ends Oct17. This is not a BE guard change.
+Canonical headers and separate record/lot columns use existing supported schemas.
+Import Scope after catalog/stock commit so reviewed aliases bind current Store lot
+IDs; no schema/API/algorithm/filename rules were added. Current operator supports
+BASELINE serving; real rolling LightGBM candidate evaluation is a separate internal
+path and is not silently activated. See [forecast documentation](features/FORECAST_TRAINED.md#synthetic-cafe-inputs).
+
+
+## CURRENT FACT — original inventory inspection, not canonical acceptance
+
+Ingredients/Recipes checkpoint `4609a528f24dd23807b9e93c56e5bc0f97e2166b` is local
+on feat/import-curated-templates, without push/main integration/runtime changes.
+Subsequent inventory work stays WIP. Exact July08 workbook03 hash matches manifest;
+stock sheet has11 rows/10 Ingredients, including two separate milk lots6+18 litres,
+source units/lot codes/expiry/location preserved. Date-only July08 is not an aware
+observation timestamp. Received date unknown/null is explicitly stated in A2;
+plastic cups have blank expiry and approved expiry_tracking=false, no invented HSD.
+
+Public API/worker inspection rebuilds Menu/Ingredient prerequisites through the
+approved recipe flow in a fresh isolated Store, binds exact Ingredient names to
+same-Store IDs and excludes purchase/vendor sheets explicitly while keeping raw.
+Count interpretation cannot create11 absent canonical lots. Opening is a possible
+baseline only after explicit business/time declarations; it is not an actual
+receipt inferred from purchase history. Current M04 cannot map one physical lot
+column to both lot_code and required source_record_id, and neither row field is
+an allowed shared scalar. Switching the target exposes the other missing field.
+The [small typed selector](IMPORT_MAPPING_API_CONTRACT_VI.md#inventory-original-column-proposal)
+was explicitly user-approved as a design, then paused before verified implementation; it is not a current valid request.
+
+Stock preview is blocked by current review/required-field guards. Fresh-session
+InventoryLot/Movement/ReceiptRecord/history/supplier/term counts remain0; all11
+stock raw rows retained and original bytes unchanged. No stock confirmation/commit,
+original replay/re-export or FEFO acceptance claim yet. Synthetic existing guards
+are separate from this original-input result. No Inventory API/DDL/production delta.
+
 ## CURRENT FACT — original Ingredients/Recipes and approved missing-data policy
 
 Menu checkpoint is `99224f1be02b70a62fb882df2ecbdbdb15b3d837`. Exact six source

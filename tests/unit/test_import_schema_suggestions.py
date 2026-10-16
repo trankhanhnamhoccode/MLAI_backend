@@ -67,12 +67,14 @@ def test_descriptor_requiredness_and_roles_are_source_contract_not_db_promise():
 def test_nullable_required_fields_and_bound_business_tokens_are_explained():
     fields = {f.key: f for f in options() if f.available}
     for key in (
-        "products.sku",
         "products.price",
-        "recipes.effective_to",
         "supplier_terms.shelf_life_days",
     ):
         assert fields[key].requiredness == "required" and fields[key].nullable
+    for key,policy in (("products.sku","unknown_null"),("ingredients.sku","unknown_null"),
+                       ("recipes.effective_to","open_ended")):
+        assert fields[key].requiredness == "optional" and fields[key].nullable
+        assert fields[key].missing_policy == policy
     assert not fields["sales.quantity"].nullable
     assert fields["sales.product_id"].input_sources == ("excel", "binding")
     assert "UUID" in fields["sales.product_id"].input_help

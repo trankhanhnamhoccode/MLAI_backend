@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import re
 from typing import Literal, Mapping, Sequence
 import unicodedata
+from decimal import Decimal, InvalidOperation
 
 
 def normalized_hint(value: str) -> str:
@@ -51,11 +52,11 @@ class TemplateMatch:
 
 
 TEMPLATES = (
-    CuratedTemplate("tabular.sales", 1, "sales",
+    CuratedTemplate("tabular.sales", 2, "sales",
         (("Ngày bán", "Ngày GD", "sales.sales_date"),
          ("Tên món", "Tên món / SKU", "Mã món", "sales.product_id")),
         ("Ngày sử dụng", "Ngày kiểm kê", "Ngày thực nhận", "Ngày đặt mua"), (
-            FieldRule("quantity", "sales.quantity", ("SL",), "CONTEXTUAL_SOLD_QUANTITY",
+            FieldRule("quantity", "sales.quantity", ("SL", "SL bán"), "CONTEXTUAL_SOLD_QUANTITY",
                       ("sold_quantity_meaning",)),
             FieldRule("slx", "sales.quantity", ("SLX",), "ABBREVIATION_MEANING_REVIEW",
                       ("sold_vs_exported_quantity",), "candidate"),
@@ -182,3 +183,20 @@ def nsx_hint(header: str, headers: tuple[str, ...], samples: tuple[str | None, .
         reason = "NSX_MEANING_AMBIGUOUS"
     return ColumnHint(None, (), f"CURATED:lexical.nsx/1:meaning;{reason};REVIEW:source_semantics",
                       requires_review=True, ambiguous=True)
+
+
+def quantity_sample_hint(hint: ColumnHint, samples: tuple[str | None, ...]) -> ColumnHint:
+    """Negative sampled evidence demotes a lexical quantity proposal, never fixes data."""
+    if not hint.target or not hint.target.endswith('.quantity'):
+        return hint
+    for raw in samples[:8]:
+        if raw is None or not raw.strip():
+            continue
+        try:
+            valid = len(raw) <= 200 and Decimal(raw).is_finite() and Decimal(raw) >= 0
+        except InvalidOperation:
+            valid = False
+        if not valid:
+            return ColumnHint(None, hint.candidates, hint.reason + ';QUANTITY_SAMPLE_TYPE_REVIEW',
+                              requires_review=True, ambiguous=True)
+    return hint

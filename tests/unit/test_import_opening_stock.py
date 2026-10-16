@@ -28,6 +28,15 @@ def test_opening_plans_new_lot_and_keeps_unknown_received_date():
     assert {w.code for w in row.warnings} == {"MISSING_RECEIVED_DATE", "INVENTORY_COMPLETENESS_REQUIRES_DECLARATION"}
 
 
+def test_wrong_opening_unit_is_not_inferred_or_filled_from_ingredient():
+    ingredient=uuid4()
+    data=opening(ingredient);data['unit']='kg'
+    row,=case('opening_stock',[data],snapshot(ingredient))
+    assert 'UNIT_MISMATCH' in {n.code for n in row.blockers}
+    assert row.proposed_action=='BLOCKED' and row.after.unit=='kg'
+    assert row.inventory_effect.movement_type is None  # Candidate effect is not an applied mutation.
+
+
 @pytest.mark.parametrize("field,value,code", [
     ("quantity", "0", "INVALID_SOURCE_VALUE"), ("unit", None, "MISSING_REQUIRED_VALUE"),
     ("observed_at", "2026-10-10", "INVALID_SOURCE_VALUE"),

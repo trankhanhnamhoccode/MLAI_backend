@@ -7,7 +7,7 @@ from app.application.contracts.import_field_values import allowed_scopes
 from app.application import import_templates as curated
 from app.application.import_templates import (
     ColumnHint, normalized_hint, validate_templates, matching_templates,
-    contextual_column, nsx_hint,
+    contextual_column, nsx_hint, quantity_sample_hint,
 )
 
 SCHEMAS = {
@@ -405,7 +405,7 @@ def sheet_rules(headers: tuple[str, ...], sheet_name: str, selected: str | None 
         fields = [o for o in options(name) if o.available]
         own_matches = tuple(m for m in matches if m.template.schema == name)
         columns = []
-        for header in headers:
+        for column_index, header in enumerate(headers):
             candidates = column_candidates(header, name)
             target = candidates[0] if len(candidates) == 1 else None
             reason = ("EXACT_CANONICAL_HEADER" if target == header else "CONTROLLED_HEADER_ALIAS")
@@ -413,7 +413,7 @@ def sheet_rules(headers: tuple[str, ...], sheet_name: str, selected: str | None 
                 "DUPLICATE_OR_AMBIGUOUS_TARGET" if candidates else "NO_SUPPORTED_TARGET"))
             contextual = contextual_column(header, own_matches)
             if contextual and header not in {o.key for o in fields}:
-                hint = contextual
+                hint = quantity_sample_hint(contextual, samples[column_index] if column_index < len(samples) else ())
             elif (target and normalized_hint(header) in {"sl", "dvt", "dv"}
                   and not own_matches and matches and name not in canonical_schemas):
                 hint = ColumnHint(None, (target,), "CONFLICTING_WORKFLOW_EVIDENCE",

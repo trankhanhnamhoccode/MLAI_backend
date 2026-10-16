@@ -23,7 +23,7 @@ def test_quantity_abbreviation_requires_workflow_context(headers, schema, target
     index = next(i for i, h in enumerate(headers) if h.strip() == "SL")
     hint = result.columns[index]
     assert hint.target == target and hint.requires_review
-    assert "CURATED:" in hint.reason and "/1:" in hint.reason
+    assert "CURATED:" in hint.reason and ("/2:" if schema=='sales' else "/1:") in hint.reason
     assert result.low_quality  # A proposed target is not a fully reviewed spec.
 
 
@@ -112,17 +112,19 @@ def test_supplier_candidates_do_not_claim_physical_unit_price_or_moq_basis(heade
 @pytest.mark.parametrize("content,missing_fields", [
     ("Món bán,Thành phần,Lượng / 1 SP,Ver\nP,I,2,1\n",
      {"recipes.yield_quantity", "recipes.yield_unit", "recipes.quantity_basis",
-      "recipes.process_loss_rate", "recipes.unit", "recipes.effective_from"}),
+      "recipes.unit", "recipes.effective_from"}),
     ("Món bán,Thành phần,Lượng / 1 SP,Yield\nP,I,2,4\n",
-     {"recipes.quantity_basis", "recipes.process_loss_rate", "recipes.unit", "recipes.effective_from"}),
+     {"recipes.quantity_basis", "recipes.unit", "recipes.effective_from"}),
     ("Vendor,Material,Pack Size,MOQ,Giá mua\nV,I,3,2,10\n",
      {"supplier_terms.price_basis", "supplier_terms.price_quantity", "supplier_terms.price_unit",
       "supplier_terms.unit", "supplier_terms.effective_from", "supplier_terms.moq_basis"}),
 ])
-def test_missing_date_loss_unit_and_price_basis_stay_missing(content, missing_fields):
+def test_required_semantics_without_defaults_stay_missing(content, missing_fields):
     sheets, issues, _ = discover(uuid4(), parse_source(content.encode(), "csv"))
     spec, missing = build_spec(sheets[0], issues, uuid4())
     assert spec is None and missing_fields <= set(missing)
+    if sheets[0].selected_type == 'recipes':
+        assert 'recipes.process_loss_rate' not in missing  # Approved effective-zero policy.
     assert not sheets[0].shared_field_bindings and not sheets[0].import_values
 
 

@@ -1,0 +1,929 @@
+{
+  "version": 1,
+  "label": "DỮ LIỆU GIẢ; chỉ đổi hình thức, không tạo facts mới",
+  "seed": "same frozen synthetic_cafe_v1; no resampling",
+  "oracle_sha256": "ab5bb8f47930cd27f5f95321b39def9d73eabcf1be8da52be9d2b0c3a302da4a",
+  "oracle_workbook_hashes": {
+    "01_main_at_cutoff.xlsx": "5656e20894314994d2faed22de1f0448b130c7d8dcf8936485a4ec29ef46468f",
+    "02_sufficient_at_cutoff.xlsx": "6b4a3811aa4db0e38a3e11815b9bd51f15499fce06706dd64de406fc62f0bed1",
+    "03_external_week_locked.xlsx": "dc6072e4bf02905089a032b9440d553420f50233b9d381e42dcbab480be76f74",
+    "04_inventory_reconciliation.xlsx": "13dbf786006738d3a4ed73e9303bf97727b914d7ecf9bbaa27c773fab021ad87"
+  },
+  "cutoff": "2026-10-17T23:59:59+07:00",
+  "source_system_key": "SYNTHETIC_CAFE_V1",
+  "report_type": "CAFE_INPUT_V1",
+  "files": {
+    "01_danh_muc.xlsx": {
+      "role": "input",
+      "sheets": [
+        {
+          "sheet": "Menu",
+          "schema": "products",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "source_business_key",
+              "label": "Mã món nguồn"
+            },
+            {
+              "field": "name",
+              "label": "Tên món"
+            },
+            {
+              "field": "selling_unit",
+              "label": "ĐVT bán"
+            },
+            {
+              "field": "sku",
+              "label": "SKU"
+            },
+            {
+              "field": "price",
+              "label": "Giá bán"
+            },
+            {
+              "field": "active",
+              "label": "Đang bán"
+            }
+          ],
+          "row_count": 4,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "products"
+        },
+        {
+          "sheet": "Nguyên liệu",
+          "schema": "ingredients",
+          "header_row": 5,
+          "columns": [
+            {
+              "field": "source_business_key",
+              "label": "Mã nguyên liệu nguồn"
+            },
+            {
+              "field": "name",
+              "label": "Tên nguyên liệu"
+            },
+            {
+              "field": "base_unit",
+              "label": "Đơn vị cơ sở"
+            },
+            {
+              "field": "sku",
+              "label": "SKU"
+            },
+            {
+              "field": "expiry_tracking",
+              "label": "Theo dõi hạn dùng"
+            },
+            {
+              "field": "active",
+              "label": "Đang sử dụng"
+            }
+          ],
+          "row_count": 5,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "ingredients"
+        },
+        {
+          "sheet": "Nhà cung cấp",
+          "schema": "suppliers",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "source_supplier_key",
+              "label": "Mã nhà cung cấp nguồn"
+            },
+            {
+              "field": "name",
+              "label": "Tên nhà cung cấp"
+            },
+            {
+              "field": "active",
+              "label": "Đang hoạt động"
+            }
+          ],
+          "row_count": 1,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "suppliers"
+        },
+        {
+          "sheet": "Định lượng món",
+          "schema": "recipes",
+          "header_row": 5,
+          "columns": [
+            {
+              "field": "product_id",
+              "label": "Món bán"
+            },
+            {
+              "field": "ingredient_id",
+              "label": "Thành phần"
+            },
+            {
+              "field": "quantity",
+              "label": "Định lượng nguyên liệu"
+            },
+            {
+              "field": "unit",
+              "label": "Đơn vị NL"
+            },
+            {
+              "field": "quantity_basis",
+              "label": "Cơ sở định lượng nguyên liệu"
+            },
+            {
+              "field": "yield_quantity",
+              "label": "Sản lượng toàn mẻ"
+            },
+            {
+              "field": "yield_unit",
+              "label": "Đơn vị SP"
+            },
+            {
+              "field": "process_loss_rate",
+              "label": "Tỷ lệ hao hụt"
+            },
+            {
+              "field": "version",
+              "label": "Phiên bản"
+            },
+            {
+              "field": "effective_from",
+              "label": "Áp dụng từ"
+            },
+            {
+              "field": "effective_to",
+              "label": "Ngày kết thúc hiệu lực"
+            }
+          ],
+          "row_count": 16,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "recipes"
+        },
+        {
+          "sheet": "Quy cách mua",
+          "schema": "supplier_terms",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "source_term_key",
+              "label": "Mã điều khoản ở nguồn"
+            },
+            {
+              "field": "supplier_id",
+              "label": "Tên nhà cung cấp"
+            },
+            {
+              "field": "ingredient_id",
+              "label": "Tên nguyên liệu"
+            },
+            {
+              "field": "pack_size_base_quantity",
+              "label": "Lượng trong một kiện"
+            },
+            {
+              "field": "unit",
+              "label": "Đơn vị cơ sở"
+            },
+            {
+              "field": "pack_cost",
+              "label": "Giá mỗi pack"
+            },
+            {
+              "field": "currency",
+              "label": "Tiền tệ"
+            },
+            {
+              "field": "price_basis",
+              "label": "Cơ sở giá nguồn"
+            },
+            {
+              "field": "price_quantity",
+              "label": "Lượng mẫu số của giá"
+            },
+            {
+              "field": "price_unit",
+              "label": "Đơn vị mẫu số của giá"
+            },
+            {
+              "field": "minimum_order_quantity",
+              "label": "MOQ"
+            },
+            {
+              "field": "moq_basis",
+              "label": "Cơ sở MOQ nguồn"
+            },
+            {
+              "field": "moq_unit",
+              "label": "Đơn vị lượng MOQ"
+            },
+            {
+              "field": "lead_time_days",
+              "label": "Số ngày giao"
+            },
+            {
+              "field": "shelf_life_days",
+              "label": "Số ngày hạn dùng"
+            },
+            {
+              "field": "maximum_order_base_quantity",
+              "label": "Lượng mua tối đa"
+            },
+            {
+              "field": "active",
+              "label": "Đang hoạt động"
+            },
+            {
+              "field": "effective_from",
+              "label": "Ngày bắt đầu hiệu lực"
+            },
+            {
+              "field": "effective_to",
+              "label": "Ngày kết thúc hiệu lực"
+            }
+          ],
+          "row_count": 5,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "supplier_terms"
+        }
+      ]
+    },
+    "02_ban_hang.xlsx": {
+      "role": "input",
+      "sheets": [
+        {
+          "sheet": "Bán hàng",
+          "schema": "sales",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "sales_date",
+              "label": "Ngày bán"
+            },
+            {
+              "field": "product_id",
+              "label": "Tên món"
+            },
+            {
+              "field": "quantity",
+              "label": "SL bán"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "is_stockout",
+              "label": "Hết món?"
+            },
+            {
+              "field": "business_report_key",
+              "label": "Mã báo cáo nghiệp vụ"
+            }
+          ],
+          "row_count": 728,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "sales"
+        }
+      ]
+    },
+    "03_lich_su.xlsx": {
+      "role": "input",
+      "sheets": [
+        {
+          "sheet": "Mua hàng",
+          "schema": "purchase_history",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "source_record_key",
+              "label": "Mã dòng mua hàng"
+            },
+            {
+              "field": "ingredient_id",
+              "label": "Tên nguyên liệu"
+            },
+            {
+              "field": "supplier_id",
+              "label": "Tên nhà cung cấp"
+            },
+            {
+              "field": "quantity",
+              "label": "Lượng đã mua"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "order_date",
+              "label": "Ngày đặt mua"
+            },
+            {
+              "field": "received_date",
+              "label": "Ngày thực nhận"
+            },
+            {
+              "field": "report_date",
+              "label": "Ngày báo cáo mua"
+            },
+            {
+              "field": "price",
+              "label": "Giá mua lịch sử"
+            },
+            {
+              "field": "currency",
+              "label": "Tiền tệ"
+            },
+            {
+              "field": "price_basis",
+              "label": "Cơ sở giá nguồn"
+            },
+            {
+              "field": "price_quantity",
+              "label": "Lượng mẫu số của giá"
+            },
+            {
+              "field": "price_unit",
+              "label": "Đơn vị mẫu số của giá"
+            },
+            {
+              "field": "evidence_reference",
+              "label": "Bằng chứng khai báo"
+            }
+          ],
+          "row_count": 597,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "purchase_history"
+        },
+        {
+          "sheet": "Thực dùng",
+          "schema": "usage_history",
+          "header_row": 5,
+          "columns": [
+            {
+              "field": "source_record_key",
+              "label": "Mã ghi nhận sử dụng"
+            },
+            {
+              "field": "usage_date",
+              "label": "Ngày sử dụng"
+            },
+            {
+              "field": "ingredient_id",
+              "label": "Nguyên liệu sử dụng"
+            },
+            {
+              "field": "quantity",
+              "label": "Lượng thực dùng"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "observed_at",
+              "label": "Thời điểm thực sử dụng"
+            },
+            {
+              "field": "evidence_reference",
+              "label": "Bằng chứng khai báo"
+            }
+          ],
+          "row_count": 910,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "usage_history"
+        }
+      ]
+    },
+    "04_ton_kho.xlsx": {
+      "role": "input",
+      "sheets": [
+        {
+          "sheet": "Tồn kho theo lô",
+          "schema": "opening_stock",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "ingredient_id",
+              "label": "Tên nguyên liệu"
+            },
+            {
+              "field": "lot_code",
+              "label": "Mã lô"
+            },
+            {
+              "field": "quantity",
+              "label": "Tồn cuối ngày"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "expiry_date",
+              "label": "Hạn dùng"
+            },
+            {
+              "field": "received_date",
+              "label": "Ngày thực nhận"
+            },
+            {
+              "field": "supplier_id",
+              "label": "Tên nhà cung cấp"
+            },
+            {
+              "field": "unit_cost",
+              "label": "Giá một đơn vị vật lý"
+            },
+            {
+              "field": "currency",
+              "label": "Tiền tệ"
+            },
+            {
+              "field": "source_record_id",
+              "label": "Mã bản ghi mở sổ"
+            },
+            {
+              "field": "observed_at",
+              "label": "Thời điểm chốt kho"
+            },
+            {
+              "field": "reason",
+              "label": "Lý do"
+            }
+          ],
+          "row_count": 11,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "opening_stock"
+        }
+      ]
+    },
+    "05_ca_du_ton.xlsx": {
+      "role": "sufficient_only",
+      "sheets": [
+        {
+          "sheet": "Mua hàng",
+          "schema": "purchase_history",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "source_record_key",
+              "label": "Mã dòng mua hàng"
+            },
+            {
+              "field": "ingredient_id",
+              "label": "Tên nguyên liệu"
+            },
+            {
+              "field": "supplier_id",
+              "label": "Tên nhà cung cấp"
+            },
+            {
+              "field": "quantity",
+              "label": "Lượng đã mua"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "order_date",
+              "label": "Ngày đặt mua"
+            },
+            {
+              "field": "received_date",
+              "label": "Ngày thực nhận"
+            },
+            {
+              "field": "report_date",
+              "label": "Ngày báo cáo mua"
+            },
+            {
+              "field": "price",
+              "label": "Giá mua lịch sử"
+            },
+            {
+              "field": "currency",
+              "label": "Tiền tệ"
+            },
+            {
+              "field": "price_basis",
+              "label": "Cơ sở giá nguồn"
+            },
+            {
+              "field": "price_quantity",
+              "label": "Lượng mẫu số của giá"
+            },
+            {
+              "field": "price_unit",
+              "label": "Đơn vị mẫu số của giá"
+            },
+            {
+              "field": "evidence_reference",
+              "label": "Bằng chứng khai báo"
+            }
+          ],
+          "row_count": 602,
+          "oracle_file": "02_sufficient_at_cutoff.xlsx",
+          "oracle_sheet": "purchase_history"
+        },
+        {
+          "sheet": "Tồn kho theo lô",
+          "schema": "opening_stock",
+          "header_row": 5,
+          "columns": [
+            {
+              "field": "ingredient_id",
+              "label": "Tên nguyên liệu"
+            },
+            {
+              "field": "lot_code",
+              "label": "Mã lô"
+            },
+            {
+              "field": "quantity",
+              "label": "Tồn cuối ngày"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "expiry_date",
+              "label": "Hạn dùng"
+            },
+            {
+              "field": "received_date",
+              "label": "Ngày thực nhận"
+            },
+            {
+              "field": "supplier_id",
+              "label": "Tên nhà cung cấp"
+            },
+            {
+              "field": "unit_cost",
+              "label": "Giá một đơn vị vật lý"
+            },
+            {
+              "field": "currency",
+              "label": "Tiền tệ"
+            },
+            {
+              "field": "source_record_id",
+              "label": "Mã bản ghi mở sổ"
+            },
+            {
+              "field": "observed_at",
+              "label": "Thời điểm chốt kho"
+            },
+            {
+              "field": "reason",
+              "label": "Lý do"
+            }
+          ],
+          "row_count": 16,
+          "oracle_file": "02_sufficient_at_cutoff.xlsx",
+          "oracle_sheet": "opening_stock"
+        }
+      ]
+    },
+    "06_tuan_kiem_chung.xlsx": {
+      "role": "external_locked",
+      "sheets": [
+        {
+          "sheet": "Bán hàng",
+          "schema": "sales",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "sales_date",
+              "label": "Ngày bán"
+            },
+            {
+              "field": "product_id",
+              "label": "Tên món"
+            },
+            {
+              "field": "quantity",
+              "label": "SL bán"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "is_stockout",
+              "label": "Hết món?"
+            },
+            {
+              "field": "business_report_key",
+              "label": "Mã báo cáo nghiệp vụ"
+            }
+          ],
+          "row_count": 28,
+          "oracle_file": "03_external_week_locked.xlsx",
+          "oracle_sheet": "sales"
+        }
+      ]
+    },
+    "07_doi_soat.xlsx": {
+      "role": "reference_only",
+      "sheets": [
+        {
+          "sheet": "Ca chính - theo ngày",
+          "schema": "main_daily",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "day",
+              "label": "Ngày"
+            },
+            {
+              "field": "ingredient",
+              "label": "Nguyên liệu"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "opening",
+              "label": "Tồn đầu ngày"
+            },
+            {
+              "field": "received",
+              "label": "Thực nhận"
+            },
+            {
+              "field": "consumed",
+              "label": "Thực dùng"
+            },
+            {
+              "field": "expired",
+              "label": "Hết hạn"
+            },
+            {
+              "field": "closing",
+              "label": "Tồn cuối ngày"
+            }
+          ],
+          "row_count": 910,
+          "oracle_file": "04_inventory_reconciliation.xlsx",
+          "oracle_sheet": "main_daily"
+        },
+        {
+          "sheet": "Ca chính - theo lô",
+          "schema": "main_lots",
+          "header_row": 5,
+          "columns": [
+            {
+              "field": "key",
+              "label": "Mã lô nguồn"
+            },
+            {
+              "field": "name",
+              "label": "Tên nguyên liệu"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "received",
+              "label": "Thực nhận"
+            },
+            {
+              "field": "expiry",
+              "label": "Hạn dùng"
+            },
+            {
+              "field": "quantity",
+              "label": "Lượng ban đầu"
+            },
+            {
+              "field": "remaining",
+              "label": "Còn lại"
+            },
+            {
+              "field": "consumed",
+              "label": "Thực dùng"
+            },
+            {
+              "field": "expired",
+              "label": "Hết hạn"
+            },
+            {
+              "field": "unit_cost",
+              "label": "Giá một đơn vị vật lý"
+            }
+          ],
+          "row_count": 597,
+          "oracle_file": "04_inventory_reconciliation.xlsx",
+          "oracle_sheet": "main_lots"
+        },
+        {
+          "sheet": "Đủ tồn - theo ngày",
+          "schema": "sufficient_daily",
+          "header_row": 4,
+          "columns": [
+            {
+              "field": "day",
+              "label": "Ngày"
+            },
+            {
+              "field": "ingredient",
+              "label": "Nguyên liệu"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "opening",
+              "label": "Tồn đầu ngày"
+            },
+            {
+              "field": "received",
+              "label": "Thực nhận"
+            },
+            {
+              "field": "consumed",
+              "label": "Thực dùng"
+            },
+            {
+              "field": "expired",
+              "label": "Hết hạn"
+            },
+            {
+              "field": "closing",
+              "label": "Tồn cuối ngày"
+            }
+          ],
+          "row_count": 910,
+          "oracle_file": "04_inventory_reconciliation.xlsx",
+          "oracle_sheet": "sufficient_daily"
+        },
+        {
+          "sheet": "Đủ tồn - theo lô",
+          "schema": "sufficient_lots",
+          "header_row": 5,
+          "columns": [
+            {
+              "field": "key",
+              "label": "Mã lô nguồn"
+            },
+            {
+              "field": "name",
+              "label": "Tên nguyên liệu"
+            },
+            {
+              "field": "unit",
+              "label": "ĐVT"
+            },
+            {
+              "field": "received",
+              "label": "Thực nhận"
+            },
+            {
+              "field": "expiry",
+              "label": "Hạn dùng"
+            },
+            {
+              "field": "quantity",
+              "label": "Lượng ban đầu"
+            },
+            {
+              "field": "remaining",
+              "label": "Còn lại"
+            },
+            {
+              "field": "consumed",
+              "label": "Thực dùng"
+            },
+            {
+              "field": "expired",
+              "label": "Hết hạn"
+            },
+            {
+              "field": "unit_cost",
+              "label": "Giá một đơn vị vật lý"
+            }
+          ],
+          "row_count": 602,
+          "oracle_file": "04_inventory_reconciliation.xlsx",
+          "oracle_sheet": "sufficient_lots"
+        }
+      ]
+    },
+    "08_khai_bao_phi.csv": {
+      "role": "explicit_declaration",
+      "sheets": [
+        {
+          "sheet": "CSV",
+          "schema": "payable_fees",
+          "header_row": 1,
+          "columns": [
+            {
+              "field": "source_fee_key",
+              "label": "Mã khai báo phí"
+            },
+            {
+              "field": "scope",
+              "label": "Phạm vi"
+            },
+            {
+              "field": "effective_from",
+              "label": "Ngày bắt đầu hiệu lực"
+            },
+            {
+              "field": "effective_to",
+              "label": "Ngày kết thúc hiệu lực"
+            },
+            {
+              "field": "mode",
+              "label": "Cơ chế phí"
+            },
+            {
+              "field": "coverage",
+              "label": "Mức khai báo đầy đủ"
+            },
+            {
+              "field": "currency",
+              "label": "Tiền tệ"
+            },
+            {
+              "field": "components",
+              "label": "Các thành phần phí"
+            },
+            {
+              "field": "covered_source_term_keys",
+              "label": "Điều khoản trong phạm vi"
+            },
+            {
+              "field": "covered_source_supplier_keys",
+              "label": "Nhà cung cấp trong phạm vi"
+            },
+            {
+              "field": "evidence_reference",
+              "label": "Bằng chứng khai báo"
+            },
+            {
+              "field": "reason",
+              "label": "Lý do"
+            }
+          ],
+          "row_count": 1,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "payable_fees"
+        }
+      ]
+    },
+    "09_pham_vi_ca_chinh.csv": {
+      "role": "explicit_declaration",
+      "sheets": [
+        {
+          "sheet": "CSV",
+          "schema": "scope_declarations",
+          "header_row": 1,
+          "columns": [
+            {
+              "field": "source_declaration_key",
+              "label": "Mã khai báo"
+            },
+            {
+              "field": "declaration",
+              "label": "Nội dung khai báo"
+            }
+          ],
+          "row_count": 7,
+          "oracle_file": "01_main_at_cutoff.xlsx",
+          "oracle_sheet": "scope_declarations"
+        }
+      ]
+    },
+    "10_pham_vi_du_ton.csv": {
+      "role": "explicit_declaration",
+      "sheets": [
+        {
+          "sheet": "CSV",
+          "schema": "scope_declarations",
+          "header_row": 1,
+          "columns": [
+            {
+              "field": "source_declaration_key",
+              "label": "Mã khai báo"
+            },
+            {
+              "field": "declaration",
+              "label": "Nội dung khai báo"
+            }
+          ],
+          "row_count": 7,
+          "oracle_file": "02_sufficient_at_cutoff.xlsx",
+          "oracle_sheet": "scope_declarations"
+        }
+      ]
+    }
+  }
+}

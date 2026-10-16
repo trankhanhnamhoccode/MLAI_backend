@@ -1,0 +1,2 @@
+"Mã khai báo phí","Phạm vi","Ngày bắt đầu hiệu lực","Ngày kết thúc hiệu lực","Cơ chế phí","Mức khai báo đầy đủ","Tiền tệ","Các thành phần phí","Điều khoản trong phạm vi","Nhà cung cấp trong phạm vi","Bằng chứng khai báo","Lý do"
+"SYN-NO-FEES","STORE_PROCUREMENT","2026-04-19","","NONE","COMPLETE","VND","[]","[""SYN-TERM-01"",""SYN-TERM-02"",""SYN-TERM-03"",""SYN-TERM-04"",""SYN-TERM-05""]","[""Nhà cung cấp giả Cafe V1""]","SYNTHETIC_CAFE_V1: entirely fictional; not extracted from July08 original workbooks","Fictional supplier includes all delivery fees in pack price"

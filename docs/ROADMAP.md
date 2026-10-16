@@ -1,5 +1,13 @@
 # Remaining work and acceptance gates
 
+CURRENT FACT: a [natural Vietnamese synthetic cafe fixture](../tests/fixtures/synthetic_cafe_human_v1/README.md)
+preserves the frozen canonical oracle and separates external-week/reconciliation
+references from input. Its focused harness covers manual public Import/Owner/atomic
+commit/re-export and the three supported BASELINE Planning scenarios. New lexical
+SL bán evidence is general/contextual; no schema/endpoint/engine/model activation.
+Whole FE/browser ergonomics for source/identity/structured declarations remain
+unverified; this slice does not reopen original-workbook contract expansion.
+
 CURRENT FACT: local launcher shutdown watcher tolerates Windows observation-file
 replacement failure; targeted lifecycle tooling regressions cover bounded retry,
 persistent denial and run-scoped stop after write failure. Native restart/browser
@@ -215,6 +223,24 @@ local checkpoint after Menu; metadata source values and actor/Owner provenance
 are verified. Positive Recipe loss multiplies all lines, including packaging;
 per-line exemptions/food classification remain outside scope, not established by
 original loss0 acceptance. Inventory acceptance starts only after this checkpoint.
+
+CURRENT FACT original inventory inspection is now WIP after4609a52: July08 stock
+sheet11 rows/10 Ingredients, all raw retained; same-Store prerequisites imported
+through the approved Menu/recipe flow, no canonical business seed. Count needs
+existing lot IDs; opening needs confirmed baseline/time/nullable facts and a
+reviewed way to read one source lot column as both label and stable scoped record
+key. [Typed selector proposal](IMPORT_MAPPING_API_CONTRACT_VI.md#inventory-original-column-proposal)
+was user-reviewed then paused before verified implementation. Preview blocked; fresh stock/movement/receipt/history/vendor
+counts0. No original stock commit/re-export/FEFO/Planning READY claim. Existing
+synthetic permission/stale/unit/idempotency guards do not substitute for it.
+
+CURRENT FACT synthetic cafe fixture work is separately authorized:182 input days
+through Oct17 plus an external sealed7-day week; four exact full-name Products,
+five Ingredients, explicit dated lots/prices/bases and three procurement scenarios.
+Target existing Import?forecast?BOM?native procurement?selector without BE/API
+changes. Main requires purchasing within budget/MOQ/lead/shelf/capacity; sufficient
+stock and insufficient budget remain separate cases. Recommendation remains separate
+from user selection. Original stock extension stays paused, not silently resumed.
 
 Chốt/push v1.0 trước rồi tách nhánh import: audit sáu workbook chỉ đọc, cải tiến
 deterministic mapping proposals và approved Store/source/report/version profile

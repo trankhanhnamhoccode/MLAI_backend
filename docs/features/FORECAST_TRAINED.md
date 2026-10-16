@@ -190,3 +190,67 @@ Warning classification: missing/readiness/selection fallback and applied negativ
 crossing postprocessing are WARNING, not errors and not evidence of poor/good quality.
 Corruption/incompatibility/nonfinite output is a typed error, not a warning that permits
 success. Baseline-only S2.2 warnings remain empty; no new warning policy is retroactive.
+
+<a id="synthetic-cafe-inputs"></a>
+## CURRENT FACT — reusable synthetic cafe inputs
+
+[Dataset manifest](../../tests/fixtures/synthetic_cafe_v1/dataset.json) and
+[SHA-256 pins](../../tests/fixtures/synthetic_cafe_v1/hashes.json) own the fictional
+input definition. `scripts/generate_synthetic_cafe.py` deterministically constructs
+facts without reading original workbooks, a DB, model outputs or final-week scores.
+All facts are SYNTHETIC; real-data quality remains NOT EVALUATED.
+
+History has182 complete days2026-04-19..2026-10-17 (728 observed Product/day rows).
+Cutoff is2026-10-17T23:59:59+07:00, Store timezoneAsia/Ho_Chi_Minh. Native backtest
+origins start day42, every7days;20origins split10 validation/10 internal holdout.
+Each origin trains only its prefix. Final fitting may use all182 input days after
+family/configuration freeze; external2026-10-18..24 is a distinct locked workbook,
+never an input to training, family selection, tuning, stock, usage-derived features
+or procurement at cutoff. No external score is asserted before predictions freeze.
+The manifest's chronological internal holdout is distinct from that final week.
+The fixed synthetic timeline was moved from July08 to Oct17 because stock freshness
+compares source observation with actual DB write timestamps. Guards are unchanged;
+this dated acceptance requires the DB creation clock not to be later than cutoff.
+A later run needs an explicitly regenerated fictional timeline or a coherently
+controlled test infrastructure clock, not a post-cutoff stock declaration.
+
+Four separate workbooks: main inputs at cutoff, sufficient-stock alternative inputs,
+external actuals only, and read-only inventory reconciliation. Each marks fictional
+origin. No original prices/receipt dates/identities are inferred. Main and low-budget
+cases use the same operational inputs; only the explicit budget differs (5,000,000
+and1VND). Sufficient stock includes its own known-at-cutoff top-up and matching
+purchase/lot ledger. Do not import both alternatives into one Store.
+
+In a fresh owned test Store, explicitly IGNORE SYNTHETIC_README and scope_declarations
+for the first Import. Use reviewed source namespaceSYNTHETIC_CAFE_V1/reportCAFE_INPUT_V1,
+daily_total sales, EXCEL_SERIAL date convention and current manual identity/N5
+workflow. After atomic catalog/stock commit, upload the same bytes and explicitly
+select only scope_declarations; bind exact current Store Products/Ingredients/lots.
+Record-only purchase/usage history does not mutate stock. Opening quantity is the
+remaining physical balance, not original receipt quantity; separate source/lot keys
+and reconciliation retain the link. Never also import historical receipts as fresh
+stock. Scope JSON quantities are decimal strings under the current typed contract.
+
+Main assumptions fixed before the external week's draw: MOQ2packs, lead1day, food
+shelf14days, declared per-Ingredient capacities and per-Supplier limits; complete
+zero extra delivery fees. Every recorded historical purchase also obeys the same
+pack/MOQ and unit-price basis. Ordering uses prior closing balance to restore three
+nominal days of stock; no future sales or external scores drive receipts.
+Forecast/BOM may require a positive purchase outlay. Native
+solver/selector determine the recommendation without hardcoded IDs or weakened
+guards; the user still confirms the final option. Current supported serving operator
+is BASELINE; internal LightGBM rolling evaluation is independently real and causal,
+not an unsupported trained activation.
+
+Reusable verification (provider off, owned shelfcash_test only for integration):
+
+```powershell
+python scripts/verify_synthetic_cafe.py
+python runtime/verification/i1/run_targeted.py tests/integration/test_synthetic_cafe_pipeline.py -q --tb=short
+```
+
+The first command checks typed parsing/normalization for every workbook row, exact
+BOM against independently summed use, receipt/expiry/usage/closing conservation and
+cutoff separation without DB/model fitting. Integration uses the public Import/N5/
+preview/confirm/worker, fresh reads, supported forecast, native procurement/selector
+and retained Planning output. It does not accept an option or place orders.
