@@ -1,9 +1,14 @@
 """Single descriptor projection of supported typed source models. No new schema."""
 
-import unicodedata
+from dataclasses import dataclass, replace
 from app.application.contracts import import_mapping as dto
 from app.application.contracts.import_domains import SOURCE_MODELS
 from app.application.contracts.import_field_values import allowed_scopes
+from app.application import import_templates as curated
+from app.application.import_templates import (
+    ColumnHint, normalized_hint, validate_templates, matching_templates,
+    contextual_column, nsx_hint,
+)
 
 SCHEMAS = {
     "inventory_receipts": ("Hàng thực nhận", "ACTUAL_RECEIPT: creates a received lot and RECEIPT movement; not opening/count/history or Planning purchases."),
@@ -152,14 +157,6 @@ UNSUPPORTED = (
     "payable_fees.tiers",
     "supplier_terms.payment_terms",
 )
-
-
-def normalized_hint(value):
-    # Only proposal matching. Never normalize canonical labels/identities/units.
-    text = unicodedata.normalize("NFKD", value).casefold().replace("đ", "d")
-    return " ".join("".join(
-        c if c.isalnum() else " " for c in text if not unicodedata.combining(c)
-    ).split())
 
 
 def unsupported_sheet_reason(headers):
@@ -352,28 +349,81 @@ def descriptors():
     )
 
 
-def rule_classification(headers, sheet_name, selected=None):
-    if selected is None and unsupported_sheet_reason(headers):
-        return None, tuple(None for _ in headers), None, False
+@dataclass(frozen=True)
+class SheetRules:
+    schema: str | None
+    columns: tuple[ColumnHint, ...]
+    confidence: float | None
+    low_quality: bool
+    provenance: tuple[str, ...] = ()
+
+
+def sheet_rules(headers: tuple[str, ...], sheet_name: str, selected: str | None = None,
+                samples: tuple[tuple[str | None, ...], ...] = ()) -> SheetRules:
+    """One proposal policy for discovery and explicit manual classification."""
+    validate_templates(curated.TEMPLATES, {
+        name: frozenset(name + "." + key for key in model.model_fields if key != "domain")
+        for name, model in SOURCE_MODELS.items()
+    })
+    unsupported = unsupported_sheet_reason(headers)
+    if selected is None and unsupported:
+        return SheetRules(None, tuple(ColumnHint(None, (), unsupported) for _ in headers), None, False)
+    matches = matching_templates(headers)
+    canonical_schemas = {name for name, model in SOURCE_MODELS.items()
+                         if any(h == name + "." + key for h in headers for key in model.model_fields)}
+    mixed = len({m.template.schema for m in matches}) > 1
+    if selected is None and mixed and not canonical_schemas:
+        columns = []
+        for i, h in enumerate(headers):
+            hint = (nsx_hint(h, headers, samples[i] if i < len(samples) else ())
+                    or contextual_column(h, matches))
+            columns.append(replace(hint, target=None, ambiguous=True,
+                                   reason=hint.reason + ";MIXED_WORKFLOW_REVIEW") if hint
+                           else ColumnHint(None, (), "AMBIGUOUS_WORKFLOW"))
+        return SheetRules(None, tuple(columns), None, True,
+            tuple(f"CURATED:{m.template.template_id}/{m.template.version}" for m in matches))
     ranked = []
     for name in SOURCE_MODELS:
         if selected is not None and name != selected:
             continue
         fields = [o for o in options(name) if o.available]
-        proposals = []
+        own_matches = tuple(m for m in matches if m.template.schema == name)
+        columns = []
         for header in headers:
             candidates = column_candidates(header, name)
-            proposals.append(candidates[0] if len(candidates) == 1 else None)
+            target = candidates[0] if len(candidates) == 1 else None
+            reason = ("EXACT_CANONICAL_HEADER" if target == header else "CONTROLLED_HEADER_ALIAS")
+            hint = ColumnHint(target, candidates, reason if target else (
+                "DUPLICATE_OR_AMBIGUOUS_TARGET" if candidates else "NO_SUPPORTED_TARGET"))
+            contextual = contextual_column(header, own_matches)
+            if contextual and header not in {o.key for o in fields}:
+                hint = contextual
+            elif (target and normalized_hint(header) in {"sl", "dvt", "dv"}
+                  and not own_matches and matches and name not in canonical_schemas):
+                hint = ColumnHint(None, (target,), "CONFLICTING_WORKFLOW_EVIDENCE",
+                                  requires_review=True, ambiguous=True)
+            columns.append(hint)
+        proposals = tuple(c.target for c in columns)
         # Duplicate headers/aliases cannot silently overwrite the same target.
         duplicates = {p for p in proposals if p and proposals.count(p) > 1}
-        proposals = tuple(None if p in duplicates else p for p in proposals)
+        columns = [replace(c, target=None, candidates=(c.target,),
+                           reason="DUPLICATE_OR_AMBIGUOUS_TARGET" + (
+                               ";" + c.reason if "CURATED:" in c.reason else ""), ambiguous=True)
+                   if c.target in duplicates else c for c in columns]
+        proposals = tuple(c.target for c in columns)
         present = {p for p in proposals if p}
         # Generic unit/name/currency alone cannot establish a business workflow.
         canonical = any(h.startswith(name + ".") and h in {o.key for o in fields} for h in headers)
         distinctive = present - {
             name + "." + k for k in ("unit", "name", "currency", "active", "price", "product_id", "ingredient_id", "supplier_id")
         }
-        if selected is None and not canonical and (len(present) < 2 or not distinctive):
+        # Generic quantity/unit/manufacturer labels do not establish a workflow.
+        generic_targets = {c.target for h, c in zip(headers, columns, strict=True)
+                           if normalized_hint(h) in {"sl", "dvt", "dv", "nsx", "so luong", "quantity", "unit"}}
+        if not own_matches:
+            distinctive -= generic_targets
+        contextual = any(not m.conflicting for m in own_matches)
+        if selected is None and not canonical and (len(present) < 2 or not (distinctive or contextual)):
             continue
         required = {o.key for o in fields if o.requiredness == "required"}
         coverage = len(present & required) / max(1, len(required))
@@ -381,12 +431,33 @@ def rule_classification(headers, sheet_name, selected=None):
             normalized_hint(name),
             normalized_hint(SCHEMAS[name][0]),
         }
-        ranked.append((len(present), coverage, bool(hint), name, proposals))
+        ranked.append((len(present), coverage, bool(hint), name, tuple(columns)))
     ranked.sort(reverse=True)
     if not ranked:
-        return None, tuple(None for _ in headers), None, True
+        return SheetRules(None, tuple(nsx_hint(h, headers, samples[i] if i < len(samples) else ())
+                                      or ColumnHint(None, (), "NO_SUPPORTED_TARGET")
+                                      for i, h in enumerate(headers)), None, True)
     best = ranked[0]
     ambiguous = len(ranked) > 1 and best[:2] == ranked[1][:2]
     if best[0] == 0 or ambiguous:
-        return None, tuple(None for _ in headers), None, True
-    return best[3], best[4], best[1], best[1] < 1 or any(p is None for p in best[4])
+        return SheetRules(None, tuple(nsx_hint(h, headers, samples[i] if i < len(samples) else ())
+                                      or ColumnHint(None, (), "NO_UNIQUE_SCHEMA_EVIDENCE")
+                                      for i, h in enumerate(headers)), None, True)
+    columns = list(best[4])
+    for i, h in enumerate(headers):
+        lexical = nsx_hint(h, headers, samples[i] if i < len(samples) else ())
+        if lexical:
+            columns[i] = lexical
+        elif columns[i].target is None and not columns[i].candidates:
+            semantic = semantic_review_candidate(h, best[3])
+            if semantic:
+                columns[i] = ColumnHint(None, (semantic[0],), semantic[1], requires_review=True)
+    return SheetRules(best[3], tuple(columns), best[1], best[1] < 1 or any(
+        c.target is None or c.requires_review for c in columns),
+        tuple(f"CURATED:{m.template.template_id}/{m.template.version}"
+              for m in matches if m.template.schema == best[3]))
+
+
+def rule_classification(headers, sheet_name, selected=None):
+    result = sheet_rules(headers, sheet_name, selected)
+    return result.schema, tuple(c.target for c in result.columns), result.confidence, result.low_quality

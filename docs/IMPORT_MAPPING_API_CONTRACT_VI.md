@@ -196,7 +196,8 @@ có thể dùng model. Không thay type/target rules đã xác định hoặc du
 không gửi sample cells của target rules đã biết. Semantic ambiguity chưa có target
 được đề xuất candidates/reason; duplicate ambiguity vẫn cần người xử lý.
 Headers/cells/README là dữ liệu không tin cậy, không phải chỉ dẫn. Off/no-key/timeout/invalid output
-giữ manual flow. Tối đa hai sheet/batch, hai transport attempts/sheet. Một live
+giữ manual flow. Default hai gateway sheet slots/analysis (operator0..10, pinned
+theo §5.1.1), hai transport attempts/slot. Một live
 gateway probe POS demo đã validate đề xuất SLX; không phải guarantee chất lượng
 model hoặc browser end-to-end. Live calls chỉ trong approved model/data/calls/cost scope.
 Không dùng filename làm source-system authority, không rows rewrite/entities/
@@ -241,9 +242,10 @@ EXCEL_DATE_SYSTEM_REQUIRED. Styles không tự quyết định semantics.
 1. Khách chọn business context date, files → I01 draft → I02 nhận bytes. Upload
    không ghi Product/Ingredient/Sales/Recipe/Inventory. Chưa upload thành công không
    phải nhập thành công. FE không parse workbook để tự canonicalize.
-2. I03 seal file set, discover schema → thử approved Store/source/report mapping
-   và deterministic rules trước. Khớp profile thì apply đúng version, không LLM,
-   không duyệt lại mapping. Unfamiliar structure/identity/conversion tạo issues.
+2. I03 seal file set và parse/discover với provisional deterministic hints, không
+   gọi provider hoặc bind bằng signature. M04 xác lập nguồn riêng từng sheet rồi
+   lookup/reuse approved compatible version. Phần còn eligible có thể được client
+   yêu cầu qua I05 semantic_suggestions (§5.1.1); manual không cần gọi phase này.
 3. M01/M02/M03 hiển thị exceptions; M04 sửa **proposal**. LLM chỉ gợi ý phần mơ hồ,
    không approval/activation/facts. Provider unavailable vẫn làm được known profile
    và manual proposal. High confidence không thay quyền Owner.
@@ -281,7 +283,7 @@ Tất cả route tương đối `/api/v1`. GIỮ ID/route gốc khi phù hợp; 
 | M02 GET /imports/{import_id}/mappings | GIỮ, SỬA issue types | Columns/identity/alias/conversion exceptions; successful pairs read-only. |
 | M03 GET /imports/{import_id}/sheets/{sheet_id}/field-options | GIỮ, SỬA descriptors | Server schema support/requiredness; unsupported targets không advertised writable. |
 | M04 PATCH /imports/{import_id}/mappings/{mapping_id} | GIỮ, SỬA semantics | Confirm proposal value, không approve/activate; CAS import revision, typed per issue. |
-| I05 POST /imports/{import_id}/process | GIỮ, SỬA phase preview/commit | Một processing route cho validate/preview rồi commit explicit; không endpoint mỗi stage. |
+| I05 POST /imports/{import_id}/process | GIỮ, phases semantic_suggestions/preview/confirm_review/commit | Optional fallback §5.1.1, preview/confirmation/commit explicit; không endpoint mỗi stage. |
 | I06 GET /imports/{import_id}/completion | GIỮ | Committed impact, source versions/audit refs; no-op completion riêng outcome. |
 | H01 GET /stores/{store_id}/imports/calendar | GIỮ | History aggregate distinct batch theo uploaded time, cùng filters H02. |
 | H02 GET /stores/{store_id}/imports | GIỮ | Paginated history, không file explorer. |
@@ -395,8 +397,8 @@ acceptance Import126b0f2/A3 (không chứng nhận server/release đang chạy):
 context nên analyze chỉ discover/candidate, giữ source_context unresolved kể cả
 chỉ một profile cùng signature. Metadata columns chỉ phát hiện conflict, không
 positive source proof; không copy source evidence của version cũ vào file mới.
-Signature cũng không còn là điều kiện skip provider; semantic proposals vẫn opt-in,
-không attest nguồn. M04 SourceContext lưu declaration/evidence/actor của batch,
+I03 không gọi provider dù model enabled; semantic proposals chỉ chạy khi client
+yêu cầu I05 sau source declaration (§5.1.1), không attest nguồn. M04 SourceContext lưu declaration/evidence/actor của batch,
 lọc Store+source_system_key+report_type+signature, kiểm compatible declarations/
 recipe/supplier basis rồi bind unique active/nonretired version. Nhiều candidate
 không phân biệt được trả PROFILE_MATCH_AMBIGUOUS; source chưa rõ không bind/preview.
@@ -404,12 +406,133 @@ _bindings kiểm source declaration + actor + exact scope trên pin khi preview/
 commit/worker; pending artifact chỉ có signature không source proof trả
 SOURCE_CONTEXT_REQUIRED. Summary báo đúng source blocker, không giả retirement.
 
-CURRENT FACT trên routes hiện có, không operation/DTO field mới: FE dùng M02
+CURRENT FACT trên routes hiện có: FE dùng M02
 source_context issue rồi M04 khai báo/chọn nguồn, không N5 lại nếu spec unchanged.
 Classification/column review compatible trước source declaration không tự làm
 đổi spec; genuine draft edits giữ approval path. Context đã resolve trong batch
 không bị hỏi lại để preview/commit. I03 vẫn chưa nhận established context/provenance
 trước analyze; không suy nguồn từ filename, signature hoặc client trust flag.
+
+<a id="semantic-suggestions-i2"></a>
+#### 5.1.1. Discovery → source/reuse → optional semantic suggestions — I2
+
+ACCEPTED DECISION / CURRENT FACT trên isolated source `feat/import-curated-templates`:
+I03 chỉ discovery; success không đồng nghĩa mapping/import ready. M04 là nơi user
+xác lập nguồn có evidence/actor và thực hiện compatible reuse. Profile đã bind
+thắng provisional hints, spec unchanged không N5 lại. Không source propagation
+giữa sheets/files, kể cả cùng filename/headers. Declaration là USER_DECLARED,
+không externally verified. Manual/Owner/preview/confirm/commit không đòi Qwen.
+
+I05 POST `/imports/{import_id}/process`, request variant:
+
+```json
+{"phase":"semantic_suggestions","mapping_revision":"<M01 current revision>","sheet_ids":["<sheet UUID>"]}
+```
+
+Header If-Match là **import_revision** từ I04, Idempotency-Key UUID, Origin/CSRF
+như các mutations hiện có. Cần mapping.propose + current domain/sensitive reads.
+Sheet scope explicit, unique, 1..100 IDs thuộc batch; thứ tự request là thứ tự
+xét fallback. Unknown scope422 INVALID_SHEET_SCOPE; empty/duplicate/bounds422.
+Toàn scope phải eligible trước enqueue, không silently bỏ sheets không eligible.
+202 SemanticSuggestionsAccepted={phase,import_id,job_id,job_status:"queued",
+import_revision}; giữ endpoint và job lifecycle hiện có, không framework mới.
+
+M01 thêm semantic_suggestions[{sheet_id,eligible,reason}], active_job_id,
+semantic_calls_used/semantic_call_limit (effective pinned), semantic_configured_limit
+(cho analysis mới), semantic_calls_remaining và semantic_budget_version.
+semantic_suggestions có dispatch_guaranteed=false: eligible không giữ chỗ hoặc hứa
+được gọi khi nhiều sheets tranh remaining. FE chọn subset và sắp thứ tự sheet_ids
+explicit; không dùng UUID/upload order làm priority. Eligibility là read-only, không bind,
+resolve hoặc gọi model. Reason có ELIGIBLE, SOURCE_CONTEXT_REQUIRED/CONFLICT,
+PROFILE_MATCH_AMBIGUOUS, APPROVED_BINDING_APPLIED, RECHECK_SOURCE_REUSE,
+SHEET_IGNORED, NO_ELIGIBLE_SEMANTICS, UNSUPPORTED_WORKFLOW, LLM_COLUMN_LIMIT/LLM_CALL_LIMIT,
+JOB_PENDING, IMPORT_COMPLETED, PERMISSION_DENIED. Command không eligible trả409
+với code tương ứng; thiếu quyền vẫn theo authorization403/404 hiện có.
+RECHECK_SOURCE_REUSE yêu cầu refresh và M04 SourceContext lại, không model chọn
+profile. Draft thật được xét theo bindings/spec/edits, không chỉ profile_id.
+Known unsupported layout không eligible chỉ vì đã khai báo nguồn; cần manual
+classification/declarations phù hợp, không nhờ model hợp thức hóa business rules.
+Fallback chỉ bổ sung identity issues trong requested sheets; approved aliases và
+issues của sheets ngoài scope giữ nguyên.
+
+Worker dùng cùng lookup/compatibility của M04, recheck current authority, claim,
+analysis/source/mapping/file-set và profile lifecycle/content trước từng provider
+call và trước atomic publication. Store/batch/job locks chỉ giữ trong transactions
+ngắn, không giữ connection/transaction trong provider call. Thay source/manual
+mapping/binding/approval/retirement làm stale → failed SEMANTIC_INPUT_STALE,
+result=null, không publish partial proposals. Current revocation vẫn deny. Thay đổi
+ngay sau pre-call check có thể phát sinh call đang bay; kết quả luôn bị fence trước
+publish. Immutable sealed source set vẫn được DB trigger bảo vệ.
+
+Provider chỉ nhận allowlist adapter hiện hành và lexical cells của unresolved
+eligible columns. Không Store catalogue, identity bindings/shared business values,
+source declarations hoặc resolved/ignored cell samples. Không overwrite fixed
+deterministic targets, explicit resolutions hoặc duplicate ambiguity. New tokens
+vẫn cần deterministic identity resolution; added reusable alias/reservation/spec
+vẫn cần Owner approval. Retained previews/canonical facts không được rewrite.
+
+CURRENT FACT I2.1: merge đồng bộ metadata theo cùng conventions M02, không DTO mới:
+
+| Semantic result | status / code / field_category |
+| --- | --- |
+| Supported target proposal | needs_confirmation / OWNER_MAPPING_APPROVAL_REQUIRED / B |
+| target=null, còn supported candidates | ambiguous / AMBIGUOUS_TARGET / B |
+| target=null, không supported candidates | unmatched / UNKNOWN_SOURCE_FIELD / C |
+
+Candidates union exact/deduplicate, tối đa4: proposed target trước, candidates cũ
+còn hợp lệ rồi model alternatives; lọc theo supported registry của sheet type.
+Model abstain không xóa deterministic candidates còn hợp lệ. Null không là IGNORE
+hoặc bằng chứng business field unsupported. suggestion_origin giữ QWEN; code và
+suggestion_reason do backend tạo, reason hiện hành bắt đầu QWEN_ và provenance cũ
+giữ dưới PRIOR_SUGGESTION_REASON. Model wording chỉ ở model_reason, untrusted
+advisory, không lấy làm code/reason xác nhận semantics hoặc exact/controlled alias.
+Classification proposal đồng bộ SHEET_TYPE_PROPOSED/needs_confirmation/B; abstain
+giữ UNSUPPORTED_OR_UNRESOLVED_SHEET/unmatched/C với reason QWEN_SHEET_TYPE_ABSTAINED,
+không khẳng định unsupported. Classification đã resolved/manual/ignored được giữ.
+QWEN classification/column vẫn cần M04 review trước build_spec/N5; semantic metadata
+không thay approval, source/profile precedence, quota hoặc worker fences.
+
+ACCEPTED DECISION / CURRENT FACT I3: operator setting
+`IMPORT_SEMANTIC_SHEET_LIMIT` là integer0..10, default2; client không đặt quota.
+0 không reserve/call, manual flow vẫn hoạt động. I03 acceptance capture
+`semantic_sheet_slots/1` + limit trong durable analysis-job input; worker chuyển
+marker vào retained analysis JSON. Config đổi, restart hoặc key mới không thay
+limit của analysis hiện tại. Retained/queued trước I3 thiếu marker luôn dùng2,
+không lấy config mới làm retrospective default; không đổi profile/signature.
+Không migration/table mới, không USD budget hoặc số HTTP attempts.
+
+Worker xét toàn bộ requested sheets đúng thứ tự, không tự gọi sheets ngoài scope.
+Trước reserve: current eligibility/source/approved reuse/authority fences và shared
+adapter preflight (enabled, key không rỗng, column/payload bounds). Disabled/key
+thiếu/input limit trả safe diagnostic attempts0, slot_consumed=false, không reserve.
+Reservation và cap check atomic dưới existing Store/batch/job locks; không giữ
+Session qua network. Durable reserve là consumed kể cả provider/network/invalid
+output, stale publish hoặc crash; không hoàn slot hoặc blind retry sau crash.
+Adapter giữ tối đa hai transport attempts/slot, timeout30s/deadline60s hiện hành.
+
+Ví dụ remaining1, request [C,A,B]: C được dispatch trước; nếu C reserve thì A/B có
+call_limit/LLM_CALL_LIMIT, không mất outcomes. Nếu C preflight fail thì C unavailable
+không tiêu slot, A có thể reserve, B call_limit. Đổi request [A,C,B] đổi priority.
+Nếu đã hết quota trước acceptance (kể cả limit0),409 LLM_CALL_LIMIT, không enqueue.
+Structural/source-ineligible sheet vẫn chặn toàn command409; không silently omit.
+
+Poll J01: operation=import_semantic_suggestions, result resource_type tương ứng,
+resource_id=import_id và outcomes theo nguyên requested order. Mỗi outcome giữ
+sheet_id, requested_position (1-based), eligible/eligibility_reason, status/code,
+slot_consumed và safe adapter diagnostic. J01 semantic_allocation đọc durable
+operational progress kể cả result=null khi failed/crash; scheduled nghĩa queued
+để xét, chưa giữ slot/hứa dispatch. attempted nghĩa đã reserve trước external
+operation, không chứng minh HTTP đã đến provider. Sau dispatch có proposed,
+unavailable hoặc call_limit. Stale publication giữ attempted/consumed, không fake
+terminal success; client đọc job error và M01 used/remaining. completed chỉ nghĩa
+optional operation đã xử lý; unavailable/call_limit
+không giả có suggestions. Sau terminal đọc lại M01/M02/I04 lấy revisions,
+warnings và SheetInfo.suggestion_diagnostic. Outage/off/key thiếu/invalid output
+giữ issues để manual; không thêm business blocker. Same-key same request/header
+replay cùng receipt/job, completed replay không enqueue/gọi lại; đổi payload cùng
+key vẫn conflict. Client cũ tiếp tục manual, nhưng I03 không còn tự gọi Qwen:
+provider behavior **không hoàn toàn backward-compatible**; FE muốn fallback phải
+gọi phase mới, không chỉ bật config rồi mong analyze chạy model.
 
 Trước preview/commit FE hiển thị scope nguồn/report + evidence do ai khai báo,
 profile_id/version/content_digest/reuse-or-new, schema và semantics/basis đang áp,
@@ -721,6 +844,16 @@ severity ERROR với actionable source location/code, không warning che lỗi. 
 source values giữ raw null/empty riêng; không normalize mất meaning. INVALID khác
 AMBIGUOUS classification CONFLICT. Preview flags là data validation, không quyền
 ủy nhiệm; actor can_commit đòi current full permissions và confirms hợp lệ.
+
+CURRENT FACT — XLSX formatting không là business record: với recorded Excel epoch,
+physical row mà mọi cell raw=null, kind=empty, không formula (hoặc không có cells)
+được tách khỏi typed record validation. Mỗi row có warning
+XLSX_FORMAT_ONLY_ROW_SKIPPED cùng source location; original bytes/raw staging rows,
+source digest và physical counters giữ nguyên. Không phải API chọn/bỏ business rows.
+Row có bất kỳ value, whitespace/empty text, error hoặc formula vẫn phải validate;
+CSV blank records không dùng rule này. Zero/false không là blank. Source chỉ còn
+formatting bị NO_DATA_ROWS, không tạo preview-ready/commit-ready giả. Preview counts
+đếm typed operations; raw sheet row_count vẫn physical body scope.
 
 I05 preview mới sau mapping proposal change không modify preview cũ. Khi commit
 request chứa explicit sales resolutions mới, frozen commit plan = preview + resolutions
@@ -2037,7 +2170,7 @@ Same Store/grants là authority, không chỉ biết job UUID; cross-Store404,
 revoked/thiếu grants403. Không cần jobservice hoặc broker riêng; one-process
 durable orchestration hiện đã wired; readiness dùng worker availability thực tế.
 
-Job={job_id:UUID,operation:import_analyze|import_preview|import_commit|planning_pdf_export,
+Job={job_id:UUID,operation:import_analyze|import_semantic_suggestions|import_preview|import_commit|planning_pdf_export,
 status:queued|running|completed|failed,stage:queued|parsing|mapping|validating|
 committing|rendering|completed|failed,progress:number0..1|null,
 created_at:Timestamp,started_at:Timestamp|null,completed_at:Timestamp|null,
@@ -2047,6 +2180,7 @@ ImportJobContext={store_id,import_id}; ExportJobContext={store_id,run_id,export_
 JobResult discriminated resource_type:
 
 - import_analysis: {resource_type,resource_id:import_id,analysis_id};
+- import_semantic_suggestions: {resource_type,resource_id:import_id,outcomes}; xem §5.1.1;
 - import_preview: {resource_type,resource_id:import_id,preview_id};
 - import_completion: {resource_type,resource_id:import_id,commit_id};
 - planning_pdf_export: {resource_type,resource_id:export_id,run_id,option_id,
@@ -2530,6 +2664,73 @@ Ví dụ hai file A/B cùng proven receipt: batch raw2/logical1; mỗi file raw1
 không cộng logical1+1 thành batch2. Nếu có master reservation, đó là action khác
 và được đếm riêng dù dùng cùng physical source row. Source rows không nhân đôi.
 Xem [verification/commands/limits](runbooks/FULL_TEST_FLOW.md#read-discovery-c4).
+
+<a id="manual-completion-i4"></a>
+### 17.2. Manual completion guidance và Owner/Staff continuation — CURRENT FACT I4
+
+M01 thêm optional typed `completion_guidance`, read-only và scope **batch**, không
+theo file/sheet/status/origin filter, page length hoặc include_clean_sheets.
+`issue_denominator` là distinct mapping issue IDs trong toàn analysis, gồm cả
+classification/source/identity/declarations và resolved/ignored issues; không phải
+số cột, số clicks, số rows hay số thao tác. Existing progress/counters giữ nghĩa
+issue counts tại mục17; không cộng issues + missing_fields + profile tasks thành
+một số thao tác, vì các views có thể nói về cùng điều kiện.
+
+- `issues` có mapping_id/sheet_id/profile_id, category/code, action và can_act.
+  Categories tách classification, column_mapping, source_context, entity_resolution,
+  conversion_business_declaration (conversion/schema blockers). Một unresolved issue
+  có tối đa một entry theo ID. target=null không tự thành IGNORE/unsupported;
+  suggested_ignore vẫn cần explicit resolution. Resolved/auto_mapped/ignored issues
+  không là manual work. RULE candidates chỉ dẫn review_full_spec khi complete spec
+  đã qua build_spec/MQ01 policy; semantic hints/QWEN vẫn resolve_mapping tại M04.
+- `profiles` dẫn profile_id/sheet_id cụ thể, missing_fields, review_ready,
+  can_submit/can_owner_review, binding_usable, reason_codes, relevant own submission
+  ID/effective state và allowed_actions. Readiness dùng cùng policy MQ01, không
+  mở whitelist build_spec. missing_fields là required inputs/spec review reasons,
+  không phải Owner có thể approve để bỏ qua. Source đã resolved trong batch không
+  bị hỏi lại. binding_usable không đồng nghĩa preview row-valid. Submission reference
+  ưu tiên current pending task, rồi history của current proposal_revision, rồi queue
+  order (-submitted_at/UUID); timestamp tie không được lấy UUID làm chronology.
+- `declarations` chỉ missing IMPORT_VALUE dưới approved usable bindings: có target,
+  mapping_id và sheet/profile cụ thể để M04 shared_value. Batch phải bổ sung giá trị
+  thực/evidence; không lấy giá trị từ import trước hoặc mặc định. Value-only update
+  dưới approved rule không cần N5; thay reusable rule/alias/reservation cần review.
+- `preview` tách preview_validation: preview_id nếu đã chạy, detail_action
+  inspect_preview tới I04 include_preview, can_inspect/can_request_preview.
+  INSPECT_PREVIEW_ROW_DOMAIN_RESULTS nghĩa cần đọc kết quả row/domain tại I04,
+  không khẳng định preview có lỗi hoặc còn current. M01 không duplicate errors,
+  read_set hoặc tính lại preview; I04 rows/blockers/stale/allowed_actions và exact
+  preview digest vẫn là authority. Approval không sửa invalid quantities/stock.
+
+Actions là guidance theo quyền/trạng thái lúc đọc, không mutation hoặc capability
+token; commands luôn recheck current grants, source/profile pins và revisions.
+Staff chỉ submit own batch với import.read/mapping.read/mapping.propose + sensitive
+reads; can_owner_review chỉ Owner. Pending submission không submit lại; stale cần
+sửa/resubmit theo mục15. Staff đọc own latest status; Owner vẫn review MQ03 pinned
+spec/evidence, không dùng live M01 spec thay pinned submission. Binding từ batch
+khác giữ read-only: nếu retire/incompatible, source_context_mapping_id dẫn về M04
+trong batch hiện tại; không đề nghị N5 sửa proposal của batch gốc.
+
+Flow FE tối thiểu, không endpoint mới:
+
+1. Đọc M01/M02/M03; làm M04 cho các manual issue/declaration và required inputs.
+   Exact deterministic proposals đủ policy không cần resolve riêng mọi cột.
+2. Staff chọn profile có can_submit → MQ01 explicit submit với proposal_revision,
+   mapping_revision và I04 import_revision; Owner tự review draft có thể dùng N5.
+3. Owner MQ02/MQ03 đọc đúng pinned full spec + evidence rồi N5 với lifecycle và
+   submission version. request_changes/reject giữ active version cũ; Staff đọc
+   status/reason, sửa M04 và explicit submit mới. Notification/queue read không
+   approve, rebind hoặc commit.
+4. approve_activate đã bind **batch gốc của proposal** trong existing N5 transaction,
+   advance import/mapping revisions và resolve eligible RULE group. Staff refetch
+   M01/I04/MQ03; không cần khai nguồn/N5 lại nếu binding còn phù hợp. Không tự bind
+   các batch khác. New entity token/alias/reservation vẫn theo current review policy.
+5. Staff I05 preview → I04 đọc rows/domain errors/stale/required_actions → explicit
+   confirm_review → explicit commit → J01/I06. Owner approval không cấp thêm quyền
+   domain, không thay confirmation hoặc cho phép commit khi thiếu rights.
+   Before commit không canonical writes; import completed không hứa Planning READY.
+
+Verification/limits: [I4 runbook](runbooks/FULL_TEST_FLOW.md#manual-completion-i4).
 
 ## Canonical clarification for consumers
 

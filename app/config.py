@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     model_artifact_directory: Path = Path("runtime/model_artifacts")
     openrouter_api_key: SecretStr | None = None
     import_llm_suggestions_enabled: bool = False
+    import_semantic_sheet_limit: int = Field(default=2, ge=0, le=10)
     openrouter_model: str | None = None
     openrouter_mapping_model: Literal["qwen/qwen3.5-9b"] = "qwen/qwen3.5-9b"
     openrouter_mapping_timeout_seconds: float = Field(default=30, gt=0, le=30)
@@ -49,6 +50,13 @@ class Settings(BaseSettings):
     auth_email_delivery_enabled: bool = False
     auth_verification_frontend_url: str | None = None
     auth_password_reset_frontend_url: str | None = None
+
+    @field_validator("import_semantic_sheet_limit", mode="before")
+    @classmethod
+    def integer_sheet_limit(cls, value):
+        if type(value) is int or isinstance(value, str) and value.isascii() and value.isdecimal():
+            return value
+        raise ValueError("Semantic sheet limit must be an integer in 0..10")
 
     @model_validator(mode="after")
     def auth_transport(self):

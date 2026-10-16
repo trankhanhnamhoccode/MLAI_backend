@@ -1,5 +1,24 @@
 # Phản hồi BE cho FE010 — canonical source handoff
 
+## CURRENT FACT — Import I2 trên isolated source, chưa deploy
+
+[OpenAPI](openapi.json) của worktree feat/import-curated-templates giữ73 operations/
+66 paths, thêm I05 semantic_suggestions và typed M01/J01. I03 không còn tự gọi
+Qwen dù config enabled; FE cũ vẫn manual nhưng provider behavior đã đổi. FE dùng
+M04 SourceContext theo sheet rồi optional I05, poll J01 và refresh revisions trước
+manual/N5/preview. [Canonical Import §5.1.1](../IMPORT_MAPPING_API_CONTRACT_VI.md#semantic-suggestions-i2)
+sở hữu request examples, permissions, eligibility/reasons, quota và stale guards;
+không suy đã deploy từ snapshot source. I3 thêm M01 configured/effective/used/remaining
+và J01 semantic_allocation/outcomes với requested_position/slot_consumed/diagnostic.
+FE chọn subset/thứ tự sheet_ids; eligible/scheduled không hứa dispatch. Canonical
+section trên sở hữu ví dụ và outage/crash behavior. I4 thêm M01 completion_guidance
+để phân loại manual work/profile readiness/current actions/own submission/declarations,
+và dẫn I04 preview row/domain results. [Canonical I4 flow](../IMPORT_MAPPING_API_CONTRACT_VI.md#manual-completion-i4)
+sở hữu DTO meaning/denominator và Staff→MQ01→Owner MQ03/N5→Staff refetch→preview/
+confirm/commit. Approval đã bind batch gốc; không thêm endpoint/rebind command hoặc
+grant domain. I1–I5.1 thuộc local checkpoint, chưa merge/push/deploy; POS scope
+đã kiểm BE theo CURRENT_STATE, whole-workbook/FE chưa xác minh.
+
 ## CURRENT FACT — Data Readiness D1–D5 / source main local
 
 D5 `11ef320a5873fc4dc314fdad63878db5f8a8b38c` tích hợp giữ ancestry vào main local.

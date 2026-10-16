@@ -1,0 +1,53 @@
+{
+  "purpose": "I5 supplied-input acceptance: hashes and independently read OOXML cells, not matcher-derived canonical expectations. Original files remain unchanged and distinct from audit9f8608ea. No declarations of missing business facts are authorized by these references.",
+  "workbooks": [
+    {
+      "file": "01_POS_BASELINE_to_2026-07-08.xlsx",
+      "sha256": "23010aaa9a8a88e03b3c6bc0562a7118ff7d2d99b5c4a3681f6559dca2d891dc",
+      "sheets": ["README", "POS_T7_2026"],
+      "cells": {"POS_T7_2026": {"C3": "SLX", "C4": "0", "F4": "Có", "C5": "38"}},
+      "missing_or_review": ["explicit sales unit and business report key", "Store Product identities", "Excel serial convention and stockout aliases", "README and informational columns require explicit disposition"],
+      "expected": "blocked_without_business_declarations"
+    },
+    {
+      "file": "02_USAGE_BASELINE_to_2026-07-08.xlsx",
+      "sha256": "e47eefcb233dce82fec7512f442b365197ff1bac43aad2adb190a920eb73bcb1",
+      "sheets": ["NL_thực_dùng"],
+      "cells": {"NL_thực_dùng": {"C3": "Lượng thực dùng", "C4": "4.661", "D4": "kg"}},
+      "missing_or_review": ["Ingredient identities", "stable source record key and report identity", "date and observed usage semantics", "record-only; no inventory decrement or extra waste derivation"],
+      "expected": "blocked_without_business_declarations"
+    },
+    {
+      "file": "03_INVENTORY_PURCHASE_BASELINE_snapshot_2026-07-08.xlsx",
+      "sha256": "ab3c5764c9fe230da7b64a3d0f6675cac92356836471601466b4b1d0bad60c47",
+      "sheets": ["KiemKe_08-07", "PNK tháng 7", "Vendor rules"],
+      "cells": {"KiemKe_08-07": {"C4": "6", "D4": "lít", "F4": "DEMO-MILK-0701"}, "PNK tháng 7": {"C4": "20", "E4": "23000"}, "Vendor rules": {"E4": "15", "H4": "28000"}},
+      "missing_or_review": ["identified existing lots and count timestamp/timezone", "purchase-history identity and price basis; not receipt", "Supplier/Ingredient identities and effective dates", "explicit price/MOQ basis; delivery schedule not an implemented constraint"],
+      "expected": "blocked_without_business_declarations"
+    },
+    {
+      "file": "04_RECIPES_BUSINESS_RULES.xlsx",
+      "sha256": "a4370e477ffc4cfe843cdf7d46c2bf53a1a86ad84f4f1695496a2f8e2332023e",
+      "sheets": ["Định lượng món", "Điều kiện vận hành"],
+      "cells": {"Định lượng món": {"C3": "Lượng / 1 SP", "C4": "0.12", "E4": "1", "F4": "ly"}, "Điều kiện vận hành": {"A4": "storage_capacity", "C4": "650"}},
+      "missing_or_review": ["Product/Ingredient identities", "explicit quantity basis and process loss", "date convention", "mixed operational constraints cannot be silently ignored or imported as recipe rows"],
+      "expected": "blocked_without_business_declarations"
+    },
+    {
+      "file": "05_CONTEXT_HISTORY_and_W1_FORECAST_2026-01-01_to_2026-07-15.xlsx",
+      "sha256": "042e97456d2293b4b37e0fad967f516da3416d215eb8d455dcea1ce497d71bb0",
+      "sheets": ["Calendar + Weather"],
+      "cells": {"Calendar + Weather": {"G3": "Temp C", "G4": "33.2", "H4": "0"}},
+      "missing_or_review": ["mixed calendar/observed promotion/weather features", "not a supported arbitrary feature-table writer", "no future POS/usage/purchase or model-training authorization"],
+      "expected": "blocked_without_business_declarations"
+    },
+    {
+      "file": "06_MENU.xlsx",
+      "sha256": "6864dc86b9cbcca1b89ba875648be3bd31a86a9497c79620b2adc3cff872ba98",
+      "sheets": ["06_Menu"],
+      "cells": {"06_Menu": {"A4": "t1", "C4": "Sinh tố chuối", "E4": "ly", "H4": "35000", "J4": "Đang bán"}},
+      "missing_or_review": ["review source business identity and Product creation metadata", "explicit per-row boolean activity semantics", "mixed combo/component/discount columns are not a recipe/combo writer"],
+      "expected": "blocked_without_business_declarations"
+    }
+  ]
+}

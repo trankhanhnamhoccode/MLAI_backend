@@ -1,0 +1,19 @@
+{
+  "label": "I5 SYNTHETIC ACCEPTANCE INPUT, not original workbook facts or real-store defaults",
+  "prerequisites": "Supported auth/Store/Staff fixtures and one explicitly synthetic Product selling_unit=cup. Product prerequisite is not an import result.",
+  "source_context": {
+    "source_system_key": "I5-POS",
+    "report_type": "daily-sales",
+    "sales_semantics": "daily_total",
+    "missing_stockout": "not_provided",
+    "evidence_reference": "I5 synthetic source declaration; ISO dates, explicit cup unit and report identity in source cells"
+  },
+  "headers": ["sales.sales_date", "sales.product_id", "SLX", "sales.unit", "sales.business_report_key"],
+  "sales_date": "2026-10-09",
+  "unit": "cup",
+  "report_key": "I5-DAY-1",
+  "first_quantity": "100",
+  "corrected_quantity": "105",
+  "expected": {"first_total": "100", "corrected_total": "105", "sale_rows": 1, "source_revisions": [1, 2], "stockout": null},
+  "fake_provider": "Only proposes the reviewed meaning of SLX or returns LLM_UNAVAILABLE. Does not create values, identities, source facts, units or approval. One reserved gateway sheet slot, no live HTTP provider."
+}

@@ -382,7 +382,7 @@ def decide(
     "/imports/{import_id}/process",
     operation_id="I05",
     status_code=202,
-    response_model=dto.ImportEnvelope[dto.PreviewAccepted] | dto.ImportEnvelope[dto.CommitAccepted],
+    response_model=dto.ImportEnvelope[dto.PreviewAccepted] | dto.ImportEnvelope[dto.CommitAccepted] | dto.ImportEnvelope[dto.SemanticSuggestionsAccepted],
     responses={
         **ERRORS,
         202: {"headers": ETAG},
@@ -393,7 +393,7 @@ def decide(
 def process(
     import_id: UUID,
     body: Annotated[
-        dto.PreviewRequest | dto.CommitRequest | dto.ConfirmReviewRequest,
+        dto.PreviewRequest | dto.CommitRequest | dto.ConfirmReviewRequest | dto.SemanticSuggestionsRequest,
         Body(discriminator="phase"),
     ],
     request: Request,
@@ -415,7 +415,9 @@ def process(
             status_code=200,
             headers={"ETag": '"' + data.import_revision + '"'},
         )
-    data = svc.preview(token, import_id, body, key, match, csrf)
+    data = (svc.semantic_suggestions(token, import_id, body, key, match, csrf)
+            if isinstance(body, dto.SemanticSuggestionsRequest)
+            else svc.preview(token, import_id, body, key, match, csrf))
     response.headers["ETag"] = '"' + data.import_revision + '"'
     return wrap(request, data, poll=2000)
 

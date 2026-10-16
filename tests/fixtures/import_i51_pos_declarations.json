@@ -1,0 +1,16 @@
+{
+  "purpose": "User-declared synthetic 08/07/2026 dataset, original bytes retained. Business declarations authorized in the I5.1 conversation; API Owner approval remains a separate operation. Not benchmark assumptions or real-store facts.",
+  "pos_sha256": "23010aaa9a8a88e03b3c6bc0562a7118ff7d2d99b5c4a3681f6559dca2d891dc",
+  "menu_sha256": "6864dc86b9cbcca1b89ba875648be3bd31a86a9497c79620b2adc3cff872ba98",
+  "data_date": "2026-07-08",
+  "source_system_key": "USER_SYNTHETIC_POS",
+  "report_type": "DAILY_PRODUCT_SALES",
+  "business_report_key": "BASELINE_2026_07_08",
+  "sales_semantics": "daily_total",
+  "evidence_reference": "I5.1 user declaration: user-created synthetic baseline 08/07/2026; SLX is total cups sold per Product/day, not independent contributions. Source/report codes chosen under explicit user authorization.",
+  "identity_lifecycle": "Re-export/correction of this report keeps these codes regardless of filename/hash/upload. A different cutoff does not automatically imply a different source/report. Explicitly establish extension/correction versus independent report; never silently add overlapping dates.",
+  "product_metadata_policy": "Exact POS token to unique Menu name only; unit/price/status read per Menu row. No fuzzy matching, benchmark UUID reuse or active default. Current source codes t1..t5 are evidence only, not approved SKUs.",
+  "sku": null,
+  "sku_evidence": "User explicitly permits sku:null for this synthetic dataset to represent unknown/unconfirmed SKU, not proof no SKU exists.",
+  "scope": "All populated POS_T7_2026 rows. Explicit IGNORE README; D/E/G remain raw evidence, not other canonical facts. Retain and report empty/invalid physical rows; no silent data-row filtering."
+}

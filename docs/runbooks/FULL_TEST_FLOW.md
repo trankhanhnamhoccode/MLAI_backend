@@ -1541,6 +1541,188 @@ the same key and reads the durable receipt; never blindly reapply stock. Preserv
 source/audit/artifacts and WIP. Migration heads remain independent; no migration,
 feature, FE change or provider call is needed for this acceptance slice.
 
+<a id="import-acceptance-i5"></a>
+## I5 — bounded Import acceptance, original inputs và synthetic success
+
+CURRENT FACT: isolated branch base b0db90c, không main integration/FE/runtime/live
+provider acceptance. Reuse ownership checks, no-dotenv/network guard và supported
+test reset của I1 bên dưới. Chỉ owned shelfcash_test/55439; kiểm Compose labels,
+config/working-dir, named volume, port, current_database/current_user và Alembic head
+trước reuse/reset. Không development DB, không business seed để tạo READY.
+
+Original inputs đọc từ ../backend/dts hoặc explicit I5_WORKBOOK_DIRECTORY.
+[Original fixture](../../tests/fixtures/import_i5_workbooks.json) pin sáu SHA256,
+sheet order và independent OOXML cell values; test rehash bytes sau API flow,
+không dùng matcher output làm expected. File thiếu phải báo BLOCKED; skipped original
+cases không chứng minh acceptance. Bộ này khác audit9f8608ea, không baseline163.
+I1 evaluator/reference chỉ kiểm regression, chưa blind/human validated.
+
+[Sales fixture](../../tests/fixtures/import_i5_synthetic.json) có explicit source,
+daily-total/unit/report identity và catalog prerequisite được gắn nhãn synthetic.
+[Core fixture](../../tests/fixtures/import_i5_synthetic_core.json) chỉ auth/empty Store
+prerequisite; masters/recipe/opening/history đi qua public Import, không SQL seed
+business facts. Fake adapter/key chỉ dùng trong tests, không live HTTP provider.
+
+```powershell
+& ..\backend\.venv\Scripts\python.exe runtime/verification/i1/run_targeted.py tests/integration/test_import_i5_workbooks.py tests/integration/test_import_i5_acceptance.py tests/integration/test_import_i5_consumers.py -q --tb=short --show-capture=no
+```
+
+Original files không được bổ sung units/loss/identity/date/price/MOQ để ép pass:
+approval/preview bị chặn, fresh-session canonical counts bằng0, không auto IGNORE.
+Original POS inspect-only continuation dùng
+tests/integration/test_import_i51_pos_inspection.py với same guarded harness/owned DB.
+Current user scope explicit IGNORE README/D/E/G, không source/identity mutation hoặc
+N5/confirm/commit.945 populated rows khác1155 physical body rows:210 styled-empty
+rows949–1158 giữ nguyên trong staging, không gọi chúng là validated canonical rows.
+Preview409 và canonical absence là guard acceptance, không end-to-end success;
+no duplicate Product-token/day và revenue=quantity×price chỉ là structure evidence,
+không proof daily-total meaning/source uniqueness. Prior benchmark UUIDs/declarations
+không tự là approved Store bindings/profile versions. SKU unresolved không thành null.
+Current user-established original POS completion case:
+tests/integration/test_import_i51_pos_declared.py, với hash-bound
+tests/fixtures/import_i51_pos_declarations.json. User xác nhận dữ liệu giả mốc08/07,
+SLX daily_total, cho chọn stable source/report codes và explicit unknown sku:null.
+Auth/empty Store là prerequisite duy nhất; exact POS/Menu matching, per-row Menu
+active/unit/price → M04 new-Product proposals → full-spec N5 → preview → confirm →
+atomic commit. Fresh session kiểm5 Product/945 Sales, source revisions và values;
+re-export cùng bytes/report dưới upload filename khác NO_OP, một approved version.
+Không auto assign t1–t5 thành SKU hoặc reuse benchmark UUID. Cutoff khác không tự
+đổi source/report identity; cần xác định correction/extension/independent report.
+Format-only source rows210 được warning từng location; raw1155 vẫn giữ, typed
+preview950 operations. Regressions: test_import_format_only_preview (all-format
+NO_DATA_ROWS/CSV blank invalid), unit test_import_format_only_rows (formula/error/
+whitespace/zero/false/unmapped values không bị bỏ), existing preview/parser/stockout/
+field-values/OpenAPI và atomic rollback/missing/zero/duplicate/future-row checks.
+Chạy đúng affected selection, không lặp577-case milestone. Captured invocation nằm
+runtime/verification/i51; giữ cả pre-fix blocked preview và final source snapshots.
+Synthetic API acceptance: I01/I02/I03 → M01/M02/M03 → M04 source → optional I05
+fake semantics → explicit resolutions → MQ01 Staff submit → MQ03 pinned Owner
+read → N5 → Staff refetch → I05 preview → confirmation → atomic commit → I06.
+Approval không là commit hoặc domain grant. Before commit kiểm absence qua fresh
+Session; after commit kiểm Store/entity IDs, values, audit source revisions và
+completion. Sales100→105 là105, replay/NO_OP không cộng trùng; same source/profile
+reuse không gọi model/N5 lại. Outage/budget exhausted vẫn manual được.
+Core kiểm cả hai file orders: whole-yield recipe1000g → BOM5servings500g,
+opening1200g không bịa received date/cost; usage20/purchase10 vẫn record-only.
+Injected failure sau history writer flush phải rollback masters/recipe/stock/history
+và success audit/completion. Existing forecast capture/BOM/inventory reads chỉ đọc,
+không execute forecast/train hoặc chạy Planning benchmark. R01 sau commit vẫn giữ
+actual blockers; không đồng nhất import completed với Planning READY.
+
+Milestone mở rộng một lần trong Import: unit test_import* + read_projections_c4,
+Import/collaboration OpenAPI và integration boundaries I1–I4, commit/reuse/current
+rights/submissions, history/stock/receipt/supplier. Explicit selection loại các tests
+thực thi forecast/Planning khỏi lát này. Giữ exact selection/commands, redacted API
+requests/results, stdout/JUnit, original hashes, source snapshots before/after và
+fresh assertions dưới ignored runtime/verification/i5. Không cộng overlapping
+exploratory/reruns thành unique coverage; khi lỗi chỉ rerun affected checks nếu đủ.
+Concurrent worker poll được phép trả None khi thua claim cùng candidate; poll tiếp
+job queued rồi vẫn phải chứng minh one-winner/PREVIEW_STALE loser/no duplicate audit.
+Không sửa guard để ép fixtures. I5 không đổi public DTO; kiểm source OpenAPI khớp
+snapshot I4 (73 operations/66 paths), production source giữ nguyên.
+Stop đúng owned test container sau verification, giữ volume/artifacts/WIP;
+không restart customer runtime, commit/push hoặc mở slice tiếp theo.
+
+<a id="manual-completion-i4"></a>
+## I4 — manual guidance và Staff→Owner→Staff trên isolated source
+
+CURRENT FACT: [canonical guidance/FE flow](../IMPORT_MAPPING_API_CONTRACT_VI.md#manual-completion-i4).
+I4 giữ queue/N5/build_spec hiện hành, chỉ thêm typed M01 read projection và shared
+MQ01 readiness. Dùng same owned I1 PostgreSQL17/55439/shelfcash_test bên dưới:
+kiểm Compose labels/working-dir/config-file/mount/port và current_database/current_user
+trước reuse. Không .env/development DB/customer runtime; provider/workers OFF và
+network guard. Supported reset chỉ own test DB, no business seed.
+
+```powershell
+& ..\backend\.venv\Scripts\python.exe runtime/verification/i1/run_targeted.py tests/unit/test_import_completion.py tests/integration/test_import_completion_guidance.py tests/integration/test_import_completion_workflow.py -q --tb=short --show-capture=no
+```
+
+Affected regressions: test_mapping_submissions (pins/stale/retire/notification/
+rollback/replay/current rights), test_import_source_reuse, test_import_field_value_bindings,
+test_import_classification, test_import_projections_c4; unit test_read_projections_c4,
+semantic metadata và tests/api/test_import_openapi.py. Không full suite lặp lại.
+Giữ final invocation logs/JUnit/source digest và OpenAPI diff dưới ignored
+runtime/verification/i4. Diff giữ operations/paths/existing schemas, chỉ thêm
+MappingSummary.completion_guidance và các typed guidance components.
+
+Manual checks dùng M01/M02/M03 để bổ sung source/semantics/entity/declarations;
+exact complete RULE spec cho phép Owner review nhóm mà không resolve từng cột.
+Staff explicit submit → Owner đọc MQ03 pinned evidence → N5 decision → Staff
+refetch M01/I04/MQ03. request_changes/reject/stale cần sửa/resubmit đúng lifecycle.
+N5 approval tự bind batch gốc, không grant thêm quyền; I05 preview/confirm/commit
+vẫn riêng. Notification/queue reads không quyết định hoặc ghi business facts.
+Before commit kiểm Sales/Product absence/reservation qua fresh Session; after
+commit kiểm exact persisted facts. Whole-workbook/browser FE/Planning READY không
+được claim từ gate này. Stop đúng owned container sau verify, giữ volume/artifacts.
+
+<a id="import-curated-i1"></a>
+## I3 — bounded budget và source trước optional semantic suggestions
+
+CURRENT FACT isolated source; [canonical flow/DTO/FE delta](../IMPORT_MAPPING_API_CONTRACT_VI.md#semantic-suggestions-i2)
+sở hữu I03/M04/I05/J01. Dùng cùng isolation/ownership/no-dotenv/network guard của
+I1 bên dưới. Không bật customer runtime hoặc provider thật để verify.
+Operator: IMPORT_SEMANTIC_SHEET_LIMIT integer0..10/default2, pin cho analysis mới,
+retained thiếu marker giữ2; zero chỉ tắt semantic calls. Không tăng timeout/retries.
+Targeted I3: tests/unit/test_import_semantic_budget.py và
+tests/integration/test_import_semantic_budget.py (pin/legacy/order/overflow,
+preflight/transport/restart-crash/two-worker accounting). Dùng fake provider/key;
+network guard chỉ cho own test DB, không .env hoặc customer runtime.
+Targeted I2: tests/integration/test_import_semantics.py. Regressions:
+test_import_qwen_review, test_import_rule_review, test_import_classification,
+test_import_curated, test_import_source_reuse, test_import_commit,
+test_import_batch_mechanics, test_mapping_submissions; unit adapter/matching và
+tests/api/test_import_openapi.py. Không chạy full I1/suite chỉ để tiếp quản.
+
+Giữ stdout/JUnit, exact command, UTC và source snapshot digest của từng invocation
+dưới ignored runtime/verification/i3; failure logs là evidence hiện tại, không
+dựng lại lịch sử. OpenAPI diff với source trước I3 phải giữ operations/paths và
+chỉ đổi bounded quota/additive allocation fields đã duyệt; [snapshot FE](../handoff/openapi.json)
+phải khớp create_app(Settings(_env_file=None)).openapi().
+Manual check: model enabled vẫn I03 không gọi; source riêng từng sheet qua M04,
+reuse không N5 lại; chỉ eligible scopes mới I05 optional, J01 outcomes/warnings rồi
+đọc lại M01/M02/I04. Off/outage/call limit vẫn manual được. Reset fixtures chỉ own
+test DB; kết thúc stop đúng owned container, giữ volume và artifacts.
+
+## I1 — curated import rules trên worktree/DB riêng
+
+CURRENT FACT source scope ở [Import feature](../features/IMPORT_STAGING_PREVIEW.md).
+Worktree backend-import-curated-templates, base b0db90c; không chạy customer runtime
+hoặc provider thật. Workbook original chỉ đọc từ thư mục input được người dùng cho
+phép; evaluator kiểm đủ sáu hashes trước khi báo metrics:
+
+```powershell
+& ..\backend\.venv\Scripts\python.exe -m scripts.evaluate_import_curated --input-directory ../backend/dts
+```
+
+Integration phải có PostgreSQL17 instance **riêng**, tạo bằng Docker Compose/named
+volume. Local I1 dùng project shelfcash-i1-curated, container
+shelfcash-i1-curated-postgres, volume shelfcash-i1-curated-pgdata, loopback55439,
+database shelfcash_test; không reuse instance/volume nhánh khác. Compose/harness tạm
+nằm runtime/verification/i1; không là application config hoặc canonical fixture.
+Trước reuse kiểm Compose project/config-file/working-dir labels, mounts/port và
+current_database/current_user; nếu không xác minh được ownership thì không reset.
+Supported tests/conftest.py và scripts.dev.reset_database sở hữu guarded reset và
+Alembic head; không đổi guard hoặc trỏ development DB. Không cần seed business data.
+
+Chạy targeted pytest trong own source với DATABASE_URL và TEST_DATABASE_URL cùng
+owned instance/database nói trên; ENVIRONMENT=test. Dùng Settings(_env_file=None),
+hoặc trong process pytest đặt Settings.model_config['env_file']=None **trước**
+fixture setup, để không đọc .env. Import/Planning/PDF/notification/email workers
+OFF, IMPORT_LLM_SUGGESTIONS_ENABLED=false, effective provider key rỗng. Provider
+tests tự mock; có thể chặn gateway.build_opener trước pytest (các mock test sẽ
+override tạm) hoặc chặn network ngoài own DB. Không chặn socketpair nội bộ Windows
+event loop khi áp network guard.
+
+Targeted files: unit test_import_curated, test_import_mapping_rules,
+test_import_suggestions, test_import_qwen_followup, test_import_schema_suggestions,
+test_import_preview, test_import_field_values; integration test_import_curated,
+test_import_source_reuse, test_import_rule_review, test_import_qwen_review,
+test_import_classification, test_mapping_submissions. Dùng `python -m pytest
+<explicit test paths> -q --tb=short`; không run full suite chỉ để tăng counts.
+Manual API review steps ở feature; full fresh-session end-to-end scope cả đợt là
+I5. Kết thúc stop đúng owned I1 container, giữ volume; không stop/remove container,
+worktree hoặc runtime khác. Exact commands/results/limits nằm trong conversation.
+
 ## A2 — manual review và targeted checks trên DB Import riêng
 
 CURRENT FACT: worktree `D:\hocc_bk\ai\proj\projectMLAI\backend-import-sales-stockout`,

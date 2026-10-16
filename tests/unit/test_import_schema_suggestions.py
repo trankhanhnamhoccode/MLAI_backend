@@ -132,6 +132,7 @@ def test_business_headers_resolve_without_excel_uuid_and_receipt_dates_are_not_c
         "calendar_events", "promotion_observations", "usage_history", "purchase_history",
         "sales",
         "inventory_count",
+        "inventory_receipts",
         "opening_stock",
         "recipes",
         "products",

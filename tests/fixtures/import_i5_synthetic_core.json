@@ -1,0 +1,17 @@
+{
+  "label": "I5 SYNTHETIC source cells and explicit Owner declarations; auth/empty Store are the only prerequisites",
+  "creations": {
+    "I5-COFFEE": ["product", {"name": "I5 synthetic coffee", "selling_unit": "cup", "sku": "I5-COFFEE", "price": null, "active": true}],
+    "I5-MILK": ["ingredient", {"name": "I5 synthetic milk", "base_unit": "g", "sku": "I5-MILK", "expiry_tracking": false, "active": true}]
+  },
+  "records": {
+    "products": {"source_business_key": "I5-COFFEE", "name": "I5 synthetic coffee", "selling_unit": "cup", "sku": "I5-COFFEE", "price": null, "active": true},
+    "ingredients": {"source_business_key": "I5-MILK", "name": "I5 synthetic milk", "base_unit": "g", "sku": "I5-MILK", "expiry_tracking": false, "active": true},
+    "recipes": {"product_id": "I5-COFFEE", "ingredient_id": "I5-MILK", "version": 1, "effective_from": "2026-01-01", "effective_to": null, "quantity_basis": "PER_SERVING", "yield_quantity": "10", "yield_unit": "cup", "quantity": "100", "unit": "g", "process_loss_rate": "0"},
+    "opening_stock": {"source_record_id": "I5-OPENING-1", "ingredient_id": "I5-MILK", "supplier_id": null, "lot_code": "I5-LOT", "quantity": "1200", "unit": "g", "received_date": null, "expiry_date": null, "unit_cost": null, "currency": "VND", "observed_at": "EXPLICIT_SYNTHETIC_TEST_CLOCK_UTC", "reason": "I5 explicit opening balance, not a purchase receipt"},
+    "usage_history": {"source_record_key": "I5-USAGE-1", "evidence_reference": "I5 explicit recorded history, no stock adjustment", "ingredient_id": "I5-MILK", "usage_date": "2026-10-09", "observed_at": null, "quantity": "20", "unit": "g"},
+    "purchase_history": {"source_record_key": "I5-PURCHASE-1", "evidence_reference": "I5 explicit historical invoice, not received stock", "ingredient_id": "I5-MILK", "supplier_id": null, "quantity": "10", "unit": "g", "order_date": null, "received_date": null, "report_date": "2026-10-09", "price": "23", "price_basis": "PER_QUANTITY", "price_quantity": "1", "price_unit": "g", "currency": "VND"}
+  },
+  "expected": {"products": 1, "ingredients": 1, "recipes": 1, "lots": 1, "movements": 1, "history_records": 2, "opening_quantity": "1200", "whole_yield_ingredient": "1000", "bom_servings": "5", "bom_required": "500", "recipe_process_loss": "0", "receipt_date": null, "unit_cost": null},
+  "independent_arithmetic": "Source 100 g per serving * 10 servings = canonical whole-yield 1000 g; 5 servings * 100 g = 500 g BOM. Recorded usage20 and purchase10 do not change physical opening stock1200. Zero loss is an explicit synthetic source fact, never a default."
+}

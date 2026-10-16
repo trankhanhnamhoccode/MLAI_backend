@@ -75,7 +75,9 @@ def test_owner_reviews_group_reuses_without_provider_and_detects_drift(imp, monk
 
 def test_optional_model_sheet_budget_keeps_manual_flow(imp, monkeypatch):
     from app.infrastructure import import_suggestions
-    imp[2].settings = imp[2].settings.model_copy(update={'import_llm_suggestions_enabled': True})
+    from pydantic import SecretStr
+    imp[2].settings = imp[2].settings.model_copy(update={
+        'import_llm_suggestions_enabled': True, 'openrouter_api_key': SecretStr('SYNTHETIC-ONLY')})
     called = []
 
     def unavailable(*args):
@@ -99,6 +101,9 @@ def test_optional_model_sheet_budget_keeps_manual_flow(imp, monkeypatch):
     }, match=accepted['import_revision'])
     assert job.status_code == 202, job.text
     imp[2].run_one()
+    assert called == []
+    from tests.integration.import_semantic_helpers import request_semantics
+    request_semantics(imp, ident)
     result = summary(imp, ident)
     assert len(called) == 2 and len(result['sheets']) == 3
     assert 'LLM_CALL_LIMIT' in {w['code'] for w in result['warnings']}

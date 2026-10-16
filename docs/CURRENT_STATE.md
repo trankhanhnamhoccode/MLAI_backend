@@ -1,5 +1,97 @@
 # Current state
 
+## CURRENT FACT — Import I1–I5.1, isolated source acceptance
+
+Backend acceptance dùng public API/worker và owned PostgreSQL test, fake provider
+hoặc provider OFF. Sáu supplied workbook giữ original SHA256/cells/receipt digests;
+không phải audit9f8608ea hoặc baseline163 issues. I5 guard cases trước manual
+completion bị chặn đúng (0 original commits trong scope gate đó), không chứng minh
+sáu workbook hoặc mọi workflow unsupported. CURRENT FACT I5.1 đã source-faithful
+commit scope POS_T7_2026 của workbook gốc sau user-established declarations cho
+**dữ liệu giả mốc08/07/2026**, không whole-workbook/all-six acceptance.
+[Pinned declarations](../tests/fixtures/import_i51_pos_declarations.json) giữ
+daily_total, source USER_SYNTHETIC_POS/report type DAILY_PRODUCT_SALES/report key
+BASELINE_2026_07_08, explicit unknown sku:null và original POS/Menu hashes.
+Exact names nối năm Product từ Menu rows4–8; unit/price/active đọc từng source row,
+không mặc định active từ sales history, không coi t1–t5 là SKU. Catalog không seed:
+M04 reservations → Owner full-spec N5 → preview → confirm → atomic commit tạo5
+Product +945 Sales rows/189 dates01/01–08/07/2026, fresh-session values/Store IDs/
+source revisions khớp original cells.23 quantities zero và18 true/927 false stockout
+giữ nguyên; D/E/G và README explicit ignored khỏi canonical scope, raw vẫn giữ.
+N5 không ghi catalog/Sales. Re-export cùng bytes/report, kể cả đổi upload filename,
+reuse một approved version và NO_OP; không tăng5 Product/945 Sales rows hoặc cộng
+overlap. Mốc ngày khác không tự là source/report mới: phải xác định extension/
+correction hay independent report trước khi chọn identity/merge action.
+Bug được original preview chứng minh:210 rows949–1158 chỉ có XLSX formatting bị coi
+MISSING_REQUIRED_VALUE. Fix chỉ tách rows có recorded XLSX epoch, mọi cell raw=null,
+kind=empty và không formula; warning XLSX_FORMAT_ONLY_ROW_SKIPPED giữ từng location.
+Raw staging vẫn1155 physical body rows; typed preview950 operations (5 Product,
+945 Sales), không bỏ populated records. CSV empty records, whitespace/zero/false,
+formula/error/unmapped data vẫn validate; all-format source bị NO_DATA_ROWS.
+Không schema/DTO/writer/approval-policy delta. Prior inspection-only/unconfirmed
+source cases vẫn kiểm guard409; không giả chúng là end-to-end success.
+Prior hash-bound timezone/five-item/known-at declarations thuộc retrospective
+benchmark, surrogate UUIDs không là Store canonical identities hoặc Import approval.
+Không seed catalog hoặc thay bằng synthetic declarations.
+I1 oracle chỉ là regression reference, chưa blind/human
+validated. Synthetic inputs riêng có explicit declarations/prerequisites chứng minh
+Staff→Owner→Staff, correction100→105/replay/reuse, master/recipe/opening/history,
+fresh-session identities/lineage và rollback sau writer flush. Existing consumer reads
+thấy sales105, BOM500g và stock1200g; purchase/usage history vẫn record-only.
+Import completed không làm Planning READY: readiness giữ actual data/configuration/
+runtime blockers, không seed để ép READY. [Runbook/fixtures](runbooks/FULL_TEST_FLOW.md#import-acceptance-i5)
+sở hữu cách lặp lại; exact invocations/JUnit/source snapshots nằm ignored runtime.
+I5 không đổi production source/public DTO/schema/approval policy. Một regression test
+polling concurrency được sửa để chấp nhận losing claim trả None rồi poll job còn lại;
+fresh-session one-winner/stale-loser/audit assertions giữ nguyên. Đây là bounded BE
+acceptance, không full repository suite, browser FE, live provider hoặc main integration.
+I1–I5.1 là local Import checkpoint từ base b0db90c; chưa merge/push/deploy.
+
+M01 completion_guidance tách manual issue kinds, profile readiness/current actions,
+own submission state, missing batch IMPORT_VALUE và I04 preview validation reference.
+Scope batch/denominator distinct issue IDs, không click count hoặc sum blockers.
+Shared MQ01 readiness giữ build_spec/full-spec policy; existing queue/N5 đã đủ
+Staff→Owner→Staff. Approval bind batch gốc, Staff refetch revisions rồi explicit
+preview/confirm/commit; không grant thêm quyền hoặc sửa các batch khác. Retired reuse
+dẫn current source-context issue, không N5 trên batch gốc. Không endpoint/migration,
+FE/runtime/provider thật; phạm vi BE I5 và original blockers được nêu ở trên.
+[Canonical flow/FE delta](IMPORT_MAPPING_API_CONTRACT_VI.md#manual-completion-i4).
+
+## CURRENT FACT — I3 bounded semantic budget, isolated source
+
+I03 chỉ parse/discover/rules, không provider. M04 xác lập nguồn theo sheet và dùng
+approved compatible reuse; I05 phase=semantic_suggestions là optional command dùng
+job hiện có, mapping.propose/current sensitive reads, explicit sheet scope và
+source/profile/revision fences. M01 eligibility/job/budget, J01 typed outcomes;
+I2.1 merge đồng bộ target/status/code/category/reason, giữ supported candidates khi
+model abstain và provenance cũ; model wording chỉ advisory, không bypass review.
+manual không cần model. Scope/FE delta tại [canonical Import §5.1.1](IMPORT_MAPPING_API_CONTRACT_VI.md#semantic-suggestions-i2).
+Branch/worktree I1 giữ nguyên trong local checkpoint; chưa merge/deploy; main/runtime/FE không
+đổi. I3 pin operator integer0..10/default2 gateway sheet slots lúc I03 acceptance,
+retained thiếu marker giữ2. M01 phân biệt configured/effective/used/remaining;
+J01 durable allocation theo explicit request order, requested_position/consumed/
+diagnostic, kể cả attempted khi crash/stale. Shared preflight trước reserve không
+phí slot cho disabled/missing key/input bounds; sau reserve không hoàn slot.
+Retry/timeout và authority/reuse/review fences giữ nguyên; không migration/FE/runtime
+hoặc provider thật. BE persistence được kiểm trong I5 ở trên; FE chưa xác minh.
+
+## CURRENT FACT — I1 curated import proposals, isolated source
+
+Branch `feat/import-curated-templates`, worktree `backend-import-curated-templates`
+từ main `b0db90cedd3962d8cb2e3f2dfe4696ec83b4e52a`; local checkpoint, chưa merge/deploy.
+Six versioned system templates dùng header context/negative evidence cho sales,
+usage/count/actual receipt và recipe/supplier hints; analyze/manual classification
+dùng cùng policy. Existing reason strings giữ template/rule provenance, không DTO,
+signature, schema/writer, authorization hoặc provider orchestration change.
+Semantic hints không vượt build_spec/Owner/source proof; không business defaults.
+Recipe context vẫn được nhận diện khi thiếu Yield; manual reclassification giữ
+mapping hợp lệ, bỏ resolution/actor cũ khi phải tạo lại proposal khác schema.
+Scope/manual flow/limits ở [Import feature](features/IMPORT_STAGING_PREVIEW.md),
+repeatable verification ở [runbook](runbooks/FULL_TEST_FLOW.md#import-curated-i1).
+Sáu supplied dts workbooks là measurement inputs riêng, không audit9f8608ea.
+Không tích hợp main hoặc sửa runtime/FE/các worktree khác; phạm vi I5 ở trên không
+claim các workbook gốc đã hoàn thành. Exact results thuộc conversation, không full-suite claim.
+
 ## CURRENT FACT — local shutdown watcher
 
 Local runtime retries transient Windows PermissionError during atomic status-file

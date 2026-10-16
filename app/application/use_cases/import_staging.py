@@ -22,9 +22,10 @@ from app.application.import_analysis import (
     identity_issues,
     source_context_conflicts,
     captured_domains,
+    column_proposal,
 )
 from app.application.import_preview import make_preview, notice
-from app.application.import_descriptors import descriptors
+from app.application.import_descriptors import descriptors, sheet_rules
 from app.infrastructure.auth_crypto import digest
 from app.infrastructure.database.auth_session import auth_session
 from app.infrastructure.import_parser import parse_source
@@ -467,6 +468,8 @@ class ImportStaging:
                 "import_analyze",
                 dict(
                     analysis_id=str(b.analysis_id),
+                    semantic_budget=dict(version='semantic_sheet_slots/1',
+                                         limit=self.settings.import_semantic_sheet_limit),
                     file_set_version=b.file_set_version,
                     file_ids=[str(x) for x in body.accepted_file_ids],
                 ),
@@ -605,6 +608,12 @@ class ImportStaging:
             blockers=tuple(blockers),
             allowed_actions=(() if b.analysis_json.get("completion") else
                              ("preview",) if not blockers else ("resolve_mapping",)),
+            semantic_suggestions=self._semantic_eligibility(s, b),
+            active_job_id=b.active_job_id,
+            semantic_calls_used=self._semantic_calls_used(s, b),
+            semantic_call_limit=self._semantic_limit(b),
+            semantic_configured_limit=self.settings.import_semantic_sheet_limit,
+            semantic_calls_remaining=max(0, self._semantic_limit(b) - self._semantic_calls_used(s, b)),
             approved_contexts=choices,
             approved_profiles=tuple(inspected),
             warnings=tuple(
@@ -613,13 +622,109 @@ class ImportStaging:
             ),
         )
 
+    def _completion_guidance(self, s, b, result, actor, authority, permissions):
+        from app.application.import_completion import review_blockers, issue_guidance
+        from app.application.use_cases.mapping_submissions import drift
+        from app.repositories.collaboration import CollaborationRepository
+        repo = CollaborationRepository(s)
+        issues, sheets = self._issues(b), self._sheets(b)
+        completed = bool(b.analysis_json.get('completion'))
+        mutable = not completed and not b.active_job_id
+        owner = authority.role == 'OWNER'
+        can_resolve = mutable and 'mapping.propose' in permissions
+        visible = repo.submissions(b.store_id, None if owner else actor.user_id, None, b.id)
+        profiles, declarations = [], []
+        for sheet in sheets:
+            if sheet.ignored or not sheet.profile_id:
+                continue
+            profile = s.get(ImportProfile, sheet.profile_id)
+            if profile is None:
+                continue
+            own = [i for i in issues if i.sheet_id == sheet.sheet_id]
+            binding = next((r for r in b.analysis_json['bindings']
+                            if r['sheet_id'] == str(sheet.sheet_id)), None)
+            version = s.get(ImportProfileVersion, (UUID(binding['profile_id']), binding['version'])) if binding else None
+            context_issue = next((i for i in own if i.issue_type == 'source_context'), None)
+            context = (context_issue.resolution.resolution if context_issue and context_issue.resolution else None)
+            usable = bool(version and not version.retired and version.store_id == b.store_id
+                and version.content_digest == binding['content_digest']
+                and content_digest(version.spec_json) == binding['content_digest']
+                and context_issue and context_issue.resolved_by and isinstance(context, dto.SourceContext)
+                and (context.source_system_key, context.report_type) == (version.source_system_key, version.report_type))
+            if usable and context_issue and not completed:
+                retained = dto.ProfileSpec.model_validate(version.spec_json, context={'retained_evidence': True})
+                supplied = {value.target_field for value in sheet.import_values}
+                declarations.extend(dto.CompletionDeclarationGuidance(profile_id=profile.id,
+                    sheet_id=sheet.sheet_id, mapping_id=context_issue.mapping_id,
+                    target_field=rule.target_field, can_act=can_resolve)
+                    for rule in retained.shared_field_bindings
+                    if rule.scope == 'IMPORT_VALUE' and rule.target_field not in supplied)
+            if profile.import_id != b.id:
+                # Reuse references another batch's immutable version. Never offer N5
+                # on its originating proposal as a way to continue this batch.
+                profiles.append(dto.CompletionProfileGuidance(profile_id=profile.id,
+                    sheet_id=sheet.sheet_id, review_ready=False, missing_fields=(),
+                    reason_codes=('APPROVED_BINDING_APPLIED' if usable else 'MAPPING_VERSION_RETIRED'
+                                  if version and version.retired else 'RECHECK_SOURCE_REUSE',),
+                    can_submit=False, can_owner_review=False, binding_usable=usable,
+                    source_context_mapping_id=context_issue.mapping_id if context_issue else None,
+                    allowed_actions=('resolve_source_context',) if can_resolve and not usable and context_issue else ()))
+                continue
+            data = profile.proposal_json
+            spec = dto.ProfileSpec.model_validate(data['spec']) if data.get('spec') else None
+            missing = tuple(data.get('missing_fields', ()))
+            blockers = review_blockers(sealed=b.sealed, analyzed=True, job_active=bool(b.active_job_id),
+                completed=completed, spec=spec, missing=missing, issues=own)
+            live = repo.live_submission(profile.id, locked=False)
+            own_submissions = [r for r in visible if r.profile_id == profile.id]
+            # Queue ordering breaks timestamp ties with UUIDs, not submission
+            # chronology. Prefer the live task, then the current proposal's history.
+            latest = (next((r for r in own_submissions if live and r.id == live.id), None)
+                or next((r for r in own_submissions if r.facts['proposal_revision'] == profile.proposal_revision), None)
+                or next(iter(own_submissions), None))
+            state = ('stale' if latest and latest.state == 'submitted' and drift(latest, b, profile)
+                     else latest.state if latest else None)
+            pending = bool(live and not drift(live, b, profile))
+            ready = not blockers
+            submit_reasons = list(blockers)
+            if usable:
+                submit_reasons.append('APPROVED_BINDING_APPLIED')
+            if pending:
+                submit_reasons.append('MAPPING_ALREADY_SUBMITTED')
+            required = {'import.read', 'mapping.read', 'mapping.propose'}
+            if spec:
+                required.update(READS[spec.schema])
+            if not required <= set(permissions):
+                submit_reasons.append('PERMISSION_DENIED')
+            if not owner and b.actor_id != actor.user_id:
+                submit_reasons.append('BATCH_NOT_OWNED')
+            can_submit = not submit_reasons
+            can_review = ready and owner and not usable and not (live and not pending)
+            actions = (('submit',) if can_submit else ()) + (('review_full_spec',) if can_review else ())
+            if latest and 'import.read' in permissions:
+                actions += ('inspect_submission',)
+            profiles.append(dto.CompletionProfileGuidance(profile_id=profile.id, sheet_id=sheet.sheet_id,
+                review_ready=ready, missing_fields=missing, reason_codes=tuple(dict.fromkeys(submit_reasons)),
+                can_submit=can_submit, can_owner_review=can_review, binding_usable=usable,
+                source_context_mapping_id=context_issue.mapping_id if context_issue else None,
+                submission_id=latest.id if latest else None, submission_state=state, allowed_actions=actions))
+        preview_id = b.analysis_json.get('latest_preview_id')
+        return dto.CompletionGuidance(issue_denominator=len({i.mapping_id for i in issues}),
+            issues=() if completed else issue_guidance(issues, sheets, profiles, can_resolve=can_resolve),
+            profiles=tuple(profiles), declarations=tuple(declarations), preview=dto.CompletionPreviewGuidance(preview_id=preview_id,
+                can_inspect='import.read' in permissions,
+                can_request_preview=mutable and result.can_preview and 'import.preview' in permissions,
+                code='INSPECT_PREVIEW_ROW_DOMAIN_RESULTS' if preview_id else 'PREVIEW_NOT_RUN'))
+
     def summary(self, token, ident, details=False, clean=False, file_id=None, sheet_id=None, review=True, status=None, origin=None):
         with auth_session(self.engine) as s:
             b = self._batch(s, ident, False)
-            _, _, permissions = self._authority(
+            actor, authority, permissions = self._authority(
                 s, token, b, "mapping.read", sensitive=True
             )
             result = self._summary(s, b, details)
+            result = result.model_copy(update={'completion_guidance':
+                self._completion_guidance(s, b, result, actor, authority, permissions)})
             from app.application.import_read_projection import mapping_selection
             scope=dto.MappingCounterScope(file_id=file_id,sheet_id=sheet_id,review_only=review,status=status,origin=origin)
             _,counters=mapping_selection(self._issues(b),self._sheets(b),scope,file_ids=[f.file_id for f in result.files])
@@ -629,6 +734,9 @@ class ImportStaging:
                     "allowed_actions": self._allowed(
                         result.allowed_actions, permissions
                     ),
+                    "semantic_suggestions": tuple(e if "mapping.propose" in permissions else
+                        e.model_copy(update={"eligible": False, "reason": "PERMISSION_DENIED"})
+                        for e in result.semantic_suggestions),
                     "can_preview": result.can_preview
                     and "import.preview" in permissions,
                 }
@@ -801,6 +909,349 @@ class ImportStaging:
             s.commit()
             return result
 
+    def _source_candidates(self, s, b, sheet, context):
+        candidates = s.scalars(
+            select(ImportProfileVersion)
+            .join(
+                ImportProfile,
+                ImportProfile.id == ImportProfileVersion.profile_id,
+            )
+            .where(
+                ImportProfileVersion.store_id == b.store_id,
+                ImportProfileVersion.schema_signature == sheet.schema_signature,
+                ImportProfileVersion.source_system_key
+                == context.source_system_key,
+                ImportProfileVersion.report_type == context.report_type,
+                ImportProfileVersion.retired.is_(False),
+                ImportProfile.active_version == ImportProfileVersion.version,
+            )
+        ).all()
+        if sheet.classification_origin == "MANUAL":
+            candidates = [
+                v
+                for v in candidates
+                if v.spec_json["schema"] == sheet.selected_type
+            ]
+        candidates = [v for v in candidates
+            if dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True}).supports_recipe_basis()
+            and dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True}).supports_supplier_basis()]
+        if len(candidates) == 1:
+            existing_spec = dto.ProfileSpec.model_validate(
+                candidates[0].spec_json
+            )
+            declared = {
+                key: value
+                for key, value in context.model_dump(mode="json").items()
+                if key
+                not in {
+                    "kind",
+                    "source_system_key",
+                    "report_type",
+                    "evidence_reference",
+                    "missing_stockout",
+                }
+                and value not in (None, (), [])
+            }
+            expected = existing_spec.model_dump(mode="json")
+            expected['stockout_aliases'] = next((json.loads(n.parameter)
+                for n in existing_spec.normalizations if n.kind == 'stockout_alias'), [])
+            expected.update(
+                decimal_locale=next(
+                    (
+                        r.parameter
+                        for r in existing_spec.normalizations
+                        if r.kind == "decimal_locale"
+                    ),
+                    None,
+                ),
+                date_format=next(
+                    (
+                        r.parameter
+                        for r in existing_spec.normalizations
+                        if r.kind == "date_format"
+                    ),
+                    None,
+                ),
+                pack_cost_basis=(
+                    "PER_SOURCE_UNIT"
+                    if any(
+                        r.rule_id == "declared_pack_pricing_basis"
+                        for r in existing_spec.normalizations
+                    )
+                    else "PER_PACK"
+                ),
+            )
+            if expected.get('date_format') in {'EXCEL_1900', 'EXCEL_1904'}:
+                expected['date_format'] = 'EXCEL_SERIAL'
+            if any(
+                value != expected.get(key) for key, value in declared.items()
+            ):
+                candidates = []
+        return candidates
+
+    @staticmethod
+    def _reuse_allowed(b, sheet, issues, p, existing_spec):
+        return (p is None or p.import_id != b.id or (
+            # A classification/column review before declaring source
+            # is not itself a reusable-spec change. Keep genuine
+            # draft edits on the approval path.
+            p.proposal_json.get("spec") is None
+            and p.proposal_json.get("base_spec") is None
+            and not any(p.proposal_json.get(key) for key in ("identities", "entities", "conversions"))
+            and (not sheet.shared_field_bindings or sheet.shared_field_bindings == existing_spec.shared_field_bindings)
+            and sheet.selected_type == existing_spec.schema
+            and all(any(f.source_column_index == i.source_location.source_column_index
+                and f.target_field == i.target_field and f.ignored == i.ignored
+                for f in existing_spec.field_bindings)
+                for i in issues if i.sheet_id == sheet.sheet_id and i.issue_type == "column"
+                and i.status == "resolved")
+        ))
+
+    @staticmethod
+    def _semantic_limit(b):
+        # Retained pre-I3 analyses always keep their original two-slot policy.
+        return (b.analysis_json or {}).get('semantic_budget', {}).get('limit', 2)
+
+    @staticmethod
+    def _semantic_calls_used(s, b):
+        jobs = s.scalars(select(ImportJob).where(ImportJob.import_id == b.id,
+            ImportJob.store_id == b.store_id, ImportJob.operation == "import_semantic_suggestions")).all()
+        return sum(j.input_json.get("semantic_attempts", 0) for j in jobs
+                   if j.input_json.get("analysis_id") == str(b.analysis_id))
+
+    def _semantic_eligibility(self, s, b, *, executing=False):
+        from app.application.import_semantics import eligible_column
+        from app.application.import_descriptors import unsupported_sheet_reason
+        issues = self._issues(b)
+        bindings = {r["sheet_id"] for r in b.analysis_json.get("bindings", [])}
+        calls_used = self._semantic_calls_used(s, b)
+        result = []
+        for sheet in self._sheets(b):
+            own = [i for i in issues if i.sheet_id == sheet.sheet_id]
+            declared = next((i for i in own if i.issue_type == "source_context"
+                             and i.status in {"resolved", "auto_mapped"} and i.resolved_by
+                             and i.resolution and isinstance(i.resolution.resolution, dto.SourceContext)), None)
+            reason = "ELIGIBLE"
+            if b.analysis_json.get("completion"):
+                reason = "IMPORT_COMPLETED"
+            elif b.active_job_id and not executing:
+                reason = "JOB_PENDING"
+            elif sheet.ignored:
+                reason = "SHEET_IGNORED"
+            elif declared is None:
+                reason = "SOURCE_CONTEXT_REQUIRED"
+            elif str(sheet.sheet_id) in bindings:
+                reason = "APPROVED_BINDING_APPLIED"
+            else:
+                context = declared.resolution.resolution
+                raw = next(r for r in b.analysis_json["sources"] if r["sheet_id"] == str(sheet.sheet_id))
+                candidates = self._source_candidates(s, b, sheet, context)
+                profile = s.get(ImportProfile, sheet.profile_id) if sheet.profile_id else None
+                if source_context_conflicts(sheet, raw, context):
+                    reason = "SOURCE_CONTEXT_CONFLICT"
+                elif len(candidates) > 1:
+                    reason = "PROFILE_MATCH_AMBIGUOUS"
+                elif candidates and self._reuse_allowed(b, sheet, issues, profile,
+                        dto.ProfileSpec.model_validate(candidates[0].spec_json)):
+                    reason = "RECHECK_SOURCE_REUSE"
+                elif sheet.classification_origin != "MANUAL" and unsupported_sheet_reason(sheet.headers):
+                    reason = "UNSUPPORTED_WORKFLOW"
+                elif len(sheet.headers) > 32:
+                    reason = "LLM_COLUMN_LIMIT"
+                elif not any(eligible_column(i) and not i.suggested_ignore for i in own):
+                    reason = "NO_ELIGIBLE_SEMANTICS"
+                elif not executing and calls_used >= self._semantic_limit(b):
+                    reason = "LLM_CALL_LIMIT"
+            result.append(dto.SemanticEligibility(sheet_id=sheet.sheet_id,
+                          eligible=reason == "ELIGIBLE", reason=reason))
+        return tuple(result)
+
+    def _semantic_fingerprint(self, s, b):
+        contexts = {(i.resolution.resolution.source_system_key, i.resolution.resolution.report_type)
+                    for i in self._issues(b) if i.issue_type == "source_context" and i.resolution
+                    and isinstance(i.resolution.resolution, dto.SourceContext)}
+        versions = s.scalars(select(ImportProfileVersion).where(ImportProfileVersion.store_id == b.store_id)).all()
+        profiles = s.scalars(select(ImportProfile).where(ImportProfile.store_id == b.store_id)).all()
+        relevant = {v.profile_id for v in versions if (v.source_system_key, v.report_type) in contexts}
+        return content_digest(dict(analysis_id=str(b.analysis_id), file_set_version=b.file_set_version,
+            mapping_revision=b.mapping_revision, analysis=b.analysis_json,
+            profiles=sorted((str(p.id), p.active_version, p.lifecycle_revision, p.proposal_revision,
+                             content_digest(p.proposal_json)) for p in profiles
+                            if p.id in relevant or p.import_id == b.id),
+            versions=sorted((str(v.profile_id), v.version, v.retired, v.content_digest,
+                             content_digest(v.spec_json)) for v in versions if v.profile_id in relevant)))
+
+    def semantic_suggestions(self, token, ident, body, key, match, csrf):
+        body = dto.SemanticSuggestionsRequest.model_validate(body.model_dump())
+        kd, fp, revision = self._request(key, body.model_dump(mode="json"), match, True)
+        with auth_session(self.engine) as s:
+            b = self._batch(s, ident, False)
+            actor, _, _ = self._authority(s, token, b, "mapping.propose", csrf or "", True)
+            b = self._batch(s, ident)
+            op = "POST:imports/" + str(ident) + "/process:semantic_suggestions"
+            old = self._old(s, actor, b.store_id, op, kd, fp)
+            if old:
+                return dto.SemanticSuggestionsAccepted.model_validate(old)
+            if b.revision != revision:
+                raise AuthError("IMPORT_REVISION_CONFLICT", 412)
+            if body.mapping_revision != b.mapping_revision:
+                raise AuthError("MAPPING_REVISION_CONFLICT", 412)
+            if b.analysis_json is None:
+                raise AuthError("ANALYSIS_NOT_READY", 409)
+            eligibility = {e.sheet_id: e for e in self._semantic_eligibility(s, b)}
+            if any(ident not in eligibility for ident in body.sheet_ids):
+                raise AuthError("INVALID_SHEET_SCOPE", 422)
+            for ident in body.sheet_ids:
+                if not eligibility[ident].eligible:
+                    raise AuthError(eligibility[ident].reason, 409)
+            job = self._accept(s, b, actor, "import_semantic_suggestions", dict(
+                file_set_version=b.file_set_version, mapping_revision=b.mapping_revision,
+                analysis_id=str(b.analysis_id), semantic_attempts=0,
+                sheet_ids=[str(ident) for ident in body.sheet_ids],
+                semantic_allocation=[dto.SemanticSheetOutcome(sheet_id=ident,
+                    requested_position=position, status='scheduled', code='SEMANTIC_SCHEDULED')
+                    .model_dump(mode='json') for position, ident in enumerate(body.sheet_ids, 1)],
+                semantic_fingerprint=self._semantic_fingerprint(s, b)))
+            result = dto.SemanticSuggestionsAccepted(import_id=b.id, job_id=job.id, import_revision=b.revision)
+            self._save(s, actor, b.store_id, op, kd, fp, result)
+            s.commit()
+        return result
+
+    def _check_semantic_job(self, s, job_id, claim):
+        job = s.get(ImportJob, job_id)
+        actor, _, permissions = self._job_authority(s, job)
+        b = self._batch(s, job.import_id)
+        job = s.scalar(select(ImportJob).where(ImportJob.id == job_id).with_for_update()
+                       .execution_options(populate_existing=True))
+        if (job.status != "running" or job.claim != claim or b.active_job_id != job.id
+                or self._semantic_fingerprint(s, b) != job.input_json["semantic_fingerprint"]):
+            raise AuthError("SEMANTIC_INPUT_STALE", 409)
+        if not set(self._sensitive_reads(b)) <= set(permissions):
+            raise AuthError("PERMISSION_DENIED")
+        eligibility = {str(e.sheet_id): e for e in self._semantic_eligibility(s, b, executing=True)}
+        for ident in job.input_json["sheet_ids"]:
+            if not eligibility[ident].eligible:
+                raise AuthError(eligibility[ident].reason, 409)
+        return job, b, actor
+
+    def _execute_semantics(self, job_id, claim):
+        from app.application.import_semantics import eligible_column, merge
+        from app.infrastructure.import_suggestions import prepare_sheet, suggest_sheet
+        with auth_session(self.engine) as s:
+            job, b, _ = self._check_semantic_job(s, job_id, claim)
+            sheets, issues = self._sheets(b), self._issues(b)
+            sources = b.analysis_json["sources"]
+            requested = list(job.input_json["sheet_ids"])
+            names = {str(f.id): f.filename for f in self._files(s, b)}
+            store_id = b.store_id
+            s.commit()
+        outcomes, warnings = [], []
+        for position, ident in enumerate(requested, 1):
+            index = next(n for n, sheet in enumerate(sheets) if str(sheet.sheet_id) == ident)
+            sheet = sheets[index]
+            location = dto.SourceLocation(file_id=sheet.file_id, sheet_id=sheet.sheet_id)
+            own = [i for i in issues if i.sheet_id == sheet.sheet_id and i.issue_type == "column"]
+            allowed = {i.source_location.source_column_index for i in own if eligible_column(i)}
+            raw = next(r for r in sources if r["sheet_id"] == ident)
+            # Even resolved/ignored null fields must never leak lexical samples.
+            raw = {**raw, "rows": [{**row, "cells": [c for c in row["cells"]
+                    if c["column_index"] in allowed]} for row in raw["rows"]]}
+            rule = dict(sheet_type=sheet.selected_type, columns=[dict(
+                source_column_index=i.source_location.source_column_index, target_field=i.target_field,
+                candidates=list(i.candidate_targets), reason=i.suggestion_reason) for i in own])
+            # Freeze effective adapter configuration for this dispatch. Preflight and
+            # adapter share the exact bounds; no known configuration/input failure costs a slot.
+            settings = self.settings
+            _, preflight = prepare_sheet(settings, sheet, raw, names[str(sheet.file_id)], rule, sheet.selected_type)
+            with auth_session(self.engine) as s:
+                job, b, _ = self._check_semantic_job(s, job_id, claim)
+                limited = self._semantic_calls_used(s, b) >= self._semantic_limit(b)
+                consumed = not limited and preflight.failure_code is None
+                code = 'LLM_CALL_LIMIT' if limited else preflight.failure_code
+                diagnostic = (dto.SuggestionDiagnostic(status='unavailable',
+                    model=settings.openrouter_mapping_model, failure_code=code) if limited else preflight)
+                outcome = dto.SemanticSheetOutcome(sheet_id=sheet.sheet_id, requested_position=position,
+                    status='attempted' if consumed else 'call_limit' if limited else 'unavailable',
+                    code=code or 'SEMANTIC_DISPATCH_RESERVED', slot_consumed=consumed,
+                    diagnostic=None if consumed else diagnostic)
+                allocation = list(job.input_json.get('semantic_allocation', []))
+                # Legacy queued jobs have no allocation projection yet.
+                if not allocation:
+                    allocation = [dto.SemanticSheetOutcome(sheet_id=sid, requested_position=n,
+                        status='scheduled', code='SEMANTIC_SCHEDULED').model_dump(mode='json')
+                        for n, sid in enumerate(requested, 1)]
+                allocation[position - 1] = outcome.model_dump(mode='json')
+                job.input_json = {**job.input_json, 'semantic_allocation': allocation,
+                    'semantic_attempts': job.input_json['semantic_attempts'] + int(consumed)}
+                s.commit()
+            if not consumed:
+                outcomes.append(outcome)
+                warnings.append(notice(code, location, True))
+                sheets[index] = sheet.model_copy(update={'suggestion_diagnostic': diagnostic})
+                continue
+            diagnostics = []
+            suggestion, unavailable = suggest_sheet(settings, sheet, raw,
+                names[str(sheet.file_id)], rule, sheet.selected_type, diagnostics)
+            if diagnostics:
+                sheet = sheet.model_copy(update={"suggestion_diagnostic": diagnostics[0]})
+            if unavailable:
+                warnings.append(notice(unavailable, location, True))
+                outcome = outcome.model_copy(update={'status': 'unavailable', 'code': unavailable})
+            else:
+                sheet, issues = merge(sheet, issues, suggestion)
+                outcome = outcome.model_copy(update={'status': 'proposed', 'code': 'LLM_PROPOSAL_REVIEW_REQUIRED'})
+                if suggestion.warnings:
+                    warnings.append(notice("LLM_ADVISORY_REVIEW_REQUIRED", location, True))
+            outcome = outcome.model_copy(update={'diagnostic': diagnostics[0] if diagnostics else None})
+            outcomes.append(outcome)
+            with auth_session(self.engine) as s:
+                job, _, _ = self._check_semantic_job(s, job_id, claim)
+                allocation = list(job.input_json['semantic_allocation'])
+                allocation[position - 1] = outcome.model_dump(mode='json')
+                job.input_json = {**job.input_json, 'semantic_allocation': allocation}
+                s.commit()
+            sheets[index] = sheet
+        # Identity/domain resolution uses current authorized facts, never the provider.
+        with auth_session(self.engine) as s:
+            self._check_semantic_job(s, job_id, claim)
+            s.commit()
+        snapshot, _ = capture_read_set(self.engine, store_id, None)
+        existing = {(i.sheet_id, i.code, i.source_header) for i in issues if i.issue_type in {"identity", "conversion"}}
+        scoped_sheets = [sheet for sheet in sheets if str(sheet.sheet_id) in requested]
+        issues.extend(i for i in identity_issues(scoped_sheets, issues, sources, snapshot)
+                      if (i.sheet_id, i.code, i.source_header) not in existing)
+        with auth_session(self.engine) as s:
+            job, b, actor = self._check_semantic_job(s, job_id, claim)
+            for sheet in sheets:
+                if str(sheet.sheet_id) not in requested or not sheet.profile_id:
+                    continue
+                profile = s.get(ImportProfile, sheet.profile_id)
+                if profile is None or profile.import_id != b.id:
+                    continue
+                data = profile.proposal_json
+                prior = data.get("spec") or data.get("base_spec") or {}
+                spec, missing = build_spec(sheet, issues, actor.user_id,
+                    tuple(dto.IdentityRule.model_validate(r) for r in data.get("identities", prior.get("identity_rules", []))),
+                    tuple(dto.EntityReservation.model_validate(r) for r in data.get("entities", prior.get("entity_proposals", []))),
+                    tuple(dto.Conversion.model_validate(r) for r in data.get("conversions", prior.get("conversions", []))),
+                    tuple(dto.Normalization.model_validate(r) for r in prior.get("normalizations", [])),
+                    prior_spec=dto.ProfileSpec.model_validate(prior) if prior else None)
+                profile.proposal_json = {**data, "spec": spec.model_dump(mode="json") if spec else None, "missing_fields": missing}
+                profile.proposal_revision, profile.lifecycle_revision = rev(), rev()
+            b.analysis_json = {**b.analysis_json, "sheets": [sh.model_dump(mode="json") for sh in sheets],
+                "issues": [i.model_dump(mode="json") for i in issues],
+                "schemas": sorted({i.target_field.split(".")[0] for i in issues if i.target_field}),
+                "warnings": b.analysis_json.get("warnings", []) + [w.model_dump(mode="json") for w in warnings]}
+            b.mapping_revision, b.revision, b.status, b.active_job_id = rev(), rev(), "review_required", None
+            job.result_json = dto.SemanticSuggestionsResult(resource_id=b.id, outcomes=tuple(outcomes)).model_dump(mode="json")
+            job.status, job.stage, job.completed_at = "completed", "completed", self.clock()
+            self._audit(s, actor, b.store_id, "IMPORT_JOB_COMPLETED",
+                        dict(job_id=str(job.id), operation=job.operation, result=job.result_json))
+            from app.application.use_cases.mapping_submissions import invalidate_submissions
+            invalidate_submissions(self, s, actor, b.store_id)
+            s.commit()
+        return job_id
+
     def _select_sheet(self, s, b, actor, issue, body, op, kd, fp):
         if issue.issue_type != "classification":
             raise AuthError("INVALID_MAPPING_TARGET", 422)
@@ -861,6 +1312,11 @@ class ImportStaging:
             }
         )
         allowed = {o.key for o in options(choice.sheet_type) if o.available}
+        rawsheet = next(raw for raw in b.analysis_json["sources"]
+                        if raw["sheet_id"] == str(sheet.sheet_id))
+        lexical = tuple(tuple(next((c["raw"] for c in row["cells"] if c["column_index"] == i), None)
+                              for row in rawsheet["rows"][:8]) for i in range(len(sheet.headers)))
+        rules = sheet_rules(sheet.headers, sheet.name, selected=choice.sheet_type, samples=lexical)
         issues = []
         for item in self._issues(b):
             if item.sheet_id != issue.sheet_id:
@@ -916,16 +1372,17 @@ class ImportStaging:
             elif item.issue_type == "column":
                 if item.ignored and not oldsheet.ignored:
                     update.update(status="resolved", target_field=None, ignored=True)
-                elif oldsheet.ignored or item.target_field not in allowed:
-                    update.update(
-                        target_field=None,
-                        status="unmatched",
-                        ignored=False,
-                        resolution=None,
-                        suggested_target_field=None,
-                        suggestion_origin="NONE",
-                        confidence=None,
-                    )
+                elif not choice.ignored and (
+                    oldsheet.ignored or item.target_field not in allowed
+                    or (item.status not in {"resolved", "auto_mapped"} and item.resolution is None
+                        and item.suggestion_origin != "QWEN")
+                ):
+                    index = item.source_location.source_column_index
+                    update.update(column_proposal(rules.columns[index], numeric=any(
+                        c["column_index"] == index and c["kind"] == "numeric"
+                        for row in rawsheet["rows"] for c in row["cells"])))
+                    update.update(ignored=False, resolution=None, resolved_by=None, model_reason=None,
+                                  confidence=rules.confidence if rules.columns[index].target else None)
                 else:
                     update.update(
                         status=(
@@ -1071,83 +1528,7 @@ class ImportStaging:
                 )
                 if source_context_conflicts(sheet, rawsheet, context):
                     raise AuthError("SOURCE_CONTEXT_CONFLICT", 409)
-                candidates = s.scalars(
-                    select(ImportProfileVersion)
-                    .join(
-                        ImportProfile,
-                        ImportProfile.id == ImportProfileVersion.profile_id,
-                    )
-                    .where(
-                        ImportProfileVersion.store_id == b.store_id,
-                        ImportProfileVersion.schema_signature == sheet.schema_signature,
-                        ImportProfileVersion.source_system_key
-                        == context.source_system_key,
-                        ImportProfileVersion.report_type == context.report_type,
-                        ImportProfileVersion.retired.is_(False),
-                        ImportProfile.active_version == ImportProfileVersion.version,
-                    )
-                ).all()
-                if sheet.classification_origin == "MANUAL":
-                    candidates = [
-                        v
-                        for v in candidates
-                        if v.spec_json["schema"] == sheet.selected_type
-                    ]
-                candidates = [v for v in candidates
-                    if dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True}).supports_recipe_basis()
-                    and dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True}).supports_supplier_basis()]
-                if len(candidates) == 1:
-                    existing_spec = dto.ProfileSpec.model_validate(
-                        candidates[0].spec_json
-                    )
-                    declared = {
-                        key: value
-                        for key, value in context.model_dump(mode="json").items()
-                        if key
-                        not in {
-                            "kind",
-                            "source_system_key",
-                            "report_type",
-                            "evidence_reference",
-                            "missing_stockout",
-                        }
-                        and value not in (None, (), [])
-                    }
-                    expected = existing_spec.model_dump(mode="json")
-                    expected['stockout_aliases'] = next((json.loads(n.parameter)
-                        for n in existing_spec.normalizations if n.kind == 'stockout_alias'), [])
-                    expected.update(
-                        decimal_locale=next(
-                            (
-                                r.parameter
-                                for r in existing_spec.normalizations
-                                if r.kind == "decimal_locale"
-                            ),
-                            None,
-                        ),
-                        date_format=next(
-                            (
-                                r.parameter
-                                for r in existing_spec.normalizations
-                                if r.kind == "date_format"
-                            ),
-                            None,
-                        ),
-                        pack_cost_basis=(
-                            "PER_SOURCE_UNIT"
-                            if any(
-                                r.rule_id == "declared_pack_pricing_basis"
-                                for r in existing_spec.normalizations
-                            )
-                            else "PER_PACK"
-                        ),
-                    )
-                    if expected.get('date_format') in {'EXCEL_1900', 'EXCEL_1904'}:
-                        expected['date_format'] = 'EXCEL_SERIAL'
-                    if any(
-                        value != expected.get(key) for key, value in declared.items()
-                    ):
-                        candidates = []
+                candidates = self._source_candidates(s, b, sheet, context)
                 if len(candidates) > 1:
                     raise AuthError("PROFILE_MATCH_AMBIGUOUS", 409)
                 scoped_versions = s.scalars(
@@ -1169,25 +1550,8 @@ class ImportStaging:
                                 if not (n["code"] == warning.code and n.get("source_location") == location.model_dump(mode="json"))]
                     analysis["warnings"] = retained + [warning.model_dump(mode="json")]
                     b.analysis_json = analysis
-                if (
-                    len(candidates) == 1
-                    and issue.issue_type == "source_context"
-                    and (p is None or p.import_id != b.id or (
-                        # A classification/column review before declaring source
-                        # is not itself a reusable-spec change. Keep genuine
-                        # draft edits on the approval path.
-                        p.proposal_json.get("spec") is None
-                        and p.proposal_json.get("base_spec") is None
-                        and not any(p.proposal_json.get(key) for key in ("identities", "entities", "conversions"))
-                        and (not sheet.shared_field_bindings or sheet.shared_field_bindings == existing_spec.shared_field_bindings)
-                        and sheet.selected_type == existing_spec.schema
-                        and all(any(f.source_column_index == i.source_location.source_column_index
-                            and f.target_field == i.target_field and f.ignored == i.ignored
-                            for f in existing_spec.field_bindings)
-                            for i in issues if i.sheet_id == sheet.sheet_id and i.issue_type == "column"
-                            and i.status == "resolved")
-                    ))
-                ):
+                if len(candidates) == 1 and self._reuse_allowed(b, sheet, issues, p,
+                        dto.ProfileSpec.model_validate(candidates[0].spec_json)):
                     v = candidates[0]
                     spec = dto.ProfileSpec.model_validate(v.spec_json, context={"retained_evidence": True})
                     if (
@@ -2523,7 +2887,7 @@ class ImportStaging:
             raise AuthError("PERMISSION_DENIED")
         summary, permissions = self.auth._summary(s, store, member)
         needed = {"import_analyze": "import.analyze", "import_preview": "import.preview",
-                  "import_commit": "import.commit"}[job.operation]
+                  "import_commit": "import.commit", "import_semantic_suggestions": "mapping.propose"}[job.operation]
         if needed not in permissions:
             raise AuthError("PERMISSION_DENIED")
         return Actor(user.id, session.digest), summary, permissions
@@ -2652,7 +3016,7 @@ class ImportStaging:
                     f.digest,
                 )
                 for f in self._files(s, b)
-                if f.upload_status == "uploaded" and operation != "import_commit"
+                if f.upload_status == "uploaded" and operation in {"import_analyze", "import_preview"}
             ]
             sources = b.analysis_json["sources"] if b.analysis_json else []
             import_values = (
@@ -2684,6 +3048,8 @@ class ImportStaging:
             s.commit()
         if operation == "import_commit":
             return self._execute_commit(job_id, claim)
+        if operation == "import_semantic_suggestions":
+            return self._execute_semantics(job_id, claim)
         # No Session, transaction, row lock or checked-out connection during parsing.
         try:
             if operation == "import_analyze":
@@ -2758,133 +3124,6 @@ class ImportStaging:
                     self.engine, store_id, None if capture_unknown else capture_schemas
                 )
                 warnings = []
-                from app.infrastructure.import_suggestions import suggest_sheet
-                from app.application.import_descriptors import rule_classification
-
-                provider_sheets = 0
-                for index, sheet in enumerate(sheets):
-                    _, _, _, low_quality = rule_classification(
-                        sheet.headers, sheet.name
-                    )
-                    if not low_quality:
-                        continue
-                    own_columns = [i for i in issues if i.sheet_id == sheet.sheet_id and i.issue_type == 'column']
-                    if own_columns and all(i.suggested_ignore for i in own_columns):
-                        continue
-                    if self.settings.import_llm_suggestions_enabled:
-                        if provider_sheets >= 2:
-                            warnings.append(notice("LLM_CALL_LIMIT", dto.SourceLocation(
-                                file_id=sheet.file_id, sheet_id=sheet.sheet_id), True))
-                            continue
-                        provider_sheets += 1
-                    rawsheet = next(
-                        raw for raw in sources if raw["sheet_id"] == str(sheet.sheet_id)
-                    )
-                    rule = dict(
-                        sheet_type=sheet.selected_type,
-                        columns=[
-                            dict(
-                                source_column_index=i.source_location.source_column_index,
-                                target_field=i.target_field,
-                                candidates=list(i.candidate_targets),
-                                reason=i.suggestion_reason,
-                            )
-                            for i in issues
-                            if i.sheet_id == sheet.sheet_id and i.issue_type == "column"
-                        ],
-                        related_sheets=[dict(sheet_type=other.selected_type, headers=list(other.headers[:16]))
-                                        for other in sheets if other.sheet_id != sheet.sheet_id
-                                        and other.selected_type is not None][:4],
-                    )
-                    filename = file_names[sheet.file_id]
-                    diagnostics = []
-                    suggestion, unavailable = suggest_sheet(
-                        self.settings, sheet, rawsheet, filename, rule, sheet.selected_type, diagnostics
-                    )
-                    if diagnostics:
-                        sheet = sheet.model_copy(update={'suggestion_diagnostic': diagnostics[0]})
-                        sheets[index] = sheet
-                    if unavailable:
-                        warnings.append(
-                            notice(
-                                unavailable,
-                                dto.SourceLocation(
-                                    file_id=sheet.file_id, sheet_id=sheet.sheet_id
-                                ),
-                                True,
-                            )
-                        )
-                        continue
-                    proposals = {c.source_column_index: c for c in suggestion.columns}
-                    sheets[index] = sheet.model_copy(
-                        update={
-                            "selected_type": suggestion.sheet_type,
-                            "suggested_type": suggestion.sheet_type,
-                            "classification_origin": "QWEN",
-                            "confidence": suggestion.confidence,
-                        }
-                    ) if sheet.selected_type is None else sheet
-                    issues = [
-                        (
-                            item.model_copy(
-                                update={
-                                    "target_field": proposals[
-                                        item.source_location.source_column_index
-                                    ].target_field,
-                                    "suggested_target_field": proposals[
-                                        item.source_location.source_column_index
-                                    ].target_field,
-                                    "suggestion_origin": "QWEN",
-                                    "suggestion_reason": "MODEL_SEMANTIC_PROPOSAL_REQUIRES_REVIEW",
-                                    "model_reason": proposals[item.source_location.source_column_index].reason,
-                                    "candidate_targets": proposals[item.source_location.source_column_index].candidates or item.candidate_targets,
-                                    "confidence": proposals[
-                                        item.source_location.source_column_index
-                                    ].confidence,
-                                    "status": (
-                                        "needs_confirmation"
-                                        if proposals[
-                                            item.source_location.source_column_index
-                                        ].target_field
-                                        else "unmatched"
-                                    ),
-                                }
-                            )
-                            if item.sheet_id == sheet.sheet_id
-                            and item.issue_type == "column"
-                            and item.target_field is None
-                            and (item.status != "ambiguous" or item.suggestion_reason != "DUPLICATE_OR_AMBIGUOUS_TARGET")
-                            else (
-                                item.model_copy(
-                                    update={
-                                        "suggestion_origin": "QWEN",
-                                        "confidence": suggestion.confidence,
-                                        "status": (
-                                            "needs_confirmation"
-                                            if suggestion.sheet_type
-                                            else "unmatched"
-                                        ),
-                                    }
-                                )
-                                if item.sheet_id == sheet.sheet_id
-                                and item.issue_type == "classification"
-                                and sheet.selected_type is None
-                                else item
-                            )
-                        )
-                        for item in issues
-                    ]
-                    # Model wording is advisory and untrusted, never a backend status/code.
-                    if suggestion.warnings:
-                        warnings.append(
-                            notice(
-                                "LLM_ADVISORY_REVIEW_REQUIRED",
-                                dto.SourceLocation(
-                                    file_id=sheet.file_id, sheet_id=sheet.sheet_id
-                                ),
-                                True,
-                            )
-                        )
                 for fid, content, fmt, expected in files:
                     if not any(sh.file_id == fid for sh in sheets):
                         warnings.append(notice("EMPTY_SHEET_SKIPPED", None, True))
@@ -2905,12 +3144,15 @@ class ImportStaging:
                 snapshot, read_digest = capture_read_set(
                     self.engine, store_id, capture_schemas
                 )
-                rows = make_preview(
+                from app.application.import_preview import preview_record_sources
+                record_sources, source_warnings = preview_record_sources(
                     [
                         source
                         for source in sources
                         if source["sheet_id"] not in ignored_sheets
-                    ],
+                    ])
+                rows = make_preview(
+                    record_sources,
                     specs,
                     snapshot,
                     self.clock(),
@@ -2919,7 +3161,7 @@ class ImportStaging:
                     import_values=import_values,
                     stockout_policies=stockout_policies,
                 )
-                result = (rows, read_digest, snapshot)
+                result = (rows, read_digest, snapshot, source_warnings)
         except Exception as e:
             raise
         with auth_session(self.engine) as s:
@@ -2974,6 +3216,8 @@ class ImportStaging:
                     if i.sheet_id==sh.sheet_id and i.issue_type=='column'] for sh in sheets})
                 if not extra_reads <= set(permissions): raise AuthError('PERMISSION_DENIED')
                 b.analysis_json = dict(
+                    semantic_budget=j.input_json.get('semantic_budget',
+                        dict(version='semantic_sheet_slots/1', limit=2)),
                     sheets=[sh.model_dump(mode="json") for sh in sheets],
                     issues=[i.model_dump(mode="json") for i in issues],
                     sources=sources,
@@ -3003,7 +3247,7 @@ class ImportStaging:
                 ):
                     raise AuthError("PREVIEW_STALE", 409)
                 self._bindings(s, b)
-                rows, read_digest, _ = result
+                rows, read_digest, _, source_warnings = result
                 pid = uuid4()
                 groups = []
                 for schema in sorted(
@@ -3037,7 +3281,9 @@ class ImportStaging:
                         )
                     )
                 blockers = tuple(x for r in rows for x in r.blockers)
-                warnings = tuple(x for r in rows for x in r.warnings) + tuple(
+                if not rows:
+                    blockers = (notice("NO_DATA_ROWS", None),)
+                warnings = source_warnings + tuple(x for r in rows for x in r.warnings) + tuple(
                     notice(
                         (
                             "SHEET_EXPLICITLY_IGNORED"
@@ -3251,6 +3497,8 @@ class ImportStaging:
                 context=dto.JobContext(store_id=j.store_id, import_id=j.import_id),
                 result=j.result_json,
                 error=j.error_json,
+                semantic_allocation=tuple(j.input_json.get('semantic_allocation', ()))
+                    if j.operation == 'import_semantic_suggestions' else (),
             )
             s.commit()
             return result

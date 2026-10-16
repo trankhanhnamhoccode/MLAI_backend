@@ -160,7 +160,16 @@ def test_concurrent_corrections_keep_one_atomic_quantity_and_observation(imp):
     other_worker = ImportStaging(imp[0][2], imp[2].settings)
     with ThreadPoolExecutor(max_workers=2) as workers:
         claimed = list(workers.map(lambda worker: worker.run_one(), (imp[2], other_worker)))
+    # Both polls may select the same queued candidate before either locks it.
+    # The losing poll returns None; the next normal poll claims the other job.
+    # This is not evidence that both pending corrections have been processed.
+    claimed = [job for job in claimed if job is not None]
+    assert claimed and len(claimed) == len(set(claimed))
+    assert set(claimed) <= set(pending)
+    for _ in range(len(pending) - len(claimed)):
+        claimed.append(imp[2].run_one())
     assert set(claimed) == set(pending)
+    assert imp[2].run_one() is None
     with Session(imp[0][1]) as fresh:
         jobs = [fresh.get(ImportJob, job) for job in pending]
         assert sorted(j.status for j in jobs) == ['completed', 'failed']

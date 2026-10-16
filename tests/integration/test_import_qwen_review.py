@@ -9,10 +9,11 @@ from sqlalchemy.orm import Session
 
 from app.models import SalesDaily
 from app.models.import_staging import ImportBatch, ImportJob, ImportProfileVersion
-from tests.integration.test_import_staging import imp, env, post, approved, previewed
+from tests.integration.test_import_staging import env, post, approved, previewed
 from tests.integration.test_import_classification import listing
 from tests.integration.test_import_rule_review import summary, declare_context
 from app.infrastructure import import_suggestions as gateway
+from tests.integration.import_semantic_helpers import request_semantics, semantic_imp as imp, base_imp
 
 
 def upload(imp, content, name='pos.csv'):
@@ -54,6 +55,8 @@ def test_qwen_semantic_candidate_owner_review_reuse_and_analyze_replay(imp, monk
                + '2026-10-09,' + str(imp[4]) + ',0,cup,R-1\n').encode()
     ident, accepted, body, key, revision = upload(imp, content)
     imp[2].run_one()
+    assert calls == []
+    request_semantics(imp, ident)
     proposed = next(i for i in listing(imp, ident) if i['source_header'] == 'SLX')
     assert proposed['suggestion_origin'] == 'QWEN' and proposed['status'] == 'needs_confirmation'
     assert proposed['target_field'] == 'sales.quantity' and proposed['model_reason']
@@ -65,10 +68,10 @@ def test_qwen_semantic_candidate_owner_review_reuse_and_analyze_replay(imp, monk
     approved(imp, ident)
     second, _, _, _, _ = upload(imp, content)
     imp[2].run_one()
-    assert not summary(imp, second)['can_preview'] and len(calls) == 2
+    assert not summary(imp, second)['can_preview'] and len(calls) == 1
     # Provider proposal/header shape cannot attest this upload's source.
     declared = declare_context(imp, second, dict(source_system_key="POS-A", report_type="daily-sales"))
-    assert declared['can_preview'] and len(calls) == 2
+    assert declared['can_preview'] and len(calls) == 1
     with Session(imp[0][1]) as s:
         assert s.scalar(select(func.count()).select_from(ImportProfileVersion)) == 1
         assert s.scalar(select(func.count()).select_from(SalesDaily)) == 0
@@ -76,6 +79,8 @@ def test_qwen_semantic_candidate_owner_review_reuse_and_analyze_replay(imp, monk
 
 def test_late_provider_publication_is_fenced_by_mapping_revision(imp, monkeypatch):
     ident, accepted, _, _, _ = upload(imp, b'sales.product_id,sales.sales_date,alien,sales.unit,sales.business_report_key\nP,2026-10-09,0,cup,R\n')
+    imp[2].run_one()
+    accepted = request_semantics(imp, ident, run=False)
     def unavailable(*args):
         assert imp[0][1].pool.checkedout() == 0
         with Session(imp[0][1]) as s:
@@ -88,7 +93,7 @@ def test_late_provider_publication_is_fenced_by_mapping_revision(imp, monkeypatc
     with Session(imp[0][1]) as s:
         batch = s.get(ImportBatch, UUID(ident))
         job = s.get(ImportJob, UUID(accepted['job_id']))
-        assert batch.mapping_revision == 'preserved-user-edit' and batch.analysis_json is None
+        assert batch.mapping_revision == 'preserved-user-edit' and batch.analysis_json is not None
         assert job.status == 'failed'
         assert s.scalar(select(func.count()).select_from(ImportProfileVersion)) == 0
 

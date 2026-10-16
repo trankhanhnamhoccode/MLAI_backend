@@ -262,6 +262,9 @@ def test_confirmation_stale_wrong_digest_and_current_revoke(imp):
 def test_qwen_runs_without_connection_and_invalid_provider_output_keeps_review(
     imp, monkeypatch
 ):
+    from pydantic import SecretStr
+    imp[2].settings = imp[2].settings.model_copy(update={
+        'import_llm_suggestions_enabled': True, 'openrouter_api_key': SecretStr('SYNTHETIC-ONLY')})
     calls = []
 
     def unavailable(*args):
@@ -271,6 +274,8 @@ def test_qwen_runs_without_connection_and_invalid_provider_output_keeps_review(
 
     monkeypatch.setattr(import_suggestions, "suggest_sheet", unavailable)
     ident = analyzed(imp, sales_bytes(imp).replace(b"sales.quantity", b"alien header"))
+    from tests.integration.import_semantic_helpers import request_semantics
+    request_semantics(imp, ident)
     summary = (
         imp[0][5].get("/api/v1/imports/" + ident + "/mapping-summary").json()["data"]
     )
@@ -627,6 +632,8 @@ def test_valid_qwen_proposal_requires_human_type_and_mapping_review(imp, monkeyp
 
     monkeypatch.setattr(import_suggestions, "build_opener", lambda *a: Transport())
     ident = analyzed(imp, sales_bytes(imp).replace(b"sales.quantity", b"alien header"))
+    from tests.integration.import_semantic_helpers import request_semantics
+    request_semantics(imp, ident)
     summary = (
         imp[0][5].get("/api/v1/imports/" + ident + "/mapping-summary").json()["data"]
     )

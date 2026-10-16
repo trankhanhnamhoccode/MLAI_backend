@@ -1,5 +1,88 @@
 # S4.4 — Import staging/mapping/preview
 
+CURRENT FACT I4 isolated source: M01 read-only completion_guidance phân loại manual
+issues, profile readiness/current actions, own submissions, batch declarations và
+I04 preview reference. Existing N5 đã bind batch gốc khi approve; Staff refetch rồi
+preview/confirm/commit riêng, không quyền domain tự cấp. Workflow/denominator/FE
+delta thuộc [canonical guidance](../IMPORT_MAPPING_API_CONTRACT_VI.md#manual-completion-i4),
+không FE/runtime acceptance. Bounded BE I5 scope và original-input blockers ở
+[CURRENT_STATE](../CURRENT_STATE.md); cách verify ở [runbook](../runbooks/FULL_TEST_FLOW.md#import-acceptance-i5).
+
+## CURRENT FACT — curated system templates (I1, isolated source)
+
+`app/application/import_templates.py` giữ immutable typed definitions với stable
+template/rule ID và version. Đây là kiến thức đề xuất chung, tách khỏi canonical
+SOURCE_MODELS/validators/writers, exact Owner-approved Store profiles và identity/
+business facts của batch. Definitions được validate against supported registry
+targets; không Store/entity IDs, samples, units/factors hoặc business defaults.
+
+`import_descriptors.sheet_rules` dùng chung trong discover và M04 manual sheet-type
+selection. Sáu templates v1: sales, usage history, lot count, actual receipt, recipe
+và supplier-pack review. Header groups phải đủ lexical context; sheet/file name
+không xác lập context. SL phân biệt sold/consumed/counted/actually received; các
+headers chung SL/ĐVT/NSX không tự xác lập workflow. Mixed/negative evidence giữ
+ambiguous candidates; duplicate target giữ cả hai source indices, không chọn cột.
+Exact canonical headers và existing aliases vẫn được giữ. Không fuzzy engine hoặc
+entity matching. Regex chỉ dùng bounded lexical date shapes cho NSX diagnostics.
+
+Usage thêm proposals cho Tên NL/ĐVT khi đủ usage context; Order UOM trong supplier
+pack context chỉ gợi ý pack_label, không physical unit. SLX, recipe per-serving/
+version và supplier price/MOQ vẫn có candidates cần review. NSX xét tối đa8 lexical
+values, mỗi value tối đa200 chars và HSD context: date-like manufacturing meaning
+hoặc textual manufacturer đều không có target hỗ trợ; mixed/numeric/absent evidence
+giữ ambiguous. Không ép NSX thành received_date/supplier, không sửa raw values.
+Purchase/order mixed reports, calendar/weather, arbitrary business rules, combo/
+discount semantics và các schema chưa có curated template vẫn cần manual review.
+
+Provenance đi trong existing suggestion_reason:
+`CURATED:<template_id>/<version>:<rule_id>;...;REVIEW:<semantics>`; classification
+reason giữ context template IDs/versions. Duplicate reason giữ prefix
+DUPLICATE_OR_AMBIGUOUS_TARGET (kèm provenance nếu có); provider merge vẫn giữ guard.
+Không DTO/status/origin/route mới. Field category B chỉ rõ semantic review; target
+null không là IGNORE. Curated reasons không giả EXACT_CANONICAL_HEADER hoặc
+CONTROLLED_HEADER_ALIAS: build_spec whitelist không được mở rộng, cần M04 review
+các semantic hints rồi N5 Owner approval. Existing eligible deterministic aliases
+vẫn dùng full-spec group review. Không auto approve/activate/IGNORE hoặc commit.
+
+Complete nonconflicting recipe header context có thể đề xuất classification dù
+quantity/version chỉ là candidates và chưa có Yield. Yield/yield unit, loss, unit,
+effective date, quantity/price/MOQ basis thiếu vẫn là blockers, không có defaults.
+Manual classification giữ explicit mapping còn hợp lệ; target không thuộc schema
+mới được tính lại thành proposal, bỏ resolution/resolved_by cũ. Chọn lại schema
+cũ không phục hồi manual resolution đã mất hiệu lực. Synthetic tests trực tiếp ở
+`tests/unit/test_import_curated.py` và `tests/integration/test_import_curated.py`.
+
+Template version không nằm trong profile signature; raw headers/kinds/header-row/
+Excel epoch giữ nguyên. Source declaration M04 vẫn phải đi trước compatible profile
+binding; identity/conversion/business declarations không đến từ template. CURRENT
+FACT I2 chuyển provider khỏi analyze: I03 discovery → M04 source/reuse → optional
+I05 semantic_suggestions. [Import contract §5.1.1](../IMPORT_MAPPING_API_CONTRACT_VI.md#semantic-suggestions-i2)
+sở hữu DTO/eligibility/revision/budget và FE delta. Adapter retry/validation giữ
+nguyên; I3 pin operator budget0..10/default2, explicit request order và
+preflight-before-reserve theo canonical contract. Fixed deterministic targets
+và duplicate ambiguity vẫn protected.
+I1 không thay schema/writers/permissions, không tích hợp vào main/runtime/FE.
+
+Manual review: upload tabular usage với Ngày sử dụng/Tên NL/SL/ĐVT; M01/M02 phải
+giữ source unresolved, Tên NL chỉ là token, SL/unit là proposals category B. Chọn
+classification khác rồi chọn lại usage phải thấy cùng contextual hints. Khai báo
+source/report, review từng semantic hint và resolve identity/conventions trước N5;
+N5 vẫn không phải confirmation/commit. Đổi source với cùng headers không tự bind;
+profile đã duyệt chỉ reuse sau compatible declaration, không vì template score.
+
+Read-only measurement dùng `scripts/evaluate_import_curated.py` cùng regression reference
+`tests/fixtures/import_curated_workbooks.json`: sáu content hashes người dùng cung
+cấp, explicit expected schema/target theo source column, không raw row samples.
+Reference chưa blind/human validated, giữ unresolved cho mixed unsupported layouts.
+Đếm riêng classification,
+correct/wrong target proposals, useful candidate-only, unresolved; target/candidate
+không chứng minh semantics/identity/row validity hoặc readiness. Sáu workbook này
+không khớp audit batch9f8608ea; không tái hiện hoặc so với163 historical issues.
+Commands/isolation ở [runbook](../runbooks/FULL_TEST_FLOW.md#import-curated-i1);
+results và limits của từng invocation thuộc conversation. I5 riêng kiểm unchanged
+original blockers và synthetic API/worker/persistence success; không original commit,
+FE/live-provider hoặc accuracy claim từ reference I1.
+
 CURRENT FACT C4: M01/M02 counters đếm mapping issues theo AND filters, giữ legacy
 Progress; I04 source_effect dùng cached pinned source/effect và R05 raw/logical
 aggregates độc lập page size, không double-count grouped/multi-location actions.
@@ -177,8 +260,12 @@ OPENROUTER_MAPPING_MODEL fixed qwen/qwen3.5-9b; backend Settings SecretStr API k
 IMPORT_LLM_SUGGESTIONS_ENABLED mặc định false; key không tự bật provider. Live
 gateway probe POS demo đã chạy trong approved model/data/calls/cost scope. Adapter xử lý
 phần chưa gán, kể cả semantic ambiguity có candidates; output thay RULE type/targets bị từ chối, duplicate ambiguity giữ
-review. Known unsupported sheets không gọi model. Hai eligible sheet/batch tối đa,
-mỗi sheet hai transport attempts; vượt cap có LLM_CALL_LIMIT và manual fallback.
+review. Known unsupported sheets không gọi model. Default hai gateway sheet slots/analysis,
+operator integer0..10 capture tại I03; retained thiếu marker giữ2. Shared preflight
+trước reserve; sau reserve không hoàn slot và không reset bởi new key; mỗi slot tối đa hai
+transport attempts. Scope xét theo explicit request order, vượt cap có typed
+outcomes/LLM_CALL_LIMIT và manual fallback; I3 dùng explicit request order và
+operator budget pin theo analysis, không heuristic priority hoặc auto-batching.
 temperature0, reasoning.enabled=false, strict response_format JSON Schema,
 provider.require_parameters=true. Không fallback model/API endpoint hay schema
 weakening. OPENROUTER_MAPPING_PROVIDERS mặc định rỗng dùng upstream routing;
@@ -188,12 +275,13 @@ Official [structured output docs](https://openrouter.ai/docs/guides/features/str
 [reasoning docs](https://github.com/OpenRouterTeam/docs/blob/main/guides/best-practices/reasoning-tokens.mdx)
 were checked; this is documentation evidence, not a live provider test.
 
-Payload sheet_profile/1: display filename/sheet name≤200 chars (hints only), stable
+Payload sheet_profile/2: display filename/sheet name≤200 chars (hints only), stable
 source-column indices, lexical kind hints, at most8 evenly sampled rows with first/
-last where available, each cell≤200 chars, chỉ samples của columns chưa có RULE
-target, current descriptors và rule suggestion. Có header_row/row_count/epoch,
-rule candidates/reasons, missing required fields và tối đa4 related sheets cùng
-authorized batch (type/hint, tối đa16 headers mỗi sheet). Headers/indices vẫn giữ đầy đủ
+last where available, each cell≤200 chars, chỉ samples của columns eligible chưa có
+target/resolution, current descriptors và rule suggestion. Có header_row/row_count/epoch,
+rule candidates/reasons, missing required fields. Adapter chấp nhận related sheet
+metadata, nhưng caller I2 không gửi related sheets hoặc source declarations.
+Headers/indices vẫn giữ đầy đủ
 để validate whole output, known target samples không gửi.
 Optional selected type limits adapter targets; no separate remap/provider endpoint
 was added. Source facts are never normalized/imputed by the model. No raw workbook,
@@ -218,8 +306,13 @@ with typed notice; does not discard uploaded batch. Sessions are released before
 provider calls. Provider notices are advisory, never canonical facts or status.
 Safe SheetInfo diagnostics expose model/prompt/schema versions/input digest/attempts/
 usage/status và controlled failure stage/code, never raw output or credentials.
-GET/polling và same analyze receipt không gọi lại provider. Publication kiểm active
-claim/file set và captured mapping revision: kết quả muộn sau mapping edit không
+CURRENT FACT I2.1: semantic merge tạo coherent M02 code/category/status/reason;
+target proposal luôn cần review, null alternatives giữ ambiguity và valid prior
+candidates. Backend reason tách untrusted model_reason, giữ prior provenance;
+[canonical metadata rules](../IMPORT_MAPPING_API_CONTRACT_VI.md#semantic-suggestions-i2)
+sở hữu bounds/validation và classification behavior. Không public DTO change.
+GET/polling, I03 và same-key semantic receipt replay không gọi lại provider. Publication kiểm active
+claim/analysis/source/file set/mapping/profile lifecycle: kết quả muộn sau mapping edit không
 được ghi đè. HTTP/DB tests dùng mock provider. Một live POS probe qua
 DeepInfra/bf16 nhận structured output hợp lệ, 1 completion POST không retry,
 2.777 input +370 output tokens, provider-reported cost $0,0003332; không phải

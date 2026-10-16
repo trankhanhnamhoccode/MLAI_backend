@@ -48,6 +48,25 @@ def notice(code, location, warning=False):
     )
 
 
+def preview_record_sources(sources) -> tuple[list[dict], tuple[dto.Notice, ...]]:
+    """Separate value-free XLSX formatting from records; retain original evidence."""
+    scoped, warnings = [], []
+    for sheet in sources:
+        rows = []
+        for row in sheet['rows']:
+            format_only = sheet.get('excel_date_system') in {'1900', '1904'} and all(
+                cell['raw'] is None and cell['kind'] == 'empty' and not cell['formula']
+                for cell in row['cells']
+            )
+            if format_only:
+                warnings.append(notice('XLSX_FORMAT_ONLY_ROW_SKIPPED', dto.SourceLocation(
+                    file_id=sheet['file_id'], sheet_id=sheet['sheet_id'], row_number=row['row_number']), True))
+            else:
+                rows.append(row)
+        scoped.append({**sheet, 'rows': rows})
+    return scoped, tuple(warnings)
+
+
 def metadata_equal(key, left, right):
     if key == "price" and left is not None and right is not None:
         return Decimal(left) == Decimal(right)

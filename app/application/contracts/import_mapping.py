@@ -105,6 +105,26 @@ class PreviewRequest(DTO):
     mapping_revision: Version
 
 
+class SemanticSuggestionsRequest(DTO):
+    phase: Literal["semantic_suggestions"]
+    mapping_revision: Version
+    sheet_ids: tuple[UUID, ...] = Field(min_length=1, max_length=100)
+
+    @model_validator(mode="after")
+    def unique_sheets(self):
+        if len(set(self.sheet_ids)) != len(self.sheet_ids):
+            raise ValueError("DUPLICATE_SHEET_ID")
+        return self
+
+
+class SemanticSuggestionsAccepted(DTO):
+    phase: Literal["semantic_suggestions"] = "semantic_suggestions"
+    import_id: UUID
+    job_id: UUID
+    job_status: Literal["queued"] = "queued"
+    import_revision: str
+
+
 class ConfirmReviewRequest(DTO):
     phase: Literal["confirm_review"]
     preview_id: UUID
@@ -723,6 +743,75 @@ class MappingCounters(DTO):
     filtered: MappingIssueCounts
 
 
+class SemanticEligibility(DTO):
+    sheet_id: UUID
+    eligible: bool
+    dispatch_guaranteed: Literal[False] = False
+    reason: Literal["ELIGIBLE", "SHEET_IGNORED", "SOURCE_CONTEXT_REQUIRED",
+                    "SOURCE_CONTEXT_CONFLICT", "PROFILE_MATCH_AMBIGUOUS",
+                    "APPROVED_BINDING_APPLIED", "RECHECK_SOURCE_REUSE",
+                    "NO_ELIGIBLE_SEMANTICS", "IMPORT_COMPLETED", "JOB_PENDING",
+                    "PERMISSION_DENIED", "LLM_COLUMN_LIMIT", "LLM_CALL_LIMIT", "UNSUPPORTED_WORKFLOW"]
+
+
+class CompletionIssueGuidance(DTO):
+    mapping_id: UUID
+    sheet_id: UUID
+    profile_id: UUID | None
+    category: Literal['classification', 'column_mapping', 'source_context',
+                      'entity_resolution', 'conversion_business_declaration']
+    code: str
+    action: Literal['resolve_mapping', 'review_full_spec']
+    can_act: bool
+
+
+class CompletionProfileGuidance(DTO):
+    category: Literal['profile_approval'] = 'profile_approval'
+    profile_id: UUID
+    sheet_id: UUID
+    review_ready: bool
+    missing_fields: tuple[str, ...]
+    reason_codes: tuple[str, ...]
+    can_submit: bool
+    can_owner_review: bool
+    binding_usable: bool
+    source_context_mapping_id: UUID | None = None
+    submission_id: UUID | None = None
+    submission_state: Literal['submitted', 'changes_requested', 'approved', 'rejected',
+                              'stale', 'withdrawn'] | None = None
+    allowed_actions: tuple[Literal['submit', 'review_full_spec', 'inspect_submission', 'resolve_source_context'], ...] = ()
+
+
+class CompletionPreviewGuidance(DTO):
+    category: Literal['preview_validation'] = 'preview_validation'
+    preview_id: UUID | None = None
+    detail_action: Literal['inspect_preview'] = 'inspect_preview'
+    can_inspect: bool
+    can_request_preview: bool
+    code: Literal['PREVIEW_NOT_RUN', 'INSPECT_PREVIEW_ROW_DOMAIN_RESULTS']
+
+
+class CompletionDeclarationGuidance(DTO):
+    category: Literal['conversion_business_declaration'] = 'conversion_business_declaration'
+    code: Literal['MISSING_IMPORT_VALUE'] = 'MISSING_IMPORT_VALUE'
+    profile_id: UUID
+    sheet_id: UUID
+    mapping_id: UUID
+    target_field: str
+    action: Literal['resolve_mapping'] = 'resolve_mapping'
+    can_act: bool
+
+
+class CompletionGuidance(DTO):
+    scope: Literal['batch'] = 'batch'
+    count_unit: Literal['distinct_mapping_issue_ids_not_actions'] = 'distinct_mapping_issue_ids_not_actions'
+    issue_denominator: int = Field(ge=0)
+    issues: tuple[CompletionIssueGuidance, ...]
+    declarations: tuple[CompletionDeclarationGuidance, ...] = ()
+    profiles: tuple[CompletionProfileGuidance, ...]
+    preview: CompletionPreviewGuidance
+
+
 class MappingSummary(DTO):
     import_id: UUID
     analysis_id: UUID
@@ -740,6 +829,14 @@ class MappingSummary(DTO):
     warnings: tuple[Notice, ...] = ()
     counter_scope: MappingCounterScope | None = None
     counters: MappingCounters | None = None
+    semantic_suggestions: tuple[SemanticEligibility, ...] = ()
+    active_job_id: UUID | None = None
+    semantic_call_limit: int = Field(default=2, ge=0, le=10)
+    semantic_configured_limit: int = Field(default=2, ge=0, le=10)
+    semantic_budget_version: Literal['semantic_sheet_slots/1'] = 'semantic_sheet_slots/1'
+    semantic_calls_used: int = Field(default=0, ge=0, le=10)
+    semantic_calls_remaining: int = Field(default=0, ge=0, le=10)
+    completion_guidance: CompletionGuidance | None = None
 
 
 class MappingList(DTO):
@@ -1342,6 +1439,23 @@ class AnalysisResult(DTO):
     analysis_id: UUID
 
 
+class SemanticSheetOutcome(DTO):
+    sheet_id: UUID
+    status: Literal["scheduled", "attempted", "proposed", "unavailable", "call_limit"]
+    code: str
+    requested_position: int | None = Field(default=None, ge=1, le=100)
+    eligible: bool = True
+    eligibility_reason: str = 'ELIGIBLE'
+    slot_consumed: bool = False
+    diagnostic: SuggestionDiagnostic | None = None
+
+
+class SemanticSuggestionsResult(DTO):
+    resource_type: Literal["import_semantic_suggestions"] = "import_semantic_suggestions"
+    resource_id: UUID
+    outcomes: tuple[SemanticSheetOutcome, ...]
+
+
 class PreviewResult(DTO):
     resource_type: Literal["import_preview"]
     resource_id: UUID
@@ -1495,7 +1609,7 @@ class JobError(DTO):
 
 class JobView(DTO):
     job_id: UUID
-    operation: Literal["import_analyze", "import_preview", "import_commit", "planning_pdf_export"]
+    operation: Literal["import_analyze", "import_preview", "import_commit", "import_semantic_suggestions", "planning_pdf_export"]
     status: Literal["queued", "running", "completed", "failed"]
     stage: Literal["queued", "parsing", "mapping", "validating", "committing", "rendering", "completed", "failed"]
     progress: float | None
@@ -1504,7 +1618,8 @@ class JobView(DTO):
     completed_at: datetime | None
     context: JobContext | ExportJobContext
     result: (
-        Annotated[AnalysisResult | PreviewResult | CompletionResult | ExportJobResult, Field(discriminator="resource_type")]
+        Annotated[AnalysisResult | SemanticSuggestionsResult | PreviewResult | CompletionResult | ExportJobResult, Field(discriminator="resource_type")]
         | None
     )
     error: JobError | None
+    semantic_allocation: tuple[SemanticSheetOutcome, ...] = ()

@@ -1,6 +1,7 @@
 """Deterministic source discovery. Suggestions are proposals, not accepted facts."""
 
 from uuid import uuid4
+from typing import Literal, TypedDict
 from app.application.contracts import import_mapping as dto
 from app.application.contracts.import_domains import SOURCE_MODELS
 from app.application.contracts.import_source import ParsedFile, SourceRow
@@ -8,9 +9,9 @@ from app.application.import_identity import content_digest
 
 
 from app.application.import_descriptors import (
-    options, rule_classification, column_candidates, unsupported_sheet_reason,
-    semantic_review_candidate,
+    options, sheet_rules, unsupported_sheet_reason,
 )
+from app.application.import_templates import ColumnHint
 
 
 def header_index(rows: tuple[SourceRow, ...]) -> int:
@@ -30,6 +31,36 @@ def source_row(row: SourceRow) -> dict:
         line_start=row.line_start, line_end=row.line_end,
         cells=[dict(column_index=c.column_index, raw=c.raw, kind=c.kind, formula=c.formula)
                for c in row.cells],
+    )
+
+
+class ColumnProposal(TypedDict):
+    target_field: str | None
+    suggested_target_field: str | None
+    candidate_targets: tuple[str, ...]
+    suggestion_reason: str
+    code: str
+    status: Literal["needs_confirmation", "ambiguous", "unmatched"]
+    field_category: Literal["A", "B", "C", "D"]
+    suggestion_origin: Literal["RULE", "NONE"]
+
+
+def column_proposal(hint: ColumnHint, *, numeric: bool = False) -> ColumnProposal:
+    """Shared mapping-issue projection; a semantic proposal never becomes an alias."""
+    target = hint.target
+    reason = hint.reason
+    if target and target.endswith((".sales_date", ".effective_from", ".effective_to")) and numeric:
+        reason += ";DATE_CONVENTION_REVIEW: numeric lexical value is not an approved date format"
+    return dict(
+        target_field=target, suggested_target_field=target, candidate_targets=hint.candidates,
+        suggestion_reason=reason,
+        code="OWNER_MAPPING_APPROVAL_REQUIRED" if target else (
+            "AMBIGUOUS_TARGET" if hint.candidates or hint.ambiguous else "UNKNOWN_SOURCE_FIELD"),
+        status="needs_confirmation" if target else (
+            "ambiguous" if hint.candidates or hint.ambiguous else "unmatched"),
+        field_category="B" if hint.requires_review or hint.ambiguous or "DATE_CONVENTION_REVIEW" in reason
+                       else "A" if target else "C",
+        suggestion_origin="RULE" if target else "NONE",
     )
 
 
@@ -66,7 +97,10 @@ def discover(file_id, parsed: ParsedFile):
                  **({'excel_date_system': parsed.excel_date_system} if parsed.excel_date_system else {}))
         )
         sid = uuid4()
-        selected, proposals, confidence, _ = rule_classification(headers, sheet.name)
+        lexical = tuple(tuple(next((c.raw for c in row.cells if c.column_index == i), None)
+                              for row in body[:8]) for i in range(width))
+        rules = sheet_rules(headers, sheet.name, samples=lexical)
+        selected, confidence = rules.schema, rules.confidence
         sheets.append(
             dto.SheetInfo(
                 file_id=file_id,
@@ -97,9 +131,9 @@ def discover(file_id, parsed: ParsedFile):
                     if selected
                     else "UNSUPPORTED_OR_UNRESOLVED_SHEET"
                 ),
-                suggestion_reason=unsupported_sheet_reason(headers) or (
+                suggestion_reason=(unsupported_sheet_reason(headers) or (
                     "SCHEMA_HEADER_EVIDENCE" if selected else "NO_UNIQUE_SCHEMA_EVIDENCE"
-                ),
+                )) + (";" + ";".join(rules.provenance) if rules.provenance else ""),
                 status="needs_confirmation" if selected else "unmatched",
                 source_location=dto.SourceLocation(file_id=file_id, sheet_id=sid),
                 resolution_origin="UNRESOLVED",
@@ -120,44 +154,23 @@ def discover(file_id, parsed: ParsedFile):
         )
         unsupported = {o.key for o in options() if o.support == "unsupported"}
         for i, h in enumerate(headers):
-            target = proposals[i]
-            candidates = column_candidates(h, selected) if selected else ()
-            reason = "EXACT_CANONICAL_HEADER" if target == h else "CONTROLLED_HEADER_ALIAS"
-            if not target:
-                reason = ("DUPLICATE_OR_AMBIGUOUS_TARGET" if candidates else
-                          unsupported_sheet_reason(headers) or "NO_SUPPORTED_TARGET")
-                semantic = semantic_review_candidate(h, selected)
-                if not candidates and semantic:
-                    candidates = (semantic[0],)
-                    reason = semantic[1]
-            if target and target.endswith((".sales_date", ".effective_from", ".effective_to")):
-                if any(c.column_index == i and c.kind == "numeric" for r in body for c in r.cells):
-                    reason += ";DATE_CONVENTION_REVIEW: numeric lexical value is not an approved date format"
+            proposal = column_proposal(rules.columns[i], numeric=any(
+                c.column_index == i and c.kind == "numeric" for r in body for c in r.cells))
             informational = selected is None and sheet.name.casefold() == "readme"
+            if h in unsupported:
+                proposal["code"] = "UNSUPPORTED_BUSINESS_RULE"
+            if informational:
+                proposal["field_category"] = "D"
             issues.append(
                 dto.MappingIssue(
                     mapping_id=uuid4(),
                     sheet_id=sid,
                     issue_type="schema_blocker" if h in unsupported else "column",
-                    code=(
-                        "UNSUPPORTED_BUSINESS_RULE"
-                        if h in unsupported
-                        else (
-                            "OWNER_MAPPING_APPROVAL_REQUIRED"
-                            if target
-                            else "AMBIGUOUS_TARGET" if candidates else "UNKNOWN_SOURCE_FIELD"
-                        )
-                    ),
-                    status="needs_confirmation" if target else ("ambiguous" if candidates else "unmatched"),
+                    **proposal,
                     source_location=dto.SourceLocation(
                         file_id=file_id, sheet_id=sid, source_column_index=i
                     ),
                     source_header=h,
-                    target_field=target,
-                    suggested_target_field=target,
-                    candidate_targets=candidates,
-                    suggestion_reason=reason,
-                    field_category="D" if informational else ("B" if candidates and not target or "DATE_CONVENTION_REVIEW" in reason else "A" if target else "C"),
                     suggested_ignore=informational,
                     samples=tuple(
                         (
@@ -167,8 +180,7 @@ def discover(file_id, parsed: ParsedFile):
                         for r in body[:5]
                     ),
                     resolution_origin="UNRESOLVED",
-                    suggestion_origin="RULE" if target else "NONE",
-                    confidence=confidence if target else None,
+                    confidence=confidence if proposal["target_field"] else None,
                 )
             )
         sources.append(

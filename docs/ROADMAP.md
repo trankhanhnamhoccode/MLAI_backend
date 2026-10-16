@@ -134,6 +134,54 @@ conversation; S4.11 UI acceptance and remaining product proposals are unchanged.
 
 ## ACCEPTED DECISION — phạm vi tiếp theo được người dùng duyệt
 
+CURRENT FACT I1 isolated source: `feat/import-curated-templates` từ main b0db90c;
+versioned contextual system templates tách khỏi canonical schemas, Owner-approved
+Store profiles và batch facts. Analyze/manual classification dùng cùng proposals;
+semantic/negative/duplicate guards, source-safe reuse và signature giữ nguyên.
+Recipe context không cần có sẵn Yield để classification; missing semantics vẫn
+block. Manual reclassification không gán actor cũ cho proposal được tính lại.
+Scope/limits tại [Import feature](features/IMPORT_STAGING_PREVIEW.md).
+Verification đo proposals trên supplied workbook hashes và synthetic guards, không
+reproduce audit9f8608ea, không release/FE/runtime/full-flow acceptance.
+CURRENT FACT I2 isolated source dùng phương án A đã được duyệt: discovery không
+provider → M04 source/reuse → optional I05 semantic_suggestions, typed M01/J01 và
+revision/current-authority fences. [Import contract §5.1.1](IMPORT_MAPPING_API_CONTRACT_VI.md#semantic-suggestions-i2)
+sở hữu behavior/FE delta.
+I2.1 đồng bộ semantic metadata M02 và classification, bounded supported alternatives
+giữ prior provenance; không đổi DTO, source orchestration hoặc quota.
+CURRENT FACT I3 isolated source: bounded operator limit0..10/default2 pin theo
+analysis, legacy2, explicit request-order allocation và preflight-before-reserve;
+M01/J01 thêm typed accounting/progress, không migration hoặc thay retry/approval.
+[Import contract §5.1.1](IMPORT_MAPPING_API_CONTRACT_VI.md#semantic-suggestions-i2)
+sở hữu config/FE delta. CURRENT FACT I4 thêm read-only typed M01 completion_guidance
+và shared MQ01 readiness; existing N5/queue bind/refetch/Staff continuation giữ nguyên.
+Targeted Staff→Owner→Staff covers preview/confirm/commit và fresh-session writes,
+không whole-workbook/full-suite/FE acceptance. [Canonical guidance](IMPORT_MAPPING_API_CONTRACT_VI.md#manual-completion-i4).
+CURRENT FACT I5 bounded BE acceptance: sáu unchanged supplied workbooks bị chặn đúng
+khi chưa manual completion và thiếu business declarations (0 original commits);
+không kết luận whole workbooks/workflows unsupported từ các attempts đó.
+CURRENT FACT I5.1 source-faithful POS_T7_2026 scope completed trên owned test DB,
+sau user-established synthetic-baseline08/07/2026 declarations và explicit unknown
+SKU null. Public manual completion/N5/preview/confirm/atomic commit tạo5 Product
+(per-row Menu metadata, exact-name binding, không seed) và945 Sales; fresh-session
+values/Store/source lineage verified. Same-report re-export/renamed upload reuse
+version/NO_OP, không cộng overlap hoặc duplicate.210 XLSX format-only rows bị
+preview coi là missing records đã có narrow fix + per-location warnings; raw1155
+physical rows giữ nguyên, CSV/partial/formula/error/zero guards giữ hiệu lực.
+Không whole-workbook/all-six completion, không benchmark surrogate UUID reuse.
+Independent source-cell/hash
+checks và separate synthetic public API/worker flows kiểm completion, correction/
+reuse, Staff→Owner→Staff, fresh-session canonical facts/lineage, atomic rollback và
+existing forecast/BOM/inventory reads. I1 expected targets chỉ là regression reference,
+không blind/human-validated accuracy. Import milestone gate gồm I1–I4 boundaries;
+test polling concurrency được sửa theo current worker claim contract, không production
+delta. Readiness vẫn blocked theo facts/config/runtime hiện có; không training hoặc
+Planning benchmark. [Acceptance runbook](runbooks/FULL_TEST_FLOW.md#import-acceptance-i5)
+giữ fixtures/cách chạy; exact invocations và limits thuộc conversation/ignored runtime.
+Không full repository suite/FE/live provider/main integration acceptance, không deploy
+I1–I5.1 được chốt thành local checkpoint trên base b0db90c; Menu acceptance là
+slice tiếp theo đã được người dùng cho phép, giữ thay đổi mới WIP để review.
+
 Chốt/push v1.0 trước rồi tách nhánh import: audit sáu workbook chỉ đọc, cải tiến
 deterministic mapping proposals và approved Store/source/report/version profile
 reuse, phát hiện drift, giữ Owner approval và atomic commit. Provider thật cần

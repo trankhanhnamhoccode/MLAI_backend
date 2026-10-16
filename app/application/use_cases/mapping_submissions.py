@@ -174,12 +174,10 @@ class MappingSubmissions:
                 spec=mapping.ProfileSpec.model_validate(profile.proposal_json['spec'])
                 self.authority(s,token,batch,write=True,csrf=csrf or '',pinned=spec.model_dump(mode='json'))
                 issues=[i for i in self.imports._issues(batch) if i.sheet_id==profile.sheet_id]
-                for issue in issues:
-                    resolved=issue.status in ('resolved','auto_mapped')
-                    candidate=issue.status=='needs_confirmation' and issue.suggestion_origin=='RULE' and issue.issue_type in ('column','classification') and issue.source_location is not None
-                    if not resolved and not candidate: blockers.append(issue.code)
-                    if issue.issue_type=='source_context' and not issue.resolved_by: blockers.append('SOURCE_CONTEXT_REQUIRED')
-                if not spec.source_provenance.evidence_references: blockers.append('SOURCE_CONTEXT_REQUIRED')
+                from app.application.import_completion import review_blockers
+                blockers = review_blockers(sealed=batch.sealed, analyzed=bool(batch.analysis_json),
+                    job_active=bool(batch.active_job_id), completed=bool((batch.analysis_json or {}).get('completion')),
+                    spec=spec, missing=missing, issues=issues)
                 if blockers: raise WorkflowError('REVIEW_NOT_READY',missing_fields=missing,reason_codes=tuple(sorted(set(blockers))))
                 sheet=next(sh for sh in self.imports._sheets(batch) if sh.sheet_id==profile.sheet_id)
                 file=s.get(ImportFile,sheet.file_id); blob=s.get(ImportBlob,(batch.store_id,file.digest))

@@ -1,0 +1,161 @@
+{
+  "purpose": "I1 regression reference for the six supplied dts workbooks, not blind or human-validated and not batch 9f8608ea. Targets identify proposal/candidate regression expectations only, not canonical facts, independent correctness or approval. Null means no supported unambiguous column target in I1. Date/quantity/price/unit/identity meanings still require review. No row samples retained.",
+  "workbooks": [
+    {
+      "sha256": "23010aaa9a8a88e03b3c6bc0562a7118ff7d2d99b5c4a3681f6559dca2d891dc",
+      "sheets": [
+        {
+          "schema": null,
+          "targets": [
+            null,
+            null
+          ]
+        },
+        {
+          "schema": "sales",
+          "targets": [
+            "sales.sales_date",
+            "sales.product_id",
+            "sales.quantity",
+            null,
+            null,
+            "sales.is_stockout",
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "e47eefcb233dce82fec7512f442b365197ff1bac43aad2adb190a920eb73bcb1",
+      "sheets": [
+        {
+          "schema": "usage_history",
+          "targets": [
+            "usage_history.usage_date",
+            "usage_history.ingredient_id",
+            "usage_history.quantity",
+            "usage_history.unit",
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "ab3c5764c9fe230da7b64a3d0f6675cac92356836471601466b4b1d0bad60c47",
+      "sheets": [
+        {
+          "schema": "inventory_count",
+          "targets": [
+            "inventory_count.observed_at",
+            "inventory_count.ingredient_id",
+            "inventory_count.on_hand",
+            "inventory_count.unit",
+            null,
+            "inventory_count.lot_id",
+            null
+          ]
+        },
+        {
+          "schema": null,
+          "targets": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "schema": "supplier_terms",
+          "targets": [
+            "supplier_terms.supplier_id",
+            "supplier_terms.ingredient_id",
+            "supplier_terms.minimum_order_quantity",
+            "supplier_terms.pack_label",
+            "supplier_terms.pack_size_base_quantity",
+            "supplier_terms.unit",
+            "supplier_terms.lead_time_days",
+            "supplier_terms.pack_cost",
+            null,
+            "supplier_terms.shelf_life_days"
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "a4370e477ffc4cfe843cdf7d46c2bf53a1a86ad84f4f1695496a2f8e2332023e",
+      "sheets": [
+        {
+          "schema": "recipes",
+          "targets": [
+            "recipes.product_id",
+            "recipes.ingredient_id",
+            "recipes.quantity",
+            "recipes.unit",
+            "recipes.yield_quantity",
+            "recipes.yield_unit",
+            "recipes.version",
+            "recipes.effective_from"
+          ]
+        },
+        {
+          "schema": null,
+          "targets": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "042e97456d2293b4b37e0fad967f516da3416d215eb8d455dcea1ce497d71bb0",
+      "sheets": [
+        {
+          "schema": null,
+          "targets": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "sha256": "6864dc86b9cbcca1b89ba875648be3bd31a86a9497c79620b2adc3cff872ba98",
+      "sheets": [
+        {
+          "schema": "products",
+          "targets": [
+            "products.source_business_key",
+            null,
+            "products.name",
+            null,
+            "products.selling_unit",
+            null,
+            null,
+            "products.price",
+            null,
+            null
+          ]
+        }
+      ]
+    }
+  ]
+}

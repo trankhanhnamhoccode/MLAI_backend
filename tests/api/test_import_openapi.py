@@ -6,6 +6,25 @@ from app.main import create_app
 
 def test_import_operations_and_typed_variants_preserve_boundaries():
     spec = create_app(Settings(_env_file=None)).openapi()
+    schemas = spec['components']['schemas']
+    assert schemas['SemanticSuggestionsRequest']['properties']['sheet_ids']['minItems'] == 1
+    assert schemas['SemanticSuggestionsRequest']['properties']['sheet_ids']['maxItems'] == 100
+    assert schemas['SemanticSuggestionsRequest']['properties']['phase']['const'] == 'semantic_suggestions'
+    assert 'import_semantic_suggestions' in schemas['JobView']['properties']['operation']['enum']
+    assert 'semantic_suggestions' in schemas['MappingSummary']['properties']
+    budget = schemas['MappingSummary']['properties']
+    assert budget['semantic_call_limit']['maximum'] == 10
+    assert budget['semantic_configured_limit']['minimum'] == 0
+    assert 'semantic_calls_remaining' in budget
+    assert 'semantic_allocation' in schemas['JobView']['properties']
+    outcome = schemas['SemanticSheetOutcome']['properties']
+    assert {'requested_position', 'slot_consumed', 'diagnostic'} <= outcome.keys()
+    assert 'completion_guidance' in schemas['MappingSummary']['properties']
+    guidance = schemas['CompletionGuidance']['properties']
+    assert guidance['scope']['const'] == 'batch'
+    assert guidance['count_unit']['const'] == 'distinct_mapping_issue_ids_not_actions'
+    assert {'issues', 'profiles', 'declarations', 'preview'} <= guidance.keys()
+    assert {'can_submit', 'can_owner_review', 'submission_id', 'source_context_mapping_id'} <= schemas['CompletionProfileGuidance']['properties'].keys()
     wanted = {
         "I01": ("post", "/stores/{store_id}/imports", 201),
         "I02": ("post", "/imports/{import_id}/files", 200),
@@ -86,7 +105,7 @@ def test_import_operations_and_typed_variants_preserve_boundaries():
     assert spec["paths"]["/api/v1/imports/{import_id}/completion"]["get"]["operationId"] == "I06"
     process = spec["paths"]["/api/v1/imports/{import_id}/process"]["post"]
     accepted = process["responses"]["202"]["content"]["application/json"]["schema"]["anyOf"]
-    assert {r["$ref"].split("/")[-1] for r in accepted} == {"ImportEnvelope_PreviewAccepted_", "ImportEnvelope_CommitAccepted_"}
+    assert {r["$ref"].split("/")[-1] for r in accepted} == {"ImportEnvelope_PreviewAccepted_", "ImportEnvelope_CommitAccepted_", "ImportEnvelope_SemanticSuggestionsAccepted_"}
     assert process["responses"]["200"]["content"]["application/json"]["schema"][
         "$ref"
     ].endswith("ImportEnvelope_ConfirmationResult_")

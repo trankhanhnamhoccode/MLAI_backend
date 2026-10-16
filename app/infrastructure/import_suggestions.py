@@ -86,6 +86,27 @@ def sheet_payload(sheet, rawsheet, filename, rule, selected_type=None, sample_li
     )
 
 
+def prepare_sheet(settings, sheet, rawsheet, filename, rule, selected_type=None):
+    """Network-free shared preflight; callers can check before durable reservation."""
+    from app.application.contracts.import_mapping import SuggestionDiagnostic
+    detail = dict(model=settings.openrouter_mapping_model, attempts=0, prompt_version='mapping_prompt/3')
+    if (not settings.import_llm_suggestions_enabled or not settings.openrouter_api_key
+            or not settings.openrouter_api_key.get_secret_value().strip()):
+        return None, SuggestionDiagnostic(
+            status='disabled' if not settings.import_llm_suggestions_enabled else 'unavailable',
+            failure_code='LLM_UNAVAILABLE', failure_stage='configuration', **detail)
+    try:
+        payload = sheet_payload(sheet, rawsheet, filename, rule, selected_type, settings.openrouter_mapping_sample_limit)
+        detail['input_digest'] = content_digest(payload)
+        user = json.dumps(payload, ensure_ascii=False)
+        if len(user.encode()) > 96000:
+            raise ValueError('LLM_INPUT_LIMIT')
+    except ValueError:
+        return None, SuggestionDiagnostic(status='unavailable', failure_code='LLM_INPUT_LIMIT',
+                                         failure_stage='input', **detail)
+    return user, SuggestionDiagnostic(status='unavailable', **detail)
+
+
 def suggest_sheet(settings, sheet, rawsheet, filename, rule, selected_type=None, diagnostics=None):
     """Preserve the caller result contract; expose only typed, sample-free diagnostics."""
     from app.application.contracts.import_mapping import SuggestionDiagnostic
@@ -104,19 +125,10 @@ def _suggest_sheet(settings, sheet, rawsheet, filename, rule, selected_type, det
     from app.application.import_descriptors import options
     from pydantic import ValidationError
 
-    if not settings.import_llm_suggestions_enabled or not settings.openrouter_api_key:
-        detail['failure_stage'] = 'configuration'
-        return None, "LLM_UNAVAILABLE"
-    try:
-        payload = sheet_payload(sheet, rawsheet, filename, rule, selected_type, settings.openrouter_mapping_sample_limit)
-        detail['input_digest'] = content_digest(payload)
-        user = json.dumps(payload, ensure_ascii=False)
-        if len(user.encode()) > 96000:
-            detail['failure_stage'] = 'input'
-            return None, "LLM_INPUT_LIMIT"
-    except ValueError:
-        detail['failure_stage'] = 'input'
-        return None, "LLM_INPUT_LIMIT"
+    user, preflight = prepare_sheet(settings, sheet, rawsheet, filename, rule, selected_type)
+    detail.update(preflight.model_dump(exclude={'status', 'failure_code'}, exclude_none=True))
+    if preflight.failure_code:
+        return None, preflight.failure_code
     body = dict(
         model=settings.openrouter_mapping_model,
         temperature=0,
