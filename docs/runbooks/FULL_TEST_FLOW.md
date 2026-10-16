@@ -1,5 +1,41 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="recovery-handoff"></a>
+## CURRENT FACT — recovery + Assistant handoff integration
+
+Reuse recovery2e4a048 and its historical mergee48c74a from main e499112; current
+handoff source is the enclosing commit. Use the recovery integration checkout,
+fresh dedicated Compose project shelfcash-recovery-handoff at127.0.0.1:5442,
+shelfcash_integration_test / limited shelfcash_integration_tester. Do not copy/use
+sibling5441/5436/5438 or customer/demo targets. The ignored/exported setup and runner
+under runtime/recovery-handoff validate exact host/port/database/role before connect,
+effective DB/role/privileges after connect, then supported dev guards/fixture reset.
+No .env edit; email, summary/chat/import providers and background workers OFF.
+Explicit test workers/fake providers are not live activation.
+
+```powershell
+# From integration checkout; source imports must resolve to this checkout:
+$env:PYTHONPATH=(Get-Location).Path
+..\backend\.venv\Scripts\python.exe -B runtime/recovery-handoff/run.py -m scripts.dev status --test-database
+..\backend\.venv\Scripts\python.exe -B runtime/recovery-handoff/run.py -m pytest tests/unit/test_application_contracts.py tests/unit/test_challenger_target_guard.py tests/integration/test_store_creation.py tests/integration/test_import_commit.py -q --tb=short
+..\backend\.venv\Scripts\python.exe -B runtime/recovery-handoff/run.py -m pytest tests/unit/test_fe_handoff.py tests/integration/test_fe_handoff_examples.py -q --tb=short
+```
+
+New combined-source recovery gate114 pass includes atomicity/concurrency/process
+recovery and grants replay; no stale-head deselection. Original guard and retention
+head failures were reproduced first, then fixed without loosening architecture
+or rewriting migrations. Assistant/host/metadata2/parent upgrade/old replay gates
+run fresh, with provider OFF/fake only. Initial example assumed captured ingredient
+names that are actually absent; current example keeps empty labelled candidates
+and uses pinned pending IDs. Missing evidence-directory creation in two L5 tests
+was repaired without changing assertions. Current schema76 tables/head
+l5_20261016_assistant_f4, not isolated component head0027.
+Exact invocations/fail→fix JUnit, OpenAPI comparison and limits accompany the requested
+handoff ZIP. Counts overlap; no full-suite/browser/F5/deployment/live-provider PASS.
+Final-source publication and remote SHA are in package PROVENANCE, not a guessed
+self-referential commit in docs. FE field allowlist/remaining work:
+[canonical START_HERE](../handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
+
 <a id="assistant-l5"></a>
 ## CURRENT FACT - L5 combined-source offline acceptance
 

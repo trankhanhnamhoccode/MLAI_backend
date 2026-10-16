@@ -135,18 +135,8 @@ class ChallengerPlanningServing(ForecastServing):
         self.declaration=ChallengerInput.model_validate(declaration)
         self.service=ForecastChallenger(storage,enabled=enabled)
         if not enabled:raise ValueError('Explicit test opt-in required')
-        from scripts.dev import validate_reset_target
-        from sqlalchemy.engine import make_url
-        validate_reset_target(settings)
-        url=make_url(settings.database_url)
-        if (settings.environment!='test' or url.database!='shelfcash_challenger_test'
-                or engine.url!=url):raise ValueError('F4 restricted to the dedicated challenger test target')
-        from sqlalchemy import text
-        with engine.connect() as connection:
-            if connection.execute(text('SELECT current_database(),current_user')).one()!=('shelfcash_challenger_test','shelfcash_challenger_tester'):
-                raise ValueError('Connected challenger identity mismatch')
-            if connection.scalar(text('SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls FROM pg_roles WHERE rolname=current_user')):
-                raise ValueError('Challenger runtime role must be limited')
+        from app.infrastructure.planning_challenger_identity import require_challenger_test_target
+        require_challenger_test_target(engine, settings)
         self.execution=ChallengerTestExecution(engine,self.service)
 
     def acceptance_pin(self,facts,store,start):

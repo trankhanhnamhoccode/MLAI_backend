@@ -25,6 +25,16 @@ and [handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
 
 ## CURRENT FACT — mutation recovery
 
+Recovery checkpoint2e4a048 is combined with Assistant main in the dedicated recovery
+handoff integration checkout. The unchanged architecture guard now passes after
+moving F4 connected-target/limited-role queries to infrastructure. Store receipt
+retention tests follow the source migration graph and preserve Store/Owner/audit/
+receipt on rejected destructive downgrade. No applied migration is rewritten.
+ACCEPTED DECISION: FE pre-dispatch persistent intent journal with explicit reviewed
+field allowlist + existing BE receipt/replay/readback; FE/browser implementation
+pending. Current [handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md) owns generated76/69
+OpenAPI, FE73 diff, validated examples, journal matrix and final-package provenance.
+
 Import review confirmation replays its durable receipt before the completion/CAS
 guard in both transactions, after current authorization and preview/write checks.
 Canonical Import commit reconciles only recognized SQLAlchemy/psycopg uncertain

@@ -31,6 +31,8 @@ def assistant(env):
     assert (target.database, target.username, target.host, target.port) in {
         ('shelfcash_assistant_test', 'shelfcash_assistant_tester', '127.0.0.1', 5436),
         ('shelfcash_integration_test', 'shelfcash_integration_tester', '127.0.0.1', 5441),
+        # Separate recovery/handoff integration instance; never reuse sibling L5 DB.
+        ('shelfcash_integration_test', 'shelfcash_integration_tester', '127.0.0.1', 5442),
     }, 'Only the owned Assistant or L5 disposable target'
     owner=setup(env)
     record=retained_record(actor_id=owner.user_id)

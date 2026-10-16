@@ -1,0 +1,58 @@
+{
+  "baseline_source": "869eaec914aa6905d6b935889afebe7d973004ae",
+  "baseline_openapi_sha256": "790443d80350cc597c7c06179309e43303ba558de34017ea1dd4113de71fc1ee",
+  "provenance": "Current enclosing Git commit owns generated artifacts; final ZIP manifest supplies exact source SHA",
+  "before": {
+    "operations": 73,
+    "paths": 66
+  },
+  "after": {
+    "operations": 76,
+    "paths": 69
+  },
+  "added_operations": [
+    {
+      "id": "AS01",
+      "method": "POST",
+      "path": "/api/v1/procurement-plans/{plan_id}/assistant/summary"
+    },
+    {
+      "id": "AS02",
+      "method": "GET",
+      "path": "/api/v1/procurement-plans/{plan_id}/assistant/summary/{generation_id}"
+    },
+    {
+      "id": "AS03",
+      "method": "POST",
+      "path": "/api/v1/procurement-plans/{plan_id}/assistant/messages"
+    }
+  ],
+  "removed_operations": [],
+  "changed_operations": [],
+  "added_schemas": [
+    "AssistantResponse",
+    "ChatClaim",
+    "ChatContext",
+    "ChatDiagnostics",
+    "ChatEnvelope",
+    "ChatRequest",
+    "Clarification",
+    "EvidenceIdentity",
+    "EvidenceReference",
+    "HistoryMessage",
+    "IngredientCandidate",
+    "OptionCandidate",
+    "PendingQuestion",
+    "ProductCandidate",
+    "SummaryAnswer",
+    "SummaryClaim",
+    "SummaryDiagnostics",
+    "SummaryEnvelope",
+    "SummaryExpression",
+    "SummaryMeta",
+    "SummaryRequest",
+    "SummaryView"
+  ],
+  "removed_schemas": [],
+  "changed_schemas": []
+}

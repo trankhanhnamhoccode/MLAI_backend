@@ -1,0 +1,1121 @@
+{
+  "schema_version": "fe_intent_journal_allowlist/1",
+  "status": "ACCEPTED recovery direction; BE handoff field review; FE implementation/browser acceptance NOT_RUN",
+  "provenance": "Enclosing Git commit owns this spec; final ZIP external manifest pins exact SHA",
+  "default": "DENY_UNLISTED_OPERATIONS_AND_FIELDS",
+  "metadata_fields": [
+    "actor_user_id",
+    "store_id",
+    "operation_id",
+    "phase",
+    "method",
+    "path",
+    "resource_ids",
+    "idempotency_key",
+    "original_cas",
+    "created_at",
+    "payload_sha256",
+    "state",
+    "receipt_ids"
+  ],
+  "metadata_constraints": "Only identifiers, operation/route literals, version/key strings, UTC timestamp, hash and finite state; no arbitrary response/raw request text",
+  "states": [
+    "pending",
+    "unknown",
+    "confirmed",
+    "rejected"
+  ],
+  "dispatch_rule": "Durable journal write must succeed before dispatch. Restore under current actor/Store/session; no automatic new-key retry. Fresh CSRF/cookie are never stored. Hash cannot reconstruct lost body. Reject only with original-attempt-specific semantics; denied replay preserves uncertainty.",
+  "never_persist": [
+    "password",
+    "access_token",
+    "session_token",
+    "csrf_token",
+    "cookie",
+    "Authorization",
+    "email_verification_proof",
+    "invitation_token",
+    "secret_key",
+    "raw_uploaded_cells",
+    "file_bytes"
+  ],
+  "excluded_auth_operations": [
+    "A01",
+    "A02",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "N7"
+  ],
+  "operations": [
+    {
+      "operation_id": "T03",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores",
+      "key_required": true,
+      "key_scope": "actor account + key; replay current Owner",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "full_body",
+        "allowed_body_fields": [
+          "name",
+          "timezone",
+          "currency"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": ""
+      },
+      "readers": [
+        {
+          "operation_id": "T01",
+          "method": "GET",
+          "path": "/api/v1/stores"
+        },
+        {
+          "operation_id": "T02",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "I01",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/imports",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "full_body",
+        "allowed_body_fields": [
+          "data_date"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": ""
+      },
+      "readers": [
+        {
+          "operation_id": "H02",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/imports"
+        },
+        {
+          "operation_id": "I04",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "I02",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/imports/{import_id}/files",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "excluded",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "BE multipart exact replay exists; FE helper does not support it. Never generic-journal raw bytes/cells/files; recover via retained batch/client-file IDs or separately held original file."
+      },
+      "readers": [
+        {
+          "operation_id": "I04",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "I03",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/imports/{import_id}/analyze",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "full_body",
+        "allowed_body_fields": [
+          "file_set_version",
+          "accepted_file_ids",
+          "acknowledged_rejected_client_file_ids"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": ""
+      },
+      "readers": [
+        {
+          "operation_id": "I04",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}"
+        },
+        {
+          "operation_id": "J01",
+          "method": "GET",
+          "path": "/api/v1/jobs/{job_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "I05",
+      "phase": "preview",
+      "method": "POST",
+      "path": "/api/v1/imports/{import_id}/process",
+      "key_required": true,
+      "key_scope": "actor + Store + import/process:preview",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "full_body",
+        "allowed_body_fields": [
+          "phase",
+          "mapping_revision"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": ""
+      },
+      "readers": [
+        {
+          "operation_id": "I04",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}"
+        },
+        {
+          "operation_id": "J01",
+          "method": "GET",
+          "path": "/api/v1/jobs/{job_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "I05",
+      "phase": "confirm_review",
+      "method": "POST",
+      "path": "/api/v1/imports/{import_id}/process",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [
+          "phase",
+          "preview_id",
+          "preview_digest",
+          "mapping_revision",
+          "confirm"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "reason is required free text and not journal-allowlisted; complete body replay remains disabled."
+      },
+      "readers": [
+        {
+          "operation_id": "I04",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "I05",
+      "phase": "commit",
+      "method": "POST",
+      "path": "/api/v1/imports/{import_id}/process",
+      "key_required": true,
+      "key_scope": "actor + Store + import/process:commit",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "conditional_full_body",
+        "allowed_body_fields": [
+          "phase",
+          "preview_id",
+          "preview_digest",
+          "confirm",
+          "reason",
+          "resolutions",
+          "supplier_changes",
+          "history_corrections"
+        ],
+        "conditions": {
+          "reason": "ABSENT or null ONLY",
+          "resolutions": "exact empty array ONLY",
+          "supplier_changes": "ABSENT or exact empty array ONLY",
+          "history_corrections": "ABSENT or exact empty array ONLY"
+        },
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Pure insert/NO_OP only; correction reason/resolutions/evidence text require separate field review. Never default-fill omitted keys."
+      },
+      "readers": [
+        {
+          "operation_id": "I04",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}"
+        },
+        {
+          "operation_id": "J01",
+          "method": "GET",
+          "path": "/api/v1/jobs/{job_id}"
+        },
+        {
+          "operation_id": "I06",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}/completion"
+        },
+        {
+          "operation_id": "H02",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/imports"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N13",
+      "phase": null,
+      "method": "PUT",
+      "path": "/api/v1/stores/{store_id}/memberships/{membership_id}/permissions",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [
+          "grants"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "reason free text excluded; no generic full-body journal replay."
+      },
+      "readers": [
+        {
+          "operation_id": "N12",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/memberships"
+        },
+        {
+          "operation_id": "N14",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/permission-events"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N15",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/staff-invitations",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "excluded",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Target email and delivery/account workflow excluded from generic journal."
+      },
+      "readers": [
+        {
+          "operation_id": "N16",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/staff-invitations"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N17",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/staff-invitations/{invitation_id}/actions",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Reissue email/proof lifecycle and free-text reason require separate review."
+      },
+      "readers": [
+        {
+          "operation_id": "N16",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/staff-invitations"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N19",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/staff-invitations/{invitation_id}/accept",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "excluded",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Invitation proof token excluded; N18 also needs proof. Membership readback is not terminal proof."
+      },
+      "readers": [
+        {
+          "operation_id": "N18",
+          "method": "GET",
+          "path": "/api/v1/staff-invitations/{invitation_id}"
+        },
+        {
+          "operation_id": "T01",
+          "method": "GET",
+          "path": "/api/v1/stores"
+        },
+        {
+          "operation_id": "T02",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "IN01",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/staff-invitations/{invitation_id}/decline",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "excluded",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Invitation proof excluded; no membership from decline."
+      },
+      "readers": [
+        {
+          "operation_id": "N18",
+          "method": "GET",
+          "path": "/api/v1/staff-invitations/{invitation_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "PR01",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/permission-requests",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [
+          "requested_permissions",
+          "permission_catalog_version",
+          "expected_grants_version"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Required free-text reason excluded; body replay disabled."
+      },
+      "readers": [
+        {
+          "operation_id": "PR02",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/permission-requests"
+        },
+        {
+          "operation_id": "PR03",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/permission-requests/{request_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "PR04",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/permission-requests/{request_id}/actions",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Required decision reason excluded; body replay disabled; approve is a union, never reapply."
+      },
+      "readers": [
+        {
+          "operation_id": "PR02",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/permission-requests"
+        },
+        {
+          "operation_id": "PR03",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/permission-requests/{request_id}"
+        },
+        {
+          "operation_id": "N12",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/memberships"
+        },
+        {
+          "operation_id": "N14",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/permission-events"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "MQ01",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/imports/{import_id}/mapping-submissions",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Profile/submission pins needed, but free text/source evidence not allowlisted; full body disabled."
+      },
+      "readers": [
+        {
+          "operation_id": "MQ02",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/mapping-submissions"
+        },
+        {
+          "operation_id": "MQ03",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/mapping-submissions/{submission_id}"
+        },
+        {
+          "operation_id": "I04",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N5",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/mapping-profiles/{profile_id}/decisions",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Owner-only; full reviewed spec/pins/reason required; no unreviewed free-text journal."
+      },
+      "readers": [
+        {
+          "operation_id": "M01",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}/mapping-summary"
+        },
+        {
+          "operation_id": "MQ02",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/mapping-submissions"
+        },
+        {
+          "operation_id": "MQ03",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/mapping-submissions/{submission_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "M04",
+      "phase": null,
+      "method": "PATCH",
+      "path": "/api/v1/imports/{import_id}/mappings/{mapping_id}",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Resolution union includes source values/new-entity metadata/evidence; generic body serialization disabled."
+      },
+      "readers": [
+        {
+          "operation_id": "M01",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}/mapping-summary"
+        },
+        {
+          "operation_id": "M02",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}/mappings"
+        },
+        {
+          "operation_id": "M03",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}/sheets/{sheet_id}/field-options"
+        },
+        {
+          "operation_id": "I04",
+          "method": "GET",
+          "path": "/api/v1/imports/{import_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N6",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/inventory/receipts",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Source identity deduplicates physical receipt, not lot_code. Free-text reason/source values need separate review; body disabled."
+      },
+      "readers": [
+        {
+          "operation_id": "V01",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/inventory"
+        },
+        {
+          "operation_id": "V02",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/inventory/{ingredient_id}"
+        },
+        {
+          "operation_id": "V03",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/inventory/{ingredient_id}/lots"
+        },
+        {
+          "operation_id": "V04",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/inventory/{ingredient_id}/movements"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N1",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/planning-requirements",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Saved requirement name/free-text fields not allowlisted; body disabled."
+      },
+      "readers": [
+        {
+          "operation_id": "C01",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/planning-context"
+        },
+        {
+          "operation_id": "N2",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N3",
+      "phase": null,
+      "method": "PUT",
+      "path": "/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Archive/update discriminated body needs review; body disabled."
+      },
+      "readers": [
+        {
+          "operation_id": "C01",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/planning-context"
+        },
+        {
+          "operation_id": "N2",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N4",
+      "phase": null,
+      "method": "PUT",
+      "path": "/api/v1/stores/{store_id}/planning-budget",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match",
+        "If-None-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "full_body",
+        "allowed_body_fields": [
+          "amount"
+        ],
+        "conditions": {
+          "CAS": "exactly one If-Match or If-None-Match:*"
+        },
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": ""
+      },
+      "readers": [
+        {
+          "operation_id": "C01",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/planning-context"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N21",
+      "phase": "preview",
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Preview reason/content excluded from generic body journal."
+      },
+      "readers": [
+        {
+          "operation_id": "N22",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes/{change_id}"
+        },
+        {
+          "operation_id": "N20",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N21",
+      "phase": "commit",
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes",
+      "key_required": true,
+      "key_scope": "actor + Store + Product + commit phase",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "full_body",
+        "allowed_body_fields": [
+          "phase",
+          "change_id",
+          "preview_digest",
+          "confirm",
+          "acknowledged_warning_codes"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": ""
+      },
+      "readers": [
+        {
+          "operation_id": "N22",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes/{change_id}"
+        },
+        {
+          "operation_id": "N20",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "C02",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/stores/{store_id}/procurement-plans",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "conditional_full_body",
+        "allowed_body_fields": [
+          "requirements_mode",
+          "forecast_start_date",
+          "default_requirements_version",
+          "requirements",
+          "saved_requirement_id"
+        ],
+        "conditions": {
+          "requirements_mode": "default or saved ONLY",
+          "requirements": "ABSENT or null ONLY"
+        },
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Custom nested requirements need separate explicit field review; no generic serialization. Original version/body pins remain exact."
+      },
+      "readers": [
+        {
+          "operation_id": "C03",
+          "method": "GET",
+          "path": "/api/v1/procurement-plans/{plan_id}"
+        },
+        {
+          "operation_id": "N9",
+          "method": "GET",
+          "path": "/api/v1/stores/{store_id}/procurement-plans"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "N10",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/procurement-plans/{plan_id}/exports",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "full_body",
+        "allowed_body_fields": [
+          "format",
+          "option_id",
+          "locale"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": ""
+      },
+      "readers": [
+        {
+          "operation_id": "EX01",
+          "method": "GET",
+          "path": "/api/v1/procurement-plans/{plan_id}/exports"
+        },
+        {
+          "operation_id": "J01",
+          "method": "GET",
+          "path": "/api/v1/jobs/{job_id}"
+        },
+        {
+          "operation_id": "N11",
+          "method": "GET",
+          "path": "/api/v1/procurement-plans/{plan_id}/exports/{export_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "NF03",
+      "phase": null,
+      "method": "PATCH",
+      "path": "/api/v1/notifications/{notification_id}",
+      "key_required": true,
+      "key_scope": "actor recipient + notification + key",
+      "persist_headers": [
+        "Idempotency-Key",
+        "If-Match"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "full_body",
+        "allowed_body_fields": [
+          "read"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": ""
+      },
+      "readers": [
+        {
+          "operation_id": "NF01",
+          "method": "GET",
+          "path": "/api/v1/notifications"
+        },
+        {
+          "operation_id": "NF02",
+          "method": "GET",
+          "path": "/api/v1/notifications/unread-count"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "AS01",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/procurement-plans/{plan_id}/assistant/summary",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "full_body",
+        "allowed_body_fields": [
+          "expected_evidence_version",
+          "option_id",
+          "locale",
+          "detail_level"
+        ],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": ""
+      },
+      "readers": [
+        {
+          "operation_id": "AS02",
+          "method": "GET",
+          "path": "/api/v1/procurement-plans/{plan_id}/assistant/summary/{generation_id}"
+        },
+        {
+          "operation_id": "C03",
+          "method": "GET",
+          "path": "/api/v1/procurement-plans/{plan_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    },
+    {
+      "operation_id": "AS03",
+      "phase": null,
+      "method": "POST",
+      "path": "/api/v1/procurement-plans/{plan_id}/assistant/messages",
+      "key_required": true,
+      "key_scope": "actor + Store + operation/resource",
+      "persist_headers": [
+        "Idempotency-Key"
+      ],
+      "body_for_exact_replay": "Original operation body with exact field presence, array order, values and original CAS; use current session/CSRF separately",
+      "journal": {
+        "mode": "metadata_only",
+        "allowed_body_fields": [],
+        "conditions": {},
+        "unlisted_fields": "DENY; disable full-body replay rather than drop a field",
+        "note": "Exact POST replay is a BE capability; no GET message. question/history/context.pending.original_question are unreviewed free text and excluded from generic journal. Context IDs/version alone cannot reconstruct body. Existing retained POST may recover only under operation-specific provider/claim policy."
+      },
+      "readers": [
+        {
+          "operation_id": "C03",
+          "method": "GET",
+          "path": "/api/v1/procurement-plans/{plan_id}"
+        }
+      ],
+      "current_authorization": "Recheck current account/session/Store/membership/operation rights before readback/replay; actor switch never reuses another actor intent",
+      "unknown_semantics": "Missing receipt, empty list,403/404,timeout and replay denial do not prove no-effect; newer state is not original receipt",
+      "retention": "Existing receipts/aggregates have no automatic TTL/purge; no new BE journal retention policy"
+    }
+  ],
+  "storage_proposal": {
+    "technology": "IndexedDB recommended, FE-owned",
+    "unresolved": "Do not silently expire/clear unresolved intent; shared-device/retention/logout UX must be explicit FE policy. Actor isolation is not XSS protection. Logout/clear is never cancellation or rollback. No BE retention change."
+  }
+}

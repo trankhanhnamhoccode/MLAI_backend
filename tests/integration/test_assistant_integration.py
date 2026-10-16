@@ -95,6 +95,7 @@ def test_actual_host_worker_then_cold_assistant_default_v6(flow,monkeypatch):
     record=worker.run_one();assert record.status=='completed',record.error_code
     assert record.public_capture.forecast.model_type=='historical_quantile_baseline'
     proof=summary_chat(c[0],record,c[3],monkeypatch)
+    ROOT.mkdir(parents=True,exist_ok=True)
     (ROOT/'host-worker-assistant.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2),encoding='utf8')
 
 
@@ -151,6 +152,7 @@ def test_retained_schema3_metadata2_cold_assistant_and_migration_guard(env,monke
     assert versions(env[1])=={HEAD}
     assert assistant_rows()==receipts
     proof.update(mode='SAVED_NATIVE_FORECAST_NEW_SYNTHETIC_HOST_PLANNING_NO_NATIVE_INFERENCE',metadata2_preserved=True,schema3_preserved=True,migration_guard_rejected=True)
+    ROOT.mkdir(parents=True,exist_ok=True)
     (ROOT/'metadata2-assistant.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2),encoding='utf8')
 
 

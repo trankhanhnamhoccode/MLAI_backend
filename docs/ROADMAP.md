@@ -87,8 +87,10 @@ CURRENT FACT: the FE019 recovery repair preserves current authorization and publ
 contracts while correcting delayed Import review replay and canonical-commit
 exception reconciliation. Existing reads/replay cover retained positive outcomes;
 recovery after losing key/body is operation-specific and has no negative proof.
-PROPOSAL: durable client intent metadata and, only if product requires it, scoped
-committed discovery or an explicitly fenced terminal protocol. File delete/unseal,
+ACCEPTED DECISION: FE persistent pre-dispatch intent journal under the explicit
+handoff field allowlist; FE implementation/F5/browser acceptance remains pending.
+Cross-device committed discovery or an explicitly fenced terminal protocol is
+separate BACKLOG, not an endpoint authorized here. File delete/unseal,
 immediate canonical resolver writes, standalone Preview choices, pending procurement
 decisions and richer public token/session continuation remain unimplemented feature
 scope. See [FE019 audit](reports/FE_019_BACKEND_RECOVERY_AUDIT.md) for precise existing

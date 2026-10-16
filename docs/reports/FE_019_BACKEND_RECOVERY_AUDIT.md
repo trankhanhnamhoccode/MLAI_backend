@@ -12,7 +12,8 @@ PROPOSAL, not approval to implement. Canonical workflow owners remain
 ## Source, runtime and evidence
 
 - Source baseline: local main/HEAD `8b0968562438a1558fb189e0ab18bfabbe0cd5a9`.
-  Work is uncommitted on `feat/mutation-recovery-fixes` in the main checkout.
+  Original audit was checkpointed at `2e4a048` on `feat/mutation-recovery-fixes`;
+  current combined source/handoff is owned by the enclosing integration commit.
   Existing untracked 018/019 reports and `dts/` are preserved. No sibling worktree
   integration, fetch/pull/push, commit, restart or demo migration.
 - FE pins `869eaec914aa6905d6b935889afebe7d973004ae` and OpenAPI SHA256
@@ -27,7 +28,8 @@ PROPOSAL, not approval to implement. Canonical workflow owners remain
   `FOUND_MISSING_UI.md`, coverage/verification inventories and the described reload
   image are not supplied in this checkout/request attachment. Their detailed UI
   findings and screenshots remain unverified; the explicit 018/019 findings below
-  are independently auditable. Assistant/curated-template WIP stays excluded.
+  are independently auditable. Original audit excluded Assistant/curated WIP. Current handoff includes the
+  separately committed Assistant main; curated-template WIP remains excluded.
 - Verification owns a new Compose project/volume `shelfcash-fe019-recovery`,
   PostgreSQL17 at `127.0.0.1:5440`, allowlisted `shelfcash_local_test`, role
   `shelfcash_local_tester` without superuser/CREATEDB/CREATEROLE/BYPASSRLS.
@@ -43,7 +45,7 @@ PROPOSAL, not approval to implement. Canonical workflow owners remain
 | --- | --- | --- |
 | Delayed same-key review confirmation races with canonical completion | Reproduced BE bug: `ImportStaging.confirm_review` rechecks completion before its second receipt lookup, after releasing the first transaction for read-set capture. Regression first returned 409 `IMPORT_STATE_CONFLICT` despite a committed matching receipt. | Move only the completion guard after receipt replay; current authorization, preview integrity and required write checks still precede replay. One review audit/receipt and canonical row, exact retained result/ETag. |
 | Worker post-commit exception handling | Reproduced BE bug: `ImportStaging.run_one` swallowed a synthetic `RuntimeError` after real canonical commit (`DID NOT RAISE RuntimeError`); Import §10 requires programming errors to remain errors. | Only recognized SQLAlchemy/psycopg uncertain errors raised by the canonical COMMIT can reconcile through fresh retained completion/job proof. Reuses the existing `_is_uncertain_commit` classifier; no new retry framework. Completed state stays completed; error surfaces to worker logging. |
-| Fingerprint presence wording | Contract/source discrepancy: Import §10 describes presence-sensitive body digest; `ImportStaging` validates then uses `model_dump`, which fills optional defaults. Actual DTO + `_request` comparison shows omitted Commit.reason and explicit null have the same fingerprint. | Preserve exact wire replay in FE. No fingerprint migration/compatibility change made. Clarify which optional defaults must be distinguished before changing persisted receipt semantics. Evidence is serializer-level, not another PostgreSQL mutation test. |
+| Fingerprint presence wording | HISTORICAL INFORMATION ? original contract/source discrepancy: Import §10 describes presence-sensitive body digest; `ImportStaging` validates then uses `model_dump`, which fills optional defaults. Actual DTO + `_request` comparison shows omitted Commit.reason and explicit null have the same fingerprint. | Preserve exact wire replay in FE. No fingerprint migration/compatibility change made. Current canonical Import contract now describes Commit.reason omitted/null equivalence explicitly; no fingerprint algorithm changed. Evidence is serializer-level, not another PostgreSQL mutation test. |
 | Reload loses original intent | Missing public discovery capability for logical intent, not proof of rollback. 018/019 explicitly retain only in-memory intent. All receipt keys are digests; tracing IDs are not lookup keys. | Use operation readers where identities survive. Do not invent key/body or clear uncertainty after denied replay. No generic status endpoint added. |
 | Accepted-file delete/replace/unseal | Unsupported new lifecycle. `ImportStaging.upload/analyze`, immutable blobs/files, sealed analysis and Import §9.1a intentionally preserve accepted bytes. | Existing alternative: explicitly create another draft/upload; it does not cancel an uncertain old mutation. Delete/unseal would need invalidation/quota/provenance/concurrency policy. |
 | Resolver immediate create+bind | Partly available, partly new capability. `ImportStaging.resolve`, `new_entity_proposal` and Import §6.1 retain Product/Ingredient proposals/reserved IDs for atomic canonical commit. | FE can use descriptor-supported staged creation/binding now. Immediate independent canonical create/bind before batch commit is not the same contract and is unsupported. No generic CRUD added. |
@@ -160,18 +162,19 @@ connection_invalidated=True, preserving their full canonical/audit/receipt asser
 The separate programming-failure regression proves the runtime change; this is
 not weakening data assertions or changing production fixtures to conceal a defect.
 
-TECHNICAL DEBT: the architecture guard fails on committed
+HISTORICAL INFORMATION: the original architecture guard failed on committed
 `planning_challenger.py` direct Session queries at146/148. Both that file and the
 guard test equal HEAD after Git line-ending normalization; applying the same AST
 guard to committed source reproduces146/148. Source/test were not changed here.
-This is unrelated existing main debt, not a passing gate or an exemption added by
-this task. `runtime/fe019/baseline-drift.json` retains sanitized comparison evidence.
+Current combined-source integration relocates these queries to infrastructure,
+keeps every target/role guard, and passes the unchanged architecture guard; no exemption. `runtime/fe019/baseline-drift.json` retains sanitized comparison evidence.
 
-Known test drift (deselected, not executed): `test_receipt_retention_schema_parity_and_no_destructive_downgrade`
+HISTORICAL INFORMATION ? original test drift (then deselected): `test_receipt_retention_schema_parity_and_no_destructive_downgrade`
 hard-codes0027 as current head although main already has
 `f4_20261016_metadata_v2`. Its downgrade crosses the F4 constraint and then hits the
 retained Store guard; this task does not rewrite historical migration intent or
-claim that stale head assertion passed. No migration/schema source change here.
+claim that the original stale assertion passed. Current integration uses graph heads
+and verifies unchanged Store/Owner/audit/receipt after denied downgrade; no applied migration rewrite.
 
 Fault injection after real Session.commit and fresh Session assertions prove durable
 rows; recreating ImportStaging proves no in-memory service dependence. Neither is
@@ -210,11 +213,11 @@ refresh current state separately from retained success. Do not retry with new ke
 to resolve unknown outcomes. New session may permit replay with preserved intent;
 accepted workers still have their own original-session authorization boundary.
 
-| PROPOSAL (not implemented) | Concrete minimal contract, scope and retention | Absence/late-request/duplicate limits; decision needed |
+| Status / direction | Concrete minimal contract, scope and retention | Absence/late-request/duplicate limits; decision needed |
 | --- | --- | --- |
-| FE pre-dispatch intent journal | Actor/Store/operation/resource, original key/CAS, payload fingerprint, timestamp; persist before dispatch and block unresolved competing writes after reload. Exclude passwords/email/invitation proof/tokens/raw uploaded cells. Exact replay only if an explicitly approved per-operation safe original body also survives; a hash cannot reconstruct it. Retain unresolved entries until positive reconciliation or explicit reviewed handling; current auth always required. No BE API delta. | Protects same intent only if journal write completed first; no negative certificate and no remote cancellation. Decide allowed body fields/storage/logout/shared-device retention with FE; BE does not implement FE here. |
-| T03-specific committed creation discovery | Proposed `GET /api/v1/store-creations?limit&cursor`; authenticated verified holder only; return own retained `{creation_reference,store_id,created_at}` only while current Owner of active Store. No raw key/body/email and no foreign-actor lookup. Existing receipt lifetime, no invented TTL; scope-bound pagination and no forbidden counts. Existing T01 may already suffice for product needs. | Positive committed evidence only. Empty page/inaccessible receipt remains unknown; no pending record and no guarantee which lost intent a candidate belonged to. Decide whether additional creation reference/history is useful beyond T01; no endpoint added. |
-| Scoped status with definitive negative outcome, only if required | Requires a separately approved preaccepted operation-specific intent identity, immutable payload digest, same current actor/Store authority, durable state machine and server-side terminal tombstone. Execute and abandon must lock/fence the same identity atomically; late dispatch must reject an abandoned identity. No generic auth/token/request-body recovery. Tombstones must be retained indefinitely unless an approved nonreusable-key expiry protocol proves late requests cannot execute. | A GET absence alone never fences. Terminal negative requires an atomic state-changing fence, duplicate protection and business-specific worker races/rights/retention tests. Decide need for explicit abandon/expiry and UX; materially new policy, not a bug fix or generic manager to implement now. |
+| ACCEPTED DECISION ? FE pre-dispatch intent journal (FE implementation pending) | Actor/Store/operation/resource, original key/CAS, payload fingerprint, timestamp; persist before dispatch and block unresolved competing writes after reload. Exclude passwords/email/invitation proof/tokens/raw uploaded cells. Exact replay only if an explicitly approved per-operation safe original body also survives; a hash cannot reconstruct it. Retain unresolved entries until positive reconciliation or explicit reviewed handling; current auth always required. No BE API delta. | Protects same intent only if journal write completed first; no negative certificate and no remote cancellation. Current field allowlist and IndexedDB/logout/retention proposal are in the canonical [handoff](../handoff/010_BE_CAPABILITY_RESPONSE_VI.md); BE does not implement FE here. |
+| BACKLOG PROPOSAL ? T03-specific committed creation discovery | Proposed `GET /api/v1/store-creations?limit&cursor`; authenticated verified holder only; return own retained `{creation_reference,store_id,created_at}` only while current Owner of active Store. No raw key/body/email and no foreign-actor lookup. Existing receipt lifetime, no invented TTL; scope-bound pagination and no forbidden counts. Existing T01 may already suffice for product needs. | Positive committed evidence only. Empty page/inaccessible receipt remains unknown; no pending record and no guarantee which lost intent a candidate belonged to. Decide whether additional creation reference/history is useful beyond T01; no endpoint added. |
+| BACKLOG PROPOSAL ? scoped status/definitive negative outcome | Requires a separately approved preaccepted operation-specific intent identity, immutable payload digest, same current actor/Store authority, durable state machine and server-side terminal tombstone. Execute and abandon must lock/fence the same identity atomically; late dispatch must reject an abandoned identity. No generic auth/token/request-body recovery. Tombstones must be retained indefinitely unless an approved nonreusable-key expiry protocol proves late requests cannot execute. | A GET absence alone never fences. Terminal negative requires an atomic state-changing fence, duplicate protection and business-specific worker races/rights/retention tests. Decide need for explicit abandon/expiry and UX; materially new policy, not a bug fix or generic manager to implement now. |
 
 Other feature dependencies: file removal needs provenance/quota/seal invalidation;
 immediate resolver canonical writes need create authority and rollback identity;
@@ -229,4 +232,5 @@ the changed source/tests/canonical docs, this report, sanitized verification rec
 OpenAPI equality/delta evidence, guarded disposable setup/runner and SHA256 manifest.
 Original files/private runtime are retained; no credentials/cookies/DB dump/raw private
 data. ZIP CRC, per-entry hashes and exclusion/secret scans must pass before delivery.
-No commit/merge/push/deploy/FE edit/SMTP/OpenRouter call is part of this work.
+The original review ZIP remains historical. Current integration authorizes commit/merge/push
+and a final-source handoff ZIP; no deploy/FE edit/SMTP/OpenRouter call.

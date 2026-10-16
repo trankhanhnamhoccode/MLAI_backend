@@ -1,204 +1,147 @@
-# Phản hồi BE cho FE010 — canonical source handoff
+# START_HERE ? handoff FE th?ng nh?t
 
-## CURRENT FACT - Decision Assistant L5 combined backend source
+## Source v? ?i?m b?t ??u
 
-Combined source adds only AS01/AS02/AS03:76 operations/69 paths, migration head
-`l5_20261016_assistant_f4`,76 tables including Alembic. Source OpenAPI above is
-current; earlier73/66 and FE54 comparisons below are historical checkpoints.
-No FE files, runtime8103 configuration/process, demo DB or provider activation changed.
+CURRENT FACT: combined backend c? **76 operations / 69 paths**, migration head
+`l5_20261016_assistant_f4` (merge0030 v? f4_20261016_metadata_v2). Recovery checkpoint
+`2e4a048` ???c merge gi? l?ch s? v?i Assistant main `e499112` t?i `e48c74a`.
+Git commit ch?a t?i li?u/artifacts n?y s? h?u source provenance; kh?ng ghi SHA t?
+tham chi?u. ZIP cu?i xu?t t? final main sau push: **PROVENANCE.json trong g?i** ghi
+exact source SHA, remote main SHA v? tr?ng th?i ?? ??i chi?u. ??i chi?u manifest
+tr??c khi d?ng; working-tree artifact kh?ng t? l? release/deployment.
 
-| Operation | Exact path under `/api/v1/procurement-plans/{plan_id}` | FE behavior |
+FE pin c? `869eaec914aa6905d6b935889afebe7d973004ae`, OpenAPI SHA256
+`790443d80350cc597c7c06179309e43303ba558de34017ea1dd4113de71fc1ee`.
+[Diff machine-readable](openapi_diff_fe73.json) d?ng ??ng baseline hash: ch? th?m
+AS01/AS02/AS03, kh?ng ??i/x?a73 operations ho?c schemas c?. Historical handoff ZIP
+v? original baseline ???c gi?; kh?ng gh?p artifacts t? c?c nh?nh WIP.
+
+??c theo th? t?:
+
+1. [OpenAPI source](openapi.json) ? c?u tr?c request/response/headers/errors.
+2. [API chung](../API_CONTRACT.md), [Authorization](../AUTHORIZATION_CONTRACT_VI.md),
+   [Import](../IMPORT_MAPPING_API_CONTRACT_VI.md), [Planning/Assistant](../PROCUREMENT_API_CONTRACT_VI.md),
+   [Notifications](../NOTIFICATION_API_CONTRACT_VI.md) ? workflow, meaning, quy?n.
+3. [Recovery matrix v? journal allowlist](recovery_journal.json) ? method/path,
+   phase, key/CAS/body, readers, exclusions v? journal field rules.
+4. [V? d? ?? validate](examples.json) ? actual synthetic HTTP tr?n combined source,
+   provider OFF; summary/chat/context/clarification, Store v? Import recovery.
+5. [Current state](../CURRENT_STATE.md), [runbook](../runbooks/FULL_TEST_FLOW.md),
+   [Assistant limits](../features/DECISION_ASSISTANT.md),
+   [audit recovery](../reports/FE_019_BACKEND_RECOVERY_AUDIT.md).
+
+## ?? c? trong source v? gi?i h?n availability
+
+Hai BE bugs ?? s?a: delayed same-key confirm_review tr? matching durable receipt
+tr??c completion/CAS guard trong continuation, sau current authority; canonical
+Import worker ch? reconcile recognized uncertain COMMIT v?i durable proof. Programming
+error sau commit v?n n?i l?n; completed state kh?ng th?nh failed/kh?ng write l?i.
+Architecture repair chuy?n effective DB/limited-role query sang infrastructure,
+kh?ng n?i guard/test. Receipt retention test d?ng migration graph hi?n t?i v? gi?
+Store/Owner/audit/receipt sau failed destructive downgrade.
+
+CURRENT FACT: T03 Store/Owner atomic; N13 grants audited replay; PR/MQ/N5/M04 workflow;
+I01?I06 upload/analyze/preview/review/commit/completion; N6 receipt; planning config,
+recipe schedule, C02/C03/N9; PDF N10/J01/N11/EX01; NF inbox/read. Permissions-v3/43,
+Store isolation, exact arithmetic/CAS/idempotency/worker fencing kh?ng ??i.
+TypeAdapter optimization gi? nguy?n. Forecast C ch? test-only/OFF, kh?ng promote.
+
+Source availability kh?c deployed availability: task n?y **kh?ng restart8103,
+kh?ng migrate demo/development, ??i .env/flags ho?c g?i SMTP/OpenRouter**. Kh?ng ??a
+m?t base URL nh? ?? verified ph?c v? source m?i. Operator c?n ??i chi?u process/source
+manifest v? DB head, review backup/quiescence/schema upgrade/flags r?i th?c hi?n qua
+supported runbook trong nhi?m v? deployment ri?ng. FE integration ph?i ki?m tra
+??ng serving artifact; health200 ch? liveness, kh?ng x?c nh?n schema/features.
+
+## Assistant delta
+
+| ID | Exact method/path | Ti?p t?c/recovery |
 | --- | --- | --- |
-| AS01 POST | `/assistant/summary` | Explicit synchronous summary generation/replay; UUID Idempotency-Key; Location points to AS02 |
-| AS02 GET | `/assistant/summary/{generation_id}` | Read retained summary only; no implicit generation/recovery/provider |
-| AS03 POST | `/assistant/messages` | Scoped answer/clarification; same key/body POST replays retained response; no GET message endpoint |
+| AS01 | POST `/api/v1/procurement-plans/{plan_id}/assistant/summary` | Explicit synchronous create/replay; UUID key, original body/evidence version. Location ??n AS02. |
+| AS02 | GET `/api/v1/procurement-plans/{plan_id}/assistant/summary/{generation_id}` | Retained read; kh?ng implicit generate/recover/provider. |
+| AS03 | POST `/api/v1/procurement-plans/{plan_id}/assistant/messages` | Same key/body POST replay. **Kh?ng GET message endpoint**; kh?ng gi? J01 polling. |
 
-AS01/AS03 require secure session cookie, exact Origin, X-CSRF-Token and UUID
-Idempotency-Key. All three require current planning.result.read + budget.read +
-procurement.cost.read, repeated before delivery/replay. Missing current rights403;
-foreign/inactive Store404; unusable session401. AS02 read keeps ordinary cookie and
-Origin policy, no mutation body/key. Client obtains expected_evidence_version from
-C03 response_version; mismatch409. No client-supplied facts/proof/winner authority.
-Strict request/response structure is in [OpenAPI](openapi.json), canonical workflow/
-errors in [Planning18](../PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
-[Examples](examples.json) decision_assistant_l5 are DTO-validated synthetic actual
-HTTP responses, not restaurant data, live model or browser evidence.
+Current planning.result.read + budget.read + procurement.cost.read tr?n ??ng Store
+cho c? ba; mutation th?m current session/Origin/CSRF/key. expected_evidence_version
+l?y t? retained C03 response_version; mismatch409. Same key/different body409;
+running/live ho?c unknown generation claim409. AS02 c? th? tr? retained running/failed;
+GET kh?ng recover. Explicit operation-specific replay ch? recover proven-dead claim,
+kh?ng l?p uncertain provider call; xem contract ?? ph?n bi?t terminal failure.
 
-Summary is backend-rendered fact blocks with optional model ordering/tone; C08 is
-unchanged structured engine explanation; chat is finite scoped conversational
-wording over retained facts. Unknown is not zero; simulation is not actual stock
-or exact purchase causality; unproven/finite-domain proof is not global optimality.
-Carry returned structured context/pending clarification for follow-ups; display
-candidates by retained identity and keep source/diagnostics visible. Changing
-entity must change its facts/provenance; history never supplies business evidence.
+V6 m?c ??nh; candidate8 ch? explicit `AssistantChat(...,presentation_version=8)`
+composition trial, ch?a c? operator selector hay FE field ch?n version. SUMMARY_LLM_ENABLED
+v? CHAT_LLM_ENABLED ??c l?p, default OFF; IMPORT_LLM_SUGGESTIONS_ENABLED ri?ng.
+Model OFF c? deterministic fallback/clarification; HTTP200 kh?ng ch?ng minh model
+?? ch?y. Return structured context/pending clarification cho follow-up; history
+kh?ng l? business evidence. Gi? unknown/missing name, version, references/diagnostics;
+kh?ng suy t?n t? ID ho?c fabricate friendly labels. Summary/chat kh?ng thay solver,
+kh?ng t? approve purchasing, t?o order/stock receipt ho?c ch?n l?i winner.
 
-V6 is the default presentation. Candidate8 remains an explicit application
-composition trial (`AssistantChat(...,presentation_version=8)`), no operator-facing
-selector or FE request field exists. SUMMARY_LLM_ENABLED and CHAT_LLM_ENABLED are
-independent and OFF by default; Import Qwen is separate. Model OFF summary is
-deterministic_fallback; chat uses scoped deterministic answer/clarification.
-No configured key alone enables calls. Forecast challenger remains test-only/OFF.
+## Recovery ?? duy?t: FE persistent journal + BE hi?n c?
 
-AS01/AS03 same-key/body retries preserve original response across settings/version
-changes. Same key/different body409; running/live or unknown claim409. AS02 may show
-running/failed retained status, but GET never recovers it. Explicit replay recovers
-only OS-proven dead generation without repeating an uncertain call; failed keys
-stay failed, intentional new attempt needs a new key. Do not treat AS03 as J01
-polling or invent GET messages. Bounded fake-provider fallback can return200;
-inspect source/diagnostics rather than inferring model success from HTTP status.
-Backend integration verification and its limits belong to the feature/runbook;
-browser, deployment and new live merged-source acceptance remain PENDING.
+ACCEPTED DECISION: FE tri?n khai journal (khuy?n ngh? IndexedDB), persist **tr??c**
+dispatch. Scope actor/Store/operation/resource; original key/body/CAS/timestamp theo
+allowlist, pending/unknown/confirmed ho?c rejection c? semantics r?. Restore sau F5
+ki?m current session/actor/Store, r?i explicit readback/exact replay. Fresh cookie/
+CSRF l?y t? Auth hi?n t?i, kh?ng persist. Kh?ng t? t?o key m?i ?? gi?i quy?t unknown.
+FE journal ch?a ???c implement/verify browser trong task BE n?y.
 
-## HISTORICAL INFORMATION — Data Readiness D1–D5 integration surface
+[recovery_journal.json](recovery_journal.json) l? field allowlist **default DENY**;
+kh?ng serialize to?n request theo OpenAPI. full_body ch? cho T03(name/timezone/currency),
+I01(data_date), I03(file-set/accepted/rejected IDs), I05 preview(phase/mapping_revision),
+N4(amount), N21 commit(change/digest/confirm/warning IDs), N10(format/option/locale),
+NF03(read) v? AS01(evidence/option/locale/detail). I05 commit ch? pure insert/NO_OP
+v?i reason absent/null v? c?c correction arrays empty/absent ??ng JSON rules;
+C02 ch? default/saved v?i requirements absent/null. Original field presence/array
+order v?n gi?; ngo?i conditions th? full-body journal replay disabled.
 
-D5 `11ef320a5873fc4dc314fdad63878db5f8a8b38c` tích hợp giữ ancestry vào main local.
-[OpenAPI](openapi.json) source73 operations/66 paths, head0027/72 tables; enclosing
-merge commit + source-input hashes sở hữu provenance. Không thêm endpoint/migration.
-Runtime8103 manifest vẫn `052cddee075e165af2c0cea42ebc2e616c396760`; không restart,
-migrate hoặc deploy. Source contract mới không có nghĩa process8103 đã chạy bản mới.
+C?c body ch?a review (grants/decision reason, mapping/source resolution, stock facts,
+custom requirements, AS03 question/history/pending original question) ch? metadata
+ho?c excluded theo JSON; **kh?ng b? field r?i replay body thi?u**. Handoff field
+review ch? cho ordinary non-secret business metadata; kh?ng cho nh?p credentials
+v?o c?c field ??. Password/token/session/CSRF/cookie, email/invitation proof, secret
+keys, raw uploaded cells/file bytes lu?n excluded. Secret-bearing auth flows kh?ng
+thu?c generic replay/journal. AS03 exact POST replay c? ? BE nh?ng kh?ng t? cho ph?p
+persist to?n c?u h?i/l?ch s? h?i tho?i trong generic journal.
 
-R01 `/api/v1/stores/{store_id}/readiness?actions=planning` và C01
-`/api/v1/stores/{store_id}/planning-context` không query chỉ đánh giá default.
-Truyền `planning_request=<URL-encoded strict C02 JSON>` để đánh giá full/partial
-custom hoặc saved; dùng cùng request khi POST C02, fresh acceptance revalidate.
-[Examples JSON](examples.json) mục data_readiness có default/supplied GET và typed
-synthetic fragments; không là business facts hoặc runtime response hoàn chỉnh.
-Full custom/saved đủ facts không bị unused default chặn. R01 planning_assessment/
-forecast_assessment, C01 readiness.assessment/forecast giữ input_scope và
-semantics_version planning_readiness/1; quality_status not_evaluated không claim accuracy.
+Actor isolation kh?ng thay XSS protection/shared-device policy. PROPOSAL FE: explicit
+logout/retention UX, kh?ng silently expire unresolved intents; confirmed records ch?
+x?a theo FE policy ???c review. Logout/clear journal **kh?ng cancel/rollback** write.
+Kh?ng c? retention policy m?i ph?a BE, generic status/negative proof API ho?c
+cross-device receipt discovery. Definitive abandon/fencing l? backlog ri?ng.
 
-Blockers chặn đúng scope; warnings cho phép thử chạy nhưng cần hiển thị reason/
-provenance. UNKNOWN không là0, NONE hoặc confirmed fact. can_generate/can_execute
-không cam kết winner/global optimality; no eligible offer vẫn xét zero purchase khi
-đủ stock. Shared fee unknown, corrupt/conflicting facts và applicable mandatory safety
-vẫn block. Offer omission giữ reference/version/reason và eligible-domain proof.
-Current GET assessment dùng facts/config hiện tại; C03/C08 source_reference/
-source_version đến từ retained Run, không rewrite theo facts mới. Old queued/retained
-semantics/digests và I06 completion schema giữ nguyên.
+Empty list/absent receipt/403/404/timeout kh?ng definitive no-effect. Readback c?
+th? m?i h?n receipt; replay denial gi? nguy?n original uncertainty. Payload hash
+kh?ng t?i d?ng ???c body ?? m?t. Key m?i kh?ng x?c nh?n stock/Store m?i.
 
-Canonical meaning/permissions: [Planning](../PROCUREMENT_API_CONTRACT_VI.md#planning-context),
-[R01](../IMPORT_MAPPING_API_CONTRACT_VI.md#readiness-v1),
-[policy](../features/DATA_READINESS_POLICY.md). Commands/isolation/limits:
-[runbook D5](../runbooks/FULL_TEST_FLOW.md#data-readiness-d5). Backend focused gate
-không là browser/full-suite/real-accuracy acceptance; D3 timing root cause còn mở.
+## Checklist FE ti?p theo
 
+- Regenerate typed services t?76/69 v? ??c diff; ki?m serving source/schema ri?ng.
+- Implement allowlisted durable pre-dispatch journal v? restore pending/unknown
+  sau m?t response/F5; kh?ng automatic replay/new-key mutation.
+- Store/actor switch c? l?p intent; logout/relogin d?ng fresh CSRF v? original scope;
+  session h?t kh?ng ch?ng minh accepted worker rollback.
+- Test stale CAS, revoked rights, concurrent acceptance/replay, same key/different
+  body; retained receipt kh?ng reapply grants ho?c canonical data b? ??i sau ??.
+- Test lookup empty tr??c request ??n tr?; kh?ng unlock competing creation/write
+  t? empty/404/403 ho?c timeout. Test journal write failure tr??c dispatch.
+- Upload: I02 c? BE exact multipart replay theo key + ordered client IDs/name/bytes
+  hash, nh?ng FE helper018 ch?a h? tr?; kh?ng g?i ??y l? thi?u BE API. Kh?ng journal
+  raw files/cells. Gi? accepted-file identities v? I04 quota/source-set authoritative.
+- Preview review ?? persist trong I04; domain decisions ch?a submit kh?c persisted
+  confirm_review/accepted commit resolutions. Kh?ng h?a m?i resolver choice ?? saved.
+- Email/invitation proof, signup/password/reset flows d?ng operation-specific UX;
+  verification kh?ng session/Store, invalid consumed token kh?ng ch?ng minh no-effect.
+- Verify AS01/AS02/AS03 evidence version, unknown names/context/pending clarification,
+  same-key replay v? current revocation; kh?ng invent GET messages.
+- Browser/F5/full Owner/Staff E2E, XSS/shared-device acceptance v?n NOT_RUN ? BE task.
 
+BACKLOG: accepted-file delete/replace/unseal; Today outlook/arrival/pending customer
+decision; immediate canonical create+bind (staged proposals ?? c?); standalone saved
+Preview domain decisions; richer token/session continuation; cross-device discovery/
+negative fencing. Latest Run kh?ng l? pending purchasing approval; recommendation
+kh?ng t?o order/receipt. Import curated templates/I1/I2 semantic WIP ch?a t?ch h?p,
+kh?ng m? t? l? runtime ?? c?.
 
-## HISTORICAL INFORMATION — customer self-service integration surface
-
-Source73 operations/66 paths, head0027/72 tables. T03 POST `/api/v1/stores` mới trên
-collection T01, required `{name,timezone,currency}`, response201 StoreSummary/Location.
-Authenticated active verified credential-ready holder → Store + Owner + audit/receipt
-atomic; Origin/CSRF/Idempotency-Key, current-authority replay/lost ACK. Không owner_id/
-role/grants payload, no seed business/defaults/Staff grants. Refresh A03/T01/T02 sau create.
-
-FE cần nối signup/A05 EMAIL_VERIFY consumer/callback và Store-create UI/T03. Route FE
-verification chưa xác nhận nên config unset; không trỏ EMAIL_VERIFY vào N7. Reset
-credentials page đã có; invitation sender hỗ trợ confirmed `/invitations/{invitation_id}`
-+ fragment token, giữ formatter fixed landing cũ. Real email/browser E2E chưa verified.
-Canonical folder `backend` với own .venv/runtime/TLS, API HTTPS8103, Origin HTTPS5173;
-exact commands/config/Gmail/14 flows ở [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#customer-self-service).
-Khách tự đăng ký/tạo Store/invite, không lấy accounts.json/assisted provisioning.
-
-
-
-## HISTORICAL INFORMATION — C5 handoff checkpoint
-
-C4 checkpoint eabab333; source artifact hiện72 operations/66 paths, single head0026.
-Runtime HTTPS8103/head0026 VERIFIED trên committed main; status/matrix/commands ở
-[FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5), là runbook canonical.
-Không coi C5 tổng thể COMPLETE khi browser checklist Nam/Nguyên chưa chạy.
-API base `https://localhost:8103`, exact Origin `https://localhost:5173`;
-credentials include, secure cookie và current CSRF như contract. Setup/reset callback
-`/credentials/complete`; invitation private route `/invitations/{invitationId}`;
-verification và SMTP invitation landing vẫn cần FE xác nhận, không tự gửi mail.
-Credentials chỉ mở accounts.json bằng editor local trong serving worktree, không đưa FE/Git.
-Import/Planning/PDF/notification cùng owned BE; email/Qwen mặc định OFF.
-
-
-## Tóm tắt cho chủ dự án
-
-CURRENT FACT C1–C4/C5 đã tích hợp main:72 operations/66 paths, permissions-v3/43,
-head0026/71 tables. C4 checkpoint eabab333; D01/SU01/EX01 và M01/M02/I04/N9 đã
-implement. Demo HTTPS8103 chạy committed main và four workers, email/model OFF.
-Artifacts bên dưới đã regenerate offline từ source; [runbook C5](../runbooks/FULL_TEST_FLOW.md#linked-acceptance-c5)
-sở hữu commands/results/recovery và checklist browser còn PENDING. R05/R09 đã
-implemented, recipe split-report R10 vẫn DEFERRED. Không full-suite/real-data quality claim.
-
-HISTORICAL INFORMATION G: đã ghép hai commit nghiệm thu trong worktree riêng `backend-integrate-import-auth`, branch `feat/integrate-import-auth`, giữ nguyên lịch sử nguồn và WIP của hai phiên. Source thống nhất có **59 operations/55 paths**, catalogue **permissions-v3/43 keys**, migration head **0024_integrate_import_auth**. FE dùng [openapi.json](openapi.json), không cộng hai artifacts WIP cũ thành một contract.
-
-Backend/fake-delivery và PostgreSQL là phạm vi verification; kết quả gate cuối nằm trong [runbook](../runbooks/FULL_TEST_FLOW.md#integrated-acceptance). Tại snapshot G ban đầu chưa có server; runtime demo8103 trước C5 từng giữ source trước C1–C4; trạng thái đó đã được thay bằng runtime C5 nêu trên. Browser E2E và email workflow thật vẫn pending. Gmail smoke đã nhận inbox chỉ chứng minh email smoke đó. Forecast có consumers/mechanics, **real-data accuracy NOT EVALUATED**.
-
-R05/R09 đã IMPLEMENTED trong local source C4, theo Product acceptance được giữ ở contracts. Recipe split-report đa file/sheet deferred; các guards và single-sheet hợp lệ vẫn hoạt động. Chỉ các capabilities ghi IMPLEMENTED được xác nhận bởi backend gates; browser acceptance vẫn cần FE.
-
-## HISTORICAL INFORMATION — FE010 R00–R13 tại C5
-
-G = source tích hợp từ Import `126b0f210c898ba7510039b46f10ce3a42b4e0c0` (I) và Auth `0fbb979490eca5f8334284b6a1f7193591fe26a0` (B), common base `b1ede89a3919230ce9526337537d7a19ca182f15`. Git commit chứa tài liệu/artifact là snapshot bàn giao. Branch evidence lịch sử thuộc I/B, không suy từ file test tồn tại; gate G được ghi riêng trong runbook.
-
-| Yêu cầu | Contract status | Runtime status | Branch/snapshot | Evidence / source kiểm tra | FE cần làm | BE cần làm | Slice phụ trách |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| R00 contract/API delta | OpenAPI source structural authority | C4 local72/66, gi?69 C3 locators; G59/55 l? historical artifact | C4 checkpoint eabab333; C3 checkpoint b1c906a; G provenance retained | [Diff JSON](openapi_diff_fe54.json), `app.main.create_app`, API tests | Regenerate DTO/adapters t? source C4 sau review; artifact G ch? baseline | Kh?ng n?ng c?p demo8103 trong C4; live runtime/browser c?n pending | Integration hiện tại |
-| R01 signup/verify/resend/reset | ACCEPTED; AUTH self-service | A02/A05/A06/A07 và N7 implemented; no automatic Store/grants/session from verification | B1/B2/B4 tại B; G composition | [Auth routes](../../app/api/auth.py), `EmailVerification.request/complete`, `PasswordReset.request`, `AuthUseCases.complete`; fake delivery/fresh reads B4 | A02→check_email→A05→login; A07→N7→login | Browser/real workflow-email acceptance còn thiếu | B1/B2/B4 backend COMPLETE |
-| R02 invitation decline | ACCEPTED; IN01 riêng; N19 true-only | Decline terminal/event/receipt, no membership/grants/access; new invitation identity for reinvite | B3/B4 tại B; G | [Staff DTO](../../app/application/contracts/staff.py), `StaffUseCases.decline/accept`, API const:true và transition tests | POST decline riêng; không dùng accept:false; refresh current context after acceptance | FE/browser terminal-state flow | B3/B4 backend COMPLETE |
-| R03 mapping scoped counters | IMPLEMENTED C4 | M01/M02 batch/filtered issue counters và pinned revision; legacy Progress giữ nguyên | C4 checkpoint eabab333 | `ImportStaging.mappings/_progress`; [Import contract](../IMPORT_MAPPING_API_CONTRACT_VI.md) | Dùng counter_scope/counters, không page length hoặc completed_fields làm auto count | Current sensitive reads, snapshot/cursor và exact AND filters đã có | Import read projections C4 |
-| R04 raw-cell/source-effect preview | IMPLEMENTED C4 | I04 source_effect reuse SourceEvidenceCell/C2 bounds, cached formula values và typed effects | C4 checkpoint eabab333 | `import_preview.make_preview`, `PreviewRow`, `ProvenanceValue`; [preview DTO](../../app/application/contracts/import_mapping.py) | Hiển thị partial/unavailable/truncated, không coi null là0; Recipe ID chưa reserved được báo rõ | Pinned source/read permissions, no GET parse/recanonicalization | Import read projections C4 |
-| R05 file/sheet preview aggregates | IMPLEMENTED C4 / Product accepted | I04 aggregates batch/selected/files/sheets, raw records riêng logical actions; totals không theo page | C4 checkpoint eabab333 | [§17.1](../IMPORT_MAPPING_API_CONTRACT_VI.md#preview-aggregates) | Không cộng overlapping scopes; classification áp sau grouping | Retained preview/digest, distinct actions và source-record counts | Import read projections C4 |
-| R06 supplier picker | IMPLEMENTED C4 | SU01 canonical supplier ID/name/active/version, search/order/paging/snapshot | C4 checkpoint eabab333 | `Supplier`, `StockWrites.receive`; [API](../API_CONTRACT.md#today-operations) | Picker chỉ locator, nullable supplier và N6 inactive policy giữ nguyên | Current supplier.read/Store scope, no terms/cost/contact | Operational discovery C4 |
-| R07 creator/created-date Run search | IMPLEMENTED C4 | N9 creator/local accepted-date filters, applied_filters/timezone và snapshot | C4 checkpoint eabab333 | `PublicPlanning.history`, [history DTO](../../app/application/contracts/history.py) | Tôi dùng A03; creator lạ empty, Staff không cần N12 | Retained filter/Store timezone/current finance rights | Planning discovery C4 |
-| R08 PDF locator discovery | IMPLEMENTED C4 | EX01 retained exports/job locators và verified artifact availability; GET không render | C4 checkpoint eabab333 | `PlanningExports.accept/download`, [export router](../../app/api/planning_exports.py) | Phân biệt execution status với missing/corrupt bytes; poll/download/request-new theo allowed_actions | Current export/result/finance rights và integrity; N11 rechecks | PDF discovery C4; browser S4.11 vẫn PARTIAL |
-| R09 captured budget RunSummary | IMPLEMENTED C4 / Product accepted | N9 captured_budget available/unavailable từ retained acceptance, không current cap | C4 checkpoint eabab333 | [Planning §17](../PROCUREMENT_API_CONTRACT_VI.md#history-captured-budget) | Limit/currency là acceptance effective limit, không spend/remaining/null→0 | Cùng list snapshot/current financial rights; no C03 HTTP loop | Planning discovery C4 |
-| R10 source-before-reuse / recipe grain | Guards ACCEPTED; split-report DEFERRED | Explicit source proof trước reuse; recipe scope ambiguity blocks; valid single-sheet assembly có | Base b1ede89 + I A3 + G | `import_analysis.discover`, `ImportStaging.resolve/_bindings`, `import_preview.make_preview`; A3 source/conflict acceptance | M02→M04 declaration→review/pin→preview; hiển thị blocker | Giữ guards; split identity/completeness deferred, không Product blocker | Lát3/A3 guards; split-report ngoài đợt |
-| R11 Staff permission requests | IMPLEMENTED C2 | PR01–PR04 request/union decisions/current grants và atomic notifications | C2 local commit b9fe048 | [staff routes](../../app/api/staff.py), `StaffUseCases.replace`; [AUTH](../AUTHORIZATION_CONTRACT_VI.md#permission-requests) | Dùng PR lifecycle; approval không giả hai calls hoặc tự grant | Backend implemented; browser chưa verified | Collaboration C2 |
-| R12 inbox/count/read | IMPLEMENTED C1/C2 | NF01–NF03 recipient projection/count/read; N13/PR/MQ producers và bounded dispatcher | C1/C2 local commits | [Notification](../NOTIFICATION_API_CONTRACT_VI.md#notification-v1), composition | Refetch pinned badge/list và current target rights; không dùng SMTP intent làm inbox | Backend implemented; worker default OFF/browser pending | Notifications C1/C2 |
-| R13 Excel actual receipts | IMPLEMENTED C3 | Excel inventory_receipts và N6 cùng receipt identity/ledger/writer, atomic Import | C3 local commit b1c906a | `StockWrites.receive`, `InventoryEffect`, [Import](../IMPORT_MAPPING_API_CONTRACT_VI.md) | Receipt-only facts, replay/conflict và typed effects/completion; không dùng opening/count/history thay receipt | Backend implemented; C4 thêm read projection, không writer mới | Actual receipts C3 |
-
-## Quyết định Product còn cần duyệt
-
-Không còn câu hỏi Product chặn bàn giao trong R00–R13 hiện tại. R05/R09/R10 đã được duyệt theo nghĩa ở canonical contracts. Việc chọn thứ tự/ủy quyền triển khai các slices Đợt2 còn lại thuộc roadmap hiện hành, không phải yêu cầu đổi policy đã chốt hay duyệt cấu trúc JSON thường.
-
-R05: logical action nhiều locations đếm một lần trong scope; totals file/sheet có thể overlap và không cộng thành batch total. Raw retained source rows là count khác. Totals/page dùng cùng preview/digest, không page length; tận dụng I04.
-
-R09: captured effective limit/currency của Run tại acceptance, không Store cap hiện tại hoặc spend/remaining. Old Run thiếu evidence trả availability/nullable fields rõ, không zero giả; giữ quyền đọc tài chính và list snapshot/paging.
-
-R10: không auto-union/last-file-wins hoặc bypass RECIPE_SOURCE_SCOPE_AMBIGUOUS; valid single-sheet assembly giữ nguyên. Split-report identity/completeness là deferred scope, không câu hỏi Product đang mở.
-
-## FE nối ngay và runtime cần chờ
-
-FE có thể làm DTO/adapters theo G cho public auth, N7, invitation offer/accept/decline, current Store context/grants và Import A1/A2 fields. FE cũng có thể chuẩn bị browser flows; chưa có base URL của server tích hợp đang chạy để certify live connectivity. R03–R09 và R11–R13 đã có trong local source C1–C4 như bảng; chưa có trên demo8103 và chưa browser-verified. D01 Today cũng thuộc C4, xem canonical API contract; không enable bằng stale capability fixture/prose.
-
-Các URL lịch sử/demo riêng: Gmail Auth demo `https://localhost:8102` với Origin `https://localhost:5173`, DB5434 còn schema B2; demo S4.11 `http://localhost:18001`, DB5433 là profile cũ. **Không URL nào được chứng nhận là release tích hợp này.** Lượt tích hợp không start/restart/migrate demo hoặc sửa FE/config FE.
-
-- Mọi API dưới `/api/v1`; browser dùng `credentials: include`, exact `AUTH_ALLOWED_ORIGINS` (JSON array), cookie HttpOnly. HTTPS dùng `__Host-shelfcash_session`; local insecure dev profile chỉ dùng khi cấu hình explicit đúng AUTH contract.
-- A01/A02/A05/A06/A07/N7: exact Origin, public session/CSRF exemptions; verification/reset completion không cấp session. Authenticated invitation/grants mutations cần current session, Origin, X-CSRF-Token, Idempotency-Key và If-Match theo OpenAPI.
-- N19 body chỉ `accept:true`; false/string/number bị422, không decline. IN01 có token/reason riêng. Offer proof không cấp authority; acceptance tạo exact grants, replay không khôi phục quyền đã thu hồi.
-- Callback FE dùng AUTH_VERIFICATION_FRONTEND_URL, AUTH_PASSWORD_RESET_FRONTEND_URL, AUTH_INVITATION_FRONTEND_URL/AUTH_FRONTEND_URL theo [Auth feature](../features/AUTH_SESSION.md). URL base cần thuộc allowed Origin, không query/fragment/userinfo. Page lấy token từ fragment vào memory, xóa fragment ngay, no-referrer; không log/persist token. A05 consume verification, N7 consume SETUP/RESET, invitation proof không đổi purpose.
-- Import/Planning/PDF/notification worker flags độc lập default OFF; demo explicit ON trong cùng process, chỉ bật worker tương ứng khi cần process jobs và đã cấu hình runtime. AUTH_EMAIL_DELIVERY_ENABLED default OFF; backend/fake-delivery tests inject adapters, không SMTP. Provider/LLM OFF. Public mail endpoints503 EMAIL_DELIVERY_UNAVAILABLE khi capability không available; completion vẫn dùng existing valid token theo contract.
-- Private errors phân biệt401 UNAUTHENTICATED,403 permission/CSRF,404 foreign resource,409 state/catalogue/idempotency,412 stale CAS,428 missing precondition. Không nới FE validator để che drift; refresh catalogue/version/context đúng error.
-
-Lệnh kiểm trong worktree tích hợp, không secrets:
-
-```powershell
-.\.venv\Scripts\python.exe -m scripts.dev status --test-database
-.\.venv\Scripts\python.exe -m alembic heads
-.\.venv\Scripts\python.exe -m pytest tests/integration/test_integrated_migrations.py -q
-.\.venv\Scripts\python.exe -m pytest tests/integration/test_auth_combined_acceptance.py tests/integration/test_import_planning_a3.py tests/integration/test_import_history_a2.py -q
-```
-
-DB test phải đúng shelfcash_integration_test / shelfcash_integration_tester; tests reset tuần tự riêng DB đó. Commands chạy server/worker/demo thuộc [FULL_TEST_FLOW](../runbooks/FULL_TEST_FLOW.md), là hướng dẫn, không evidence server đã chạy trong lượt này.
-
-## Artifacts và provenance
-
-| Artifact | Nội dung / giới hạn |
-| --- | --- |
-| [openapi.json](openapi.json) | Source C1–C4 + T03 đo73 operations/66 paths; provenance có source manifest/head và previous BE72 artifact hash/ref; Git giữ bytes G59/C5 cũ |
-| [openapi_diff_fe54.json](openapi_diff_fe54.json) | Diff với FE thực54/50 và nested previous_delivered_be72/66; SHA256, locators và structural JSON pointers |
-| [examples.json](examples.json) | Giữ examples/provenance cũ; c5_read_discovery và self_service_store có DTO-validated fragments/request/response/query examples, không live response hoặc secrets |
-| Tài liệu này | Trả lời R00–R13 và hướng dẫn nối FE; canonical contracts vẫn sở hữu policy |
-
-Baseline FE thực đọc: `Shelfcash_FE_v2/api-contract-v2/generated/openapi.json`, SHA256 `6336bc0cdbe5f260389838934ba946cd51887af1b551c763b5beb4437e5e7e1f`,54 operations/50 paths. Yêu cầu010 trước ghi hash `f160bf4a46453404f103a32431da5dc722382fb02494612e61e2000e57533961`; đó là bytes snapshot khác, không được thay thành “cùng bản”. Baseline ngày10/10 trong tests/fixtures là32 operations, được giữ nguyên và không giả làm FE54.
-
-Delta FE54→current73: +T03, +A02/A05/A06/A07/IN01, NF01–NF03, PR01–PR04, MQ01–MQ03, D01/SU01/EX01; không removed operations; N19 schema const:true; terminal declined/can_decline; public mail envelopes; catalogue v3/max43; stockout policies/contributions; bốn support-history domains/typed corrections/projections; source-value/recipe/supplier basis/opening provenance và parser/mapping metadata. Xem diff structural đầy đủ và source DTO, không suy typed source input nào cũng là public HTTP request.
-
-Source-only generation dùng process riêng, Settings không đọc .env, mọi workers/provider OFF, DB/network connect bị chặn; chỉ app.openapi(), không lifespan/server. Examples là synthetic và được model_validate; không deploy/API response captures. Artifact từng nhánh trong backend tổng `docs/handoff/010_openapi_{main,import-wip,auth-wip}.json` là lịch sử audit13/10 lúc18:07, không release I/B/G; provenance của chúng giữ nguyên ở backend tổng, không overwrite/copy làm artifact hiện hành.
-
-Còn thiếu: browser checklist, FE callback verification/SMTP invitation và real workflow-email receipts. Runtime current status thuộc phần C5/runbook. Không tuyên bố toàn roadmap COMPLETE, forecast accuracy hay deployment pass.
+Verification m?i v? actual invocations/limits: runbook recovery integration v? g?i
+verification. Kh?ng claim full-suite, browser, F5 E2E, deployment ho?c paid-model PASS.

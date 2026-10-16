@@ -1275,8 +1275,8 @@ không return sample/cost. Menu retail price visibility giữ policy đã chốt
 budget vẫn quyền riêng. No approval one-time bypass: approval_request_allowed=false
 cho commit/Owner mapping decisions cho đến khi allowlist được duyệt riêng.
 
-Idempotency key scope actor+Store+method+route+phase; digest body presence/arrays,
-content hashes và conditional headers; same key/request receipt/job cũ, không
+Idempotency key scope actor+Store+method+route+phase; digest typed validated body,
+array order, content hashes và normalized conditional headers; same key/request receipt/job cũ, không
 latest mappings/new compute. Key khác request409. Same source business records
 different key vẫn no duplicates qua source contribution/business uniqueness.
 Race two imports same rows dùng expected versions/absence predicates+unique DB
@@ -1297,11 +1297,12 @@ Mất key/body không có generic discovery/negative-outcome API; I04/J01/I06 v�
 chỉ chứng minh state quan sát được. Empty/404/403/missing receipt không fence delayed
 request và không cho phép thay bằng key mới khi outcome chưa rõ.
 
-TECHNICAL DEBT / contract-source drift: presence-sensitive wording phía trên chưa
-được áp dụng thống nhất cho optional defaults; ImportStaging validate rồi model_dump
-điền defaults, nên Commit.reason omitted và explicit null có cùng fingerprint.
-Không đổi retained digest/compatibility trong recovery fix. FE giữ original wire
-intent; cần chốt field nào thực sự phải phân biệt presence trước khi sửa semantics.
+ACCEPTED DECISION / CURRENT FACT: riêng Commit.reason omitted và explicit null
+equivalent trong current fingerprint: CommitRequest validate rồi model_dump điền
+reason=None. Text reason khác null vẫn khác intent. Không suy tương đương này cho
+mọi field/operation; array order và original CAS vẫn thuộc fingerprint. Không đổi
+persisted digest/receipt identity. FE luôn giữ original body/presence khi replay,
+không tự fill defaults, normalize null, reorder arrays hoặc lấy CAS mới.
 
 | Thay đổi trong lúc chờ | Behavior design |
 | --- | --- |

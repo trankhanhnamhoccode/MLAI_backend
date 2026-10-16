@@ -1,5 +1,21 @@
 # Authorization — Store, session, Staff and approval
 
+<a id="intent-journal"></a>
+## ACCEPTED DECISION — client recovery intent journal
+
+FE persistent journal trước dispatch + existing BE operation-specific receipt/replay/
+readback là hướng recovery đã duyệt. Journal scope actor/Store/operation/resource,
+giữ original non-secret key/body/CAS/timestamp theo explicit field allowlist trong
+[canonical handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md). Unreviewed fields/operations
+disabled; không serialize generic request. Reload kiểm current session/actor/Store;
+fresh CSRF/cookie không persist. No automatic new-key retry từ unknown/replay denial.
+Passwords, access/session/CSRF tokens, email/invitation proof, secret keys, raw cells/
+file bytes bị loại; secret-bearing auth flows không generic replay. Actor isolation
+không thay XSS/shared-device protection. IndexedDB và retention/logout UX là đề xuất
+FE, chưa browser acceptance; logout/clear không cancel/rollback pending mutation.
+Không thêm BE permission/retention/status/discovery API. Absence/empty/403/404/timeout
+không definitive no-effect; current readback có thể mới hơn retained receipt.
+
 <a id="self-service-stores"></a>
 ## ACCEPTED DECISION / CURRENT FACT — khách hàng tự tạo Store
 

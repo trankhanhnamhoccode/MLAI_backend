@@ -146,7 +146,15 @@ def test_receipt_retention_schema_parity_and_no_destructive_downgrade(env):
     from app.models.store_creation import StoreCreationReceipt
     from app.infrastructure.database.base import Base
     from scripts.dev import migration_config
+    from alembic.script import ScriptDirectory
     csrf=holder(env);assert create(env,csrf).status_code==201
+    expected_heads=set(ScriptDirectory.from_config(migration_config()).get_heads())
+    models=(Store,StoreMembership,StoreCreationReceipt,AuthAudit)
+    def evidence(session):
+        return {model.__tablename__:list(session.execute(select(*model.__table__.columns))) for model in models}
+    with Session(env[0]) as fresh:
+        before=evidence(fresh)
+        assert set(fresh.scalars(text('SELECT version_num FROM alembic_version')))==expected_heads
     with env[0].connect() as connection:
         assert compare_metadata(MigrationContext.configure(connection,opts={'compare_server_default':True}),Base.metadata)==[]
     with Session(env[0]) as fresh:
@@ -155,7 +163,8 @@ def test_receipt_retention_schema_parity_and_no_destructive_downgrade(env):
     with pytest.raises(DBAPIError,match='prevent downgrade'):
         command.downgrade(migration_config(),'0026_collaboration_requests')
     with Session(env[0]) as fresh:
-        assert fresh.scalar(text('SELECT version_num FROM alembic_version'))=='0027_self_service_stores'
+        assert set(fresh.scalars(text('SELECT version_num FROM alembic_version')))==expected_heads
+        assert evidence(fresh)==before
         assert fresh.scalar(select(func.count()).select_from(Store))==1
 
 
