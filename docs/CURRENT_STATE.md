@@ -23,6 +23,18 @@ other worktree, FE, runtime8103 or development/demo DB changes. Meaning/limits i
 [feature](features/DECISION_ASSISTANT.md), FE workflow in [Planning18](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant),
 and [handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
 
+## CURRENT FACT — mutation recovery
+
+Import review confirmation replays its durable receipt before the completion/CAS
+guard in both transactions, after current authorization and preview/write checks.
+Canonical Import commit reconciles only recognized SQLAlchemy/psycopg uncertain
+commit errors; post-commit programming errors remain errors without rewriting
+completed state. No API/schema/grant change. Existing operation-specific readers
+and replay do not certify a negative outcome after lost client intent; empty lists,
+missing receipts and revoked replay rights cannot fence a late request.
+Source/FE pin comparison, reproduced defects, targeted verification/limits and
+unimplemented discovery proposals: [FE019 recovery audit](reports/FE_019_BACKEND_RECOVERY_AUDIT.md).
+
 ## CURRENT FACT — local shutdown watcher
 
 Local runtime retries transient Windows PermissionError during atomic status-file

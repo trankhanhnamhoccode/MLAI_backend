@@ -83,6 +83,17 @@ No readiness/challenger merge is required to explain existing verified Runs;
 data admission and model quality do not become proven by wording/projection tests.
 No automatic next slice follows L2; runtime8103/main/FE/other WIP remain outside it.
 
+CURRENT FACT: the FE019 recovery repair preserves current authorization and public
+contracts while correcting delayed Import review replay and canonical-commit
+exception reconciliation. Existing reads/replay cover retained positive outcomes;
+recovery after losing key/body is operation-specific and has no negative proof.
+PROPOSAL: durable client intent metadata and, only if product requires it, scoped
+committed discovery or an explicitly fenced terminal protocol. File delete/unseal,
+immediate canonical resolver writes, standalone Preview choices, pending procurement
+decisions and richer public token/session continuation remain unimplemented feature
+scope. See [FE019 audit](reports/FE_019_BACKEND_RECOVERY_AUDIT.md) for precise existing
+capabilities, dependencies and decisions; no new endpoint/business policy is approved.
+
 CURRENT FACT: local launcher shutdown watcher tolerates Windows observation-file
 replacement failure; targeted lifecycle tooling regressions cover bounded retry,
 persistent denial and run-scoped stop after write failure. Native restart/browser

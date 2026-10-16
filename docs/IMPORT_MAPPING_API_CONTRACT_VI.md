@@ -1287,6 +1287,22 @@ nhưng sau authorization recheck. Uncertain commit reconcile receipt+canonical
 aggregate từ fresh session, không blind execute lại. Programming errors không
 success; no generic per-row silent fallback.
 
+CURRENT FACT: confirm_review kiểm receipt trong cả hai transactions, kể cả continuation
+sau detached read-set capture; same-key receipt đã tồn tại được replay trước completion/
+CAS guard sau current authorization, preview integrity và required-action checks.
+Canonical worker chỉ reconcile recognized uncertain SQLAlchemy/psycopg error tại
+COMMIT với retained completion/job proof. Programming error sau durable completion
+vẫn nổi lên; không đổi completed thành failed hoặc chạy canonical writes lại.
+Mất key/body không có generic discovery/negative-outcome API; I04/J01/I06 và H01/H02
+chỉ chứng minh state quan sát được. Empty/404/403/missing receipt không fence delayed
+request và không cho phép thay bằng key mới khi outcome chưa rõ.
+
+TECHNICAL DEBT / contract-source drift: presence-sensitive wording phía trên chưa
+được áp dụng thống nhất cho optional defaults; ImportStaging validate rồi model_dump
+điền defaults, nên Commit.reason omitted và explicit null có cùng fingerprint.
+Không đổi retained digest/compatibility trong recovery fix. FE giữ original wire
+intent; cần chốt field nào thực sự phải phân biệt presence trước khi sửa semantics.
+
 | Thay đổi trong lúc chờ | Behavior design |
 | --- | --- |
 | File bytes khác | File immutable; nguồn khác tạo new draft/file, không sửa digest/source rows cũ. |

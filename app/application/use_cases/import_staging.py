@@ -14,6 +14,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import select
 from app.application.contracts.auth import AuthError, Pagination
 from app.application.use_cases.auth import Actor
+from app.application.use_cases.forecast_execution import _is_uncertain_commit
 from app.application.contracts import import_mapping as dto
 from app.application.import_analysis import (
     discover,
@@ -107,6 +108,10 @@ WRITES = {
 
 def rev():
     return str(uuid4())
+
+
+class _ImportCommitUncertain(Exception):
+    """Recognized DB transport failure during canonical commit only."""
 
 
 class ImportStaging:
@@ -2190,8 +2195,6 @@ class ImportStaging:
                 s, token, b, "import.commit", csrf or "", True
             )
             b = self._batch(s, ident)
-            if (b.analysis_json or {}).get("completion"):
-                raise AuthError("IMPORT_STATE_CONFLICT", 409)
             p = s.get(ImportPreview, body.preview_id)
             self._verify_preview(p)
             needed = set(p.content_json["summary"]["required_actions"])
@@ -2200,6 +2203,8 @@ class ImportStaging:
             old = self._old(s, actor, b.store_id, op, kd, fp)
             if old:
                 return dto.ConfirmationResult.model_validate(old)
+            if (b.analysis_json or {}).get("completion"):
+                raise AuthError("IMPORT_STATE_CONFLICT", 409)
             if b.revision != m:
                 raise AuthError("IMPORT_REVISION_CONFLICT", 412)
             if b.active_job_id:
@@ -2428,7 +2433,12 @@ class ImportStaging:
             j.status, j.stage, j.completed_at = "completed", "completed", now
             j.result_json = dto.CompletionResult(resource_id=b.id, commit_id=commit_id).model_dump(mode="json")
             self._audit(s, actor, b.store_id, "IMPORT_JOB_COMPLETED", dict(job_id=str(j.id), operation=j.operation, result=j.result_json))
-            s.commit()
+            try:
+                s.commit()
+            except Exception as error:
+                if _is_uncertain_commit(error):
+                    raise _ImportCommitUncertain() from error
+                raise
         # HTTP 2xx is not proof; durable completion is checked in a fresh Session.
         with auth_session(self.engine) as fresh:
             durable = self._batch(fresh, completion.import_id, False)
@@ -2543,7 +2553,8 @@ class ImportStaging:
                 try:
                     with auth_session(self.engine) as s:
                         j = s.get(ImportJob, jid)
-                        if j.operation == "import_commit" and j.status == "completed":
+                        if (isinstance(primary, _ImportCommitUncertain)
+                                and j.operation == "import_commit" and j.status == "completed"):
                             b = self._batch(s, j.import_id, False)
                             record = (b.analysis_json or {}).get("completion")
                             if (record and content_digest(record) == b.analysis_json.get("completion_digest")
