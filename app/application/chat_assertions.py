@@ -36,10 +36,32 @@ def surface_error(assertion,card,locale,*,wrong_number=False):
     # A scoped double negation affirms existence; do not reject a true amount
     # merely because it contains "không". Other/nested scopes remain unverified.
     if q.startswith('khong phai khong co '):q=q[len('khong phai khong co '):]
+    expected_text=norm(display_fact(card,locale)).rstrip('.! ')
+    # Presentation punctuation cannot change the retained option or negative
+    # reason. Match the whole scoped clause; no token removal or fact-ID bypass.
+    if card.kind=='rejection' and ': ' in expected_text:
+        if norm(text).rstrip('.! ')==expected_text.replace(': ',' ',1):return None
+    if card.kind=='detail_unknown':
+        expected=normalized(display_fact(card,locale)).rstrip('.! ')
+        prefix='evidence dang dung chua co bang chung nhan qua '
+        # Within the already-resolved Run question, this scoped omission has a
+        # bounded equivalent expression. Preserve the entire remaining clause,
+        # including zero-purchase scope and proposal qualification.
+        if expected.startswith(prefix) and normalized(text).rstrip('.! ')==expected.replace('evidence dang dung chua co ','khong co ',1):return None
     # Each proposed assertion must be atomic. Internal legacy proof punctuation
     # is handled by the supported grammar below, never by a wildcard.
     if card.display is None or card.kind in ('blocker','detail_unknown','gap','service','coverage'):
         if norm(text).rstrip('.! ')==norm(display_fact(card,locale)):return None
+        # Bounded meaning-preserving presentation synonyms; all material values,
+        # names, status, direction and negative/proof scope remain exact.
+        def equivalent(value):
+            value=normalized(value).rstrip('.! ')
+            for source,target in (('it nhat','toi thieu'),('thoa man','dap ung'),
+                                  ('theo danh gia da luu','theo danh gia duoc luu'),
+                                  ('duoc luu','da luu')):
+                value=value.replace(source,target)
+            return value
+        if equivalent(text)==equivalent(display_fact(card,locale)):return None
         try:
             if any(re.fullmatch(p,norm(text).rstrip('.! ')) for p in alternatives(card,locale)):return None
         except KeyError:pass
@@ -52,17 +74,19 @@ def surface_error(assertion,card,locale,*,wrong_number=False):
     if card.option_role!='recommended' and ('khuyen nghi' in q or 'recommended' in q):return 'WRONG_OPTION_ROLE'
     if card.kind in ('stock_lot','daily_shortage','daily_ending') and ('hien tai' in q or 'current' in q):return 'CAPTURED_IS_NOT_CURRENT'
     predicates={
-        'total':('tong','ton','total','outlay','het'), 'purchase_cost':('chi phi mua','tien mua','tien hang','purchase cost'),
+        'total':('tong','ton','total','outlay','het','khoan tien phai chi'), 'purchase_cost':('chi phi mua','tien mua','tien hang','purchase cost'),
         'fees':('phi','fees'), 'budget':('ngan sach','budget'), 'purchase_quantity':('mua','purchase','buy'),
         'stock_lot':('ton','stock'), 'daily_shortage':('thieu','shortage'), 'daily_ending':('cuoi ngay','ending'),
-        'pair_cost':('chenh','delta'), 'pair_service':('phuc vu','fulfilled'),
+        'pair_cost':('chenh','delta','cao hon','thap hon'), 'pair_service':('phuc vu','fulfilled'),
     }
     if not any(p in q for p in predicates[card.kind]):return 'WRONG_PREDICATE'
     if card.kind.startswith('pair_'):
         value=Decimal(card.display)
         if any(w in q.split() for w in ('tang','increase')) and value<=0:return 'WRONG_PAIR_DIRECTION'
         if any(w in q.split() for w in ('giam','decrease')) and value>=0:return 'WRONG_PAIR_DIRECTION'
-        if card.kind=='pair_service' and not any(w in q for w in ('chenh','delta','tang','giam','increase','decrease')):return 'DELTA_NOT_ABSOLUTE'
+        if 'cao hon' in q and value<=0:return 'WRONG_PAIR_DIRECTION'
+        if 'thap hon' in q and value>=0:return 'WRONG_PAIR_DIRECTION'
+        if card.kind=='pair_service' and not any(w in q for w in ('chenh','delta','tang','giam','increase','decrease','cao hon','thap hon')):return 'DELTA_NOT_ABSOLUTE'
         if 'da' in q.split() and not any(w in q for w in ('mo phong','simulated')):return 'ACTUAL_NOT_SIMULATED'
     # Do not accept "budget" as total outlay or purchase quantity as stock.
     forbidden={ 'total':('ngan sach','budget','tien mua','purchase cost','phi phai tra'),
@@ -84,23 +108,24 @@ def surface_error(assertion,card,locale,*,wrong_number=False):
     if len(amounts)!=1:return 'EXTRA_OR_MISSING_NUMBER'
     found=amounts[0]
     expected=card.display
-    if card.kind.startswith('pair_') and any(w in q.split() for w in ('giam','decrease')):expected=format(abs(Decimal(expected)),'f')
+    if card.kind.startswith('pair_') and (any(w in q.split() for w in ('giam','decrease')) or 'thap hon' in q):expected=format(abs(Decimal(expected)),'f')
     if not wrong_number and found.group()!=expected:return 'WRONG_VALUE'
     # Unit is tied to that quantity, not merely present somewhere in the text.
     tail=q[found.end():].lstrip()
     unit=next((u for u in units if u and re.match(re.escape(u)+r'\b',tail)),None)
     if unit is None:return 'WRONG_UNIT'
+    if re.match(re.escape(unit)+r'\b',tail[len(unit):].lstrip()):return 'DUPLICATE_UNIT'
     q=q[:found.start()]+' '+q[found.end():]
     q=re.sub(r'\b'+re.escape(unit)+r'\b',' ',q,count=1)
     # Role/scope and numeric predicates are checked above; residual tokens must
     # belong to a small non-authoritative connective/presentation vocabulary.
     allowed=set(('tong chi phi tien mua hang ngan sach gioi han can de xuat luong so phai tra cua cho la bang co voi '
         'phuong an ke hoach nay dang xem duoc khuyen nghi nguyen lieu ban nen se het ton kho lo chup da luu '
-        'mo phong du kien thieu cuoi ngay theo con o tai vao tuong ung rieng muc do '
+        'mo phong du kien thieu cuoi ngay theo con o tai vao tuong ung rieng muc do khoan '
         'the this viewed option plan proposed purchase quantity cost total outlay budget limit fee fees is of for '
         'to buy need should amount captured stock lot simulated shortage ending retained available').split())
     if card.kind.startswith('pair_'):
-        allowed.update('chenh lech phuc vu mon duong tren tang giam sau tru truoc delta fulfilled product path increase decrease minus'.split())
+        allowed.update('chenh lech phuc vu mon duong tren tang giam sau tru truoc delta fulfilled product path increase decrease minus cao thap hon dat'.split())
     tokens=set(re.findall(r'\w+',q))
     if tokens-allowed:return 'UNVERIFIED_EXTRA_WORDS'
     if card.kind=='stock_lot' and not any(p in normalized(text) for p in ('chup','captured','da luu')):return 'MISSING_CAPTURE_SCOPE'
@@ -109,6 +134,15 @@ def surface_error(assertion,card,locale,*,wrong_number=False):
 
 
 def inspect_output(output,plan,locale,*,allow_repair=True):
+    if plan.version=='chat_evidence/5':
+        from app.application.chat_assertions_v5 import inspect_output as legacy
+        return legacy(output,plan,locale,allow_repair=allow_repair)
+    if plan.version=='chat_evidence/4':
+        from app.application.chat_assertions_v4 import inspect_output as legacy
+        return legacy(output,plan,locale,allow_repair=allow_repair)
+    if plan.version!='chat_evidence/6':
+        from app.application.chat_assertions_v3 import inspect_output as legacy
+        return legacy(output,plan,locale,allow_repair=allow_repair)
     output=SemanticOutput.model_validate(output);facts={f.fact_id:f for f in plan.facts}
     accepted=[];covered=set();failures=[];repaired=False;trimmed=False
     for index,a in enumerate(output.assertions):
@@ -117,6 +151,9 @@ def inspect_output(output,plan,locale,*,allow_repair=True):
         expected=proposal(card)
         slots=('unit','entity_id','path','option_role','polarity')
         error=next(('WRONG_'+k.upper() for k in slots if getattr(a,k)!=getattr(expected,k)),None)
+        if card.kind.startswith('pair_') and 'phuong an dat hon' in normalized(a.text):
+            cost=next((f for f in plan.facts if f.kind=='pair_cost'),None)
+            if cost is None or Decimal(cost.display)<=0:error=error or 'WRONG_PAIR_COST_ROLE'
         error=error or surface_error(a,card,locale)
         if a.value!=card.display:error=error or 'WRONG_VALUE'
         if error=='WRONG_VALUE' and allow_repair and card.display is not None and surface_error(a,card,locale,wrong_number=True) is None:
@@ -132,7 +169,9 @@ def inspect_output(output,plan,locale,*,allow_repair=True):
                     if surface_error(fixed,card,locale) is None:
                         failures.append(f'{index}:WRONG_VALUE_REPAIRED');a=fixed;error=None;repaired=True
         if error:
-            failures.append(f'{index}:{error}')
+            # Public diagnostics retain position/reason/scoped fact, never raw
+            # rejected prose. Opt-in evaluation artifacts join these to raw output.
+            failures.append(f'{index}:{error}:fact={a.fact_id}')
             if allow_repair and a.fact_id not in plan.required:
                 trimmed=True;continue
             return Inspection(None,'FALLBACK',tuple(failures))
@@ -151,6 +190,15 @@ def inspect_output(output,plan,locale,*,allow_repair=True):
 
 
 def semantic_answer(output,plan,diagnostics):
+    if plan.version=='chat_evidence/5':
+        from app.application.chat_assertions_v5 import semantic_answer as legacy
+        return legacy(output,plan,diagnostics)
+    if plan.version=='chat_evidence/4':
+        from app.application.chat_assertions_v4 import semantic_answer as legacy
+        return legacy(output,plan,diagnostics)
+    if plan.version!='chat_evidence/6':
+        from app.application.chat_assertions_v3 import semantic_answer as legacy
+        return legacy(output,plan,diagnostics)
     checked=inspect_output(output,plan,plan.fallback.locale,allow_repair=False)
     if checked.output is None:raise GroundingFailure('GROUNDING_REJECTED')
     facts={f.fact_id:f for f in plan.facts}

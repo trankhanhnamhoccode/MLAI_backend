@@ -28,6 +28,9 @@ test tooling, not normal startup or a product permission.
 Assistant L3 AS03 wires AssistantChat to PublicPlanning retained consistency reads,
 bounded structured context, question-specific obligations, typed assertion proposals,
 independent deterministic surface/slot checks and optional conversational provider.
+Versioned intent composition combines common instructions, scoped facts/context,
+evidence availability and bounded non-authoritative placeholder examples. Historical
+context/validator implementations stay pinned for immutable replay. No model judge.
 One semantic regeneration shares deadline/cost bounds; independent optional trimming
 and unique exact numeric-slot repair require final revalidation. Legacy grammar
 remains pinned for old receipts and a supported complex-assertion subset. No solver/worker/live catalog

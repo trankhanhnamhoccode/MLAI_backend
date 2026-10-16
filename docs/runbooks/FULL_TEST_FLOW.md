@@ -140,10 +140,11 @@ pytest PASS alone is not a model quality result; evolving WIP versions are not a
 accuracy benchmark. Independent summary live artifacts/results remain unchanged.
 
 <a id="customer-self-service"></a>
-### L3.1 synthetic conversational verification (separate batch)
+### L3.1/L3.2 synthetic conversational verification (shared cap)
 
-CURRENT FACT: original conversational-live remains immutable/exhausted. New batch
-conversational-l31-live owns distinct durable attempt-N reservations, freeze files,
+CURRENT FACT: original conversational-live remains immutable/exhausted. L3.1
+conversational-l31-live and L3.2 conversational-l32-live share the same30-attempt/
+USD1.00 cap. Both durable ledgers are read before every paid POST. Their artifacts retain freeze metadata,
 full provider request/preflight/facts/prompt/schema, raw responses and AS03 request/
 final/replay/failure traces. No session/Authorization headers are exported. Model
 is configured Gemini2.5Flash, default OpenRouter routing without fallback; current
@@ -156,8 +157,13 @@ USD0.421776 for all30. Unknown costs keep their reservation. No ledger reset.
 # Offline and isolated assistant SQL only; no paid calls by ordinary pytest.
 & $assistantPython -B -m pytest tests/unit/test_chat_l31.py tests/unit/test_chat_l31_corpus.py tests/unit/test_chat_l31_budget.py tests/live/test_chat_l31_live.py -q -p no:cacheprovider
 & $assistantPython -B -m scripts.assistant_tests tests/integration/test_chat_l31.py tests/integration/test_conversational_chat.py tests/integration/test_assistant_summary.py -q -p no:cacheprovider
-# Paid only for the explicitly authorized L3.1 batch; not an automatic retry.
-& $assistantPython -B -m scripts.conversational_l31_live --allow-paid-synthetic-max-30-usd-1.00 --case all
+# L3.2 offline units and separately guarded assistant HTTP/PostgreSQL:
+& $assistantPython -B -m pytest tests/unit/test_chat_l32.py tests/unit/test_chat_l32_lifecycle.py tests/unit/test_chat_l32_budget.py tests/api/test_plan_summary_openapi.py tests/live/test_chat_l32_live.py -q -p no:cacheprovider
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_chat_l31.py tests/integration/test_conversational_chat.py -q -p no:cacheprovider
+# Offline freeze after verification; stores source snapshot, never calls DB/model.
+& $assistantPython -B -m scripts.conversational_l32_live --freeze-source
+# Paid only under the explicit shared authorization; DB prerequisite must be ready.
+& $assistantPython -B -m scripts.conversational_l32_live --allow-paid-shared-l31-l32-max-30-usd-1.00 --case all
 ```
 
 Freeze app/fixture hash before evaluation. If source changes, previous calls become
@@ -166,7 +172,39 @@ attempts/costs remain in the same batch. Stop on systemic failure, fix offline,
 run affected tests before another paid call. Review facts, main-answer completeness
 and naturalness separately; HTTP200/source=model are not a quality oracle.
 
-CURRENT FACT batch outcome:6 completions; known cost USD0.0065817, unknown
+CURRENT FACT L3.2: Docker/owned assistant PostgreSQL resumed. Linked HTTP/SQL28
+passed. V5 focused12 pass and one newly added V4 replay expectation failure was
+corrected, then affected1 pass; V5 unit/API34 pass. Current normal live8 cases skip
+without opt-in. Commands/output stay in runtime/assistant-test/l32/index.json.
+
+Paid L3.2 used24 completions:13 development V4 and11 final V5. Together with L3.1
+this exhausts30/30. Known USD0.0551248 plus historical unknown reservation0.0281184
+has upper0.0832432; full reservations0.421776. No further paid work is authorized
+by unused dollars. Do not rerun the paid command or reset/delete/refund slots.
+Evaluated V5 source0e3199d2 is PARTIAL:7 accepted/1 regenerated/1 fallback/1
+clarification; the final condensed-milk context turn was unexecuted at cap.
+V4 had proof/null/polarity slot failures and a comparative false reject. V5 sends
+canonical per-fact slots and preserves nulls; sign/role-bound comparatives are
+supported, with old V4 replay retained. Two other valid nonnumeric V5 paraphrases
+were rejected (attempts22/27); regeneration27->28 also returns an unknown fact ID.
+No-winner fallback is factually scoped, not accepted model wording. V6 fixes
+those2 bounded variants offline:24 unit and3 actual AS03/PG fake-provider replay
+tests pass, including immutable V5 replay. Current source2e06f304 (prompt5/
+validator6/plan6/renderer7) has live acceptance PENDING; no paid V6 evaluation
+after30/30. Never relabel V5 raw/final results after this offline replay. Do not relabel
+old replies or call this a full final-source matrix PASS.
+
+Every saved final checks fresh-session persisted response, equal POST replay with0
+additional completions and GET405/no generation. Owned test cleanup leaves head0030
+and zero users/Runs/chat rows. No development DB, main/runtime8103/FE changes.
+The shared runner fsyncs reservations before network, lowers a final request to
+one completion when only one slot remains, and skips unexecuted turns at zero.
+Timeout/unknown usage retains reservations;429 stops the batch without retry or
+provider change. An abandoned lock is fail-closed. The old L3.1 caller is retired.
+The isolated live fixture retains authorized Gemini/default OpenRouter routing;
+production CHAT_* never inherits summary flags/model. No reviewer model is used.
+
+HISTORICAL INFORMATION L3.1 batch outcome:6 completions; known cost USD0.0065817, unknown
 attempts5/6 reserve USD0.0281184, known+unknown upper USD0.0347001 (all6 full
 reservations USD0.0843552). Attempts1-5 are development:3 accepted cost/proof/
 Ingredient, tradeoff wording false reject and timeout during semantic regeneration.
@@ -181,9 +219,10 @@ FAKE provider/new scoped IDs, not a rewritten live result.
 Static realistic fixture has captured two milk labels, distinct5/10VND baskets,
 50/100 percent Product service and exact per-Product/path deltas. It was authored
 once with explicitly fixed baskets/exact serving, not search/solver/forecast;
-read/replay tests never execute engines. Wording corpus labels are hand-authored:
-14 cases, zero false accepts and one documented legitimate unsupported paraphrase
-in the small probe; this does not prove general NLP correctness. Context, repair,
+read/replay tests never execute engines. Wording corpus expectations were authored by the Codex coding assistant, not an
+independent human panel or model reviewer. Historical L3.1 has14 cases, zero false
+accepts and one legitimate unsupported paraphrase. Current L3.2 finite offline
+probe has0 false accepts/0 false rejects; this does not prove general NLP correctness. Context, repair,
 regeneration and old pinned receipt compatibility have separate SQL tests. L2
 summary remains ordering/tone presentation; no production reviewer is enabled.
 

@@ -1602,7 +1602,7 @@ Every replay reauthorizes and verifies Run/receipt/generation hashes and pinned
 final assertions/refs against retained evidence. History is bounded request context,
 not a conversation authority or alternative source of facts.
 
-CURRENT FACT L3.1 uses independent CHAT_LLM_ENABLED/model/routes and input/output/
+CURRENT FACT L3.2 uses independent CHAT_LLM_ENABLED/model/routes and input/output/
 deadline/price limits. Model OFF remains default. CHAT_COMPLETION_LIMIT defaults2
 (max2) and CHAT_MAX_REQUEST_COST_USD defaults0.10; both attempts share the request
 deadline/cost reservation. Metadata support/prices are preflighted before each
@@ -1621,9 +1621,16 @@ resumption and explicit service follow-ups; arbitrary semantic aliases are not
 resolved. History/context never supply facts,
 permissions, catalogue updates or instructions. Existing body/history limits apply.
 
-New work pins prompt/3, validator chat_assertions/3, assertion schema/2 and
-selection plan/3. Implicit plan/2 and deterministic renderer/3 keep their old
-obligations; new deterministic work uses renderer/4. Each
+New work pins prompt/5, validator chat_assertions/6, assertion schema/2 and
+selection plan/6; new deterministic work uses renderer/7. Older plan/2-/3-/4-/5 and
+validator/grammar versions retain their original canonical shape and behavior.
+Prompt composition uses common plus intent-specific instructions, resolved context,
+selected facts/availability, detail and two versioned placeholder style examples.
+Examples are never evidence/citations, and no per-Ingredient literal prompt exists.
+Existing context.topic additionally accepts purchase_rationale so a resolved why
+question survives clarification and entity switches. Resolved original question is
+internal plan data, not a client-supplied business fact. No route or migration delta. The prompt supplies per-fact assertion slots including literal null and polarity;
+numbers within compound proof wording must not be extracted into null slots. Each
 model assertion proposes exact typed slots and actual prose; BE independently
 checks material predicates, value/unit/entity/path/role/polarity and unsupported
 extra text. Main answer obligations are distinct from optional support; every
@@ -1632,10 +1639,20 @@ may be trimmed. One unambiguous numeric-slot error can be replaced from its seal
 fact only with exact identity/unit/role and complete final revalidation. Other
 material/main-coverage failures regenerate once or use topic-specific fallback.
 No nearest-number/unit repair, generic nonanswer acceptance or sole model judge.
+Comparative cao hon/thap hon prose binds signed deltas and retained pair cost role.
+V6 permits an optional colon in the complete exact option/rejection clause and a
+scoped missing-causal-evidence paraphrase; no global negation/token removal,
+inferred entity/reference repair or relaxation of slots/extra-claim checks.
 Finite complex/proof grammar remains a supported subset; deterministic checking
 is not proof of general language entailment. Reviewer production is OFF/absent.
 
-Stock/daily questions use retained per-lot/date/path facts where present; no engine
+Procurement why distinguishes proposed quantity, retained simulation factors where
+available and missing causal/zero-purchase evidence. No pair delta or simulation
+row establishes why an exact purchase is optimal. Missing factors are not invented.
+Public failure traces retain assertion position/reason/fact identity; authorized
+synthetic review artifacts contain corresponding raw clauses and reconciliation.
+Unknown completion usage/cost remains null, never zero. Stock/daily questions use
+retained per-lot/date/path facts where present; no engine
 or live catalogue. Proof includes viewed-option eligibility and retained requirement target/status/
 shortfall assessments with units; no new computation. No-winner includes known gaps/reasons/blockers, otherwise explicit
 missing-detail facts. Pairwise deltas retain direction and individual units without

@@ -1,6 +1,6 @@
 # Current state
 
-## CURRENT FACT - Decision Assistant L3.1 retained chat / L2 summary
+## CURRENT FACT - Decision Assistant L3.2 retained chat / L2 summary
 
 AS03 POST assistant/messages now supports optional model-generated conversational
 prose over sealed retained facts, conservative assertion/coverage validation and
@@ -11,7 +11,7 @@ paths,76 tables including Alembic. Only owned assistant test DB migrated. Existi
 0029 receipts remain readable; no conversation platform/worker/engine execution or
 business state mutation. Foundation a3b83799 includes L2/deterministic chat; local L3 checkpoint
 f9dba875a663d833fcbc4657dfda3ddbdb719774 records original live NOT_PASSED.
-L3.1 WIP adds bounded structured context, question obligations, typed assertions,
+L3.1 checkpoint44b451893e7cc4735b6d79d9410db1ba95e0dcac adds bounded structured context, question obligations, typed assertions,
 independent prose checks and bounded repair/one regeneration. No new migration.
 Old pinned replay remains readable; summary/import stay separate. Current implementation/coverage
 limits and synthetic live evidence are owned by the feature document/runbook.
@@ -22,6 +22,25 @@ HTTP429 on freeze2 budget. Paid work stopped; no blind retry/model change. Known
 cost USD0.0065817 plus unknown-call reservation USD0.0281184 gives USD0.0347001
 upper bound. Final context/semantic and proof-assessment fixes (plan/3, renderer/4) have offline evidence, not a fresh full
 live subset. Original artifacts remain byte-identical. See feature/runbook.
+CURRENT FACT L3.2 WIP adds intent/evidence/detail prompt composition with two
+versioned placeholder examples, resolved original questions/purchase_rationale,
+scoped simulation factors without invented causality and pinned V3/V4 replay.
+New work pins prompt5/validator6/selection6, renderer7, assertions2; no new route or
+migration. Explicit per-fact assertion slots preserve nulls and polarity; comparative
+prose keeps exact pair cost role/sign/direction. Public API delta remains only the
+additive context.topic value. Fixed14-case Codex-labelled offline corpus0FA/0FR.
+Owned assistant SQL resumed: linked28 pass; V5 focused12 pass plus one added V4
+replay test expectation corrected and affected1 pass. V5 unit/API34 pass.
+Last evaluated V5 source0e3199d2 live PARTIAL:11 completions,7 accepted responses,1 regenerated,
+1 fallback and1 deterministic clarification; final entity-switch turn unexecuted.
+Two valid V5 live paraphrases were conservatively rejected, separate from the
+fixed14-case corpus. V6 fixes their closed meaning/punctuation variants offline
+without changing V5 replay:24 unit tests and3 real AS03/PostgreSQL fake-provider
+replay tests pass. Current source2e06f304 has live acceptance PENDING; no paid
+call after the cap. Old V5 results remain PARTIAL, not relabelled. Shared L3.1/L3.2 cap30/30 is exhausted.
+Known USD0.0551248 plus unchanged unknown reservation USD0.0281184 gives upper
+USD0.0832432. All finals checked through fresh Session/replay0/GET405. No further
+paid call, original result relabeling or general language/real-customer safety claim.
 Explicit synthetic Gemini smoke exercised actual AS01/AS02: first routing guard
 fallback corrected, second accepted;2 calls,$0.0003932 total API-reported cost.
 This verifies constrained presentation, not unrestricted prose or customer data.

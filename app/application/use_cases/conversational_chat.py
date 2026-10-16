@@ -43,22 +43,22 @@ class ConversationalChat:
         self.owner=assistant;self.engine=assistant.engine
         self.clock=lambda:datetime.now(timezone.utc)
 
-    def prepare(self,token,run,request,version='chat_assertions/3',selection_version='chat_evidence/3'):
+    def prepare(self,token,run,request,version='chat_assertions/6',selection_version='chat_evidence/6'):
         record,view=self.owner.planning.read_record(token,run,evidence_only=True)
         if view.response_version!=request.expected_evidence_version:raise ConfigurationError('EVIDENCE_VERSION_CONFLICT',409)
         winner=view.result.winner_option_id if view.result else None
         evidence=project_evidence(record,view,option_id=request.option_id or winner,include_comparisons=True)
         context=None
-        if version=='chat_assertions/3':
+        if version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6'):
             from app.application.chat_context import resolve_context
-            request,scope,context=resolve_context(request,evidence)
+            request,scope,context=resolve_context(request,evidence,'chat_resolution/3' if version=='chat_assertions/3' else 'chat_resolution/4')
         else:scope=resolve_question(request,evidence)
         option=request.option_id or scope.option_id
         if scope.option_id and not scope.clarification:
             evidence=project_evidence(record,view,option_id=option,include_comparisons=True)
         if scope.ingredient_id is not None and not scope.clarification:
             evidence=project_evidence(record,view,option_id=option,ingredient_id=scope.ingredient_id,include_comparisons=True)
-        if version=='chat_assertions/3':
+        if version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6'):
             from app.application.conversational_evidence import select_evidence
             if context:context=context.model_copy(update={'option_id':evidence.option.option_id if evidence.option else None})
             return evidence,select_evidence(evidence,request,scope,context,selection_version)
@@ -121,7 +121,7 @@ class ConversationalChat:
                 diag.model!=record.profile.model or diag.resolved_model!=record.profile.model or not 1<=diag.attempts<=record.profile.completion_limit or record.output is None:
                 raise AuthError('RESULT_INTEGRITY_UNAVAILABLE',503)
             try:
-                if record.validator_version=='chat_assertions/3':
+                if record.validator_version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5','chat_assertions/6'):
                     from app.application.chat_assertions import semantic_answer
                     expected=semantic_answer(record.output,plan,diag)
                 else:expected=model_answer(record.output,plan,diag)
@@ -155,9 +155,9 @@ class ConversationalChat:
                     claimed=ChatGeneration(generation_id=uuid4(),actor_id=actor,store_id=store,run_id=run,key_digest=kd,
                         request_digest=fingerprint,request=request,profile=self.owner.profile,
                         evidence_digest=digest('chat-evidence',evidence),plan_digest=digest('chat-plan',plan),
-                        process=current_process(),claim_token=uuid4(),created_at=self.clock(),prompt_version='conversational_chat_prompt/3',
-                        validator_version='chat_assertions/3',schema_version='conversational_assertions/2')
-                    claimed=claimed.model_copy(update={'selection_version':'chat_evidence/3'})
+                        process=current_process(),claim_token=uuid4(),created_at=self.clock(),prompt_version='conversational_chat_prompt/5',
+                        validator_version='chat_assertions/6',schema_version='conversational_assertions/2')
+                    claimed=claimed.model_copy(update={'selection_version':'chat_evidence/6'})
                     repo.accept(claimed);inserted=True
                 session.info['chat_accept']=inserted
                 session.commit()
@@ -209,7 +209,7 @@ class ConversationalChat:
         from app.infrastructure.conversational_provider import ChatProviderResult
         from pydantic import ValidationError
         started=time.monotonic();payload=payload_for(plan,request);trace=[];attempts=0;cost=Decimal(0);unknown_cost=False
-        inputs=outputs=0;reserved=Decimal(0);last=None
+        inputs=outputs=0;reserved=Decimal(0);last=None;unknown_input=unknown_output=False
         # The complete serialized request is byte-bounded; byte count plus1024
         # conservatively bounds text tokens, including protocol overhead.
         bound=(Decimal(claimed.profile.input_bytes+1024)*Decimal(claimed.profile.max_prompt_price)+
@@ -228,10 +228,12 @@ class ConversationalChat:
             attempts+=diag.attempts
             if diag.attempts:
                 reserved+=bound
+                unknown_input=unknown_input or diag.input_tokens is None
+                unknown_output=unknown_output or diag.output_tokens is None
                 if diag.cost_usd is None:unknown_cost=True
                 else:cost+=Decimal(diag.cost_usd)
             inputs+=diag.input_tokens or 0;outputs+=diag.output_tokens or 0
-            updates=dict(attempts=attempts,input_tokens=inputs or None,output_tokens=outputs or None,
+            updates=dict(attempts=attempts,input_tokens=None if unknown_input else inputs,output_tokens=None if unknown_output else outputs,
                 cost_usd=None if unknown_cost else str(cost),latency_ms=int((time.monotonic()-started)*1000),failure_trace=tuple(trace))
             diag=diag.model_copy(update=updates)
             compatible=diag.model==claimed.profile.model and diag.resolved_model==claimed.profile.model and diag.provider and presented.diagnostics.attempts==1
@@ -252,6 +254,6 @@ class ConversationalChat:
         if last is None:last=ChatDiagnostics(reason='PREFLIGHT_REJECTED',model=claimed.profile.model,prompt_version=claimed.prompt_version,validator_version=claimed.validator_version)
         reason='COVERAGE_REJECTED' if any('MISSING_MAIN' in t for t in trace) else 'GROUNDING_REJECTED'
         diag=last.model_copy(update={'reason':reason,'disposition':'FALLBACK','failure_trace':tuple(trace),'attempts':attempts,
-            'input_tokens':inputs or None,'output_tokens':outputs or None,'cost_usd':None if unknown_cost else str(cost),
+            'input_tokens':None if unknown_input else inputs or None,'output_tokens':None if unknown_output else outputs or None,'cost_usd':None if unknown_cost else str(cost),
             'latency_ms':int((time.monotonic()-started)*1000)})
         return plan.fallback.model_copy(update={'diagnostics':diag}),None

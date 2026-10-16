@@ -37,6 +37,8 @@ class LedgerTransport:
         self.opener=build_opener(NoRedirect());self.attempts=[];self.preflights=[]
 
     def open(self,request,timeout):
+        if self.root.resolve()==ROOT.resolve():
+            raise AssertionError('L3.1 caller retired; use shared L3.2 ledger')
         if request.data is None:
             with self.opener.open(request,timeout=timeout) as response:raw=response.read(262145)
             self.preflights.append(json.loads(raw));return io.BytesIO(raw)

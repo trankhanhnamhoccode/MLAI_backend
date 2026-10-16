@@ -155,11 +155,11 @@ context/pair and proof eligibility/requirements fixes pass offline AS03 fake-pro
 subset. Every request/fact/prompt/schema/preflight/raw/final/version and replay
 count stays ignored in runtime/assistant-test/conversational-l31-live. Source
 fingerprints distinguish WIP iterations; current source is not historical source
-for every attempt. The14-case hand-labelled wording probe reports0 false accepts
+for every attempt. The historical14-case Codex-authored wording probe reports0 false accepts
 and1 legitimate unsupported paraphrase. This is a finite limitation, not a change
 to the valid label or proof of general quality. L4 remains pending.
 
-CURRENT FACT L3.1 (uncommitted): AS03 keeps its route and authority/lifecycle.
+CURRENT FACT L3.2 WIP, after L3.1 checkpoint44b451893e7cc4735b6d79d9410db1ba95e0dcac: AS03 keeps its route and authority/lifecycle.
 `chat_context` resolves bounded structured context: Run/evidence version, viewed
 option/pair, Ingredient/Product identity and pending original question/candidates.
 Retained partial-name matches are candidates: "milk" can match two captured milk
@@ -167,7 +167,7 @@ labels, requiring structured clarification. A candidate selection resumes the
 original question; explicit new entity/option replaces old context. Pronouns need
 one antecedent; multiple or foreign-version context clarifies. IDs are revalidated
 against this Run; no live catalogue, business facts or rights come from context.
-Ingredient topic (purchase/captured stock/daily shortage/ending) can carry across
+Ingredient topic (purchase/purchase_rationale/captured stock/daily shortage/ending) can carry across
 an explicit entity switch. Product labels/IDs also produce scoped candidates and can resume pending
 questions or explicit service follow-ups. General semantic alias resolution
 remains limited to captured names, not live catalogue synonyms.
@@ -185,7 +185,21 @@ No whole-package prompt or silently dropped main facts. More than16 main facts,
 Warnings are contextual: no blanket summary disclaimer or "0 warnings" footer.
 
 Chat has independent CHAT_* flags/model/routes/bounds, default OFF. New work pins
-prompt/3, chat_assertions/3 and conversational_assertions/2. The provider writes
+prompt/5, chat_assertions/6, selection plan/6 and conversational_assertions/2.
+`chat_prompting` composes common instructions, one of seven intent families,
+resolved Run/option/Ingredient/Product context, evidence availability and detail,
+two placeholder style examples with versioned IDs, and the assertion contract.
+Examples carry no concrete quantities/names/fact IDs and are never citation sources.
+The serialized request remains byte/token bounded; selected example IDs/versions
+are retained in opt-in synthetic request artifacts. Production receipts pin prompt
+version/hash rather than storing raw prompts. There is no model reviewer.
+A clarified request sends its resolved original question while retaining the client
+question separately as untrusted data. purchase_rationale preserves a why follow-up
+across an explicit entity switch; broad budget questions do not inherit Ingredient.
+Why answers distinguish quantity, a scoped retained simulation row when available,
+and the missing exact causal/zero-purchase explanation. Simulation factors are not
+proof of why a precise quantity is optimal. Missing rows remain missing.
+The provider writes
 real prose plus typed assertion proposals (fact/role/entity/path/value/unit/
 polarity). Proposals are reconciled to sealed facts; citations/slots alone do not
 validate prose. `chat_assertions` separately checks material predicates, exact
@@ -204,13 +218,18 @@ deadline and worst-case cost reservation. Feedback contains failure codes and on
 original permitted facts/wording, never new authority from output. Unknown transport
 outcomes, schema/refusal/provider failures are not automatically retried. Final
 coverage and grounding are rechecked. Dispositions distinguish ACCEPTED, REPAIRED,
-TRIMMED, REGENERATED and FALLBACK, with safe original failure traces. Model OFF uses
+TRIMMED, REGENERATED and FALLBACK, with assertion positions/reasons/fact IDs in
+safe public traces. Opt-in synthetic artifacts join these to captured rejected
+clauses, selected facts and reconciliation results. Unknown usage remains null,
+including a known first response followed by an uncertain second completion. Model OFF uses
 the same scoped deterministic facts. Summary/import behavior remains independent.
 
 Replay dispatches by pinned renderer/validator version: old /1-/2 receipts and
 old generation plans use their pinned renderer/selector/grammar. New selection
-plan/3 and deterministic renderer/4 add proof obligations; implicit plan/2 and
-renderer/3 retain the earlier obligations, including L3.1 development receipts. New context
+plan/6 and deterministic renderer/7 own current context/obligations. Frozen
+chat_context_v3/chat_assertions_v3 preserve plan/3 and validator/3 behavior, including
+its documented false rejection; chat_assertions_v4/chat_assertions_v5 preserve their development receipts. Implicit plan/2 and renderer/3 retain earlier
+obligations, including L3.1 development receipts. New context
 and empty diagnostic fields are elided in old canonical shapes. No original
 live finals are rewritten. No new migration/table/service/endpoint is required.
 
@@ -253,6 +272,45 @@ crash demonstrates explicit replay without automatically repeating provider work
 No other DB/worktree/runtime was migrated. Commands and target ownership:
 [runbook](../runbooks/FULL_TEST_FLOW.md#assistant-l2).
 
+CURRENT FACT L3.2 verification: the fixed14-case developer/Codex corpus reports
+0FA/0FR, not independent human grading or general entailment. V5 adds explicit
+per-fact slots (including literal null and polarity) after development live showed
+correct proof prose with wrong proposed slots. Strict slot checking remains; prose
+is independently checked. Comparative cao hon/thap hon expressions bind to signed
+deltas, Product/path and the retained positive cost role; no global ranking/cause.
+When purchase evidence is unavailable, its missing-cause qualifier does not assert
+that a proposed quantity exists. V3/V4 code remains pinned for old receipts.
+
+Most recently evaluated V5 source0e3199d201853962b40222d3f11079309b8779286e36a8023b3978227eb3a8b5
+is PARTIAL, not a full live PASS:11 completions produced7 ACCEPTED,1 REGENERATED,
+1 FALLBACK and1 deterministic clarification. The final context turn switching to
+condensed milk was not executed after the shared30-attempt cap was reached.
+V4 development results remain separate. Final budget/quantity/why/missing/proof/
+comparison and first3 context turns have actual saved live responses; no-winner
+correctly falls back after a valid rejection paraphrase is rejected, then an
+unknown fact ID appears during regeneration. Two valid V5 live paraphrases (why and
+rejection, attempts22/27) were false rejects; no labels were changed to hide them.
+V6 now accepts the exact scoped omission variant and an optional colon before the
+exact option rejection reason, with whole-clause/slot/polarity checks retained.
+24 unit tests and3 real AS03/owned-PG fake-provider replay tests pass, including
+V5 pinned replay. Observed wording is rebound to fresh synthetic scoped refs;
+original raw22/27 and V5 outcomes are unchanged. Current source2e06f304 live
+acceptance is PENDING because shared attempts are exhausted; no V6 paid call.
+Proof/comparison are correct but verbose for simple detail. No unsupported material
+claim was observed in reviewed finals; this finite check is not general safety.
+
+Shared ledger30/30: known USD0.0551248, two historical unknowns reserve0.0281184,
+upper0.0832432; all full reservations0.421776. Monetary headroom does not authorize
+another call. The11 evaluated V5 completions used27133 input/5354 output tokens and
+USD0.0215249, resolved Gemini2.5Flash/Google; completion latency1811..6515ms.
+All saved finals have fresh-session persistence comparison, identical replay with0
+extra completions and GET405/no generation. Tests deliberately clean their owned
+DB afterward; final test DB is head0030 with0 users/Runs/chat rows.
+Linked SQL28 passed before V5; V5 focused12 pass/1 test-fixture expectation failure,
+then affected V4-pinned replay1 passed. Unit/API34 pass; ordinary live8 skipped.
+V4 live8 lifecycle cases passed; V5 live7 passed/1 partly executed context case
+skipped at cap. Those pytest results are not model-quality grades. No full suite.
+
 ## Legacy review and future slices
 
 HISTORICAL INFORMATION: read-only reference audit at
@@ -261,7 +319,11 @@ HISTORICAL INFORMATION: read-only reference audit at
 `Forecast_Engine_FandB/shelfcash_legacy_review.zip` under the project parent.
 The ZIP's overall_summary, FE explanation contract, schemas and CHAT-7/8 audit
 were inspected as source only. No legacy runtime/import dependency/schema port.
-Findings are offline regressions, not proof of comparative live wording quality.
+Read-only L3.2 inspection of decision_intelligence/style_examples.py and
+ingredient_synthesis.py confirms intent/evidence-case/detail selection, non-authoritative
+placeholders, positive/negative examples and selected-example diagnostics. Those
+principles inform current composition; no legacy repairs/removals/runtime code is
+ported or assumed active. Findings are offline regressions, not proof of comparative live wording quality.
 Legacy recommendation_available/expected_fill_rate mismatches motivate typed
 current C03 ProductService/service fields; no legacy aggregate fill field is made up.
 

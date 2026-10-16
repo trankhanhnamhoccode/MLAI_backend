@@ -21,7 +21,7 @@ def test_hand_labelled_wording_corpus_with_explicit_remaining_false_rejection():
     report=dict(mode='OFFLINE_HAND_LABELLED_NO_PROVIDER',cases=rows,
         false_acceptances=sum(r['false_acceptance'] for r in rows),false_rejections=sum(r['false_rejection'] for r in rows),
         note='This finite corpus is not proof of general entailment. Main obligations/context and repair/regeneration have separate unit/SQL tests.')
-    out=Path('runtime/assistant-test/l31/wording-corpus.json');out.parent.mkdir(parents=True,exist_ok=True)
+    out=Path('runtime/assistant-test/l32/legacy-validator-corpus.json');out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
     assert not any(r['false_acceptance'] for r in rows)
     # Intentionally documented unsupported phrasing; not changed to an invalid

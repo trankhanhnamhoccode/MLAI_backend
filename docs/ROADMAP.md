@@ -10,7 +10,7 @@ engine/provider network. Cold misses no longer require cached verification. See
 [implementation/limits](features/DECISION_ASSISTANT.md) and
 [summary / conversational chat contract](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
 
-- L3.1 WIP (after local L3 checkpoint f9dba875): structured context/pending
+- L3.1 checkpoint44b45189 (after local L3 checkpoint f9dba875): structured context/pending
   clarification, question obligations, typed assertions/prose checks and bounded
   repair/one regeneration. Existing L3 implemented: AS03 optional conversational prose, sealed scoped facts,
   bounded user-history context, clarification, independently configured provider,
@@ -24,6 +24,18 @@ engine/provider network. Cold misses no longer require cached verification. See
   accepted; tradeoff false reject/unknown timeout then freeze2 HTTP429). No paid
   retry/model change. Final context/pair fixes are offline-only; current limits
   and cost are in the feature/runbook, separate from original NOT_PASSED.
+- L3.2 WIP: dynamic intent/evidence/detail prompts, two placeholder examples,
+  resumed why/context and explicit slots/null/polarity, comparative sign/cost-role
+  checks and V3/V4/V5 pinned replay. Current prompt5/validator6/plan6, renderer7.
+  Evaluated V5 live PARTIAL:11 completions,7 accepted/1 regenerated/1 fallback/
+  1 clarification; last context entity switch unexecuted at shared cap30/30.
+  Fixed14-case Codex-labelled offline corpus0FA/0FR;2 additional valid live
+  paraphrases rejected in V5, fixed offline in V6 with24 unit/3 real AS03-PG
+  fake replay tests. Current V6 live PENDING at exhausted cap. Proof/comparison remain verbose. Linked SQL28 pass;
+  V5 focused12 pass plus affected V4 replay1 pass after test expectation fix;
+  unit/API34 pass. All saved finals fresh-persisted/replay0/GET405. Budget is
+  exhausted by attempts, not dollars: known0.0551248 plus unknown reserve0.0281184.
+  No real/unseen evidence, reviewer model, new route/migration or whole-chat PASS.
 - L4 pending: separately approved frozen-evidence live evaluation, cost/attempt
   caps, raw/final diagnostics and legacy regression corpus/paraphrase coverage.
   Narrow separately authorized synthetic summary/chat smokes retain every attempt,

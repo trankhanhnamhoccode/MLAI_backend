@@ -2,6 +2,7 @@
 from dataclasses import replace
 from decimal import Decimal
 from uuid import UUID
+import re
 from app.application.chat_evidence_selection import select_chat_evidence
 from app.application.chat_grounding import canonical_clause
 from app.application.assistant_chat_rendering import normalized
@@ -16,7 +17,7 @@ def display_fact(card,locale='vi'):
     if card.kind in ('daily_shortage','daily_ending'):
         word=('thiếu' if card.kind=='daily_shortage' else 'cuối ngày') if vi else ('shortage' if card.kind=='daily_shortage' else 'ending')
         return f'{"Mô phỏng" if vi else "Simulated"} {label}, {card.path}: {word} {card.display} {card.unit}'
-    if card.kind=='detail_unknown':return card.meaning.rstrip('.')
+    if card.kind in ('detail_unknown','mechanistic'):return card.meaning.rstrip('.')
     if card.kind in ('eligibility','requirement','viewed_role'):return card.meaning.rstrip('.')
     if card.kind=='blocker':return ('Vấn đề chặn đã lưu: ' if vi else 'Retained blocker: ')+card.display
     if card.kind=='gap':return (f'Phương án {card.entity_id}, món {card.label}, {card.path}: còn thiếu {card.display} {card.unit} để đáp ứng yêu cầu đã lưu' if vi else f'Option {card.entity_id}, Product {card.label}, {card.path}: retained requirement shortfall {card.display} {card.unit}')
@@ -41,13 +42,32 @@ def select_evidence(evidence,request,scope,context,version='chat_evidence/3'):
             required=[c.fact_id for c in cards if c.kind in kinds]
         elif scope.intent=='ingredient':
             row=evidence.ingredient;label=row.display_name
-            if version=='chat_evidence/3' and any(w in q for w in ('xac suat','probability','loi nhuan','profit')):
+            if version in ('chat_evidence/3','chat_evidence/4','chat_evidence/5','chat_evidence/6') and any(w in q for w in ('xac suat','probability','loi nhuan','profit')):
                 cards=[]
                 add('detail_unknown','Evidence của Run không có xác suất hay lợi nhuận để trả lời câu hỏi này.' if request.locale=='vi' else
                     'Run evidence does not contain probability or profit metrics for this question.','/overview/omissions')
-            elif version=='chat_evidence/3' and any(w in q for w in ('vi sao','tai sao','why','nguyen nhan','cause','khong mua','zero-purchase')):
-                add('detail_unknown','Evidence đang dùng chưa có bằng chứng nhân quả hoặc so sánh không mua để giải thích lý do mua; lượng mua chỉ là đề xuất đã lưu.' if request.locale=='vi' else
-                    'This evidence has no causal or zero-purchase comparison explaining the purchase; quantities are retained proposals.','/overview/omissions')
+            elif version in ('chat_evidence/3','chat_evidence/4','chat_evidence/5','chat_evidence/6') and any(w in q for w in ('vi sao','tai sao','why','nguyen nhan','cause','khong mua','zero-purchase')):
+                if version in ('chat_evidence/4','chat_evidence/5','chat_evidence/6') and row.daily_balances:
+                    # One retained row is a scoped mechanistic factor, not a
+                    # derivation of optimal quantity or an invented causal chain.
+                    paths=set(re.findall(r'\b(?:LOW|BASE|HIGH)\b',q.upper()))
+                    dates=set(re.findall(r'\b\d{4}-\d{2}-\d{2}\b',q))
+                    daily=[d for d in row.daily_balances if (not paths or d.path in paths) and (not dates or str(d.day) in dates)]
+                    if daily:
+                        d=daily[0]
+                        meaning=(f'Mô phỏng {label}, {d.path} / {d.day}: yêu cầu {d.requested.decimal_view} {d.unit}; '
+                            f'có sẵn {d.available.decimal_view} {d.unit}; thiếu {d.shortage.decimal_view} {d.unit}' if request.locale=='vi' else
+                            f'Simulated {label}, {d.path} / {d.day}: requested {d.requested.decimal_view} {d.unit}; '
+                            f'available {d.available.decimal_view} {d.unit}; shortage {d.shortage.decimal_view} {d.unit}')
+                        add('mechanistic',meaning,'/ingredient/daily_balances',entity=str(row.ingredient_id),path=f'{d.path} / {d.day}',label=label)
+                    else:add('detail_unknown','Chưa lưu dòng mô phỏng cho ngày hoặc đường được hỏi.' if request.locale=='vi' else
+                        'No retained simulation row matches the requested date/path.','/ingredient/daily_balances')
+                if version in ('chat_evidence/5','chat_evidence/6') and not row.purchases:
+                    missing_reason=('Chưa lưu bằng chứng nhân quả hoặc so sánh không mua để giải thích lý do mua; không suy ra có một lượng mua đề xuất.' if request.locale=='vi' else
+                        'Causal or zero-purchase evidence was not retained; no proposed purchase quantity is inferred.')
+                else:missing_reason=('Evidence đang dùng chưa có bằng chứng nhân quả hoặc so sánh không mua để giải thích lý do mua; lượng mua chỉ là đề xuất đã lưu.' if request.locale=='vi' else
+                    'This evidence has no causal or zero-purchase comparison explaining the purchase; quantities are retained proposals.')
+                add('detail_unknown',missing_reason,'/overview/omissions')
             elif any(w in q for w in ('ton','stock','so du','thieu','shortage','ngay nao','khi nao','ending')):
                 cards=[]
                 if any(w in q for w in ('ngay','thieu','shortage','ending','so du')):
@@ -83,7 +103,8 @@ def select_evidence(evidence,request,scope,context,version='chat_evidence/3'):
             if not o.recommendation_available and not any(c.kind in ('gap','blocker') for c in cards):
                 add('detail_unknown','Chưa lưu gap hoặc vấn đề chặn chi tiết; không suy ra nguyên nhân hay bất khả thi.' if request.locale=='vi' else 'Detailed gaps/blockers were not retained; no cause or infeasibility is inferred.','/overview/explanation')
             required=[c.fact_id for c in cards]
-        elif scope.intent=='proof' and version=='chat_evidence/3':
+        elif (scope.intent=='proof' and version=='chat_evidence/3') or (scope.intent in ('proof','requirements') and version in ('chat_evidence/4','chat_evidence/5','chat_evidence/6')):
+            if scope.intent=='requirements':cards=[] # assessments answer requirements; service tables are separate detail
             if evidence.option:
                 option=evidence.option
                 role='Phương án đang xem đủ điều kiện theo đánh giá đã lưu.' if option.eligible else 'Phương án đang xem không đủ điều kiện theo đánh giá đã lưu.'
@@ -118,7 +139,7 @@ def select_evidence(evidence,request,scope,context,version='chat_evidence/3'):
     # Only contextual guardrails. No generic summary disclaimer on every answer.
     safety=()
     pair_card=next((c for c in cards if c.kind=='pair_cost' and c.label),None)
-    if pair_card and version=='chat_evidence/3':
+    if pair_card and version in ('chat_evidence/3','chat_evidence/4','chat_evidence/5','chat_evidence/6'):
         safety=(ChatClaim(text=(f'Chênh lệch theo chiều {pair_card.label}; lượng phục vụ là mô phỏng.' if request.locale=='vi' else
             f'Deltas are {pair_card.label}; fulfilled quantities are simulated.'),evidence_ids=pair_card.evidence_ids),)
     if scope.intent=='proof':safety=() # proof boundary is already a main obligation
@@ -130,7 +151,7 @@ def select_evidence(evidence,request,scope,context,version='chat_evidence/3'):
         claims=tuple(ChatClaim(text=display_fact(c,request.locale)+'.',evidence_ids=c.evidence_ids) for c in cards if c.fact_id in required)+safety
         ids={i for c in (*claims,*cards) for i in c.evidence_ids}
         fallback=fallback.model_copy(update={'answer':'\n\n'.join(c.text for c in claims),'claims':claims,
-            'references':tuple(r for r in evidence.references if r.evidence_id in ids),'diagnostics':ChatDiagnostics(reason='MODEL_DISABLED',validator_version='decision_chat_renderer/4' if version=='chat_evidence/3' else 'decision_chat_renderer/3')})
+            'references':tuple(r for r in evidence.references if r.evidence_id in ids),'diagnostics':ChatDiagnostics(reason='MODEL_DISABLED',validator_version='decision_chat_renderer/7' if version=='chat_evidence/6' else 'decision_chat_renderer/6' if version=='chat_evidence/5' else 'decision_chat_renderer/5' if version=='chat_evidence/4' else 'decision_chat_renderer/4' if version=='chat_evidence/3' else 'decision_chat_renderer/3')})
     if fallback.clarification and scope.candidates:
         text=('Bạn muốn hỏi nguyên liệu nào? Chọn một tên bên dưới.' if request.locale=='vi' else 'Which Ingredient do you mean? Choose a name below.')
         if not any(r.name for r in scope.candidates):text=('Run chưa lưu tên nguyên liệu; chỉ có các ID đã lưu.' if request.locale=='vi' else 'Ingredient labels were not captured; only retained IDs are available.')
@@ -140,5 +161,6 @@ def select_evidence(evidence,request,scope,context,version='chat_evidence/3'):
         fallback=fallback.model_copy(update={'answer':text,'clarification':fallback.clarification.model_copy(update={'question':text,
             'product_candidates':tuple(ProductCandidate(product_id=p.product_id,name=p.name) for p in scope.product_candidates)})})
     fallback=fallback.model_copy(update={'context':context})
-    return plan.model_copy(update={'version':version,'resolver_version':'chat_resolution/3','facts':tuple(cards),
-        'required':tuple(required),'safety_claims':safety,'fallback':fallback})
+    return plan.model_copy(update={'version':version,'resolver_version':'chat_resolution/4' if version in ('chat_evidence/4','chat_evidence/5','chat_evidence/6') else 'chat_resolution/3','facts':tuple(cards),
+        'required':tuple(required),'safety_claims':safety,'fallback':fallback,
+        'resolved_question':request.question if version in ('chat_evidence/4','chat_evidence/5','chat_evidence/6') else None})

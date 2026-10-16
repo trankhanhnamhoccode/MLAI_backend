@@ -29,12 +29,12 @@ class Valid:
         cards=[FactCard(**{k:v for k,v in f.items() if k!='wording'}) for f in payload['facts']]
         statements=[]
         for card in cards:
-            text=canonical_clause(card,payload['language'])+'.'
+            text=next(f['wording'] for f in payload['facts'] if f['fact_id']==card.fact_id)+'.'
             if card.kind=='total':text=f'Phương án này có tổng chi phí là {card.display} {card.unit}.'
             statements.append(proposal(card,text))
         return ChatProviderResult(SemanticOutput(assertions=tuple(statements)),ChatDiagnostics(reason='NONE',
             disposition='ACCEPTED',model=profile.model,resolved_model=profile.model,provider='Synthetic',attempts=1,
-            prompt_version='conversational_chat_prompt/3',validator_version='chat_assertions/3'))
+            prompt_version=payload.get('composition',{}).get('version','conversational_chat_prompt/3') if payload.get('task') in ('conversational_chat/3','conversational_chat/4','conversational_chat/5') else 'conversational_chat_prompt/3',validator_version='chat_assertions/6' if payload.get('task')=='conversational_chat/5' else 'chat_assertions/5' if payload.get('task')=='conversational_chat/4' else 'chat_assertions/4' if payload.get('task')=='conversational_chat/3' else 'chat_assertions/3'))
 
 
 @pytest.fixture
@@ -281,7 +281,7 @@ def test_elliptical_purchase_form_is_accepted_offline_through_as03(conversation)
     assert result['source']=='model' and result['ingredient_id']==str(UUID(int=200))
     assert '20 g' in result['answer'] and 'đề xuất' in result['answer']
     assert state[5].post(path,headers=headers,json=body).json()['data']==result and provider.calls==1
-    target=Path('runtime/assistant-test/l31/offline-ellipsis-replay.json');target.parent.mkdir(parents=True,exist_ok=True)
+    target=Path('runtime/assistant-test/l32/offline-ellipsis-replay.json');target.parent.mkdir(parents=True,exist_ok=True)
     target.write_text(json.dumps(dict(mode='OFFLINE_FAKE_PROVIDER',
         note='Regression for the wording form observed in live attempt10; new synthetic evidence IDs, not a new live completion.',
         request=body,response=result),ensure_ascii=False,indent=2),encoding='utf8')

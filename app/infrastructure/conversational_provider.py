@@ -52,21 +52,33 @@ def profile_from_settings(settings):
 
 def payload_for(plan,request):
     from app.application.conversational_evidence import display_fact
-    semantic=plan.version in ('chat_evidence/2','chat_evidence/3')
-    return dict(task='conversational_chat/2' if semantic else 'conversational_chat/1',language=request.locale,detail_level=request.detail_level,
+    semantic=plan.version in ('chat_evidence/2','chat_evidence/3','chat_evidence/4','chat_evidence/5','chat_evidence/6')
+    payload=dict(task='conversational_chat/5' if plan.version=='chat_evidence/6' else 'conversational_chat/4' if plan.version=='chat_evidence/5' else 'conversational_chat/3' if plan.version=='chat_evidence/4' else 'conversational_chat/2' if semantic else 'conversational_chat/1',language=request.locale,detail_level=request.detail_level,
         question=request.question,recent_history=[m.model_dump() for m in request.history],
         context=dict(option_id=plan.option_id,ingredient_id=str(plan.ingredient_id) if plan.ingredient_id else None,intent=plan.intent),
         facts=[{**f.model_dump(),**({'wording':display_fact(f,request.locale)} if semantic else {})} for f in plan.facts],required=list(plan.required))
+    if plan.version in ('chat_evidence/4','chat_evidence/5','chat_evidence/6'):
+        from app.application.chat_prompting import compose
+        payload['composition']=compose(plan,request)
+        payload['original_question']=request.question
+        payload['question']=plan.resolved_question or request.question
+    if plan.version in ('chat_evidence/5','chat_evidence/6'):
+        from app.application.chat_assertions import proposal
+        payload['assertion_contract']={'slots_by_fact':[proposal(f).model_dump(exclude={'text'}) for f in plan.facts],
+            'rule':'Copy all slots exactly, including nulls. Wording supplies prose, never value/unit slots. No inferred polarity.'}
+    return payload
 
 
 def request_bytes(payload,profile):
-    semantic=payload.get('task')=='conversational_chat/2'
+    semantic=payload.get('task') in ('conversational_chat/2','conversational_chat/3','conversational_chat/4','conversational_chat/5')
     schema=SemanticOutput if semantic else ConversationalOutput
     route=dict(allow_fallbacks=False,require_parameters=True,
         max_price=dict(prompt=profile.max_prompt_price,completion=profile.max_completion_price,request=0))
     if profile.providers:route.update(order=list(profile.providers),only=list(profile.providers))
+    from app.application.chat_prompting import BASE
+    system=BASE if payload.get('task') in ('conversational_chat/3','conversational_chat/4','conversational_chat/5') else SEMANTIC_SYSTEM if semantic else SYSTEM
     body=dict(model=profile.model,temperature=0,max_tokens=profile.max_tokens,reasoning={'enabled':False},
-        provider=route,messages=[dict(role='system',content=SEMANTIC_SYSTEM if semantic else SYSTEM),dict(role='user',content=json.dumps(payload,ensure_ascii=False))],
+        provider=route,messages=[dict(role='system',content=system),dict(role='user',content=json.dumps(payload,ensure_ascii=False))],
         response_format=dict(type='json_schema',json_schema=dict(name='conversational_explanation',strict=True,schema=schema.model_json_schema())))
     raw=json.dumps(body,ensure_ascii=False,separators=(',',':')).encode('utf8')
     if len(raw)>profile.input_bytes:raise ValueError('INPUT_LIMIT')
@@ -85,9 +97,12 @@ class OpenRouterConversationalProvider:
 
     def generate(self,payload,profile,*,before_completion=None):
         started=time.monotonic()
-        semantic=payload.get('task')=='conversational_chat/2'
+        semantic=payload.get('task') in ('conversational_chat/2','conversational_chat/3','conversational_chat/4','conversational_chat/5')
         schema=SemanticOutput if semantic else ConversationalOutput
-        details=dict(model=profile.model,validator_version='chat_assertions/3' if semantic else 'chat_assertion_grammar/2',prompt_version='conversational_chat_prompt/3' if semantic else 'conversational_chat_prompt/2',
+        dynamic=payload.get('task')=='conversational_chat/3'
+        v5=payload.get('task') in ('conversational_chat/4','conversational_chat/5')
+        v6=payload.get('task')=='conversational_chat/5'
+        details=dict(model=profile.model,validator_version='chat_assertions/6' if v6 else 'chat_assertions/5' if v5 else 'chat_assertions/4' if dynamic else 'chat_assertions/3' if semantic else 'chat_assertion_grammar/2',prompt_version='conversational_chat_prompt/5' if v5 else 'conversational_chat_prompt/4' if dynamic else 'conversational_chat_prompt/3' if semantic else 'conversational_chat_prompt/2',
             evidence_hash=hashlib.sha256(json.dumps(payload['facts'],sort_keys=True,ensure_ascii=False).encode()).hexdigest(),
             schema_hash=hashlib.sha256(json.dumps(schema.model_json_schema(),sort_keys=True).encode()).hexdigest(),attempts=0)
         def failure(reason):

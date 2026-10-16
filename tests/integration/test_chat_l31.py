@@ -59,7 +59,7 @@ def test_development_tradeoff_wording_replayed_offline_through_as03(conversation
             from app.application.contracts.assistant_chat import ChatDiagnostics
             return ChatProviderResult(SemanticOutput(assertions=tuple(rows)),ChatDiagnostics(reason='NONE',model=profile.model,
                 resolved_model=profile.model,provider='OFFLINE_FAKE',attempts=1,disposition='ACCEPTED',
-                prompt_version='conversational_chat_prompt/3',validator_version='chat_assertions/3'))
+                prompt_version=payload.get('composition',{}).get('version','conversational_chat_prompt/3') if payload.get('task') in ('conversational_chat/3','conversational_chat/4','conversational_chat/5') else 'conversational_chat_prompt/3',validator_version='chat_assertions/6' if payload.get('task')=='conversational_chat/5' else 'chat_assertions/5' if payload.get('task')=='conversational_chat/4' else 'chat_assertions/4' if payload.get('task')=='conversational_chat/3' else 'chat_assertions/3'))
     provider=RecordedForm();service.provider=provider
     body={**body,'expected_evidence_version':row.record_digest,'question':'Phương án đắt hơn được lợi gì?'}
     path=f'/api/v1/procurement-plans/{record.run_id}/assistant/messages'
@@ -68,7 +68,7 @@ def test_development_tradeoff_wording_replayed_offline_through_as03(conversation
     result=response.json()['data'];assert result['source']=='model' and len(result['claims'])==8
     assert 'balanced, protected trừ lean' in result['answer'] and 'mô phỏng' in result['answer']
     assert state[5].post(path,headers=headers,json=body).json()['data']==result and provider.calls==1
-    output=Path('runtime/assistant-test/l31/offline-pair-replay.json');output.parent.mkdir(parents=True,exist_ok=True)
+    output=Path('runtime/assistant-test/l32/offline-pair-replay.json');output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(dict(mode='OFFLINE_FAKE_PROVIDER',note='Wording form observed in L3.1 development attempt4; rebound to new synthetic scoped fact IDs, not another live call or rewritten original final.',request=body,final=result,replay_completions=0),ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 
 
@@ -85,7 +85,7 @@ def test_proof_eligibility_and_requirement_coverage_through_as03(conversation):
             out=SemanticOutput(assertions=tuple(proposal(c,d['wording']+'.') for c,d in zip(cards,payload['facts'])))
             from app.application.contracts.assistant_chat import ChatDiagnostics
             return ChatProviderResult(out,ChatDiagnostics(reason='NONE',model=profile.model,resolved_model=profile.model,
-                provider='OFFLINE_FAKE',attempts=1,disposition='ACCEPTED',prompt_version='conversational_chat_prompt/3',validator_version='chat_assertions/3'))
+                provider='OFFLINE_FAKE',attempts=1,disposition='ACCEPTED',prompt_version=payload.get('composition',{}).get('version','conversational_chat_prompt/3') if payload.get('task') in ('conversational_chat/3','conversational_chat/4','conversational_chat/5') else 'conversational_chat_prompt/3',validator_version='chat_assertions/6' if payload.get('task')=='conversational_chat/5' else 'chat_assertions/5' if payload.get('task')=='conversational_chat/4' else 'chat_assertions/4' if payload.get('task')=='conversational_chat/3' else 'chat_assertions/3'))
     service.provider=Worded();body={**body,'expected_evidence_version':row.record_digest,'question':'Vì sao chọn phương án này?'}
     path=f'/api/v1/procurement-plans/{record.run_id}/assistant/messages'
     response=state[5].post(path,headers=headers,json=body)
@@ -177,7 +177,7 @@ def test_cost_reservation_blocks_regeneration_and_keeps_unknown_cost(conversatio
     assert 'SHARED_DEADLINE_OR_COST_BOUND' in d['failure_trace']
 
 
-@pytest.mark.parametrize('version',['chat_assertion_grammar/2','chat_assertions/3'])
+@pytest.mark.parametrize('version',['chat_assertion_grammar/2','chat_assertions/3','chat_assertions/4','chat_assertions/5'])
 def test_legacy_generation_remains_readable_with_original_pinned_plan(conversation,version):
     from app.application.use_cases.conversational_chat import ConversationalChat
     from app.application.contracts.chat_generation import ChatGeneration,ConversationalOutput,ModelStatement
@@ -191,22 +191,22 @@ def test_legacy_generation_remains_readable_with_original_pinned_plan(conversati
     state,record,service,headers,body,path=conversation
     token=state[5].cookies.get('__Host-shelfcash_session') or state[5].cookies.get('shelfcash_dev_session')
     use=ConversationalChat(service);request=ChatRequest(**body)
-    if version=='chat_assertions/3':request=request.model_copy(update={'question':'Vì sao chọn phương án này?'})
-    evidence,plan=use.prepare(token,record.run_id,request,version,'chat_evidence/2')
-    prompt='conversational_chat_prompt/3' if version=='chat_assertions/3' else 'conversational_chat_prompt/2'
+    if version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5'):request=request.model_copy(update={'question':'Vì sao chọn phương án này?'})
+    evidence,plan=use.prepare(token,record.run_id,request,version,'chat_evidence/5' if version=='chat_assertions/5' else 'chat_evidence/4' if version=='chat_assertions/4' else 'chat_evidence/2')
+    prompt='conversational_chat_prompt/5' if version=='chat_assertions/5' else 'conversational_chat_prompt/4' if version=='chat_assertions/4' else 'conversational_chat_prompt/3' if version=='chat_assertions/3' else 'conversational_chat_prompt/2'
     diag=ChatDiagnostics(reason='NONE',disposition='ACCEPTED',attempts=1,model=service.profile.model,resolved_model=service.profile.model,provider='Synthetic',prompt_version=prompt,validator_version=version)
-    if version=='chat_assertions/3':
+    if version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5'):
         from app.application.chat_assertions import semantic_answer
         output=SemanticOutput(assertions=tuple(proposal(c) for c in plan.facts))
         answer=semantic_answer(output,plan,diag)
-        assert {c.kind for c in plan.facts}=={'winner','selector','proof_boundary'} # completed stock fixture
+        assert {c.kind for c in plan.facts}==({'winner','selector','proof_boundary','eligibility','requirement'} if version in ('chat_assertions/4','chat_assertions/5') else {'winner','selector','proof_boundary'}) # completed stock fixture
     else:
         output=ConversationalOutput(statements=tuple(ModelStatement(text=canonical_clause(c)+'.',fact_ids=(c.fact_id,)) for c in plan.facts))
         answer=model_answer(output,plan,diag)
     claimed=ChatGeneration(generation_id=uuid4(),actor_id=record.actor_id,store_id=record.store_id,run_id=record.run_id,
         key_digest=key_digest(headers['Idempotency-Key']),request_digest=digest('assistant-message-request',request),request=request,profile=service.profile,
         evidence_digest=digest('chat-evidence',evidence),plan_digest=digest('chat-plan',plan),process=current_process(),claim_token=uuid4(),created_at=datetime.now(timezone.utc),
-        prompt_version=prompt,validator_version=version,schema_version='conversational_assertions/2' if version=='chat_assertions/3' else 'conversational_output/1')
+        prompt_version=prompt,validator_version=version,selection_version='chat_evidence/5' if version=='chat_assertions/5' else 'chat_evidence/4' if version=='chat_assertions/4' else 'chat_evidence/2',schema_version='conversational_assertions/2' if version in ('chat_assertions/3','chat_assertions/4','chat_assertions/5') else 'conversational_output/1')
     with Session(state[1]) as s:ChatGenerationRepository(s).accept(claimed);s.commit()
     use.publish(claimed,answer,output,token=token,csrf=headers['X-CSRF-Token'])
     response=state[5].post(path,headers=headers,json=request.model_dump(mode='json'))

@@ -32,7 +32,7 @@ class ChatContext(DTO):
     ingredient_id: UUID | None = None
     product_id: UUID | None = None
     pending: PendingQuestion | None = None
-    topic: Literal['purchase','stock','daily_shortage','daily_ending'] | None = None
+    topic: Literal['purchase','purchase_rationale','stock','daily_shortage','daily_ending'] | None = None
 
 
 class ChatRequest(SummaryRequest):
