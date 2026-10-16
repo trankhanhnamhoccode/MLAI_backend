@@ -19,7 +19,11 @@ def test_current_openapi_and_fe73_additive_delta():
     diff = json.loads((ROOT / 'openapi_diff_fe73.json').read_text(encoding='utf-8'))
     assert diff['baseline_openapi_sha256'] == '790443d80350cc597c7c06179309e43303ba558de34017ea1dd4113de71fc1ee'
     assert {o['id'] for o in diff['added_operations']} == {'AS01', 'AS02', 'AS03'}
-    assert not diff['changed_operations'] and not diff['removed_operations'] and not diff['changed_schemas']
+    assert not diff['changed_operations'] and not diff['removed_operations']
+    assert diff['changed_schemas'] == ['ExportAccepted']
+    assert source['components']['schemas']['ExportAccepted']['properties']['render_version'] == {
+        'type': 'string', 'enum': ['planning-pdf/1', 'planning-pdf/2', 'planning-pdf/3'],
+        'title': 'Render Version', 'default': 'planning-pdf/3'}
 
 
 def test_journal_allowlist_is_closed_and_uses_real_operations():

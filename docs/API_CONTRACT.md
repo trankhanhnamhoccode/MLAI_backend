@@ -3,7 +3,8 @@
 ## Authority and current surface
 
 CURRENT FACT L5 combined source:76 operations/69 paths; the only additions to main
-73/66 are AS01/AS02/AS03. Existing routes/component DTOs compare unchanged. The
+73/66 are AS01/AS02/AS03. Existing routes compare unchanged. P1/P1.1 changes only ExportAccepted.render_version
+to accept /1,/2,/3, default /3; [Planning §15.4](PROCUREMENT_API_CONTRACT_VI.md#154-pdf--n10n11-thêm-không-thay-planning-state) owns PDF policy. The
 [Planning contract18](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant) owns Assistant
 meaning/workflows and [current handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md)
 links source OpenAPI/examples. Runtime8103 is not deployed or migrated by this merge.

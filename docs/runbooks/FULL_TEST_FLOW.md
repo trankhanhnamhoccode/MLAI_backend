@@ -1,5 +1,103 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="owner-pdf-p1"></a>
+## CURRENT FACT — P1/P1.1 PDF review, renderer /3
+
+From the PDF source or `backend-integrate-owner-plan-pdf` checkout, use its own source import path; no .env
+copy or live runtime required. Render synthetic **projection fixtures**, not a real
+business Run or forecast quality benchmark. All outputs are ignored runtime:
+
+```powershell
+$env:PYTHONPATH=(Get-Location).Path
+..\backend\.venv\Scripts\python.exe -B -X utf8 -m scripts.owner_pdf_review
+..\backend\.venv\Scripts\python.exe -B -m pytest tests/unit/test_owner_plan_pdf.py tests/unit/test_owner_plan_pdf_p11.py tests/api/test_planning_inspection_exports_openapi.py tests/unit/test_fe_handoff.py tests/unit/test_application_contracts.py -q -p no:cacheprovider --tb=short
+```
+
+`runtime/p11-pdf/owner-plan-synthetic.pdf`, `preview-*.png`, `before.pdf`,
+`data-oracle.json` and `before-after.json` reproduce the comparison of both
+versions /2 and /3 on exactly the original P1 fixture (5 Products, 7 Ingredients,
+6 purchase lines). P1 PDF/oracle/ZIP stay unchanged in runtime/p1-pdf; the script
+reads the old oracle when available and proves frozen /2 matches original bytes.
+Without private runtime inputs a clean checkout uses the same committed synthetic
+fixture. Before/after in P1.1 is not the old /1 comparison77→4 or original169-page Run.
+The supplied original PDF is a read-only reference, not the source of this fixture.
+Inspect every PNG: Vietnamese glyphs, table
+edges/headers, page breaks, reading order, footer and readable type. Check the
+separate fractional-risk and long-name/many-line previews too; extraction alone
+cannot establish visual correctness. Policy and name capture gaps are owned by
+[Planning §15.4](../PROCUREMENT_API_CONTRACT_VI.md#154-pdf--n10n11-thêm-không-thay-planning-state).
+
+Persistence acceptance owns a separate Compose project `shelfcash-p1-pdf`, named
+volume, PostgreSQL17 loopback5444, `shelfcash_integration_test` / limited
+`shelfcash_integration_tester`; never copy demo/summary/other-worktree targets.
+Private credentials/Compose stay in `runtime/p1-pdf/private`, outside the ZIP.
+Before using test fixtures (which reset their own DB), verify URL host/port/name/
+role and effective database/user/privileges. Then run supported `scripts.dev status
+--test-database --allow-unmigrated` and the export group sequentially:
+
+```powershell
+# Only after verifying that this private file points to the dedicated target:
+$env:TEST_DATABASE_URL=Get-Content -Raw runtime/p1-pdf/private/test-url.txt
+$env:DATABASE_URL=$env:TEST_DATABASE_URL
+$env:ENVIRONMENT='test'
+..\backend\.venv\Scripts\python.exe -B -m scripts.dev status --test-database --allow-unmigrated
+..\backend\.venv\Scripts\python.exe -B -m pytest tests/integration/test_planning_exports.py tests/integration/test_planning_export_durability.py -q -p no:cacheprovider --tb=short --show-capture=no
+```
+
+Tests assert fresh-session durable records as well as public HTTP: new /3 versus
+old /1,/2 intent/retry/bytes, same-key immutable replay, no GET/discovery render,
+reference/zero-purchase, unknown-fee/no-option/failed rejection, revocation at
+materialization/publication/download, Store isolation, lost ACK, atomic artifact,
+worker races, process death and stale writer. No provider/email call. Existing
+C03/PDF deep retained validation may replay deterministic business checks (known
+technical debt documented in Architecture); P1 does not change this pipeline.
+
+Local P1/P1.1 checkpoint is authorized after focused verification and explicit
+PDF-only staging; owner review remains pending. No push/main merge/deploy, engine/FE/
+capture/summary changes or automatic next slice. All runtime PDFs/previews/ZIP/private
+configuration remain ignored, never staged. Review ZIP is a source/evidence copy,
+not a DB backup or a deployable release. Old completed artifacts always download
+original bytes; keys do not upgrade version. Rollback must retain /1,/2,/3 receipt
+read/dispatch support for issued intents. Controlled retry uses pinned template.
+
+Approved source9a80f970 is integrated locally preserving history. Summary code,
+permissions/config/receipts/historical dispatch/default flags remain as at the main
+base; no uncommitted Summary S3 or Import source is included. Summary is not called
+or embedded by PDF. Shared documents/OpenAPI preserve existing Summary schemas and
+the original FE73 baseline provenance.
+
+PDF integration acceptance uses its own Compose project `shelfcash-pdf-integration`,
+named volume `shelfcash-pdf-integration_pgdata`, PostgreSQL17 at loopback5447,
+`shelfcash_integration_test` / `shelfcash_integration_tester` (not superuser/createdb/
+createrole). Private configuration is in ignored `runtime/pdf-integration/private`.
+Do not reuse PDF5444, Summary5443/5445/5446, other-session, customer or demo DBs.
+Assert exact URL/effective database/role before the supported fixtures reset only
+this test target. Source flags remain OFF; explicit test workers/fake providers
+are offline regressions, not live activation.
+
+```powershell
+# In backend-integrate-owner-plan-pdf, after verifying the dedicated5447 identity:
+$env:PYTHONPATH=(Get-Location).Path
+$env:TEST_DATABASE_URL=Get-Content -Raw runtime/pdf-integration/private/test-url.txt
+$env:DATABASE_URL=$env:TEST_DATABASE_URL
+$env:ENVIRONMENT='test'
+..\backend\.venv\Scripts\python.exe -B -m scripts.dev status --test-database --allow-unmigrated
+..\backend\.venv\Scripts\python.exe -B -m pytest tests/unit/test_owner_plan_pdf.py tests/unit/test_owner_plan_pdf_p11.py tests/unit/test_plan_summary.py tests/unit/test_assistant_integration.py tests/api/test_plan_summary_openapi.py tests/api/test_planning_inspection_exports_openapi.py tests/unit/test_fe_handoff.py tests/unit/test_application_contracts.py -q -p no:cacheprovider --tb=short --show-capture=no
+..\backend\.venv\Scripts\python.exe -B -m pytest tests/integration/test_planning_exports.py tests/integration/test_planning_export_durability.py tests/integration/test_planning_discovery_c4.py::test_export_discovery_retained_locators_and_artifact_states tests/integration/test_assistant_summary.py -q -p no:cacheprovider --tb=short --show-capture=no
+..\backend\.venv\Scripts\python.exe -B -X utf8 -m scripts.owner_pdf_review
+```
+
+The combined-source primary PDF is runtime/p11-pdf/owner-plan-synthetic.pdf in this
+integration checkout. Inspect all4 primary PNGs, font/rows/headers/footer and all-page
+bounds; this is a synthetic fixture, not browser E2E or rerender of the original Run.
+N10 caller/body is unchanged; FE receipt/discovery readers must accept /3. Old PDFs
+remain original bytes. A deliberately new export intent is needed for new content;
+uncertain request results always retry the same key/body. Never downgrade to a
+binary that cannot read /3. Push and runtime rollout remain separately authorized
+steps: runtime source/DB/config/flags must be checked independently of Git main.
+No runtime restart/migration or new ZIP is part of local integration.
+
+
 <a id="recovery-handoff"></a>
 ## CURRENT FACT — recovery + Assistant handoff integration
 

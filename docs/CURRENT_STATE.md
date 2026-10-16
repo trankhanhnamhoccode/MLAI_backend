@@ -1,5 +1,25 @@
 # Current state
 
+## CURRENT FACT — P1/P1.1 owner-friendly Planning PDF
+
+New N10 intents pin `planning-pdf/3`: prominent period/cost/budget/winner and
+retained BASE assessments; Store-local dates, temporal-basis-specific inventory
+wording, grouped proof and unmet-demand paths without a new aggregate ratio.
+All purchase/service rows remain, exact display rounding leaves facts unchanged.
+Product/Ingredient names use retained labels; Store/Supplier names remain absent
+and use distinct suffixes. No accepted global cup→ly label, so canonical units stay.
+Old /1 and /2 receipts/jobs/retry/download retain frozen renderers and immutable
+bytes. P1 PDF/ZIP evidence is preserved; P1.1 writes only runtime/p11-pdf.
+Only ExportAccepted.render_version accepts /1,/2,/3 (new default /3); unchanged
+76 operations/69 paths, no migration/engine/capture/provider/FE change. Implemented
+from approved PDF commit9a80f970ed2770b9d44ac662c08cdb63b4b50806 in the local
+main integration. Owner PDF review is approved; browser/runtime deployment is not.
+Summary implementation/config/receipts/versions and default flags stay as at the
+integration base; separately uncommitted Summary S3 is not part of this merge.
+Summary text is not automatically inserted into PDF.
+Policy/limits belong to [Planning §15.4](PROCUREMENT_API_CONTRACT_VI.md#154-pdf--n10n11-thêm-không-thay-planning-state),
+reproduction to [runbook](runbooks/FULL_TEST_FLOW.md#owner-pdf-p1).
+
 ## CURRENT FACT - Decision Assistant L5 combined source
 
 Assistant checkpoint L4.1 `1f9b5c5` after L4 `46d15459` is integrated with local main

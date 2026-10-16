@@ -33,6 +33,8 @@ def assistant(env):
         ('shelfcash_integration_test', 'shelfcash_integration_tester', '127.0.0.1', 5441),
         # Separate recovery/handoff integration instance; never reuse sibling L5 DB.
         ('shelfcash_integration_test', 'shelfcash_integration_tester', '127.0.0.1', 5442),
+        # Dedicated PDF integration instance; no Summary/L5/demo DB reuse.
+        ('shelfcash_integration_test', 'shelfcash_integration_tester', '127.0.0.1', 5447),
     }, 'Only the owned Assistant or L5 disposable target'
     owner=setup(env)
     record=retained_record(actor_id=owner.user_id)

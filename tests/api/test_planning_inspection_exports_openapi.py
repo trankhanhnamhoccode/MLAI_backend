@@ -19,6 +19,8 @@ def test_exact_s410_surfaces_and_conditional_result_digest():
     assert set(schemas['ExportRequest']['required'])=={'format','option_id','locale'}
     assert schemas['ExportRequest']['additionalProperties'] is False
     assert schemas['ExportAccepted']['properties']['result_digest']['type']=='string'
+    assert schemas['ExportAccepted']['properties']['render_version']['enum']==['planning-pdf/1','planning-pdf/2','planning-pdf/3']
+    assert schemas['ExportAccepted']['properties']['render_version']['default']=='planning-pdf/3'
     assert 'planning_pdf_export' in schemas['JobView']['properties']['operation']['enum']
     assert 'rendering' in schemas['JobView']['properties']['stage']['enum']
     result=schemas['JobView']['properties']['result']['anyOf'][0]

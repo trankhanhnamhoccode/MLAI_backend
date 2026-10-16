@@ -21067,9 +21067,13 @@
           },
           "render_version": {
             "type": "string",
-            "const": "planning-pdf/1",
+            "enum": [
+              "planning-pdf/1",
+              "planning-pdf/2",
+              "planning-pdf/3"
+            ],
             "title": "Render Version",
-            "default": "planning-pdf/1"
+            "default": "planning-pdf/3"
           }
         },
         "additionalProperties": false,
