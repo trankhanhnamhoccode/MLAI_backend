@@ -19,5 +19,21 @@ validated test target. Fixtures are synthetic, not customer data.
   generated PDF exports belong in private ignored runtime.
 
 Historical schema-only fixtures do not prove later application/HTTP behavior.
+`decision_assistant/*.json` are interned static synthetic stock/purchase/infeasible
+pipeline + resolved setup graphs from existing runtime/s363_review/results inputs.
+Each file records original input SHA-256; `$node` references deduplicate identical
+JSON objects and are expanded by tests/assistant_cases.py, never application code.
+No solver was invoked to create these fixtures. Hand-assembled PlanningRun/public
+audit wrappers are explicitly synthetic read-contract fixtures, not user runs or
+new accuracy/Planning evidence. They preserve old /2 semantics and original numbers;
+the legacy ZIP is not a runtime dependency.
 Integration seed tools create deterministic examples through approved commands;
 they never imply a production seed or permission to reseed an existing DB.
+
+The `decision_assistant/conversational_realistic.json` fixture is a static interned
+PlanningRun: two captured milk labels, fixed1/1 versus2/2 pack baskets,5/10VND and
+50/100 percent service. A one-time exact evaluator authored fixed baskets without
+search/solver/forecast; consumption only decodes/consistency-checks the graph.
+`l31_wording_corpus.json` has hand-authored expected facts/main-answer labels;
+saved-live wording forms are development regression, not unseen evidence. Probe
+false rejections are reported without changing their valid labels.

@@ -115,6 +115,18 @@ with required import rights, reason and acknowledgment, without separate Owner
 approval. This changes batch review and invalidates preview/confirmation; it does
 not activate/update an approved reusable profile or release upload quota.
 C04/C05/C08/N9 require planning.result.read, budget.read and procurement.cost.read;
+CURRENT FACT assistant AS01/AS02/AS03 reuse those same three rights, current session/
+Store checks before materialization and on read/replay/publication. Missing one
+denies the whole summary, including cached/durable results; no new grant/catalogue
+key. Optional summary/chat providers never receive unauthorized retained facts.
+AS03 checks Origin/CSRF and reauthorizes before projection/acceptance, immediately
+before completion after preflight, at publication/delivery and on immutable replay.
+L3.1 repeats that same authority fence before the optional second semantic
+completion; repair feedback contains only previously authorized selected facts
+and safe failure codes. Client conversation context/candidate IDs are scoped
+identity hints, never grants or a source of business facts.
+Revocation during provider work discards final output; permission failures are not
+converted into successful fallback. No extra grant or membership inference.
 N10/J01 PDF/N11 also require planning.export, checked against current authority.
 One-time approval proposals stay unimplemented; no permission expansion here.
 

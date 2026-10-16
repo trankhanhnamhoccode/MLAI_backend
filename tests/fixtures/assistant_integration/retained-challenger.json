@@ -1,0 +1,4268 @@
+{
+  "provenance": {
+    "kind": "SAVED_SYNTHETIC_F4_INPUT_OUTPUT_NO_NEW_INFERENCE",
+    "source": "..\\backend-forecast-engine-challenger\\runtime\\challenger\\f4\\acceptance\\native-trace.json",
+    "source_sha256": "430e09fc7337b70b5c866e915248015eb113df4aa90b110842b82b22046c51b6",
+    "original_fields": [
+      "input",
+      "output",
+      "public_result.forecast",
+      "acceptance_pin"
+    ],
+    "not_new_L5_native_acceptance": true
+  },
+  "input": {
+    "schema_version": 1,
+    "adapter_version": "forecast_challenger/1",
+    "arm": "C_engine_native_reconstruction_v1",
+    "reconstruction_policy": "engine_native_reconstruction_v1",
+    "quantity_basis": "canonical_observed_sales",
+    "weather_policy": "exclude_all_weather_features",
+    "mode": "challenger",
+    "request": {
+      "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+      "product_ids": [
+        "3460b9ff-41eb-4042-9bbf-72542ac0f1c0"
+      ],
+      "cutoff_date": "2026-10-15",
+      "history_start_date": "2026-08-17"
+    },
+    "timezone": "Asia/Ho_Chi_Minh",
+    "inference_at": "2026-10-15T20:34:41.829007Z",
+    "products": [
+      {
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "selling_unit": "cup"
+      }
+    ],
+    "observations": [
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-17",
+        "quantity": "0",
+        "selling_unit": "cup",
+        "is_stockout": true,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-18",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-19",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": null,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-20",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-21",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-22",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-23",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-24",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-25",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-26",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-27",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-28",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-29",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-30",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-08-31",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-01",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-02",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-03",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-04",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-05",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-06",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-07",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-08",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-09",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-10",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-11",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-12",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-13",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-14",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-15",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-16",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-17",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-18",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-19",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-20",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-21",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-22",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-23",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-24",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-25",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-26",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-27",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-28",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-29",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-09-30",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-01",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-02",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-03",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-04",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-05",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-06",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-07",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-08",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-09",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-10",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-11",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-12",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-13",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-14",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "sales_date": "2026-10-15",
+        "quantity": "10",
+        "selling_unit": "cup",
+        "is_stockout": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+      }
+    ],
+    "forecast_dates": [
+      "2026-10-16",
+      "2026-10-17",
+      "2026-10-18",
+      "2026-10-19",
+      "2026-10-20",
+      "2026-10-21",
+      "2026-10-22"
+    ],
+    "calendar": [
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-17",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-18",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-19",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-20",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-21",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-22",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-23",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-24",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-25",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-26",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-27",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-28",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-29",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-30",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-08-31",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-01",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-02",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-03",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-04",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-05",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-06",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-07",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-08",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-09",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-10",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-11",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-12",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-13",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-14",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-15",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-16",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-17",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-18",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-19",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-20",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-21",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-22",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-23",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-24",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-25",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-26",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-27",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-28",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-29",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-09-30",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-01",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-02",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-03",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-04",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-05",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-06",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-07",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-08",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-09",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-10",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-11",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-12",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-13",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-14",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-15",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-16",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-17",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-18",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-19",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-20",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-21",
+        "closed": false,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      },
+      {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "day": "2026-10-22",
+        "closed": true,
+        "holiday": false,
+        "available_at": "2026-10-15T20:34:40.829007Z",
+        "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+      }
+    ],
+    "artifact_identity": "31db7cc6fa7ed0d84dcb45bb77c137e55664b58aaf456c71eb368b9f9174c685"
+  },
+  "output": {
+    "cqr": [
+      {
+        "lower": "7.0",
+        "upper": "15.0",
+        "source": "global",
+        "semantics": "cqr-order-statistic-v2",
+        "correction": "2.0",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "forecast_date": "2026-10-16",
+        "nominal_coverage": "0.5",
+        "calibrator_digest": "8ab0a2ed478af2aeee4742e2751e062fad4f0a9836970c08899c6cdf9015ec40",
+        "point_corrector_digest": "377e32f31627acf65ba55c7212af650862d575273a1bf8831815c32c68c2bebe"
+      },
+      {
+        "lower": "7.0",
+        "upper": "15.0",
+        "source": "global",
+        "semantics": "cqr-order-statistic-v2",
+        "correction": "2.0",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "forecast_date": "2026-10-17",
+        "nominal_coverage": "0.5",
+        "calibrator_digest": "8ab0a2ed478af2aeee4742e2751e062fad4f0a9836970c08899c6cdf9015ec40",
+        "point_corrector_digest": "377e32f31627acf65ba55c7212af650862d575273a1bf8831815c32c68c2bebe"
+      },
+      {
+        "lower": "7.0",
+        "upper": "15.0",
+        "source": "global",
+        "semantics": "cqr-order-statistic-v2",
+        "correction": "2.0",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "forecast_date": "2026-10-18",
+        "nominal_coverage": "0.5",
+        "calibrator_digest": "8ab0a2ed478af2aeee4742e2751e062fad4f0a9836970c08899c6cdf9015ec40",
+        "point_corrector_digest": "377e32f31627acf65ba55c7212af650862d575273a1bf8831815c32c68c2bebe"
+      },
+      {
+        "lower": "7.0",
+        "upper": "15.0",
+        "source": "global",
+        "semantics": "cqr-order-statistic-v2",
+        "correction": "2.0",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "forecast_date": "2026-10-19",
+        "nominal_coverage": "0.5",
+        "calibrator_digest": "8ab0a2ed478af2aeee4742e2751e062fad4f0a9836970c08899c6cdf9015ec40",
+        "point_corrector_digest": "377e32f31627acf65ba55c7212af650862d575273a1bf8831815c32c68c2bebe"
+      },
+      {
+        "lower": "7.0",
+        "upper": "15.0",
+        "source": "global",
+        "semantics": "cqr-order-statistic-v2",
+        "correction": "2.0",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "forecast_date": "2026-10-20",
+        "nominal_coverage": "0.5",
+        "calibrator_digest": "8ab0a2ed478af2aeee4742e2751e062fad4f0a9836970c08899c6cdf9015ec40",
+        "point_corrector_digest": "377e32f31627acf65ba55c7212af650862d575273a1bf8831815c32c68c2bebe"
+      },
+      {
+        "lower": "7.0",
+        "upper": "15.0",
+        "source": "global",
+        "semantics": "cqr-order-statistic-v2",
+        "correction": "2.0",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "forecast_date": "2026-10-21",
+        "nominal_coverage": "0.5",
+        "calibrator_digest": "8ab0a2ed478af2aeee4742e2751e062fad4f0a9836970c08899c6cdf9015ec40",
+        "point_corrector_digest": "377e32f31627acf65ba55c7212af650862d575273a1bf8831815c32c68c2bebe"
+      },
+      {
+        "lower": "0.0",
+        "upper": "0.0",
+        "source": "global",
+        "semantics": "cqr-order-statistic-v2",
+        "correction": "2.0",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "forecast_date": "2026-10-22",
+        "nominal_coverage": "0.5",
+        "calibrator_digest": "8ab0a2ed478af2aeee4742e2751e062fad4f0a9836970c08899c6cdf9015ec40",
+        "point_corrector_digest": "377e32f31627acf65ba55c7212af650862d575273a1bf8831815c32c68c2bebe"
+      }
+    ],
+    "runtime": {
+      "python": "3.11.9",
+      "machine": "AMD64",
+      "platform": "Windows",
+      "dependencies": [
+        {
+          "name": "annotated-types",
+          "version": "0.8.0"
+        },
+        {
+          "name": "lightgbm",
+          "version": "4.6.0"
+        },
+        {
+          "name": "numpy",
+          "version": "2.2.6"
+        },
+        {
+          "name": "pandas",
+          "version": "2.2.3"
+        },
+        {
+          "name": "pydantic",
+          "version": "2.13.5"
+        },
+        {
+          "name": "pydantic-core",
+          "version": "2.46.5"
+        },
+        {
+          "name": "python-dateutil",
+          "version": "2.9.0.post0"
+        },
+        {
+          "name": "pytz",
+          "version": "2026.5"
+        },
+        {
+          "name": "scipy",
+          "version": "1.17.1"
+        },
+        {
+          "name": "six",
+          "version": "1.17.0"
+        },
+        {
+          "name": "typing-extensions",
+          "version": "4.16.0"
+        },
+        {
+          "name": "typing-inspection",
+          "version": "0.4.4"
+        },
+        {
+          "name": "tzdata",
+          "version": "2026.5"
+        }
+      ],
+      "engine_commit": "62b94fa4d67cb04141d32be4e57d6f9740c2a8fc",
+      "adapter_code_digest": "b7cc1b2c62bd63562dd1fdec88941a0542f93a17fc8150d2a460d0513a57a0e9",
+      "engine_source_digest": "99ef7c2631f3bb349c303b311718fb0bd81471469715928fb99c9e28de28aca4"
+    },
+    "artifact": {
+      "arm": "C_engine_native_reconstruction_v1",
+      "files": [
+        {
+          "name": "artifact_checksums.json",
+          "digest": "12c17bb56e03590cc30f4c9d353decc0ecbc08974e3c19b6d4fe0158dc7c5070"
+        },
+        {
+          "name": "calibrator.json",
+          "digest": "8ab0a2ed478af2aeee4742e2751e062fad4f0a9836970c08899c6cdf9015ec40"
+        },
+        {
+          "name": "category_mappings.json",
+          "digest": "411c46ed5177d1a86215bc766809a857a9d03a1d4fa5945f8036911e6f74c09d"
+        },
+        {
+          "name": "feature_schema.json",
+          "digest": "f99252fd3636495b1dd7e37b73efbd554e01c320d83bfad600434f5f0d6e020e"
+        },
+        {
+          "name": "model_metadata.json",
+          "digest": "4069326f213fd7c48f5d9c39da56a652d68e5d97c43892cd8016b54966acf32e"
+        },
+        {
+          "name": "model_q25.txt",
+          "digest": "1c48523411f0726f0278012dedd8d9fde4be8c48436988489f521d2fb854e468"
+        },
+        {
+          "name": "model_q50.txt",
+          "digest": "4c559ea0635773ed514348ecd856c884f8892f3dc06eef442c8cc365b87e8e88"
+        },
+        {
+          "name": "model_q75.txt",
+          "digest": "76278efef5265d116b8d66e1792ea79f68985b4ab4001ebaee2b5758211748e5"
+        },
+        {
+          "name": "point_corrector.json",
+          "digest": "377e32f31627acf65ba55c7212af650862d575273a1bf8831815c32c68c2bebe"
+        },
+        {
+          "name": "preprocessing_config.json",
+          "digest": "2a14cb9b20d0035f84001619f42e21d4b6bf39b77441181be9dfbb88d6dfa00c"
+        },
+        {
+          "name": "training_manifest.json",
+          "digest": "5db8c1edeacbda267ba80f6aa241100617b4127c97cf8f1e90236f3532a7ce3d"
+        }
+      ],
+      "purpose": "synthetic_correctness",
+      "runtime": {
+        "python": "3.11.9",
+        "machine": "AMD64",
+        "platform": "Windows",
+        "dependencies": [
+          {
+            "name": "annotated-types",
+            "version": "0.8.0"
+          },
+          {
+            "name": "lightgbm",
+            "version": "4.6.0"
+          },
+          {
+            "name": "numpy",
+            "version": "2.2.6"
+          },
+          {
+            "name": "pandas",
+            "version": "2.2.3"
+          },
+          {
+            "name": "pydantic",
+            "version": "2.13.5"
+          },
+          {
+            "name": "pydantic-core",
+            "version": "2.46.5"
+          },
+          {
+            "name": "python-dateutil",
+            "version": "2.9.0.post0"
+          },
+          {
+            "name": "pytz",
+            "version": "2026.5"
+          },
+          {
+            "name": "scipy",
+            "version": "1.17.1"
+          },
+          {
+            "name": "six",
+            "version": "1.17.0"
+          },
+          {
+            "name": "typing-extensions",
+            "version": "4.16.0"
+          },
+          {
+            "name": "typing-inspection",
+            "version": "0.4.4"
+          },
+          {
+            "name": "tzdata",
+            "version": "2026.5"
+          }
+        ],
+        "engine_commit": "62b94fa4d67cb04141d32be4e57d6f9740c2a8fc",
+        "adapter_code_digest": "b7cc1b2c62bd63562dd1fdec88941a0542f93a17fc8150d2a460d0513a57a0e9",
+        "engine_source_digest": "99ef7c2631f3bb349c303b311718fb0bd81471469715928fb99c9e28de28aca4"
+      },
+      "products": [
+        {
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "selling_unit": "cup"
+        }
+      ],
+      "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "training": {
+        "end": "2026-07-28",
+        "start": "2026-07-15",
+        "labels_available_at": "2026-10-14T13:48:27.688324Z"
+      },
+      "fitted_at": "2026-10-14T13:48:28.688324Z",
+      "point_fit": {
+        "end": "2026-08-11",
+        "start": "2026-07-29",
+        "labels_available_at": "2026-10-14T13:48:27.688324Z"
+      },
+      "model_type": "forecast_engine_challenger",
+      "calibration": {
+        "end": "2026-08-13",
+        "start": "2026-08-12",
+        "labels_available_at": "2026-10-14T13:48:27.688324Z"
+      },
+      "available_at": "2026-10-15T20:34:40.829007Z",
+      "published_at": "2026-10-15T20:34:40.829007Z",
+      "config_digest": "2a14cb9b20d0035f84001619f42e21d4b6bf39b77441181be9dfbb88d6dfa00c",
+      "model_version": "f4-test-rebound-constant/1",
+      "feature_digest": "f99252fd3636495b1dd7e37b73efbd554e01c320d83bfad600434f5f0d6e020e",
+      "holdout_status": "SYNTHETIC_ONLY",
+      "schema_version": 1,
+      "promotion_status": "trained_candidate",
+      "publication_basis": "local_snapshot_admission",
+      "postprocess_digest": "a6e09d884517d553677914a0051b7edb08043311cbffcb4a344902d3fabe3026",
+      "reconstruction_policy": "engine_native_reconstruction_v1",
+      "production_available_at": null
+    },
+    "forecast": {
+      "warnings": [],
+      "model_type": "forecast_engine_challenger",
+      "predictions": [
+        {
+          "p25": "9.0",
+          "p50": "11.0",
+          "p75": "13.0",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "forecast_date": "2026-10-16"
+        },
+        {
+          "p25": "9.0",
+          "p50": "11.0",
+          "p75": "13.0",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "forecast_date": "2026-10-17"
+        },
+        {
+          "p25": "9.0",
+          "p50": "11.0",
+          "p75": "13.0",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "forecast_date": "2026-10-18"
+        },
+        {
+          "p25": "9.0",
+          "p50": "11.0",
+          "p75": "13.0",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "forecast_date": "2026-10-19"
+        },
+        {
+          "p25": "9.0",
+          "p50": "11.0",
+          "p75": "13.0",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "forecast_date": "2026-10-20"
+        },
+        {
+          "p25": "9.0",
+          "p50": "11.0",
+          "p75": "13.0",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "forecast_date": "2026-10-21"
+        },
+        {
+          "p25": "0.0",
+          "p50": "0.0",
+          "p75": "0.0",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "forecast_date": "2026-10-22"
+        }
+      ],
+      "model_version": "f4-test-rebound-constant/1",
+      "artifact_identity": "31db7cc6fa7ed0d84dcb45bb77c137e55664b58aaf456c71eb368b9f9174c685"
+    },
+    "warnings": [
+      "CENSORED_UNSUPPORTED_EXCLUDED",
+      "CHALLENGER_NOT_PROMOTED",
+      "EXECUTION_MODE_BACKTEST_REPLAY",
+      "UNKNOWN_STOCKOUT_OBSERVED_COMPATIBILITY",
+      "WEATHER_EXCLUDED_BY_ARM_POLICY"
+    ],
+    "float_policy": "decimal_str_float/1",
+    "input_digest": "e1bc6acfa4ca0a6bf5cb5c1e19f87631fc8bdd38dc63eab53f25e7a858bae78b",
+    "reconstruction": [
+      {
+        "day": "2026-08-17",
+        "method": "insufficient_history",
+        "applied": false,
+        "stockout": true,
+        "confidence": "low",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "0.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": null,
+        "observed_sales": "0.0",
+        "train_eligible": false,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [
+          "RECONSTRUCTION_INSUFFICIENT_SUPPORT"
+        ],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-18",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-19",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": null,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-20",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-21",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-22",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-23",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-24",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-25",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-26",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-27",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-28",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-29",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-30",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-08-31",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-01",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-02",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-03",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-04",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-05",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-06",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-07",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-08",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-09",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-10",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-11",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-12",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-13",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-14",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-15",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-16",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-17",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-18",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-19",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-20",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-21",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-22",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-23",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-24",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-25",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-26",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-27",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-28",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-29",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-09-30",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-01",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-02",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-03",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-04",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-05",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-06",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-07",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-08",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-09",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-10",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-11",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-12",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-13",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-14",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      },
+      {
+        "day": "2026-10-15",
+        "method": "not_censored",
+        "applied": false,
+        "stockout": false,
+        "confidence": "not_applicable",
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "demand_proxy": "10.0",
+        "relative_iqr": null,
+        "row_observed": true,
+        "feature_demand": "10.0",
+        "observed_sales": "10.0",
+        "train_eligible": true,
+        "reference_count": 0,
+        "latest_reference": null,
+        "rejection_reasons": [],
+        "reference_recency_days": null
+      }
+    ],
+    "schema_version": 1,
+    "native_predictions": [
+      {
+        "method": "FIXED_LIGHTGBM_POINT_CQR",
+        "repaired": [
+          "8.0",
+          "10.0",
+          "12.0"
+        ],
+        "warnings": [
+          "CALIBRATION_FALLBACK_GLOBAL"
+        ],
+        "model_raw": [
+          "2.0",
+          "0.0",
+          "-2.0"
+        ],
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "point_offset": "1.0",
+        "quantity_raw": [
+          "12.0",
+          "10.0",
+          "8.0"
+        ],
+        "raw_crossing": true,
+        "forecast_date": "2026-10-16",
+        "anchor_warning": "",
+        "planned_closed": false,
+        "anchor_fallback": false,
+        "seasonal_anchor": "10.0",
+        "target_strategy": "seasonal_residual_signed",
+        "anchor_reference_date": "2026-10-09"
+      },
+      {
+        "method": "FIXED_LIGHTGBM_POINT_CQR",
+        "repaired": [
+          "8.0",
+          "10.0",
+          "12.0"
+        ],
+        "warnings": [
+          "CALIBRATION_FALLBACK_GLOBAL"
+        ],
+        "model_raw": [
+          "2.0",
+          "0.0",
+          "-2.0"
+        ],
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "point_offset": "1.0",
+        "quantity_raw": [
+          "12.0",
+          "10.0",
+          "8.0"
+        ],
+        "raw_crossing": true,
+        "forecast_date": "2026-10-17",
+        "anchor_warning": "",
+        "planned_closed": false,
+        "anchor_fallback": false,
+        "seasonal_anchor": "10.0",
+        "target_strategy": "seasonal_residual_signed",
+        "anchor_reference_date": "2026-10-10"
+      },
+      {
+        "method": "FIXED_LIGHTGBM_POINT_CQR",
+        "repaired": [
+          "8.0",
+          "10.0",
+          "12.0"
+        ],
+        "warnings": [
+          "CALIBRATION_FALLBACK_GLOBAL"
+        ],
+        "model_raw": [
+          "2.0",
+          "0.0",
+          "-2.0"
+        ],
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "point_offset": "1.0",
+        "quantity_raw": [
+          "12.0",
+          "10.0",
+          "8.0"
+        ],
+        "raw_crossing": true,
+        "forecast_date": "2026-10-18",
+        "anchor_warning": "",
+        "planned_closed": false,
+        "anchor_fallback": false,
+        "seasonal_anchor": "10.0",
+        "target_strategy": "seasonal_residual_signed",
+        "anchor_reference_date": "2026-10-11"
+      },
+      {
+        "method": "FIXED_LIGHTGBM_POINT_CQR",
+        "repaired": [
+          "8.0",
+          "10.0",
+          "12.0"
+        ],
+        "warnings": [
+          "CALIBRATION_FALLBACK_GLOBAL"
+        ],
+        "model_raw": [
+          "2.0",
+          "0.0",
+          "-2.0"
+        ],
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "point_offset": "1.0",
+        "quantity_raw": [
+          "12.0",
+          "10.0",
+          "8.0"
+        ],
+        "raw_crossing": true,
+        "forecast_date": "2026-10-19",
+        "anchor_warning": "",
+        "planned_closed": false,
+        "anchor_fallback": false,
+        "seasonal_anchor": "10.0",
+        "target_strategy": "seasonal_residual_signed",
+        "anchor_reference_date": "2026-10-12"
+      },
+      {
+        "method": "FIXED_LIGHTGBM_POINT_CQR",
+        "repaired": [
+          "8.0",
+          "10.0",
+          "12.0"
+        ],
+        "warnings": [
+          "CALIBRATION_FALLBACK_GLOBAL"
+        ],
+        "model_raw": [
+          "2.0",
+          "0.0",
+          "-2.0"
+        ],
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "point_offset": "1.0",
+        "quantity_raw": [
+          "12.0",
+          "10.0",
+          "8.0"
+        ],
+        "raw_crossing": true,
+        "forecast_date": "2026-10-20",
+        "anchor_warning": "",
+        "planned_closed": false,
+        "anchor_fallback": false,
+        "seasonal_anchor": "10.0",
+        "target_strategy": "seasonal_residual_signed",
+        "anchor_reference_date": "2026-10-13"
+      },
+      {
+        "method": "FIXED_LIGHTGBM_POINT_CQR",
+        "repaired": [
+          "8.0",
+          "10.0",
+          "12.0"
+        ],
+        "warnings": [
+          "CALIBRATION_FALLBACK_GLOBAL"
+        ],
+        "model_raw": [
+          "2.0",
+          "0.0",
+          "-2.0"
+        ],
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "point_offset": "1.0",
+        "quantity_raw": [
+          "12.0",
+          "10.0",
+          "8.0"
+        ],
+        "raw_crossing": true,
+        "forecast_date": "2026-10-21",
+        "anchor_warning": "",
+        "planned_closed": false,
+        "anchor_fallback": false,
+        "seasonal_anchor": "10.0",
+        "target_strategy": "seasonal_residual_signed",
+        "anchor_reference_date": "2026-10-14"
+      },
+      {
+        "method": "FIXED_LIGHTGBM_POINT_CQR",
+        "repaired": [
+          "8.0",
+          "10.0",
+          "12.0"
+        ],
+        "warnings": [
+          "CALIBRATION_FALLBACK_GLOBAL",
+          "STORE_PLANNED_CLOSED"
+        ],
+        "model_raw": [
+          "2.0",
+          "0.0",
+          "-2.0"
+        ],
+        "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+        "point_offset": "1.0",
+        "quantity_raw": [
+          "12.0",
+          "10.0",
+          "8.0"
+        ],
+        "raw_crossing": true,
+        "forecast_date": "2026-10-22",
+        "anchor_warning": "",
+        "planned_closed": true,
+        "anchor_fallback": false,
+        "seasonal_anchor": "10.0",
+        "target_strategy": "seasonal_residual_signed",
+        "anchor_reference_date": "2026-10-15"
+      }
+    ]
+  },
+  "forecast_view": {
+    "forecast_run_id": "4969b8af-723e-4896-9903-763c62bc009b",
+    "input_digest": "916c34b0fc4a1486486dc55d6359ee6ab0ba65b45e9a9ec8e4c112622d9995a3",
+    "model_type": "forecast_engine_challenger",
+    "model_version": "f4-test-rebound-constant/1",
+    "artifact_identity": "31db7cc6fa7ed0d84dcb45bb77c137e55664b58aaf456c71eb368b9f9174c685",
+    "start_date": "2026-10-16",
+    "end_date": "2026-10-22",
+    "history_start_date": "2026-08-17",
+    "history_end_date": "2026-10-15",
+    "training_start_date": "2026-07-15",
+    "training_end_date": "2026-07-28",
+    "reused": false,
+    "quality_status": "not_evaluated",
+    "warnings": []
+  },
+  "acceptance_pin": {
+    "schema_version": "planning_challenger_test/1",
+    "variant": "C0_TEST_ONLY",
+    "closure_policy": "native_explicit_calendar_once/1",
+    "eligibility": "synthetic_test_only",
+    "input": {
+      "schema_version": 1,
+      "adapter_version": "forecast_challenger/1",
+      "arm": "C_engine_native_reconstruction_v1",
+      "reconstruction_policy": "engine_native_reconstruction_v1",
+      "quantity_basis": "canonical_observed_sales",
+      "weather_policy": "exclude_all_weather_features",
+      "mode": "challenger",
+      "request": {
+        "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+        "product_ids": [
+          "3460b9ff-41eb-4042-9bbf-72542ac0f1c0"
+        ],
+        "cutoff_date": "2026-10-15",
+        "history_start_date": "2026-08-17"
+      },
+      "timezone": "Asia/Ho_Chi_Minh",
+      "inference_at": "2026-10-15T20:34:41.829007Z",
+      "products": [
+        {
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "selling_unit": "cup"
+        }
+      ],
+      "observations": [
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-17",
+          "quantity": "0",
+          "selling_unit": "cup",
+          "is_stockout": true,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-18",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-19",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": null,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-20",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-21",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-22",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-23",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-24",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-25",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-26",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-27",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-28",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-29",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-30",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-08-31",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-01",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-02",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-03",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-04",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-05",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-06",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-07",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-08",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-09",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-10",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-11",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-12",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-13",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-14",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-15",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-16",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-17",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-18",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-19",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-20",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-21",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-22",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-23",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-24",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-25",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-26",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-27",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-28",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-29",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-09-30",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-01",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-02",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-03",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-04",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-05",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-06",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-07",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-08",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-09",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-10",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-11",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-12",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-13",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-14",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "sales_date": "2026-10-15",
+          "quantity": "1E+1",
+          "selling_unit": "cup",
+          "is_stockout": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_COMPLETE_SYNTHETIC_OBSERVATION_DECLARATION/1"
+        }
+      ],
+      "forecast_dates": [
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18",
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-22"
+      ],
+      "calendar": [
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-17",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-18",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-19",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-20",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-21",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-22",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-23",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-24",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-25",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-26",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-27",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-28",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-29",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-30",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-08-31",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-01",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-02",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-03",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-04",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-05",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-06",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-07",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-08",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-09",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-10",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-11",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-12",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-13",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-14",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-15",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-16",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-17",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-18",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-19",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-20",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-21",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-22",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-23",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-24",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-25",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-26",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-27",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-28",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-29",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-09-30",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-01",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-02",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-03",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-04",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-05",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-06",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-07",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-08",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-09",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-10",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-11",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-12",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-13",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-14",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-15",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-16",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-17",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-18",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-19",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-20",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-21",
+          "closed": false,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        },
+        {
+          "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+          "day": "2026-10-22",
+          "closed": true,
+          "holiday": false,
+          "available_at": "2026-10-15T20:34:40.829007Z",
+          "source": "F4_EXPLICIT_SYNTHETIC_CALENDAR/1"
+        }
+      ],
+      "artifact_identity": "31db7cc6fa7ed0d84dcb45bb77c137e55664b58aaf456c71eb368b9f9174c685"
+    },
+    "artifact": {
+      "schema_version": 1,
+      "model_type": "forecast_engine_challenger",
+      "model_version": "f4-test-rebound-constant/1",
+      "purpose": "synthetic_correctness",
+      "holdout_status": "SYNTHETIC_ONLY",
+      "promotion_status": "trained_candidate",
+      "production_available_at": null,
+      "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+      "products": [
+        {
+          "product_id": "3460b9ff-41eb-4042-9bbf-72542ac0f1c0",
+          "selling_unit": "cup"
+        }
+      ],
+      "timezone": "Asia/Ho_Chi_Minh",
+      "arm": "C_engine_native_reconstruction_v1",
+      "reconstruction_policy": "engine_native_reconstruction_v1",
+      "runtime": {
+        "engine_commit": "62b94fa4d67cb04141d32be4e57d6f9740c2a8fc",
+        "engine_source_digest": "99ef7c2631f3bb349c303b311718fb0bd81471469715928fb99c9e28de28aca4",
+        "adapter_code_digest": "b7cc1b2c62bd63562dd1fdec88941a0542f93a17fc8150d2a460d0513a57a0e9",
+        "python": "3.11.9",
+        "platform": "Windows",
+        "machine": "AMD64",
+        "dependencies": [
+          {
+            "name": "annotated-types",
+            "version": "0.8.0"
+          },
+          {
+            "name": "lightgbm",
+            "version": "4.6.0"
+          },
+          {
+            "name": "numpy",
+            "version": "2.2.6"
+          },
+          {
+            "name": "pandas",
+            "version": "2.2.3"
+          },
+          {
+            "name": "pydantic",
+            "version": "2.13.5"
+          },
+          {
+            "name": "pydantic-core",
+            "version": "2.46.5"
+          },
+          {
+            "name": "python-dateutil",
+            "version": "2.9.0.post0"
+          },
+          {
+            "name": "pytz",
+            "version": "2026.5"
+          },
+          {
+            "name": "scipy",
+            "version": "1.17.1"
+          },
+          {
+            "name": "six",
+            "version": "1.17.0"
+          },
+          {
+            "name": "typing-extensions",
+            "version": "4.16.0"
+          },
+          {
+            "name": "typing-inspection",
+            "version": "0.4.4"
+          },
+          {
+            "name": "tzdata",
+            "version": "2026.5"
+          }
+        ]
+      },
+      "training": {
+        "start": "2026-07-15",
+        "end": "2026-07-28",
+        "labels_available_at": "2026-10-14T13:48:27.688324Z"
+      },
+      "point_fit": {
+        "start": "2026-07-29",
+        "end": "2026-08-11",
+        "labels_available_at": "2026-10-14T13:48:27.688324Z"
+      },
+      "calibration": {
+        "start": "2026-08-12",
+        "end": "2026-08-13",
+        "labels_available_at": "2026-10-14T13:48:27.688324Z"
+      },
+      "fitted_at": "2026-10-14T13:48:28.688324Z",
+      "published_at": "2026-10-15T20:34:40.829007Z",
+      "available_at": "2026-10-15T20:34:40.829007Z",
+      "publication_basis": "local_snapshot_admission",
+      "config_digest": "2a14cb9b20d0035f84001619f42e21d4b6bf39b77441181be9dfbb88d6dfa00c",
+      "feature_digest": "f99252fd3636495b1dd7e37b73efbd554e01c320d83bfad600434f5f0d6e020e",
+      "postprocess_digest": "a6e09d884517d553677914a0051b7edb08043311cbffcb4a344902d3fabe3026",
+      "files": [
+        {
+          "name": "artifact_checksums.json",
+          "digest": "12c17bb56e03590cc30f4c9d353decc0ecbc08974e3c19b6d4fe0158dc7c5070"
+        },
+        {
+          "name": "calibrator.json",
+          "digest": "8ab0a2ed478af2aeee4742e2751e062fad4f0a9836970c08899c6cdf9015ec40"
+        },
+        {
+          "name": "category_mappings.json",
+          "digest": "411c46ed5177d1a86215bc766809a857a9d03a1d4fa5945f8036911e6f74c09d"
+        },
+        {
+          "name": "feature_schema.json",
+          "digest": "f99252fd3636495b1dd7e37b73efbd554e01c320d83bfad600434f5f0d6e020e"
+        },
+        {
+          "name": "model_metadata.json",
+          "digest": "4069326f213fd7c48f5d9c39da56a652d68e5d97c43892cd8016b54966acf32e"
+        },
+        {
+          "name": "model_q25.txt",
+          "digest": "1c48523411f0726f0278012dedd8d9fde4be8c48436988489f521d2fb854e468"
+        },
+        {
+          "name": "model_q50.txt",
+          "digest": "4c559ea0635773ed514348ecd856c884f8892f3dc06eef442c8cc365b87e8e88"
+        },
+        {
+          "name": "model_q75.txt",
+          "digest": "76278efef5265d116b8d66e1792ea79f68985b4ab4001ebaee2b5758211748e5"
+        },
+        {
+          "name": "point_corrector.json",
+          "digest": "377e32f31627acf65ba55c7212af650862d575273a1bf8831815c32c68c2bebe"
+        },
+        {
+          "name": "preprocessing_config.json",
+          "digest": "2a14cb9b20d0035f84001619f42e21d4b6bf39b77441181be9dfbb88d6dfa00c"
+        },
+        {
+          "name": "training_manifest.json",
+          "digest": "5db8c1edeacbda267ba80f6aa241100617b4127c97cf8f1e90236f3532a7ce3d"
+        }
+      ]
+    },
+    "runtime": {
+      "engine_commit": "62b94fa4d67cb04141d32be4e57d6f9740c2a8fc",
+      "engine_source_digest": "99ef7c2631f3bb349c303b311718fb0bd81471469715928fb99c9e28de28aca4",
+      "adapter_code_digest": "b7cc1b2c62bd63562dd1fdec88941a0542f93a17fc8150d2a460d0513a57a0e9",
+      "python": "3.11.9",
+      "platform": "Windows",
+      "machine": "AMD64",
+      "dependencies": [
+        {
+          "name": "annotated-types",
+          "version": "0.8.0"
+        },
+        {
+          "name": "lightgbm",
+          "version": "4.6.0"
+        },
+        {
+          "name": "numpy",
+          "version": "2.2.6"
+        },
+        {
+          "name": "pandas",
+          "version": "2.2.3"
+        },
+        {
+          "name": "pydantic",
+          "version": "2.13.5"
+        },
+        {
+          "name": "pydantic-core",
+          "version": "2.46.5"
+        },
+        {
+          "name": "python-dateutil",
+          "version": "2.9.0.post0"
+        },
+        {
+          "name": "pytz",
+          "version": "2026.5"
+        },
+        {
+          "name": "scipy",
+          "version": "1.17.1"
+        },
+        {
+          "name": "six",
+          "version": "1.17.0"
+        },
+        {
+          "name": "typing-extensions",
+          "version": "4.16.0"
+        },
+        {
+          "name": "typing-inspection",
+          "version": "0.4.4"
+        },
+        {
+          "name": "tzdata",
+          "version": "2026.5"
+        }
+      ]
+    },
+    "integration_code_digest": "6b6cabc1b2aabedb1e4dc08bf4a527650a9389766fcf7d5b33db0a2e2dc86adc"
+  }
+}

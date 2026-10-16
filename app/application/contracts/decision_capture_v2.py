@@ -2,7 +2,7 @@
 from datetime import date
 from typing import Literal
 from uuid import UUID
-from pydantic import AwareDatetime, Field, model_validator, model_serializer
+from pydantic import AwareDatetime, Field, model_validator, model_serializer, ValidationInfo
 from app.application.contracts.offer_admission import OfferAdmission
 from typing import Annotated
 from app.application.contracts.common import Contract, Nonblank, Name, Unit
@@ -164,7 +164,7 @@ class OperationalPipelineResultV2(Contract):
     decision_readiness: Literal['NOT_ASSESSED'] = 'NOT_ASSESSED'
 
     @model_validator(mode='after')
-    def reconcile(self):
+    def reconcile(self, info: ValidationInfo):
         from app.application.decision_pipeline_v2_validation import validate_pipeline_v2
-        validate_pipeline_v2(self)
+        validate_pipeline_v2(self, retained=bool(info.context and info.context.get('retained_consistency')))
         return self

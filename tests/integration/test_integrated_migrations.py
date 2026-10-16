@@ -14,7 +14,7 @@ from scripts.dev import migration_config
 
 IMPORT = '0021_import_support_history'
 AUTH = '0023_auth_permissions_v3'
-HEAD = '0027_self_service_stores'
+HEAD = 'l5_20261016_assistant_f4'
 KEYS = ('calendar.read', 'calendar.write', 'usage.history.read',
         'usage.history.write', 'purchase.history.read', 'purchase.history.write')
 
@@ -34,7 +34,7 @@ def test_demo_upgrade_0024_to_current_preserves_accounts_and_grants(database_set
         with engine.connect() as connection:
             assert all(list(connection.execute(text('SELECT * FROM '+table)))==rows for table,rows in before.items())
             assert compare_metadata(MigrationContext.configure(connection,opts={'compare_server_default':True}),Base.metadata)==[]
-        assert len(inspect(engine).get_table_names())==72
+        assert len(inspect(engine).get_table_names())==76
     finally:engine.dispose()
 
 
@@ -75,7 +75,7 @@ def test_upgrade_from_each_branch_head_preserves_v3_grants_and_schema_parity(dat
         with engine.connect() as connection:
             assert set(connection.scalars(text('SELECT permission FROM membership_grants WHERE membership_id=:mid'), {'mid': mid})) == set(KEYS)
             assert compare_metadata(MigrationContext.configure(connection, opts={'compare_server_default': True}), Base.metadata) == []
-        assert len(inspect(engine).get_table_names()) == 72
+        assert len(inspect(engine).get_table_names()) == 76
     finally:
         engine.dispose()
 

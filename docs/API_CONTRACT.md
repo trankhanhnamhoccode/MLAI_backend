@@ -2,6 +2,13 @@
 
 ## Authority and current surface
 
+CURRENT FACT L5 combined source:76 operations/69 paths; the only additions to main
+73/66 are AS01/AS02/AS03. Existing routes/component DTOs compare unchanged. The
+[Planning contract18](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant) owns Assistant
+meaning/workflows and [current handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md)
+links source OpenAPI/examples. Runtime8103 is not deployed or migrated by this merge.
+Earlier per-slice73/66 accounts below are historical surface checkpoints.
+
 CURRENT FACT self-service:73 operations/66 paths, additive T03 POST `/api/v1/stores`
 trên collection GET T01 hiện có. Body/response DTO ở OpenAPI; accepted workflow,
 account-scoped idempotency/Owner authority ở [Authorization](AUTHORIZATION_CONTRACT_VI.md#self-service-stores).

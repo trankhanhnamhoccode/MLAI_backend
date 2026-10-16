@@ -1,6 +1,6 @@
 """comparison/2 and selector/1. No persisted API resource or purchase mutation."""
 from typing import Literal
-from pydantic import model_validator
+from pydantic import model_validator, ValidationInfo
 from app.application.contracts.common import Contract, Strategy, Nonblank
 from app.application.contracts.procurement_v2 import ProcurementResultV2
 from app.application.contracts.procurement_comparison import ComparisonOption, OptionDelta, ComparisonDiagnostic, Token
@@ -41,7 +41,11 @@ class WinnerSelection(Contract):
     reason: Literal['WINNER_FOUND', 'NO_ELIGIBLE_CANDIDATE']
 
     @model_validator(mode='after')
-    def reconcile(self):
+    def reconcile(self, info: ValidationInfo):
+        if info.context and info.context.get('retained_consistency'):
+            from app.application.retained_decision_validation import validate_selection
+            validate_selection(self)
+            return self
         from app.application.use_cases.procurement_selection import selection_facts
         expected=selection_facts(self.comparison)
         if (self.winner_token,self.eligible_tokens,self.rejected,self.reason)!=expected:

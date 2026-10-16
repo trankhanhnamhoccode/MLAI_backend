@@ -1,5 +1,88 @@
 # Remaining work and acceptance gates
 
+## CURRENT FACT - L5 backend source integration
+
+Decision Assistant L4.1 checkpoint1f9b5c5 is integrated with main base8b09685 in an
+isolated worktree. Backend integration VERIFIED by required focused combined-source gates. V6 default,
+candidate8 explicit controlled trial only; summary/chat flags independently OFF,
+forecast challenger test-only/OFF and Import Qwen separate. Local integration is
+not deployment or browser/live E2E acceptance; these remain PENDING. No next slice
+or activation follows automatically. Current feature/runbook own scope and limits;
+older isolated L4/L5-pending accounts below are historical checkpoints.
+
+## CURRENT FACT — Decision Assistant L3 / remaining L4–L5
+
+L1 and L2/deterministic foundation checkpoints are local; foundation implements cold durable consistency evidence reads,
+typed summary renderer/fallback, constrained model presentation and AS01/AS02
+durable receipt/claim/publication lifecycle. Focused unit/API and owned PostgreSQL
+tests exercise fresh-process/revocation/concurrency/ACK/restart behavior with no
+engine/provider network. Cold misses no longer require cached verification. See
+[implementation/limits](features/DECISION_ASSISTANT.md) and
+[summary / conversational chat contract](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
+
+- L3.1 checkpoint44b45189 (after local L3 checkpoint f9dba875): structured context/pending
+  clarification, question obligations, typed assertions/prose checks and bounded
+  repair/one regeneration. Existing L3 implemented: AS03 optional conversational prose, sealed scoped facts,
+  bounded user-history context, clarification, independently configured provider,
+  deterministic assertion grammar/coverage checks and durable provider lifecycle.
+  No what-if/ordering/config/inventory writes. Finite resolution and conservative
+  grammar may reject legitimate paraphrases; general language entailment/quality
+  remains unverified. Summary presentation and import behavior remain separate.
+  Live acceptance remains NOT PASSED:10 progressive attempts retained original
+  fallback finals; final wording fixes have offline AS03 acceptance only. The separately authorized L3.1 synthetic batch uses a new ledger;
+  final-source live acceptance remains PENDING after6 calls (3 development
+  accepted; tradeoff false reject/unknown timeout then freeze2 HTTP429). No paid
+  retry/model change. Final context/pair fixes are offline-only; current limits
+  and cost are in the feature/runbook, separate from original NOT_PASSED.
+- L3.2 checkpoint a29ae1f3: dynamic intent/evidence/detail prompts, two placeholder examples,
+  resumed why/context and explicit slots/null/polarity, comparative sign/cost-role
+  checks and V3/V4/V5 pinned replay. Current prompt5/validator6/plan6, renderer7.
+  Evaluated V5 live PARTIAL:11 completions,7 accepted/1 regenerated/1 fallback/
+  1 clarification; last context entity switch unexecuted at shared cap30/30.
+  Fixed14-case Codex-labelled offline corpus0FA/0FR;2 additional valid live
+  paraphrases rejected in V5, fixed offline in V6 with24 unit/3 real AS03-PG
+  fake replay tests. V6 was PENDING at that checkpoint; prior results stay historical.
+  Separate L32-V6-acceptance-1 now passes the frozen V6 synthetic matrix with limits:
+  11/16 completions,9 accepted/1 regenerated/1 clarification, all4 conversation turns.
+  Correct slots with omitted simulation prose were rejected then regenerated;
+  no application source change. All11 finals checked current rights/Store isolation,
+  fresh persistence and replay0. Known USD0.0203539, reservations0.1546512/0.30,
+  no unknown usage,5 unused slots. Quality review is Codex-authored, not human-panel
+  evaluation. Proof/comparison remain verbose, opaque option IDs and clarification
+  disposition mismatch remain. New acceptance harness/tests/docs are WIP. Linked SQL28 pass;
+  V5 focused12 pass plus affected V4 replay1 pass after test expectation fix;
+  unit/API34 pass. All saved finals fresh-persisted/replay0/GET405. Budget is
+  exhausted by attempts, not dollars: known0.0551248 plus unknown reserve0.0281184.
+  No real/unseen evidence, reviewer model, new route/migration or whole-chat PASS.
+- L4 finite evaluation complete with limits, implementation WIP: V6 default retained;
+  explicit candidate7 adds typed grouping, local labels, consistent clarification
+  diagnostics and resolver5 failed-run intent.36 frozen scenarios originally18/18;
+  eight evaluation cases exposed to development, remaining9 offline/1 SQL pass
+  both versions. Candidate35 pass/1 separate security gate; baseline34 pass/1 intent
+  coverage gap/1 security gate. Six paired synthetic live scenarios and full4-turn
+  chain: baseline9 calls versus candidate8;17/24 total, USD0.0319601 known,
+  reservations0.2390064/0.50. Candidate improves proof/comparison/no-winner prose,
+  not uniformly quantity/why. Inherited valid-paraphrase false rejection remains;
+  no independent human/unseen/general grounding claim or automatic default switch.
+ 20/35g detection is offline projection-only; live retains the existing20/20g Run.
+  Broader quality/real-data evidence and review precede any default/integration choice.
+- L5 pending: FE/browser/runtime integration and broader operational acceptance.
+  L4.1 focused acceptance is PASS WITH LIMITS after L4 checkpoint46d15459;
+  derived candidate8 (prompt7/validator8/selection8/renderer9/resolver5) qualifies
+  for explicit controlled trial in the verified scope, with V6 still default.
+  Capture/engine/persistence factory proves20g/35g across all4 real HTTP/DB/live
+  turns; actual failed/partial and mixed-path comparison preserve scope.5 accepted/
+  1 clarification,5 calls, USD0.0099809; shared L4 now22/24, known0.0419410,
+  reservations0.3093024/0.50.2 unused, no new group or older-slot transfer.
+  Full-clause paraphrase fix and optional simple why factors keep old6/7 replay.
+  Finite quality review and focused security/persistence checks do not authorize L5.
+  Summary HTTP/owned-DB revocation/fresh retained reads/restart are L2 acceptance,
+  not a claim that chat/whole FE or production deployment is verified.
+
+No readiness/challenger merge is required to explain existing verified Runs;
+data admission and model quality do not become proven by wording/projection tests.
+No automatic next slice follows L2; runtime8103/main/FE/other WIP remain outside it.
+
 CURRENT FACT: local launcher shutdown watcher tolerates Windows observation-file
 replacement failure; targeted lifecycle tooling regressions cover bounded retry,
 persistent denial and run-scoped stop after write failure. Native restart/browser

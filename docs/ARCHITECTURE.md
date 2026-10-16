@@ -25,6 +25,24 @@ test tooling, not normal startup or a product permission.
 
 ## CURRENT FACT ? dependency direction
 
+Assistant L3 AS03 wires AssistantChat to PublicPlanning retained consistency reads,
+bounded structured context, question-specific obligations, typed assertion proposals,
+independent deterministic surface/slot checks and optional conversational provider.
+Versioned intent composition combines common instructions, scoped facts/context,
+evidence availability and bounded non-authoritative placeholder examples. Historical
+context/validator implementations stay pinned for immutable replay. No model judge.
+One semantic regeneration shares deadline/cost bounds; independent optional trimming
+and unique exact numeric-slot repair require final revalidation. Legacy grammar
+remains pinned for old receipts and a supported complex-assertion subset. No solver/worker/live catalog
+dependency. Existing deterministic receipts remain immutable/readable; additive
+chat_generations owns accepted/running/completed/failed claim fencing and pins
+request/profile/evidence/selection/prompt/schema/validator. Current authority repeats
+before projection/acceptance, after metadata preflight immediately before completion,
+and at publication/delivery/replay. Provider/preflight waits hold no Session/connection;
+brief authority transactions close before network. No generic LLM framework/queue.
+The L2 optional summary provider remains separate; its configured empty route now
+means explicitly permitted default OpenRouter routing with fallback disabled.
+
 ```text
 API / Pydantic DTO boundary
   -> application use cases and typed captured values
@@ -78,8 +96,13 @@ lifespan thread in the same backend process. Default flags are OFF.
 - Durable claims fence publication. Only uncertain commit with verified fresh
   retained aggregate may reconcile as success. Only OS-proven dead owner process
   incarnations recover as failed; no elapsed-time guess or automatic recompute.
-- Retained reads verify snapshots/digests/current rights without engine/provider
-  calls. PDF has its own durable export aggregate, local private bytes, verified
+- Assistant evidence reads verify snapshots/digests/current rights using retained
+  equation/relationship checks without engine/provider calls. Existing default
+  C03/PDF cold validators still replay exact BOM/serving/selector checks: explicit
+  technical debt, not a no-recomputation guarantee for those old callers.
+  Summary uses synchronous durable acceptance/claim, closes Sessions before
+  optional bounded provider presentation, then rechecks rights/versions and fences
+  immutable publication; GET reads do no generation/recovery. PDF has its own durable export aggregate, local private bytes, verified
   SHA/size and rights at acceptance/materialization/publication/download.
 
 ## ACCEPTED DECISION ? historical and hypothetical meaning

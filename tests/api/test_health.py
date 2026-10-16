@@ -72,7 +72,8 @@ def test_only_intended_routes_exist() -> None:
                    '/api/v1/stores/{store_id}/suppliers':'GET',
                    '/api/v1/stores':'GET,POST',
                    '/api/v1/procurement-plans/{plan_id}/exports':'GET,POST'})
-    assert set(application.openapi()["paths"]) == {"/health", *public}
+    public.update({'/api/v1/procurement-plans/{plan_id}/assistant/summary':'POST', '/api/v1/procurement-plans/{plan_id}/assistant/summary/{generation_id}':'GET', '/api/v1/procurement-plans/{plan_id}/assistant/messages':'POST'})
+    assert set(application.openapi()["paths"]) == {"/health", *public, '/api/v1/procurement-plans/{plan_id}/assistant/summary', '/api/v1/procurement-plans/{plan_id}/assistant/summary/{generation_id}', '/api/v1/procurement-plans/{plan_id}/assistant/messages'}
     assert {(route.path, frozenset(route.methods)) for route in application.routes} == {
         ("/health", frozenset({"GET"})),
         ("/openapi.json", frozenset({"GET", "HEAD"})),

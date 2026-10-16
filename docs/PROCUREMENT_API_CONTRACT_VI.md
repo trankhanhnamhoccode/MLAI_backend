@@ -1504,3 +1504,361 @@ FE thêm creator/local-date filters, export list→resume J01→download N11 và
 artifact UI. Acceptance C4: Store time boundaries, filter cursor consistency,
 creator không email leak; locator recovery, grant revocation discovery/download,
 missing/corrupt bytes, no implicit rendering, no retained fact rewrite.
+
+<a id="decision-assistant"></a>
+## 18. Decision Assistant — L2 summary / L3 conversational explanation
+
+CURRENT FACT: C08 §15.3 vẫn là structured retained explanation; GET không gọi
+model, tạo job hoặc phát sinh phí. L2 thêm durable evidence access và AS01/AS02
+summary, synchronous explicit creation/retained read, deterministic renderer và
+optional bounded presentation adapter. Source OpenAPI75 operations/68 paths;
+L3 adds independently opt-in model-generated prose on AS03 with deterministic
+grounding/coverage validation and factual fallback: source76 operations/69 paths.
+Không deploy runtime8103; general natural-language entailment/quality chưa được chứng minh.
+[Feature](features/DECISION_ASSISTANT.md) sở hữu implementation boundary/limits;
+mục này sở hữu FE workflow, DTO nguồn/OpenAPI sở hữu exact wire.
+
+CURRENT FACT L5 combined source: metadata2/schema3 retained forecasts are supported
+without downgrade, inference or artifact access on Assistant reads. Source head
+l5_20261016_assistant_f4 joins0030 and forecast head; no public wire delta beyond
+the three Assistant operations. V6 default and independent OFF flags remain;
+candidate8 requires explicit application composition, no operator selector or
+FE presentation-version field. [Current handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md)
+contains DTO-validated synthetic examples and the unchanged AS01/AS02/AS03 workflow.
+
+### 18.1. Capabilities và authority
+
+| Capability | Status | Meaning |
+| --- | --- | --- |
+| C03/C04/C05/C08 retained facts | IMPLEMENTED | Quyền và semantics hiện hành, không LLM |
+| Internal scoped evidence | IMPLEMENTED | Cold durable consistency checks; cache chỉ optimization; overview/option/Ingredient |
+| AS01/AS02 summary | IMPLEMENTED | PostgreSQL lifecycle/HTTP/deterministic fallback; fake-provider VERIFIED |
+| On-demand chat AS03 | IMPLEMENTED WIP | Scoped conversational prose/fallback, clarification/history, fenced provider lifecycle and immutable replay |
+| Unrestricted model prose / general entailment | UNAVAILABLE | L3 conservative assertion grammar; L2 summary still presentation ordering/tone only |
+| Backend integration / FE acceptance | BACKEND SOURCE INTEGRATED | L5 offline/fake-provider checks; browser/deployment PENDING, no new combined-source live call |
+| Chat what-if, ordering, config/inventory mutation | UNAVAILABLE | Không thuộc contract này |
+
+CURRENT FACT summary/chat action mapping: dùng lại `planning.result.read` + `budget.read` +
+`procurement.cost.read`, current actor/session và owning Store của Run. Không thêm
+permission key, không auto-grant. Kiểm trước load/materialize/provider và kiểm
+lại lúc trả kết quả/cache/replay. Thu hồi một quyền chặn toàn response, không
+redact nửa bài hoặc gửi facts bị chặn cho provider. POST giữ Origin/CSRF/cookie
+như mutations hiện hành. Client không được gửi facts/winner/proof, Store/actor
+authority hoặc system-role messages. History chỉ giúp hiểu câu hỏi, không evidence.
+
+### 18.2. Routes — CURRENT FACT summary/chat
+
+Routes dưới `/api/v1/procurement-plans/{plan_id}`; không dùng POST explanation
+legacy vì C08 đang hứa một structured read khác responsibility.
+
+| Method/path | Request | Result |
+| --- | --- | --- |
+| POST `/assistant/summary` AS01 | SummaryRequest | Create/replay durable summary,200 SummaryEnvelope; không rerun |
+| GET `/assistant/summary/{generation_id}` AS02 | No body/query |200 SummaryEnvelope retained; không provider/job |
+| POST `/assistant/messages` AS03 | ChatRequest unchanged | Một model/deterministic answer hoặc structured clarification;200 ChatEnvelope |
+
+SummaryRequest = `{expected_evidence_version:Version,option_id:OptionId|null,
+locale:"vi"|"en",detail_level:"simple"|"technical"}`; mọi field required.
+ChatRequest = SummaryRequest + `{question:string1..2000,ingredient_id:UUID|null,
+history:HistoryMessage[]}`. HistoryMessage = `{role:"user"|"assistant",content:
+string1..2000}`. Tối đa6 messages/4000 characters tổng history; body≤32KiB UTF-8.
+Reject422 khi quá bounds, không truncate facts/history ngầm. Không system/tool
+history hoặc attachment. Unknown fields reject422. Một option context/request;
+option phải thuộc Run. Ingredient phải thuộc computed scope; label/ambiguity chỉ
+dùng retained names/IDs, không live aliases/catalog fallback. Option null ở summary
+dùng winner nếu có, còn không là overview; chat Ingredient context dùng winner nếu có, còn không thì
+`not_selected` và balances/purchases nullable theo C05. Explicit option là đang
+xem option đó, không có nghĩa option được chọn/khuyến nghị.
+
+`expected_evidence_version` là aggregate response_version của C03, required;
+mismatch409 EVIDENCE_VERSION_CONFLICT trước provider. Result digest null vẫn hợp
+lệ cho failed/capture-only evidence, không giả result. Queued/running409
+RESULT_NOT_READY. Whole-run missing scope vẫn giải thích retained failure/unknown;
+Ingredient unavailable409 COMPUTED_SCOPE_NOT_AVAILABLE. Không tự chọn entity khi
+question/explicit ID mâu thuẫn; trả clarification với candidates scoped đã lưu.
+
+### 18.3. Response / clarification — CURRENT FACT chat
+
+AS01/AS02 dùng SummaryEnvelope §18.5. AS03 giữ envelope
+`{data,meta:{request_id},error:null}` với AssistantResponse:
+`{schema_version:"decision_assistant/1",run_id:UUID,evidence_version:Version,
+result_digest:Version|null,option_id:OptionId|null,ingredient_id:UUID|null,
+locale,kind:"answer"|"clarification",source:"model"|"deterministic_fallback"|
+"deterministic_clarification",answer:string,claims:Claim[],references:Reference[],
+clarification:Clarification|null,diagnostics:Diagnostics,context?:ChatContext}`.
+
+Claim = `{text:string,evidence_ids:string[]}`; mọi business assertion phải được
+kiểm nghĩa/negation/quantity/unit/role/proof trên đúng scoped evidence. Reference
+là typed EvidenceReference của `decision_evidence/1`: `{evidence_id,pointer,source}`;
+IDs bind schema/Run/Store/digests/option/Ingredient, resolve được trên đúng evidence
+projection phía server. Pointer không là URL hoặc credential. L2 response chỉ trả
+refs thực dùng, mọi claim ref phải resolve; optional evidence detail dùng existing
+C03/C05/C08 theo context cùng digest, không thêm endpoint bypass quyền. Citation
+không tự chứng minh claim chỉ vì nhắc đúng entity hoặc một số trùng nhau.
+
+Clarification = `{code:"ENTITY_AMBIGUOUS"|"ENTITY_CONTEXT_MISMATCH"|
+"QUERY_UNSUPPORTED",question:string,candidates:[{ingredient_id:UUID,name:string}],
+original_question:string,option_candidates?:[{option_id,source_strategies}],
+product_candidates?:[{product_id,name}]}`.
+Ingredient candidates chỉ từ retained computed scope có label;
+không có label thì yêu cầu chọn canonical ID qua C04, không đặt tên giả. Khi kind
+clarification: claims/references có thể rỗng, không gọi model chỉ để resolve
+ambiguity; FE giữ câu hỏi và hiện candidates inline. Retry sau lựa chọn explicit
+giữ original_question và gửi ingredient_id. Không auto đổi Ingredient/option.
+Option ambiguity uses retained option_candidates from the same Run; supply an
+explicit option context and pair IDs from C03. Missing labels never create aliases.
+
+Diagnostics L3 has reason, prompt_version, validator_version, model, resolved_model,
+provider, attempts0..2, input/output_tokens, cost_usd, latency_ms, finish_reason,
+disposition ACCEPTED/REPAIRED/TRIMMED/REGENERATED/FALLBACK/CLARIFICATION and prompt/schema/evidence hashes, plus safe failure_trace codes.
+OpenAPI/ChatDiagnostics owns exact nullable structure and reason enum. Reasons
+distinguish disabled/insufficient/wording unsupported, preflight/provider/schema/
+grounding/coverage/input failures; NONE with source=model means validated wording,
+not that all business evidence exists or a model quality evaluation passed.
+No raw prompt/output, credentials,
+provider stacktrace hoặc sensitive logs trong FE. 200 fallback không chứng minh
+provider thành công. Khi model disabled/provider failure/grounding rejection,
+L2/L3 phải trả deterministic answer từ cùng authorized evidence, kèm limitations
+và reason. Nếu thiếu facts trả lời thì nói rõ unknown/không có bằng chứng, không
+fabricate answer. No-winner không nhận positive selection assertion, dù model hay
+fallback. LOW/BASE/HIGH không probabilities; captured stock, simulated shortage/
+ending, baseline và actual tách riêng. Không có zero-purchase baseline trong L1.
+
+Ví dụ request summary (synthetic identifiers):
+
+```json
+{"expected_evidence_version":"aggregate-1","option_id":null,"locale":"vi","detail_level":"simple"}
+```
+
+Ví dụ response chat clarification (không model):
+
+```json
+{"data":{"schema_version":"decision_assistant/1","run_id":"00000000-0000-0000-0000-000000000001","evidence_version":"aggregate-1","result_digest":null,"option_id":null,"ingredient_id":null,"locale":"vi","kind":"clarification","source":"deterministic_clarification","answer":"Bạn muốn hỏi nguyên liệu nào?","claims":[],"references":[],"clarification":{"code":"ENTITY_AMBIGUOUS","question":"Bạn muốn hỏi nguyên liệu nào?","candidates":[{"ingredient_id":"00000000-0000-0000-0000-000000000020","name":"Sữa tươi"},{"ingredient_id":"00000000-0000-0000-0000-000000000021","name":"Sữa đặc"}],"original_question":"Sữa có cần nhập không?"},"diagnostics":{"reason":"EVIDENCE_INSUFFICIENT","prompt_version":null,"validator_version":"decision_chat_renderer/1","model":null}},"meta":{"request_id":"req-chat"},"error":null}
+```
+
+Ví dụ no-winner fallback answer: `kind="answer"`,
+`source="deterministic_fallback"`, `answer="Run này chưa có phương án được chọn."`;
+claim phải dẫn reference `/overview/explanation` có winner.option_id=null cùng
+`/overview/outcome`. IDs thật do server phát hành, không dùng illustrative ID làm
+assertion authority. Không suy no-winner thành certified infeasible.
+
+### 18.4. Chat errors, replay/cache và limits — CURRENT FACT
+
+Standard error envelope §2/10. 401 UNAUTHENTICATED;403 PERMISSION_DENIED/
+CSRF_CHECK_FAILED;404 RESOURCE_NOT_FOUND/OPTION_NOT_FOUND/INGREDIENT_NOT_IN_RUN;
+409 RESULT_NOT_READY/COMPUTED_SCOPE_NOT_AVAILABLE/EVIDENCE_VERSION_CONFLICT/
+IDEMPOTENCY_KEY_REUSED/GENERATION_IN_PROGRESS/GENERATION_FAILED/STALE_CHAT_CLAIM;
+413 RESOURCE_LIMIT_EXCEEDED;422 INVALID_PLANNING_CONFIGURATION;429 GENERATION_LIMIT_EXCEEDED;
+503 RESULT_INTEGRITY_UNAVAILABLE/UNSUPPORTED_RESULT_VERSION/
+SERVICE_UNAVAILABLE. Auth/integrity failures không biến thành fallback200.
+Handled clarification là200 có candidates; FE không reset conversation/retry loop.
+
+Idempotency-Key UUID required, scoped actor+Store+Run+AS03+key. Bounded normalized
+request includes question/history/context/evidence version. Same key/body replays
+the retained data with a fresh envelope request_id; changed body409. Old immutable
+assistant_message/1 receipts keep their pinned renderer (new model-OFF work uses
+renderer/2 with the same resolver/factual family fallback). Enabling chat later
+does not regenerate an existing deterministic receipt.
+
+New provider acceptance uses additive chat_generation/1 with frozen request/model/
+route/config, evidence/selection hashes, prompt/schema/validator versions, process
+incarnation and claim token. Accepted running identity commits before network;
+preflight/provider waits hold no Session/connection. Current authority repeats
+immediately before completion after preflight and at publication/delivery/replay.
+Publication atomically commits a terminal generation plus immutable assistant_message/2
+final receipt; stale/late writers cannot overwrite it. Same-key concurrency409
+GENERATION_IN_PROGRESS,20 running/store cap429. GET is never a worker/recovery path;
+there is no chat GET endpoint or new conversation service.
+
+Alive/unknown running owner stays409. Only explicit POST replay with OS proof of
+dead owner records PROCESS_INTERRUPTED, then GENERATION_FAILED409; no paid call is
+repeated. Same failed key stays failed; a new key is deliberate new work. Transport
+timeout/uncertain completion yields retained deterministic fallback with attempts1,
+never automatic retry or exactly-once billing promise. Recognized applied DB ACK
+loss reconciles exact durable claims/finals through fresh Sessions; unapplied/
+unrecognized DB or programming failures are503, not fabricated fallback success.
+Every replay reauthorizes and verifies Run/receipt/generation hashes and pinned
+final assertions/refs against retained evidence. History is bounded request context,
+not a conversation authority or alternative source of facts.
+
+CURRENT FACT L3.2 uses independent CHAT_LLM_ENABLED/model/routes and input/output/
+deadline/price limits. Model OFF remains default. CHAT_COMPLETION_LIMIT defaults2
+(max2) and CHAT_MAX_REQUEST_COST_USD defaults0.10; both attempts share the request
+deadline/cost reservation. Metadata support/prices are preflighted before each
+completion, with no model/provider substitution. Only known schema-valid semantic
+failures may regenerate once; unknown transport billing is never blindly retried.
+Summary AS01/AS02 remain constrained presentation; Import is unchanged.
+
+Optional ChatRequest.context and response.context carry bounded Run/evidence,
+option/pair, Ingredient/Product IDs, pending original question/candidate IDs and
+Ingredient topic. IDs/version are verified against retained scope after current
+rights. Explicit new context wins over old context. Partial retained-label matches
+can yield multiple named candidates; selecting one resumes the pending original
+question. Pronouns require one antecedent; ambiguous/foreign-version context
+clarifies. Missing labels remain missing. Captured Product labels/IDs support structured candidates, pending-question
+resumption and explicit service follow-ups; arbitrary semantic aliases are not
+resolved. History/context never supply facts,
+permissions, catalogue updates or instructions. Existing body/history limits apply.
+
+New work pins prompt/5, validator chat_assertions/6, assertion schema/2 and
+selection plan/6; new deterministic work uses renderer/7. Older plan/2-/3-/4-/5 and
+validator/grammar versions retain their original canonical shape and behavior.
+Prompt composition uses common plus intent-specific instructions, resolved context,
+selected facts/availability, detail and two versioned placeholder style examples.
+Examples are never evidence/citations, and no per-Ingredient literal prompt exists.
+Existing context.topic additionally accepts purchase_rationale so a resolved why
+question survives clarification and entity switches. Resolved original question is
+internal plan data, not a client-supplied business fact. No route or migration delta. The prompt supplies per-fact assertion slots including literal null and polarity;
+numbers within compound proof wording must not be extracted into null slots. Each
+model assertion proposes exact typed slots and actual prose; BE independently
+checks material predicates, value/unit/entity/path/role/polarity and unsupported
+extra text. Main answer obligations are distinct from optional support; every
+retrieved fact need not appear once. Independent redundant/invalid optional units
+may be trimmed. One unambiguous numeric-slot error can be replaced from its sealed
+fact only with exact identity/unit/role and complete final revalidation. Other
+material/main-coverage failures regenerate once or use topic-specific fallback.
+No nearest-number/unit repair, generic nonanswer acceptance or sole model judge.
+Comparative cao hon/thap hon prose binds signed deltas and retained pair cost role.
+V6 permits an optional colon in the complete exact option/rejection clause and a
+scoped missing-causal-evidence paraphrase; no global negation/token removal,
+inferred entity/reference repair or relaxation of slots/extra-claim checks.
+Finite complex/proof grammar remains a supported subset; deterministic checking
+is not proof of general language entailment. Reviewer production is OFF/absent.
+
+CURRENT FACT L4 candidate (explicit application composition, V6 remains default):
+selection7/prompt6/validator7/renderer8/resolver5 retain the same AS03 wire and rights.
+Simple detail may group equal retained Product/path assessments or paired deltas;
+typed members and reference union cover every replaced obligation, never an average,
+BASE extrapolation or whole-Menu pass with missing/excluded/exception rows. Technical
+detail retains individual rows. BE supplies complete bounded group wording; proposed
+slots and actual prose are independently checked. Unknown prose still regenerates
+once or falls back. Captured names or deterministic local/strategy labels replace
+opaque IDs in prose; structured IDs/references remain authoritative, no live-name read.
+New renderer8 clarification uses the already-existing diagnostics disposition
+CLARIFICATION. Older stored FALLBACK diagnostics stay unchanged and replay exactly.
+Resolver5 recognizes a failed-run outcome question; actual failure comes only from
+retained status, never the user's wording. No new request/configuration field is
+exposed by HTTP; no endpoint/migration/OpenAPI delta or default-presentation change.
+
+CURRENT FACT L4.1 derived candidate8 is explicit application composition only;
+V6 stays default. Selection8/prompt7/validator8/renderer9/resolver5 preserve AS03
+wire/authority. For simple purchase-why, quantity and missing exact-rationale
+boundary are main obligations; an arbitrary first LOW/day row is optional support.
+Technical or explicitly requested path/date factors remain required when retained.
+Unknown quantity/cause never becomes zero or an existing purchase. One complete
+mechanistic sentence construction may use commas/"và" instead of canonical
+colon/semicolons; every retained material amount/unit/name/path/date/simulation
+scope must match, and typed slots remain independently checked. No wildcard,
+fact-ID exemption or causal/actual assertion allowed. Prior version7/6 replay
+retains original required factors/validator behavior and stored diagnostics.
+New renderer9 clarification uses CLARIFICATION; historical replies are immutable.
+Focused synthetic HTTP/DB/live acceptance supports explicit trial in this scope,
+not unrestricted grounding, production readiness, automatic default selection or L5.
+
+Procurement why distinguishes proposed quantity, retained simulation factors where
+available and missing causal/zero-purchase evidence. No pair delta or simulation
+row establishes why an exact purchase is optimal. Missing factors are not invented.
+Public failure traces retain assertion position/reason/fact identity; authorized
+synthetic review artifacts contain corresponding raw clauses and reconciliation.
+Unknown completion usage/cost remains null, never zero. Stock/daily questions use
+retained per-lot/date/path facts where present; no engine
+or live catalogue. Proof includes viewed-option eligibility and retained requirement target/status/
+shortfall assessments with units; no new computation. No-winner includes known gaps/reasons/blockers, otherwise explicit
+missing-detail facts. Pairwise deltas retain direction and individual units without
+causal/global-ranking claims. Contextual scope/proof/proposal qualifiers replace
+blanket disclaimers. Main facts above16, selected facts above24 or serialized byte
+bounds cause full topic fallback, not silent truncation. Old receipt/plan/validator
+versions remain pinned and readable; no original response or live artifact rewrite.
+
+L3–L4 nếu cho phép free prose phải kiểm: sau salvage còn trả lời ý chính; repair không sinh
+“đồng đồng”; negation tiếng Việt/English và positive controls; “đủ điều kiện”/
+paraphrase hợp lệ không bị false reject; no-winner reject “BALANCED đã được chọn”.
+Winner chỉ best evaluated candidates; UNPROVEN/INCOMPLETE không nâng thành certified,
+pairwise facts không tạo global ranking. L2 không implement prose repair, sentence
+removal, chat intent resolver hoặc regex grounding; không báo REPAIRED/SENTENCE_REMOVED.
+
+### 18.5. AS01/AS02 — CURRENT FACT summary contract
+
+Request AS01 đúng SummaryRequest §18.2, unknown fields422. Idempotency-Key UUID,
+exact Origin/session/CSRF required; If-Match/If-None-Match rejected400. Body≤32KiB
+streaming; không history/question/system messages hoặc client business facts.
+`option_id=null` dùng winner nếu có, còn không trả global no-winner/blocked/failed
+facts, costs unavailable khác0. Explicit option phải thuộc Run; đang xem option
+khác winner không trở thành lựa chọn. `locale` và `detail_level` explicit, technical
+thêm schema provenance; không đoán từ question.
+
+SummaryEnvelope = `{data:SummaryView,meta:{request_id},error:null}`.
+SummaryView = `{generation_id:UUID,run_id:UUID,status:"running"|"completed"|"failed",
+created_at:Timestamp,finished_at:Timestamp|null,result:SummaryAnswer|null,
+error_code:string|null}`. AS01 thường trả200 completed sau execute; completed
+deterministic result có thể degraded qua source/diagnostics, không làm Run failed.
+Replay failed trả200 retained failure với result=null. AS02 chỉ đọc, hỗ trợ nhìn
+running/failed/completed và không recover/write job. Success có Cache-Control
+private,no-store; AS01 Location trỏ AS02. Không global search/conversation endpoint.
+
+Ví dụ AS02 đọc accepted work đang chạy (synthetic IDs, không gọi provider):
+
+```json
+{"data":{"generation_id":"00000000-0000-0000-0000-000000000011","run_id":"00000000-0000-0000-0000-000000000001","status":"running","created_at":"2026-10-15T02:00:00Z","finished_at":null,"result":null,"error_code":null},"meta":{"request_id":"req-summary"},"error":null}
+```
+
+SummaryAnswer nguồn tại `contracts/plan_summary.py`: schema_version=plan_summary/1,
+identity=EvidenceIdentity (Run/Store/request/input/result/aggregate versions/digests,
+temporal capture times), option_id nullable, locale/detail_level, source:
+deterministic_fallback|model_presentation, presentation:{ordering,tone}, answer,
+claims:[{family,text,evidence_ids}], references:EvidenceReference[], diagnostics,
+renderer_version. Sáu families required: outcome,cost,requirements,coverage,proof,
+limitations; outcome đứng đầu. Typed exact numbers/currency/units từ evidence được
+server render, assessments theo Product/path, không tổng cup/piece hay g/ml.
+Winner explanation chỉ trong evaluated candidates; finite certificate và UNPROVEN
+giữ nguyên scope. Khi có retained pairwise deltas, summary lấy một cặp liên quan
+option đang xem (hoặc cặp đầu ở overview), giữ chiều sau trừ trước, exact outlay
+và tối đa một Product/path service delta đáng chú ý; không nâng thành global ranking.
+Chưa có causal reasons, profit, actual outcomes hoặc zero-purchase baseline;
+không tự tạo các facts này.
+Failed partial Run có thể giữ winner của selector như diagnostic fact; khi đó
+recommendation_available=false, summary phải nói rõ không có khuyến nghị khả dụng,
+không xóa winner lịch sử hoặc nâng failed thành completed. Completed no-winner
+vẫn không được mang winner. Temporal hypothetical-current-capture được cảnh báo
+rõ, không relabel current balances thành tồn lịch sử.
+
+L2 optional model chỉ trả SummaryExpression `{ordering:family[6],tone:plain|brief}`,
+đủ mỗi family đúng một lần; không free text/claims/numbers/citations. Server chọn
+variant đã kiểm và render facts/refs. Đây là constrained presentation, không claim
+free-form Qwen summary quality. Raw assertions dù có đúng số/entity/citation cũng
+reject schema; không dùng numeric matching làm grounding. Mọi final result được
+đối chiếu lại renderer + pinned evidence khi fresh read, kể cả cache/replay.
+
+Diagnostics có disposition=ACCEPTED|FALLBACK, reason=NONE|MODEL_DISABLED|
+PROVIDER_UNAVAILABLE|SCHEMA_REJECTED|GROUNDING_REJECTED|INPUT_LIMIT|
+PROCESS_INTERRUPTED; requested/resolved model/provider nullable, attempts/input/
+output tokens khi biết, prompt/validator versions. Model OFF không gọi provider;
+schema failure, route/model substitution, timeout hoặc vượt bounds trả deterministic
+answer đủ sáu families, không repair/removal. Không raw payload/secrets/provider
+stacktrace trong response/log mặc định. Đã verify fake transport, chưa live Qwen.
+
+Một generation pin actor/Store/Run + request + evidence digest + profile/schema/
+renderer/prompt/validator. Same generation identity running/completed được reuse,
+distinct keys có immutable receipts; cùng key đổi request409 IDEMPOTENCY_KEY_REUSED.
+In-progress409 GENERATION_IN_PROGRESS, client chỉ retry cùng key theo thao tác
+explicit; không tự tạo key mới vì timeout. Lost acceptance/terminal ACK chỉ reconcile
+sau transport-uncertain commit và fresh scoped exact retained match. Không commit
+thì không fabricated success. Tối đa20 running generations/Store; quota không
+chặn replay generation đã có. Failed generation không phải permanent negative
+cache: cùng key vẫn failure cũ, key mới explicit có thể retry với generation ID mới.
+
+Không worker/thread/queue mới: acceptance + running claim cùng transaction ngắn,
+provider ngoài Session; publication transaction mới kiểm current rights/Run digest
+và claim, terminal rows/receipts immutable. GET không recovery/call. Sau restart,
+POST cùng key chỉ fail running work khi OS chứng minh owner process đã chết:
+PROCESS_INTERRUPTED, không phát lại ambiguous provider attempt. Alive/UNKNOWN
+owner vẫn409; không TTL guess. Thu hồi quyền khi provider đang chạy bỏ output,
+mark failed AUTHORITY_CHANGED; current auth tiếp tục chặn mọi read/replay.
+
+Errors theo §10:401/403/404,400 INVALID_REQUEST,409 RESULT_NOT_READY/
+COMPUTED_SCOPE_NOT_AVAILABLE/EVIDENCE_VERSION_CONFLICT/IDEMPOTENCY_KEY_REUSED/
+GENERATION_IN_PROGRESS/STALE_SUMMARY_CLAIM,413 RESOURCE_LIMIT_EXCEEDED,
+422 VALIDATION_ERROR,429 GENERATION_LIMIT_EXCEEDED,503 RESULT_INTEGRITY_UNAVAILABLE/
+UNSUPPORTED_RESULT_VERSION/SERVICE_UNAVAILABLE. Missing phase evidence trên failed
+Run là nullable business availability, khác corrupt schema/hash hay technical DB
+failure; không blanket fallback200 cho auth/integrity/technical failure.

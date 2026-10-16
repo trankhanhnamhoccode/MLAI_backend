@@ -1,5 +1,28 @@
 # Current state
 
+## CURRENT FACT - Decision Assistant L5 combined source
+
+Assistant checkpoint L4.1 `1f9b5c5` after L4 `46d15459` is integrated with local main
+through an isolated integration branch from `8b0968562438a1558fb189e0ab18bfabbe0cd5a9`.
+Backend integration VERIFIED through focused combined-source offline/fake-provider
+checks; no deployment/browser/live acceptance.
+AS01/AS02/AS03 add exactly3 operations,76/69; existing operations/DTOs unchanged.
+Additive merge head `l5_20261016_assistant_f4` joins0030 and f4_20261016_metadata_v2
+without applied migration rewrites;76 tables including Alembic. Main TypeAdapter
+optimization and host forecast default retained; challenger test-only/OFF.
+Cold evidence reads and optional summary/chat presentation use retained consistency,
+current rights, immutable receipts and versioned replay, no engine/provider on reads.
+V6 default; candidate8 explicit composition (prompt7/validator8/selection8/renderer9/
+resolver5/assertions2). Operator-facing candidate selector is not implemented.
+Summary/chat flags independently OFF; Import Qwen unchanged. Old6/7 replay preserved.
+L4.1 source2d7e2c93 live focused PASS WITH LIMITS is historical exact-source evidence;
+combined L5 source is verified offline/fake-provider only, no new paid call.
+L4 ledger remains22/24, knownUSD0.0419410, reserved0.3093024/0.50; old ledgers untouched.
+Owned L5 PostgreSQL5441/limited integration role only. No main working-tree WIP,
+other worktree, FE, runtime8103 or development/demo DB changes. Meaning/limits in
+[feature](features/DECISION_ASSISTANT.md), FE workflow in [Planning18](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant),
+and [handoff](handoff/010_BE_CAPABILITY_RESPONSE_VI.md).
+
 ## CURRENT FACT — local shutdown watcher
 
 Local runtime retries transient Windows PermissionError during atomic status-file

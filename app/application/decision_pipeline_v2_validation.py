@@ -12,7 +12,7 @@ def pipeline_outcome(capture,bom,procurement,selection):
     return 'RECOMMENDATION_AVAILABLE' if selection and selection.winner_token else 'NO_ELIGIBLE_CANDIDATE'
 
 
-def validate_pipeline_v2(result):
+def validate_pipeline_v2(result, *, retained=False):
     c=result.capture
     if c.status!='CAPTURED':
         if any(x is not None for x in (result.bom,result.procurement,result.comparison,result.selection)):
@@ -23,9 +23,13 @@ def validate_pipeline_v2(result):
         # BOM's historical output contract checks shape/status, not every
         # contribution. The new /2 aggregate boundary reconciles actual values
         # against retained input without weakening or rewriting that /1 contract.
-        from app.application.use_cases.bom import expand_bom
-        if result.bom!=expand_bom(c.prepared):
-            raise ValueError('Pipeline BOM quantities/coverage/issues differ from captured input')
+        if retained:
+            from app.application.retained_decision_validation import validate_bom
+            validate_bom(result.bom)
+        else:
+            from app.application.use_cases.bom import expand_bom
+            if result.bom!=expand_bom(c.prepared):
+                raise ValueError('Pipeline BOM quantities/coverage/issues differ from captured input')
     if result.procurement is not None:
         if result.procurement.input!=c.procurement_input or result.bom is None or result.bom.status!='COMPLETE':
             raise ValueError('Engine must use captured effective envelope after complete BOM')

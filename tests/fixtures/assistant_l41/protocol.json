@@ -1,0 +1,13 @@
+{
+ "version":"assistant_l41_acceptance/1",
+ "label_author":"Codex-authored before paid calls; not independent human review",
+ "candidate":"selection8/validator8/prompt7/renderer9/resolver5/assertions2, explicit only; default V6 unchanged",
+ "budget":"Use only remaining slots in L4-quality-evaluation-1 cap24/USD0.50. Observed initial17, at most7 more. Regeneration included. No old slot refund or new group.429 stops.",
+ "conversation":["Ambiguous milk:2 retained candidates, no model call","Fresh milk:20g proposed","Why that amount: same Ingredient/rationale topic, quantity and explicit missing exact causal evidence; arbitrary LOW/day optional for simple","Condensed milk:35g proposed, own Ingredient/fact/ref identity, not prior20g"],
+ "failed":"Actual injected partial search failure retained through exact engine/persistence, no recommendation promoted. Known gaps/factors scoped; missing cause not inferred.",
+ "mixed":"Actual retained engine comparison with different deltas across paths. Group only matching members, exact to-minus-from cost and simulated scope; do not equate HIGH with BASE/LOW.",
+ "prelive_oracles":{"milk":{"fresh":"20 g","condensed":"35 g","scope":"proposed purchases, winner, not receipts"},"mixed":{"direction":"lean minus balanced/protected","cost":"-5 VND","product0":{"BASE":"-5 cup","HIGH":"-5 cup","LOW":"0 cup"},"product1":{"BASE":"-2.5 cup","HIGH":"-17.5 cup","LOW":"0 cup"}},"failed":"execution_error, diagnostic incumbent only, no actionable recommendation, protected customer gaps9.5/19cup"},
+ "lifecycle":"Each final fresh-session persisted equality, same key/body replay0, current rights403 and Store isolation404. No GET message endpoint.",
+ "offline":"Saved baseline raw7 accepted only in validator8, old7 unchanged; negative quantity/unit/entity/date/path/polarity/actual/causal/omission probes rejected. Exception/exclusion/missing groups cannot claim universal pass.",
+ "stop":"Review quality independently from lifecycle tests; any source change after live needs new freeze and affected rerun within existing remaining cap. No L5/default change."
+}

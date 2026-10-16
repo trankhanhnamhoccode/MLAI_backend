@@ -50,3 +50,6 @@ from app.models.planning_export import PlanningExport
 from app.models.notifications import NotificationIntent, NotificationRecord, NotificationReadReceipt
 from app.models.collaboration import PermissionRequestRecord, PermissionRequestAudit, MappingSubmissionRecord
 from app.models.store_creation import StoreCreationReceipt
+from app.models.plan_summary import PlanSummaryGeneration, PlanSummaryReceipt
+from app.models.assistant_message import AssistantMessage
+from app.models.chat_generation import ChatGenerationRow

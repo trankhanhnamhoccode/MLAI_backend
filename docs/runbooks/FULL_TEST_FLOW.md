@@ -1,5 +1,198 @@
 # Chạy và kiểm thử ShelfCash từ đầu đến cuối
 
+<a id="assistant-l5"></a>
+## CURRENT FACT - L5 combined-source offline acceptance
+
+Use the isolated integration checkout/branch, not a running demo. L4.1 checkpoint
+1f9b5c5; main base8b09685. Dedicated Compose project shelfcash-assistant-integration-l5,
+named shelfcash-assistant-integration-l5-pgdata volume, PostgreSQL17 loopback5441,
+shelfcash_integration_test / limited shelfcash_integration_tester. Provisioning
+private files and credentials remain under ignored runtime/assistant-integration/private.
+The committed runner requires exact driver/host/port/database/role/no-query before
+connection, uses ordinary dev/Alembic effective identity guards, disables all
+workers/email/paid model flags, and runs selected tests sequentially. It refuses
+Assistant5436/challenger5438/development/demo targets. Provision via a new isolated
+Compose project/volume and limited role, then create private test-url.txt; never
+copy another worktree's URL or relax the guard. No .env is needed for offline tests.
+
+```powershell
+..\backend\.venv\Scripts\python.exe -B -m scripts.assistant_integration_tests tests/integration/test_assistant_integration.py -q -p no:cacheprovider --tb=short
+..\backend\.venv\Scripts\python.exe -B -m scripts.assistant_integration_tests tests/integration/test_assistant_summary.py tests/integration/test_assistant_chat.py tests/integration/test_conversational_chat.py tests/integration/test_assistant_l41.py -q -p no:cacheprovider --tb=short
+```
+
+Focused combined-source verification: final API/boundary62 pass30.98s; Assistant
+HTTP/PostgreSQL41 pass345.68s; final new combined migration/host/metadata2 cases4
+pass26.55s. Strengthened populated-parent upgrades2 pass17.09s cover existing
+Assistant receipts and metadata2 ForecastRun input/predictions before upgrade.
+Host regression invocation13 pass/1 old72-table assertion failure;
+affected assertion fixed,1 pass2.45s. Additional affected unit gate148 pass/1 thin
+fixture missing declarations; fixture corrected,19 evidence units pass. Initial
+unit/API gate198 pass/7 stale route inventories; follow-up8 pass/2 remaining
+inventories, then3 pass. Counts overlap; not a full-suite aggregate. New integration
+test-only failures (request_id comparison, missing identity binding, ambiguous -1,
+DB guard exception type) remain in original logs, corrected without changing
+runtime business/presentation semantics or weakening guards. A startup subprocess
+forbids native dependency/network/DB access with all flags OFF; health/defaultV6/
+host serving pass. Exact invocations and fail->fix logs are in requested review.
+
+Migration head l5_20261016_assistant_f4 merges original0030 and forecast metadata2;
+do not use ambiguous relative -1 at this merge. Explicit downgrade0030 unmerges
+to both original heads; it does not remove sibling evidence. Empty roundtrip and
+upgrade from either parent run on disposable DB only. Parent downgrade guards
+reject retained metadata2/Assistant rows, preserving transactional schema/rows.
+No migration/reset of shelfcash_local/development/demo and no restart8103.
+
+AS01/AS02/AS03 handoff/OpenAPI examples are validated offline from synthetic HTTP
+responses. Replay same key/body POST for AS03; there is no GET messages. V6 default,
+candidate8 explicit AssistantChat composition only. No operator-facing activation
+selector yet. Provider flags SUMMARY_LLM_ENABLED and CHAT_LLM_ENABLED are separate
+and OFF; Import Qwen independent. Model OFF remains deterministic. Never run old
+opt-in live commands for L5 integration: all paid ledgers stay unchanged, including
+two L4 and five L3.2 unused slots. New L5 native fixture reuses saved forecast, no
+inference/training/artifact read. Focused host LightGBM regression uses only its
+existing tiny synthetic correctness fixture, not F3/F4 or accuracy benchmark.
+Detailed invocations/results/fail->fix and sanitised proof are in the requested
+ignored L5 review, not application audit. No full-suite/browser/deployment claim.
+
+<a id="assistant-l2"></a>
+## Decision Assistant L2/L3 — isolated verification
+
+CURRENT FACT source: AS01 explicit synchronous summary create/replay and AS02
+retained read, AS03 optional conversational prose/clarification with topic fallback,
+no what-if execution/worker/deployment. Source76 operations/69 paths;0030 adds
+fenced provider generations after0029 immutable chat receipts;
+contract/limits at [Planning §18](../PROCUREMENT_API_CONTRACT_VI.md#decision-assistant)
+and [feature](../features/DECISION_ASSISTANT.md). C08 remains structured facts.
+
+Worktree backend-decision-assistant / feat/decision-assistant. Use its dependencies
+or the already installed sibling backend Python **without changing that checkout**.
+Do not copy a serving .env. Provisioner owns only labeled container
+shelfcash-assistant-test-postgres, volume shelfcash-assistant-test-pgdata,
+127.0.0.1:5436, database shelfcash_assistant_test and limited
+shelfcash_assistant_tester. No other instance is connected/migrated/reset.
+Tester has schema creation/DML only on this disposable DB, not superuser/CREATEDB/
+CREATEROLE/replication/BYPASSRLS. Private credentials/URL in ignored
+runtime/assistant-test/private; never print/copy them to Git. If container/volume/
+credentials disagree, reconcile ownership instead of deleting/resetting blindly.
+Provisioning does not reset. Tests use the existing guarded reset and cleanup;
+dedicated target/current_user checks run before migrations. No .env edits needed.
+
+```powershell
+Set-Location D:\hocc_bk\ai\proj\projectMLAI\backend-decision-assistant
+$assistantPython = '..\backend\.venv\Scripts\python.exe'
+& $assistantPython -B -m scripts.assistant_test_database
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_assistant_summary.py tests/integration/test_assistant_chat.py -q -p no:cacheprovider
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_conversational_chat.py -q -p no:cacheprovider
+& $assistantPython -B -m pytest tests/unit/test_decision_evidence.py tests/unit/test_assistant_cold_reads.py tests/unit/test_plan_summary.py tests/unit/test_assistant_chat.py tests/unit/test_assistant_smoke_budget.py tests/api/test_plan_summary_openapi.py tests/live/test_assistant_smoke.py -q -p no:cacheprovider
+git diff --check
+```
+
+Expected: historical synthetic graphs read on cold cache/fresh Session/process with
+engine entrypoints forbidden; corrupt versions/hash/equations reject, no live facts
+rewrite history. AS01 completes deterministic response with model OFF; GET/replay
+returns retained result without provider. Mock generation calls outside transaction,
+concurrent same identity once, current grant/Store denial, late writer denial,
+transport-lost ACK reconciliation versus unapplied commit failure, explicit dead
+process recovery without repeating provider. Additive migration round-trip/parity
+and terminal immutability use this DB only. Fixture provenance and synthetic nature
+are recorded in tests/fixtures/decision_assistant, not customer/unseen evidence.
+
+The runner forces model/email/business worker flags OFF and removes provider key
+for its child test process; provider-enabled cases inject fake clients. Unit transport
+tests mock OpenRouter responses. No train, solver fixture generation, benchmark,
+SMTP/live Qwen or browser/full-suite acceptance. Read/create summary for a historical
+Run does not depend on readiness/challenger merge or model promotion. API manual flow
+after a separately authorized deployment: C03→pin response_version→AS01 with UUID
+key + Origin/CSRF→follow Location AS02; never auto-generate from a GET.
+
+L2 has no automatic worker/retry. A running generation owned by alive/unknown process
+stays409 on POST replay. Only OS-proven dead owner is failed on explicit replay;
+GET remains read-only. Same key retains failure, explicit new key may retry. Keep
+private test resources/evidence; do not purge runtime or delete the volume as cleanup.
+
+AS03 manual flow after separately authorized deployment: C03 response_version,
+POST `/api/v1/procurement-plans/{plan_id}/assistant/messages` with UUID key,
+Origin/CSRF, SummaryRequest fields plus question, ingredient_id:null or retained
+UUID, history:[] or bounded user/assistant messages. Clarification keeps original
+question and asks for retained ID; explicit new request/key after selection.
+Same key/body replays, changed question/history/context409. No GET message endpoint
+or implicit computation; C05 links/details retain exact Ingredient scope. CHAT_* is
+independent from SUMMARY_*/Import and default OFF; a key alone never enables it.
+Model-enabled acceptance pins profile/evidence/selection/prompt/schema/validator,
+calls preflight/provider outside DB, repeats authority immediately before completion,
+then validates full assertions/coverage and publishes immutable final. Running409;
+dead owner only fails on explicit replay, never automatically retries paid work.
+Read source/disposition/reason: HTTP200 fallback is not accepted model wording.
+
+### Explicit synthetic live smoke (separate authorization only)
+
+Ordinary pytest skips `tests/live/test_assistant_smoke.py`; offline tests never
+enable it. The standalone command below deliberately enables a paid test and
+reads this worktree's private .env in memory. Never run against a real Store.
+It uses synthetic static fixtures and only the guarded assistant test DB. Before
+every completion it checks public endpoint metadata/support/pricing and sets
+provider.max_price prompt0.3/completion2.5 USD per million, no fallback/model swap.
+Text request≤16000 bytes/max_tokens≤256, conservative prompt bound65536 plus256
+output reserves$0.0203008 per attempt;3 reservations≤$0.0609024, under$0.10.
+No tools/search/modalities or per-request fees are allowed. Exclusive write-ahead
+attempt slots under ignored runtime/assistant-test/live-smoke survive timeouts/
+crashes and are never refunded. Do not delete/recycle slots or increase bounds.
+Normal tests mock all of this metadata/transport. No key/header dump or real data.
+
+```powershell
+& $assistantPython -B -m scripts.assistant_live_smoke --allow-paid-synthetic-max-3-usd-0.10
+```
+
+CURRENT FACT: authorization for this smoke was used for2 attempts (first application
+route guard fallback, then accepted after targeted fix), total usage.cost$0.0003932.
+Do not rerun merely to consume the remaining slot. Safe synthetic raw/final artifacts
+remain ignored. GET/replay made0 additional model calls; timeout fallback was offline.
+This verifies model presentation routing/schema through AS01/AS02, not free prose,
+model chat or a broader L4 evaluation. L3 chat always uses deterministic evidence.
+
+### Conversational AS03 opt-in smoke and offline replay
+
+Ordinary pytest skips all6 conversational live cases. The opt-in CLI alone enables
+synthetic AS03 calls on the guarded assistant DB. It reads this worktree's private
+.env key only in memory and uses its configured Gemini model; SUMMARY_MODEL is
+permitted as test-only selection for this already approved model. Production chat
+does not inherit summary model/config: explicit CHAT_LLM_ENABLED/CHAT_MODEL/
+CHAT_PROVIDERS/CHAT_* bounds are required. Empty providers is explicit default
+OpenRouter routing, no fallback/model substitution. No real Store data is approved.
+
+Public endpoint support/price metadata is checked before each completion. Request
+sets temperature0, strict JSON schema, reasoning disabled, require_parameters=true,
+max_price prompt0.3/completion2.5 USD per million and per-request0; no tools/search/
+attachments. Slots1..8:≤12000 serialized UTF-8 bytes, conservative prompt bound32768,
+output768, reserve$0.0117504 each. Slots9..10 MUST use≤6144 bytes, prompt bound8192,
+output128, reserve$0.0027776 each. Total worst-case$0.0995584≤$0.10 for10 attempts.
+Byte caps include messages/schema and token bounds reserve additional framing.
+Exclusive write-ahead slots survive uncertain calls and are never refunded, deleted
+or recycled. The current ledger under runtime/assistant-test/conversational-live is
+exhausted. Do not bypass it; another batch needs its own explicit authorization.
+
+```powershell
+# Paid command, separate explicit authorization only; current batch is exhausted.
+& $assistantPython -B -m scripts.conversational_live_smoke --allow-paid-synthetic-max-10-usd-0.10 --case all
+# Only when an authorized small slot remains:
+& $assistantPython -B -m scripts.conversational_live_smoke --allow-paid-synthetic-max-10-usd-0.10 --case followup --small-output
+# Offline: inspect a synthetic AS03 acceptance for the final ellipsis regression.
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_conversational_chat.py::test_elliptical_purchase_form_is_accepted_offline_through_as03 -q -p no:cacheprovider
+& $assistantPython -B -m pytest tests/unit/test_conversational_chat.py tests/unit/test_conversational_budget.py tests/live/test_conversational_smoke.py -q -p no:cacheprovider
+```
+
+Inspect every raw-N/final-N artifact and prompt/schema/evidence hashes, resolved
+model/provider, usage/cost/latency/finish reason, source/disposition/reason and replay
+completion count. All attempts stay, including rejected/fallback. The first transport
+failure has no recovered raw usage: cost is unknown, not zero, and fully reserved.
+This progressive10-attempt batch had0 original source=model finals. Legitimate
+paraphrase false rejects were fixed with scoped controls/offline AS03 replay; they
+are not relabeled as new live PASS. The fixture has one deduplicated option, so
+trade-off smoke tests missing pair evidence, not known pairwise numeric quality.
+Fresh final-version live acceptance/broad L4 evaluation remains pending. HTTP200/
+pytest PASS alone is not a model quality result; evolving WIP versions are not an
+accuracy benchmark. Independent summary live artifacts/results remain unchanged.
+
 <a id="forecast-f4"></a>
 ## CURRENT FACT — F4 isolated technical acceptance
 
@@ -1009,6 +1202,231 @@ Exact commands/results của lượt thực thi thuộc conversation; không g�
 là full suite hoặc synthetic mechanics là accuracy.
 
 <a id="customer-self-service"></a>
+### L3.1/L3.2 synthetic conversational verification (shared cap)
+
+CURRENT FACT: original conversational-live remains immutable/exhausted. L3.1
+conversational-l31-live and L3.2 conversational-l32-live share the same30-attempt/
+USD1.00 cap. Both durable ledgers are read before every paid POST. Their artifacts retain freeze metadata,
+full provider request/preflight/facts/prompt/schema, raw responses and AS03 request/
+final/replay/failure traces. No session/Authorization headers are exported. Model
+is configured Gemini2.5Flash, default OpenRouter routing without fallback; current
+metadata support/prices are checked before every POST. Up to30 completions including
+regeneration, aggregate USD1.00. Input<=24000 bytes, conservative36864 input tokens,
+output<=1200 at capped USD0.3/2.5 per million reserves USD0.0140592/completion,
+USD0.421776 for all30. Unknown costs keep their reservation. No ledger reset.
+
+```powershell
+# Offline and isolated assistant SQL only; no paid calls by ordinary pytest.
+& $assistantPython -B -m pytest tests/unit/test_chat_l31.py tests/unit/test_chat_l31_corpus.py tests/unit/test_chat_l31_budget.py tests/live/test_chat_l31_live.py -q -p no:cacheprovider
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_chat_l31.py tests/integration/test_conversational_chat.py tests/integration/test_assistant_summary.py -q -p no:cacheprovider
+# L3.2 offline units and separately guarded assistant HTTP/PostgreSQL:
+& $assistantPython -B -m pytest tests/unit/test_chat_l32.py tests/unit/test_chat_l32_lifecycle.py tests/unit/test_chat_l32_budget.py tests/api/test_plan_summary_openapi.py tests/live/test_chat_l32_live.py -q -p no:cacheprovider
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_chat_l31.py tests/integration/test_conversational_chat.py -q -p no:cacheprovider
+# Offline freeze after verification; stores source snapshot, never calls DB/model.
+& $assistantPython -B -m scripts.conversational_l32_live --freeze-source
+# Paid only under the explicit shared authorization; DB prerequisite must be ready.
+& $assistantPython -B -m scripts.conversational_l32_live --allow-paid-shared-l31-l32-max-30-usd-1.00 --case all
+```
+
+Freeze app/fixture hash before evaluation. If source changes, previous calls become
+development evidence and only a fresh fixed-version subset is acceptance; all
+attempts/costs remain in the same batch. Stop on systemic failure, fix offline,
+run affected tests before another paid call. Review facts, main-answer completeness
+and naturalness separately; HTTP200/source=model are not a quality oracle.
+
+CURRENT FACT L3.2: Docker/owned assistant PostgreSQL resumed. Linked HTTP/SQL28
+passed. V5 focused12 pass and one newly added V4 replay expectation failure was
+corrected, then affected1 pass; V5 unit/API34 pass. Current normal live8 cases skip
+without opt-in. Commands/output stay in runtime/assistant-test/l32/index.json.
+
+Paid L3.2 used24 completions:13 development V4 and11 final V5. Together with L3.1
+this exhausts30/30. Known USD0.0551248 plus historical unknown reservation0.0281184
+has upper0.0832432; full reservations0.421776. No further paid work is authorized
+by unused dollars. Do not rerun the paid command or reset/delete/refund slots.
+Evaluated V5 source0e3199d2 is PARTIAL:7 accepted/1 regenerated/1 fallback/1
+clarification; the final condensed-milk context turn was unexecuted at cap.
+V4 had proof/null/polarity slot failures and a comparative false reject. V5 sends
+canonical per-fact slots and preserves nulls; sign/role-bound comparatives are
+supported, with old V4 replay retained. Two other valid nonnumeric V5 paraphrases
+were rejected (attempts22/27); regeneration27->28 also returns an unknown fact ID.
+No-winner fallback is factually scoped, not accepted model wording. V6 fixes
+those2 bounded variants offline:24 unit and3 actual AS03/PG fake-provider replay
+tests pass, including immutable V5 replay. Source2e06f304 (prompt5/
+validator6/plan6/renderer7) was live PENDING at checkpoint a29ae1f3; no further
+call belongs to this exhausted group. Never relabel these old raw/final results.
+
+Every saved final checks fresh-session persisted response, equal POST replay with0
+additional completions and GET405/no generation. Owned test cleanup leaves head0030
+and zero users/Runs/chat rows. No development DB, main/runtime8103/FE changes.
+The shared runner fsyncs reservations before network, lowers a final request to
+one completion when only one slot remains, and skips unexecuted turns at zero.
+Timeout/unknown usage retains reservations;429 stops the batch without retry or
+provider change. An abandoned lock is fail-closed. The old L3.1 caller is retired.
+The isolated live fixture retains authorized Gemini/default OpenRouter routing;
+production CHAT_* never inherits summary flags/model. No reviewer model is used.
+
+HISTORICAL INFORMATION L3.1 batch outcome:6 completions; known cost USD0.0065817, unknown
+attempts5/6 reserve USD0.0281184, known+unknown upper USD0.0347001 (all6 full
+reservations USD0.0843552). Attempts1-5 are development:3 accepted cost/proof/
+Ingredient, tradeoff wording false reject and timeout during semantic regeneration.
+Freeze2 budget returned HTTP429, so final live acceptance is PENDING; no paid call
+after429. Final identity-conflict/proof-assessment fixes are offline-only; new selection
+plan/3 and renderer/4 preserve prior implicit plan/2 and renderer/3 obligations. Do not retry
+an unknown completion or call this a complete7-case final-version live PASS.
+Review runtime/assistant-test/conversational-l31-live/index.json and each attempt/
+raw/final; offline-pair-replay.json in runtime/assistant-test/l31 explicitly uses
+FAKE provider/new scoped IDs, not a rewritten live result.
+
+Static realistic fixture has captured two milk labels, distinct5/10VND baskets,
+50/100 percent Product service and exact per-Product/path deltas. It was authored
+once with explicitly fixed baskets/exact serving, not search/solver/forecast;
+read/replay tests never execute engines. Wording corpus expectations were authored by the Codex coding assistant, not an
+independent human panel or model reviewer. Historical L3.1 has14 cases, zero false
+accepts and one legitimate unsupported paraphrase. Current L3.2 finite offline
+probe has0 false accepts/0 false rejects; this does not prove general NLP correctness. Context, repair,
+regeneration and old pinned receipt compatibility have separate SQL tests. L2
+summary remains ordering/tone presentation; no production reviewer is enabled.
+
+### V6 acceptance — separate authorized group
+
+CURRENT FACT `L32-V6-acceptance-1` is separate from the closed30-attempt ledger.
+It permits16 completions including regeneration, USD0.30 total conservative
+reservation, USD0.0140592 per call at unchanged24000-byte/36864-token conservative
+input and1200 output bounds/pricing caps. A durable exclusive/fsynced reservation
+precedes each completion. Unknowns retain full reservation, crash lock fails closed,
+429 stops the entire group without retries/model/provider change. Old groups are
+never reset, refunded or appended. Ordinary pytest skips all8 new live cases.
+
+```powershell
+# Offline tests and separately guarded owned-DB fake-provider harness:
+& $assistantPython -B -m pytest tests/unit/test_chat_v6_acceptance_budget.py tests/unit/test_chat_l32_budget.py tests/unit/test_chat_l32_final_paraphrases.py tests/live/test_chat_v6_acceptance.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_chat_v6_acceptance_harness.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m pytest tests/unit/test_chat_v6_acceptance_findings.py -q -p no:cacheprovider --tb=short
+# Executed acceptance commands below are historical, not a request to rerun:
+& $assistantPython -B -m scripts.conversational_v6_acceptance --freeze-source
+& $assistantPython -B -m scripts.conversational_v6_acceptance --allow-paid-l32-v6-acceptance-1-max-16-usd-0.30
+```
+
+Frozen source2e06f304 has finite synthetic live PASS WITH LIMITS:9 ACCEPTED,
+1 REGENERATED,1 deterministic clarification; all4 conversation turns executed.
+Raw10 omitted simulation numbers with correct slots, so the independent prose
+check rejected it; raw11 restored complete scoped facts. No production source or
+fixture change. Fresh-session equality, POST replay0 and rights/Store denials were
+checked on all11 finals. No message GET exists;405 is a negative method check.
+Live8 lifecycle cases pass109.45s; Codex-authored quality review is separate.
+Offline13 passed/8 skipped, fake HTTP harness2 passed, observed omission test1 passed.
+An initial harness403 expectation for inaccessible Store failed2 tests, corrected
+to documented404 before live; logs remain, no authorization contract change.
+
+New group used11/16 calls, cost USD0.0203539, no unknown usage; all reservations
+USD0.1546512/0.30,5 slots unused.26263 input/4990 output tokens, resolved
+Google/google/gemini-2.5-flash, completion latency2077..5858ms/median3733. No new429
+or timeout. Stop after completed matrix rather than consume remaining slots.
+Review `runtime/assistant-test/L32-V6-acceptance-1/index.json`, quality-review and
+resource-ledger, with original requests/facts/prompt/schema/raw/finals/traces.
+Old artifacts remain bytes-identical; missing original HTTP/header bytes are
+explicit, never reconstructed. Verbose proof/comparison, opaque option labels,
+clarification disposition mismatch and finite-language limits remain. No full
+suite, real/unseen-data claim, L4, reviewer model, FE/runtime deployment.
+
+### L4 paired quality evaluation — separate group
+
+CURRENT FACT L3.2 acceptance checkpoint464dec8dc5c04f2f773ce4cedcee26e342151f57.
+Default remains V6. Candidate is explicit application composition presentation7,
+not a new client parameter/config flag. No endpoint/schema migration/API delta.
+Corpus/split/criteria in tests/fixtures/assistant_l4; exposure.json marks eight
+evaluation cases exposed to development. Read per-stratum results and raw prose,
+not a single accuracy or pytest lifecycle score.20/35g inputs are offline projected
+fixtures only; live uses consistent retained20/20g synthetic evidence.
+
+```powershell
+& $assistantPython -B -m pytest tests/unit/test_assistant_l4_budget.py tests/live/test_chat_l4_live.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m pytest tests/unit/test_assistant_l4_presentation.py tests/unit/test_chat_l32_final_paraphrases.py tests/api/test_plan_summary_openapi.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_assistant_l4.py -q -p no:cacheprovider --tb=short
+# Use a NEW ignored output path; evaluator preserves prior results exclusively.
+& $assistantPython -B -m scripts.assistant_l4_eval --version 7 --split all --output runtime/assistant-test/l4/reproduction-candidate.json
+# Historical paid commands, not instructions to repeat a completed evaluation:
+& $assistantPython -B -m scripts.conversational_l4_live --phase baseline --freeze-source
+& $assistantPython -B -m scripts.conversational_l4_live --phase baseline --allow-paid-l4-max-24-usd-0.50
+& $assistantPython -B -m scripts.conversational_l4_live --phase candidate --freeze-source
+& $assistantPython -B -m scripts.conversational_l4_live --phase candidate --allow-paid-l4-max-24-usd-0.50
+```
+
+`L4-quality-evaluation-1` has its own write-ahead/fsynced exclusive ledger, cap24
+completions including both phases/regeneration/retries, USD0.50 conservative total.
+Unchanged byte/token/price bounds reserve USD0.0140592 each (24 reserve0.3374208).
+Unknown cost retains reservation;429 stops the whole group, crash lock fails closed.
+Private configured Gemini/OpenRouter routing unchanged, no fallback/model judge.
+Normal pytest skips six live scenarios. Freeze copies full app/fixture/corpus and
+selected harness sources per phase; a baseline freeze cannot be recreated from a
+changed candidate worktree. Keep snapshots and use their original source for replay.
+
+Executed baseline6 lifecycle tests passed,9 completions; candidate6 passed,8 calls.
+Separate Codex review: baseline7 ACCEPTED/1 REGENERATED/1 clarification, candidate8
+ACCEPTED/1 clarification; all4 turns complete, all finals fresh-persisted, same-key
+replay0, current rights403/Store isolation404. No message GET exists. Total17/24,
+known USD0.0319601, no unknown usage, reservations0.2390064/0.50,7 slots unused.
+Old30/30 ledger and L3.2 group11/16 with5 unused slots are unchanged, not pooled.
+Stop after completed subset. No call is needed to spend unused slots.
+
+Offline baseline34 pass/1 coverage failure/1 SQL, candidate35 pass/1 SQL; original
+metric-null failures remain historical and corrected separately. Authored assertion
+probe FA/FR0/0 is separate from the baseline valid live paraphrase false rejection,
+also rejected by candidate in offline replay. Proof/comparison/no-winner shorten;
+quantity/why do not improve uniformly. Keep V6 default pending broader evidence.
+Final affected20 unit/API/3 SQL tests pass, earlier focused40/17; no full suite.
+Exact commands/results and phase source/version/usage/latency are under ignored
+runtime/assistant-test/l4/index.json and L4-quality-evaluation-1. Review ZIP is scoped,
+ignored and deletable without losing originals; no secrets, DB dumps or whole runtime.
+
+### L4.1 focused acceptance — remaining L4 budget only
+
+CURRENT FACT checkpoint L4 `46d15459d40f006152f51a4101a9563cc96eb150`;
+derived candidate8 source2d7e2c938baea975c39175fe3b699cb062fddc4a2f99352b62ba776c54246a4f,
+prompt7/validator8/selection8/renderer9/resolver5/assertions2. Default6 unchanged.
+Explicit `AssistantChat(...,presentation_version=8)` supports controlled trial;
+no public request/config field, migration/endpoint or OpenAPI delta.
+
+```powershell
+& $assistantPython -B -m pytest tests/unit/test_assistant_l41.py -q -p no:cacheprovider --tb=short
+& $assistantPython -B -m scripts.assistant_tests tests/integration/test_assistant_l41.py -q -p no:cacheprovider --tb=short
+# Historical executed paid acceptance, not an instruction to consume spare slots:
+& $assistantPython -B -m scripts.conversational_l41_live --freeze-source
+& $assistantPython -B -m scripts.conversational_l41_live --allow-paid-l41-remaining-l4-max-24-usd-0.50
+```
+
+The new opt-in uses ONLY existing L4-quality-evaluation-1 reservations/cap24/USD0.50.
+Before this slice17 calls;5 new calls18–22 cost USD0.0099809, aggregate22/24 known
+USD0.0419410/full reservations0.3093024, unknown0.2 slots unused. Old L3.2 group
+11/16 and its5 unused slots are not consumed/transferred. Unknown reservation,
+crash lock and429 whole-group stop remain unchanged. No new budget or blind retry.
+
+Factories create actual validated retained20/35g, failed/partial and mixed-path
+Runs through capture/exact pipeline/PlanningRun persistence in guarded assistant
+DB only. Different pack inputs cause20/35; no output patch. Mixed uses explicit
+custom BASE40, never altering default BASE95. Test engine execution authors Runs,
+not chat/replay behavior. No production data/development DB/forecast training.
+Protocol/expected oracles freeze in tests/fixtures/assistant_l41/protocol.json.
+
+Final22 unit tests pass; earlier37 unit/API+3 live skips;20/35 four-turn HTTP/DB fake
+wording1 pass with old6/7 generation replay, affected mixed/failed HTTP/SQL2 pass.
+OpenAPI diff0. Live3 lifecycle scenarios pass125.27s,6 finals:5 ACCEPTED and1
+CLARIFICATION, no regeneration/fallback. All four turns execute20→35 with different
+scoped refs; every final verifies current rights/Store isolation, fresh response
+equality and POST replay0 calls. No message GET resource;405 is a negative probe.
+Quality review is Codex-authored against all raw/final prose/facts, not pytest or
+independent human/model grading. Saved raw7 offline replay is explicit old6/7
+reject/new8 accept; new minimal pairs retain material prose/slot protection.
+Simple why factors are support unless explicit path/date or technical detail;
+quantity/missing exact-rationale boundary always remain main obligations.
+
+Retain failed helper/fixture logs: offline resolver mapping corrected to5; mixed
+default40 was blocked correctly, then valid custom40 used. Evidence/old results
+are never relabelled. Read `runtime/assistant-test/l41/index.json`, quality-review,
+resource-ledger and new live phase `L4-quality-evaluation-1/l41-candidate8`.
+Focused acceptance PASS WITH LIMITS allows explicit trial only. No full suite,
+default selection, general entailment/production readiness, FE/deployment or L5.
+
 ## CURRENT FACT — setup khách hàng từ số0
 
 Checkout chính: `D:\hocc_bk\ai\proj\projectMLAI\backend`, main, `.venv` riêng.

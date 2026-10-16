@@ -451,5 +451,553 @@
       "source_reference": "synthetic-reviewed-source",
       "source_version": 1
     }
+  },
+  "decision_assistant_l5": {
+    "provenance": {
+      "kind": "SYNTHETIC_ACTUAL_OFFLINE_HTTP_RESPONSES",
+      "labels": "Codex-authored, not human review; no live provider/browser acceptance",
+      "main_base": "8b0968562438a1558fb189e0ab18bfabbe0cd5a9",
+      "assistant_checkpoint": "1f9b5c5",
+      "source": "enclosing integration commit; runtime/assistant-integration manifest owns exact source hashes"
+    },
+    "summary_request": {
+      "expected_evidence_version": "e74c903f21c2a2599d6f91a754dbd0ca2a5980c3bc4615e4ef7b6bb5eea2e81a",
+      "option_id": null,
+      "locale": "vi",
+      "detail_level": "simple"
+    },
+    "chat_request": {
+      "expected_evidence_version": "e74c903f21c2a2599d6f91a754dbd0ca2a5980c3bc4615e4ef7b6bb5eea2e81a",
+      "option_id": null,
+      "locale": "vi",
+      "detail_level": "simple",
+      "question": "Chi phí và ngân sách?",
+      "ingredient_id": null,
+      "history": []
+    },
+    "host": {
+      "summary": {
+        "data": {
+          "generation_id": "c294b6a1-7b18-4992-9eaf-3153887122e6",
+          "run_id": "f2abdc88-c0a4-4a86-8a12-6b9dcc980fdc",
+          "status": "completed",
+          "created_at": "2026-10-10T02:00:00Z",
+          "finished_at": "2026-10-10T02:00:00Z",
+          "result": {
+            "schema_version": "plan_summary/1",
+            "identity": {
+              "run_id": "f2abdc88-c0a4-4a86-8a12-6b9dcc980fdc",
+              "store_id": "dd28fa4c-0481-4325-b3da-d2f0e831f662",
+              "aggregate_digest": "e74c903f21c2a2599d6f91a754dbd0ca2a5980c3bc4615e4ef7b6bb5eea2e81a",
+              "input_digest": "48cbec1d19be708f157a06210cd938db5e3bc57a081b9a0e9d9862af6d00538b",
+              "result_digest": "2f21687c714c571a37168240dee58d01143edb367ed3e26d8b5b68850391405a",
+              "request_digest": "cb1073250d10593361b755c74f0356c7e715c352d6341650a4b4270baf3f559b",
+              "storage_version": "planning_storage/1",
+              "package_schema_version": 1,
+              "result_schema_version": "operational_pipeline/2",
+              "capture_schema_version": "operational_capture/2",
+              "accepted_at": "2026-10-10T02:00:00Z",
+              "started_at": "2026-10-10T02:00:00Z",
+              "finished_at": "2026-10-10T02:00:00Z",
+              "captured_at": "2026-10-10T02:00:00Z"
+            },
+            "option_id": "cmp1_e6a4e94855c9a3f118ec908d47a9e218a75138dd28bf8d84712692f501987fde",
+            "locale": "vi",
+            "detail_level": "simple",
+            "source": "deterministic_fallback",
+            "presentation": {
+              "ordering": [
+                "outcome",
+                "cost",
+                "requirements",
+                "coverage",
+                "proof",
+                "limitations"
+              ],
+              "tone": "plain"
+            },
+            "answer": "Run có phương án được khuyến nghị.\n\nPhương án đang xem có tổng chi 14 VND, gồm tiền mua 14 và phí phải trả 0 VND. Giới hạn ngân sách đã lưu là 100 VND.\n\nCác đánh giá yêu cầu theo món và đường nhu cầu: 1 đạt, 0 chưa đạt, 0 chưa đánh giá.\n\nPhạm vi đã tính gồm 1/1 món; món bị loại không có nghĩa là nhu cầu bằng không.\n\nKhuyến nghị chỉ so sánh các phương án đã đánh giá, không chứng minh tối ưu toàn cục. Selector xét phương án đủ điều kiện theo chi phí, sau đó mức đáp ứng từng món và thứ tự kỹ thuật khi hòa. Tìm kiếm chưa có chứng nhận đầy đủ trong miền giới hạn đã lưu.\n\nRun giữ 1 cảnh báo và 0 vấn đề chặn. Các đường nhu cầu không phải xác suất; kết quả mô phỏng không phải lượng nhận hoặc tiêu thụ thực tế. Chưa có bằng chứng nhân quả hay so sánh không mua trong summary này. Xem chi tiết trước khi quyết định; sửa dữ liệu thì tạo Run mới. Khuyến nghị không tự tạo đơn mua.",
+            "claims": [
+              {
+                "family": "outcome",
+                "text": "Run có phương án được khuyến nghị.",
+                "evidence_ids": [
+                  "ev-3942a2d35ec907697801c94c12da0ef90a9a3045323027e97ec1cb2420d7ac22",
+                  "ev-d75c72539d6fa80cbf48e611aea09b78637942ff29b1bfe994f04e0bad31cabb"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Phương án đang xem có tổng chi 14 VND, gồm tiền mua 14 và phí phải trả 0 VND. Giới hạn ngân sách đã lưu là 100 VND.",
+                "evidence_ids": [
+                  "ev-84a8b9b9ccb488520ec6e5b7e43514c5bc139ce44310984ace290d2674aaa7de",
+                  "ev-c93638d699106b09b6ceeae597f790a5ca5267f9ce94d11b679c5f9bcc590df2"
+                ]
+              },
+              {
+                "family": "requirements",
+                "text": "Các đánh giá yêu cầu theo món và đường nhu cầu: 1 đạt, 0 chưa đạt, 0 chưa đánh giá.",
+                "evidence_ids": [
+                  "ev-0c9d16c86d255cb6d4a119fdc0ea32f0a139228b0d0a24060338561342b55f0b"
+                ]
+              },
+              {
+                "family": "coverage",
+                "text": "Phạm vi đã tính gồm 1/1 món; món bị loại không có nghĩa là nhu cầu bằng không.",
+                "evidence_ids": [
+                  "ev-716a99d73a02f37c48d3cc3b5e478441f1677cd4120e787b987a54ba1b8fb9e2"
+                ]
+              },
+              {
+                "family": "proof",
+                "text": "Khuyến nghị chỉ so sánh các phương án đã đánh giá, không chứng minh tối ưu toàn cục. Selector xét phương án đủ điều kiện theo chi phí, sau đó mức đáp ứng từng món và thứ tự kỹ thuật khi hòa. Tìm kiếm chưa có chứng nhận đầy đủ trong miền giới hạn đã lưu.",
+                "evidence_ids": [
+                  "ev-3fa6715b08838ec8d1fa59871c10f4926e88d046f7ec3a7a97cbec4421fb0b84",
+                  "ev-af73f1bb38e21e8a1166512d7f0282588030fcb52b3d89b83ab84aa1658779be",
+                  "ev-d75c72539d6fa80cbf48e611aea09b78637942ff29b1bfe994f04e0bad31cabb"
+                ]
+              },
+              {
+                "family": "limitations",
+                "text": "Run giữ 1 cảnh báo và 0 vấn đề chặn. Các đường nhu cầu không phải xác suất; kết quả mô phỏng không phải lượng nhận hoặc tiêu thụ thực tế. Chưa có bằng chứng nhân quả hay so sánh không mua trong summary này. Xem chi tiết trước khi quyết định; sửa dữ liệu thì tạo Run mới. Khuyến nghị không tự tạo đơn mua.",
+                "evidence_ids": [
+                  "ev-d75c72539d6fa80cbf48e611aea09b78637942ff29b1bfe994f04e0bad31cabb",
+                  "ev-2cce7c5312dc93b2c326a640279d096465f45f4bf48fd1f31c091a0ba53796eb",
+                  "ev-e9914e8c3cc7fb9a0d7369af45aee0a95c75219bdac7aff31bf0575bc8a92c2d",
+                  "ev-ec55ab073396a06bb718873b9a300f4cc20343e8ebdedb33783494397362efca"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "evidence_id": "ev-3942a2d35ec907697801c94c12da0ef90a9a3045323027e97ec1cb2420d7ac22",
+                "pointer": "/overview/outcome",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-84a8b9b9ccb488520ec6e5b7e43514c5bc139ce44310984ace290d2674aaa7de",
+                "pointer": "/overview/configuration",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-ec55ab073396a06bb718873b9a300f4cc20343e8ebdedb33783494397362efca",
+                "pointer": "/overview/temporal_basis",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-716a99d73a02f37c48d3cc3b5e478441f1677cd4120e787b987a54ba1b8fb9e2",
+                "pointer": "/overview/scope",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-af73f1bb38e21e8a1166512d7f0282588030fcb52b3d89b83ab84aa1658779be",
+                "pointer": "/overview/strategies",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-d75c72539d6fa80cbf48e611aea09b78637942ff29b1bfe994f04e0bad31cabb",
+                "pointer": "/overview/explanation",
+                "source": "retained_C08"
+              },
+              {
+                "evidence_id": "ev-3fa6715b08838ec8d1fa59871c10f4926e88d046f7ec3a7a97cbec4421fb0b84",
+                "pointer": "/overview/selection_proof",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-e9914e8c3cc7fb9a0d7369af45aee0a95c75219bdac7aff31bf0575bc8a92c2d",
+                "pointer": "/overview/assumptions",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-2cce7c5312dc93b2c326a640279d096465f45f4bf48fd1f31c091a0ba53796eb",
+                "pointer": "/overview/omissions",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-c93638d699106b09b6ceeae597f790a5ca5267f9ce94d11b679c5f9bcc590df2",
+                "pointer": "/option/costs",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-0c9d16c86d255cb6d4a119fdc0ea32f0a139228b0d0a24060338561342b55f0b",
+                "pointer": "/option/requirements_assessment",
+                "source": "retained_C03"
+              }
+            ],
+            "diagnostics": {
+              "disposition": "FALLBACK",
+              "reason": "MODEL_DISABLED",
+              "prompt_version": "plan_summary_prompt/1",
+              "validator_version": "summary_presentation_guard/1",
+              "requested_model": null,
+              "resolved_model": null,
+              "resolved_provider": null,
+              "attempts": 0,
+              "input_tokens": null,
+              "output_tokens": null
+            },
+            "renderer_version": "plan_summary_renderer/1"
+          },
+          "error_code": null
+        },
+        "meta": {
+          "request_id": "5d2c0007-9e18-49b3-8d0a-d1e89c5f31c8"
+        },
+        "error": null
+      },
+      "message": {
+        "data": {
+          "schema_version": "decision_assistant/1",
+          "run_id": "f2abdc88-c0a4-4a86-8a12-6b9dcc980fdc",
+          "evidence_version": "e74c903f21c2a2599d6f91a754dbd0ca2a5980c3bc4615e4ef7b6bb5eea2e81a",
+          "result_digest": "2f21687c714c571a37168240dee58d01143edb367ed3e26d8b5b68850391405a",
+          "option_id": "cmp1_e6a4e94855c9a3f118ec908d47a9e218a75138dd28bf8d84712692f501987fde",
+          "ingredient_id": null,
+          "locale": "vi",
+          "kind": "answer",
+          "source": "deterministic_fallback",
+          "answer": "Tổng chi của phương án đang xem là 14 VND.\n\nTiền mua là 14 VND.\n\nPhí phải trả là 0 VND.\n\nNgân sách đã lưu là 100 VND.",
+          "claims": [
+            {
+              "text": "Tổng chi của phương án đang xem là 14 VND.",
+              "evidence_ids": [
+                "ev-c93638d699106b09b6ceeae597f790a5ca5267f9ce94d11b679c5f9bcc590df2",
+                "ev-d8cee7588c7dfff46c94a661ef5fdf78ca771a38400dc26e062dd3b0d265480a",
+                "ev-d75c72539d6fa80cbf48e611aea09b78637942ff29b1bfe994f04e0bad31cabb",
+                "ev-919fd33a8b3bac5e4ea4736139fb0fa2481d24db1d3b0367cef02e928a78004e"
+              ]
+            },
+            {
+              "text": "Tiền mua là 14 VND.",
+              "evidence_ids": [
+                "ev-c93638d699106b09b6ceeae597f790a5ca5267f9ce94d11b679c5f9bcc590df2",
+                "ev-d8cee7588c7dfff46c94a661ef5fdf78ca771a38400dc26e062dd3b0d265480a",
+                "ev-d75c72539d6fa80cbf48e611aea09b78637942ff29b1bfe994f04e0bad31cabb",
+                "ev-919fd33a8b3bac5e4ea4736139fb0fa2481d24db1d3b0367cef02e928a78004e"
+              ]
+            },
+            {
+              "text": "Phí phải trả là 0 VND.",
+              "evidence_ids": [
+                "ev-c93638d699106b09b6ceeae597f790a5ca5267f9ce94d11b679c5f9bcc590df2",
+                "ev-d8cee7588c7dfff46c94a661ef5fdf78ca771a38400dc26e062dd3b0d265480a",
+                "ev-d75c72539d6fa80cbf48e611aea09b78637942ff29b1bfe994f04e0bad31cabb",
+                "ev-919fd33a8b3bac5e4ea4736139fb0fa2481d24db1d3b0367cef02e928a78004e"
+              ]
+            },
+            {
+              "text": "Ngân sách đã lưu là 100 VND.",
+              "evidence_ids": [
+                "ev-84a8b9b9ccb488520ec6e5b7e43514c5bc139ce44310984ace290d2674aaa7de"
+              ]
+            }
+          ],
+          "references": [
+            {
+              "evidence_id": "ev-d8cee7588c7dfff46c94a661ef5fdf78ca771a38400dc26e062dd3b0d265480a",
+              "pointer": "/overview/recommendation_available",
+              "source": "retained_C03"
+            },
+            {
+              "evidence_id": "ev-84a8b9b9ccb488520ec6e5b7e43514c5bc139ce44310984ace290d2674aaa7de",
+              "pointer": "/overview/configuration",
+              "source": "retained_C03"
+            },
+            {
+              "evidence_id": "ev-d75c72539d6fa80cbf48e611aea09b78637942ff29b1bfe994f04e0bad31cabb",
+              "pointer": "/overview/explanation",
+              "source": "retained_C08"
+            },
+            {
+              "evidence_id": "ev-919fd33a8b3bac5e4ea4736139fb0fa2481d24db1d3b0367cef02e928a78004e",
+              "pointer": "/option/option_id",
+              "source": "retained_C03"
+            },
+            {
+              "evidence_id": "ev-c93638d699106b09b6ceeae597f790a5ca5267f9ce94d11b679c5f9bcc590df2",
+              "pointer": "/option/costs",
+              "source": "retained_C03"
+            }
+          ],
+          "clarification": null,
+          "diagnostics": {
+            "reason": "MODEL_DISABLED",
+            "prompt_version": null,
+            "validator_version": "decision_chat_renderer/4",
+            "model": null,
+            "resolved_model": null,
+            "provider": null,
+            "attempts": 0,
+            "input_tokens": null,
+            "output_tokens": null,
+            "cost_usd": null,
+            "latency_ms": null,
+            "finish_reason": null,
+            "disposition": "FALLBACK",
+            "prompt_hash": null,
+            "schema_hash": null,
+            "evidence_hash": null
+          },
+          "context": {
+            "run_id": "f2abdc88-c0a4-4a86-8a12-6b9dcc980fdc",
+            "evidence_version": "e74c903f21c2a2599d6f91a754dbd0ca2a5980c3bc4615e4ef7b6bb5eea2e81a",
+            "option_id": "cmp1_e6a4e94855c9a3f118ec908d47a9e218a75138dd28bf8d84712692f501987fde",
+            "comparison_pair": null,
+            "ingredient_id": null,
+            "product_id": null,
+            "pending": null,
+            "topic": null
+          }
+        },
+        "meta": {
+          "request_id": "98ac28c3-db37-48a7-b5e6-eae6dfc0320a"
+        },
+        "error": null
+      },
+      "fresh_session_equal": true,
+      "replay_zero_compute": true
+    },
+    "retained_schema3_metadata2": {
+      "summary": {
+        "data": {
+          "generation_id": "2a2fa563-e227-4ac9-a060-a13128a0535c",
+          "run_id": "0177acc4-d302-468a-bffb-aeac3168533f",
+          "status": "completed",
+          "created_at": "2026-10-10T02:00:00Z",
+          "finished_at": "2026-10-10T02:00:00Z",
+          "result": {
+            "schema_version": "plan_summary/1",
+            "identity": {
+              "run_id": "0177acc4-d302-468a-bffb-aeac3168533f",
+              "store_id": "5ca56f3f-68dd-417c-825b-dbac795bac2f",
+              "aggregate_digest": "c3e0ace54f67c45500a5bf6c7dc39c9326a57c3667b2ff6f86e8d332886cf34b",
+              "input_digest": "c4c270509df348baa7c062f26aae494bb518e89117f4ddb70e877fe732d064ee",
+              "result_digest": "6248a5baff67d63875fb75816cf2d3185e7d7940ec36c782a28b544c1f1ccbfd",
+              "request_digest": "99a3cc59a0d4e81808be93f9a9733bedf9c780937a13d8a3aec89dbbc78f52cf",
+              "storage_version": "planning_storage/1",
+              "package_schema_version": 1,
+              "result_schema_version": "operational_pipeline/2",
+              "capture_schema_version": "operational_capture/2",
+              "accepted_at": "2026-10-15T20:34:42.829007Z",
+              "started_at": "2026-10-15T20:34:42.829007Z",
+              "finished_at": "2026-10-15T20:34:42.829007Z",
+              "captured_at": "2026-10-15T20:34:42.829007Z"
+            },
+            "option_id": null,
+            "locale": "vi",
+            "detail_level": "simple",
+            "source": "deterministic_fallback",
+            "presentation": {
+              "ordering": [
+                "outcome",
+                "cost",
+                "requirements",
+                "coverage",
+                "proof",
+                "limitations"
+              ],
+              "tone": "plain"
+            },
+            "answer": "Chưa có phương án đủ điều kiện được chọn trong Run này.\n\nChưa có chi phí phương án để diễn giải; không thể coi là chi phí bằng không. Giới hạn ngân sách đã lưu là 0 VND.\n\nChưa có đánh giá đáp ứng yêu cầu của phương án.\n\nPhạm vi đã tính gồm 1/1 món; món bị loại không có nghĩa là nhu cầu bằng không.\n\nKhuyến nghị chỉ so sánh các phương án đã đánh giá, không chứng minh tối ưu toàn cục. Chứng nhận duyệt hết chỉ áp dụng cho miền hữu hạn đã lưu.\n\nRun giữ 0 cảnh báo và 0 vấn đề chặn. Các đường nhu cầu không phải xác suất; kết quả mô phỏng không phải lượng nhận hoặc tiêu thụ thực tế. Chưa có bằng chứng nhân quả hay so sánh không mua trong summary này. Xem chi tiết trước khi quyết định; sửa dữ liệu thì tạo Run mới. Khuyến nghị không tự tạo đơn mua.",
+            "claims": [
+              {
+                "family": "outcome",
+                "text": "Chưa có phương án đủ điều kiện được chọn trong Run này.",
+                "evidence_ids": [
+                  "ev-a3732fbf725903dac188d9c3fcbba55e32a536972d6ac43f799eba5903f09cff",
+                  "ev-2f8a1f4ecc26529c2b95e63f7f352e3926e77e69ec17324df0ad474498f8d6be"
+                ]
+              },
+              {
+                "family": "cost",
+                "text": "Chưa có chi phí phương án để diễn giải; không thể coi là chi phí bằng không. Giới hạn ngân sách đã lưu là 0 VND.",
+                "evidence_ids": [
+                  "ev-b90bc1ebc3a0b904290c73f972a99cb30e14779edc5c22081952651f0283d471",
+                  "ev-65b138c963545d7d9cf1aace1a859769413c490f0b8d69599e7f87037a5bc55d"
+                ]
+              },
+              {
+                "family": "requirements",
+                "text": "Chưa có đánh giá đáp ứng yêu cầu của phương án.",
+                "evidence_ids": [
+                  "ev-2f8a1f4ecc26529c2b95e63f7f352e3926e77e69ec17324df0ad474498f8d6be"
+                ]
+              },
+              {
+                "family": "coverage",
+                "text": "Phạm vi đã tính gồm 1/1 món; món bị loại không có nghĩa là nhu cầu bằng không.",
+                "evidence_ids": [
+                  "ev-01c4212ccb24d0758f3b89a6517deb0edc903d62820f8fe00c151dd09cc15cbd"
+                ]
+              },
+              {
+                "family": "proof",
+                "text": "Khuyến nghị chỉ so sánh các phương án đã đánh giá, không chứng minh tối ưu toàn cục. Chứng nhận duyệt hết chỉ áp dụng cho miền hữu hạn đã lưu.",
+                "evidence_ids": [
+                  "ev-56ee2a2c03528a4dfa4835b92fdd7fead2574e0447de181b6e04b922c5b46408",
+                  "ev-70763039f5636379b7b7ffe9c34dde1d48e5c6b9a6231913456094f3dcf35ce9",
+                  "ev-2f8a1f4ecc26529c2b95e63f7f352e3926e77e69ec17324df0ad474498f8d6be"
+                ]
+              },
+              {
+                "family": "limitations",
+                "text": "Run giữ 0 cảnh báo và 0 vấn đề chặn. Các đường nhu cầu không phải xác suất; kết quả mô phỏng không phải lượng nhận hoặc tiêu thụ thực tế. Chưa có bằng chứng nhân quả hay so sánh không mua trong summary này. Xem chi tiết trước khi quyết định; sửa dữ liệu thì tạo Run mới. Khuyến nghị không tự tạo đơn mua.",
+                "evidence_ids": [
+                  "ev-2f8a1f4ecc26529c2b95e63f7f352e3926e77e69ec17324df0ad474498f8d6be",
+                  "ev-65b138c963545d7d9cf1aace1a859769413c490f0b8d69599e7f87037a5bc55d",
+                  "ev-e238752b61247570bb421f32dd7ff7910fec3d949d98a1bb0aad176d22bb1653",
+                  "ev-3e203a892d5d164d0ba061ccaa5025bafb8096eb86f17a813446f4eb9e72313c"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "evidence_id": "ev-a3732fbf725903dac188d9c3fcbba55e32a536972d6ac43f799eba5903f09cff",
+                "pointer": "/overview/outcome",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-b90bc1ebc3a0b904290c73f972a99cb30e14779edc5c22081952651f0283d471",
+                "pointer": "/overview/configuration",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-3e203a892d5d164d0ba061ccaa5025bafb8096eb86f17a813446f4eb9e72313c",
+                "pointer": "/overview/temporal_basis",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-01c4212ccb24d0758f3b89a6517deb0edc903d62820f8fe00c151dd09cc15cbd",
+                "pointer": "/overview/scope",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-70763039f5636379b7b7ffe9c34dde1d48e5c6b9a6231913456094f3dcf35ce9",
+                "pointer": "/overview/strategies",
+                "source": "retained_C03"
+              },
+              {
+                "evidence_id": "ev-2f8a1f4ecc26529c2b95e63f7f352e3926e77e69ec17324df0ad474498f8d6be",
+                "pointer": "/overview/explanation",
+                "source": "retained_C08"
+              },
+              {
+                "evidence_id": "ev-56ee2a2c03528a4dfa4835b92fdd7fead2574e0447de181b6e04b922c5b46408",
+                "pointer": "/overview/selection_proof",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-e238752b61247570bb421f32dd7ff7910fec3d949d98a1bb0aad176d22bb1653",
+                "pointer": "/overview/assumptions",
+                "source": "retained_capture"
+              },
+              {
+                "evidence_id": "ev-65b138c963545d7d9cf1aace1a859769413c490f0b8d69599e7f87037a5bc55d",
+                "pointer": "/overview/omissions",
+                "source": "retained_capture"
+              }
+            ],
+            "diagnostics": {
+              "disposition": "FALLBACK",
+              "reason": "MODEL_DISABLED",
+              "prompt_version": "plan_summary_prompt/1",
+              "validator_version": "summary_presentation_guard/1",
+              "requested_model": null,
+              "resolved_model": null,
+              "resolved_provider": null,
+              "attempts": 0,
+              "input_tokens": null,
+              "output_tokens": null
+            },
+            "renderer_version": "plan_summary_renderer/1"
+          },
+          "error_code": null
+        },
+        "meta": {
+          "request_id": "9cb258c6-8b8d-48c6-8260-ee3266599d53"
+        },
+        "error": null
+      },
+      "message": {
+        "data": {
+          "schema_version": "decision_assistant/1",
+          "run_id": "0177acc4-d302-468a-bffb-aeac3168533f",
+          "evidence_version": "c3e0ace54f67c45500a5bf6c7dc39c9326a57c3667b2ff6f86e8d332886cf34b",
+          "result_digest": "6248a5baff67d63875fb75816cf2d3185e7d7940ec36c782a28b544c1f1ccbfd",
+          "option_id": null,
+          "ingredient_id": null,
+          "locale": "vi",
+          "kind": "answer",
+          "source": "deterministic_fallback",
+          "answer": "Chi phí phương án chưa có, không đồng nghĩa bằng không.\n\nNgân sách đã lưu là 0 VND.",
+          "claims": [
+            {
+              "text": "Chi phí phương án chưa có, không đồng nghĩa bằng không.",
+              "evidence_ids": [
+                "ev-65b138c963545d7d9cf1aace1a859769413c490f0b8d69599e7f87037a5bc55d"
+              ]
+            },
+            {
+              "text": "Ngân sách đã lưu là 0 VND.",
+              "evidence_ids": [
+                "ev-b90bc1ebc3a0b904290c73f972a99cb30e14779edc5c22081952651f0283d471"
+              ]
+            }
+          ],
+          "references": [
+            {
+              "evidence_id": "ev-b90bc1ebc3a0b904290c73f972a99cb30e14779edc5c22081952651f0283d471",
+              "pointer": "/overview/configuration",
+              "source": "retained_C03"
+            },
+            {
+              "evidence_id": "ev-65b138c963545d7d9cf1aace1a859769413c490f0b8d69599e7f87037a5bc55d",
+              "pointer": "/overview/omissions",
+              "source": "retained_capture"
+            }
+          ],
+          "clarification": null,
+          "diagnostics": {
+            "reason": "MODEL_DISABLED",
+            "prompt_version": null,
+            "validator_version": "decision_chat_renderer/4",
+            "model": null,
+            "resolved_model": null,
+            "provider": null,
+            "attempts": 0,
+            "input_tokens": null,
+            "output_tokens": null,
+            "cost_usd": null,
+            "latency_ms": null,
+            "finish_reason": null,
+            "disposition": "FALLBACK",
+            "prompt_hash": null,
+            "schema_hash": null,
+            "evidence_hash": null
+          },
+          "context": {
+            "run_id": "0177acc4-d302-468a-bffb-aeac3168533f",
+            "evidence_version": "c3e0ace54f67c45500a5bf6c7dc39c9326a57c3667b2ff6f86e8d332886cf34b",
+            "option_id": null,
+            "comparison_pair": null,
+            "ingredient_id": null,
+            "product_id": null,
+            "pending": null,
+            "topic": null
+          }
+        },
+        "meta": {
+          "request_id": "70fa8a3a-983d-4c67-9685-387f20469c12"
+        },
+        "error": null
+      },
+      "fresh_session_equal": true,
+      "replay_zero_compute": true,
+      "mode": "SAVED_NATIVE_FORECAST_NEW_SYNTHETIC_HOST_PLANNING_NO_NATIVE_INFERENCE",
+      "metadata2_preserved": true,
+      "schema3_preserved": true,
+      "migration_guard_rejected": true
+    }
   }
 }

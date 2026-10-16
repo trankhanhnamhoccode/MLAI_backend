@@ -1,6 +1,55 @@
 # Phản hồi BE cho FE010 — canonical source handoff
 
-## CURRENT FACT — Data Readiness D1–D5 / source main local
+## CURRENT FACT - Decision Assistant L5 combined backend source
+
+Combined source adds only AS01/AS02/AS03:76 operations/69 paths, migration head
+`l5_20261016_assistant_f4`,76 tables including Alembic. Source OpenAPI above is
+current; earlier73/66 and FE54 comparisons below are historical checkpoints.
+No FE files, runtime8103 configuration/process, demo DB or provider activation changed.
+
+| Operation | Exact path under `/api/v1/procurement-plans/{plan_id}` | FE behavior |
+| --- | --- | --- |
+| AS01 POST | `/assistant/summary` | Explicit synchronous summary generation/replay; UUID Idempotency-Key; Location points to AS02 |
+| AS02 GET | `/assistant/summary/{generation_id}` | Read retained summary only; no implicit generation/recovery/provider |
+| AS03 POST | `/assistant/messages` | Scoped answer/clarification; same key/body POST replays retained response; no GET message endpoint |
+
+AS01/AS03 require secure session cookie, exact Origin, X-CSRF-Token and UUID
+Idempotency-Key. All three require current planning.result.read + budget.read +
+procurement.cost.read, repeated before delivery/replay. Missing current rights403;
+foreign/inactive Store404; unusable session401. AS02 read keeps ordinary cookie and
+Origin policy, no mutation body/key. Client obtains expected_evidence_version from
+C03 response_version; mismatch409. No client-supplied facts/proof/winner authority.
+Strict request/response structure is in [OpenAPI](openapi.json), canonical workflow/
+errors in [Planning18](../PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
+[Examples](examples.json) decision_assistant_l5 are DTO-validated synthetic actual
+HTTP responses, not restaurant data, live model or browser evidence.
+
+Summary is backend-rendered fact blocks with optional model ordering/tone; C08 is
+unchanged structured engine explanation; chat is finite scoped conversational
+wording over retained facts. Unknown is not zero; simulation is not actual stock
+or exact purchase causality; unproven/finite-domain proof is not global optimality.
+Carry returned structured context/pending clarification for follow-ups; display
+candidates by retained identity and keep source/diagnostics visible. Changing
+entity must change its facts/provenance; history never supplies business evidence.
+
+V6 is the default presentation. Candidate8 remains an explicit application
+composition trial (`AssistantChat(...,presentation_version=8)`), no operator-facing
+selector or FE request field exists. SUMMARY_LLM_ENABLED and CHAT_LLM_ENABLED are
+independent and OFF by default; Import Qwen is separate. Model OFF summary is
+deterministic_fallback; chat uses scoped deterministic answer/clarification.
+No configured key alone enables calls. Forecast challenger remains test-only/OFF.
+
+AS01/AS03 same-key/body retries preserve original response across settings/version
+changes. Same key/different body409; running/live or unknown claim409. AS02 may show
+running/failed retained status, but GET never recovers it. Explicit replay recovers
+only OS-proven dead generation without repeating an uncertain call; failed keys
+stay failed, intentional new attempt needs a new key. Do not treat AS03 as J01
+polling or invent GET messages. Bounded fake-provider fallback can return200;
+inspect source/diagnostics rather than inferring model success from HTTP status.
+Backend integration verification and its limits belong to the feature/runbook;
+browser, deployment and new live merged-source acceptance remain PENDING.
+
+## HISTORICAL INFORMATION — Data Readiness D1–D5 integration surface
 
 D5 `11ef320a5873fc4dc314fdad63878db5f8a8b38c` tích hợp giữ ancestry vào main local.
 [OpenAPI](openapi.json) source73 operations/66 paths, head0027/72 tables; enclosing
@@ -35,7 +84,7 @@ không là browser/full-suite/real-accuracy acceptance; D3 timing root cause cò
 
 
 
-## CURRENT FACT — customer self-service / canonical backend
+## HISTORICAL INFORMATION — customer self-service integration surface
 
 Source73 operations/66 paths, head0027/72 tables. T03 POST `/api/v1/stores` mới trên
 collection T01, required `{name,timezone,currency}`, response201 StoreSummary/Location.

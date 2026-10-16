@@ -1,7 +1,7 @@
 """Explicit procurement/2; effective ratios only, no API/default/saved parser."""
 from typing import Literal
 from uuid import UUID
-from pydantic import model_validator
+from pydantic import model_validator, ValidationInfo
 from app.application.contracts.common import Contract, Nonblank, Strategy
 from app.application.contracts.procurement import (
     ProcurementInput, ProcurementPolicy, ProductFloor, Ratio, ProcurementCandidate,
@@ -115,7 +115,11 @@ class ProcurementResultV2(Contract):
     unique_exact_evaluations: Count
 
     @model_validator(mode='after')
-    def reconcile(self):
+    def reconcile(self, info: ValidationInfo):
+        if info.context and info.context.get('retained_consistency'):
+            from app.application.retained_decision_validation import validate_procurement
+            validate_procurement(self)
+            return self
         from app.application.procurement_v2_validation import validate_result
         validate_result(self)
         return self

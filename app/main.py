@@ -112,6 +112,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.readiness = ReadinessReads(application.state.auth,application.state.forecast_serving,
         planning_available=lambda:application.state.planning_worker is not None and application.state.planning_worker.available)
     application.state.planning_public = PublicPlanning(application.state.auth,application.state.forecast_serving)
+    from app.application.use_cases.plan_summary import PlanSummaries
+    from app.infrastructure.plan_summary_provider import OpenRouterSummaryProvider, profile_from_settings
+    application.state.plan_summaries = PlanSummaries(application.state.planning_public,
+        profile_from_settings(configuration),OpenRouterSummaryProvider(configuration.openrouter_api_key))
+    from app.application.use_cases.assistant_chat import AssistantChat
+    from app.infrastructure.conversational_provider import OpenRouterConversationalProvider,profile_from_settings as chat_profile
+    application.state.assistant_chat = AssistantChat(application.state.planning_public,
+        chat_profile(configuration),OpenRouterConversationalProvider(configuration.openrouter_api_key))
     from app.application.use_cases.planning_exports import PlanningExports
     from app.infrastructure.storage.planning_pdf import PlanningPDFStore
     from app.infrastructure.planning_pdf_renderer import PlanningPDFRenderer
@@ -135,6 +143,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(planning_configuration_router)
     application.include_router(readiness_router)
     application.include_router(planning_public_router)
+    from app.api.plan_summary import router as summary_router
+    application.include_router(summary_router)
+    from app.api.assistant_chat import router as chat_router
+    application.include_router(chat_router)
     from app.api.history import router as history_router
     application.include_router(history_router)
     from app.api.planning_exports import router as pdf_router
@@ -269,7 +281,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 if request.url.path.endswith('/procurement-plans'):
                     from app.application.contracts.planning_configuration import FieldError
                     response=config_failure(ConfigurationError('INVALID_PLANNING_CONFIGURATION',422,(FieldError(code='RESOURCE_LIMIT_EXCEEDED',field='request',message='Yêu cầu vượt giới hạn 64 KiB.'),)))
-                else:response=config_failure(ConfigurationError('RESOURCE_LIMIT_EXCEEDED' if '/procurement-plans/' in request.url.path and request.url.path.endswith('/exports') else 'REQUEST_TOO_LARGE',413))
+                else:response=config_failure(ConfigurationError('RESOURCE_LIMIT_EXCEEDED' if '/procurement-plans/' in request.url.path and request.url.path.endswith(('/exports','/assistant/messages')) else 'REQUEST_TOO_LARGE',413))
             if getattr(request.state,'import_resource_limit',False):
                 response=failure(request,AuthError('RESOURCE_LIMIT_EXCEEDED',413))
             response.headers["Cache-Control"] = "private, no-store" if public_read(request) or (request.method == "GET" and (request.url.path.startswith("/api/v1/notifications") or "/permission-requests" in request.url.path or "/mapping-submissions" in request.url.path)) or response.headers.get('Content-Type')=='application/pdf' else "no-store"

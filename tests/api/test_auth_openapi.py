@@ -32,7 +32,7 @@ def test_s41_openapi_exact_methods_envelopes_headers_and_cookie():
         '/api/v1/procurement-plans/{plan_id}/exports',
         '/api/v1/procurement-plans/{plan_id}/exports/{export_id}',
         '/api/v1/stores/{store_id}/imports/calendar'}
-    assert set(schema["paths"]) == {"/health", "/api/v1/stores/{store_id}/today", "/api/v1/stores/{store_id}/suppliers", *notification_paths, '/api/v1/stores/{store_id}/planning-requirements', '/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}', '/api/v1/stores/{store_id}/planning-budget', '/api/v1/stores/{store_id}/readiness', '/api/v1/stores/{store_id}/planning-context', *expected, *staff_paths, *import_paths,
+    assert set(schema["paths"]) == {'/api/v1/procurement-plans/{plan_id}/assistant/summary', '/api/v1/procurement-plans/{plan_id}/assistant/summary/{generation_id}', '/api/v1/procurement-plans/{plan_id}/assistant/messages', "/health", "/api/v1/stores/{store_id}/today", "/api/v1/stores/{store_id}/suppliers", *notification_paths, '/api/v1/stores/{store_id}/planning-requirements', '/api/v1/stores/{store_id}/planning-requirements/{saved_requirement_id}', '/api/v1/stores/{store_id}/planning-budget', '/api/v1/stores/{store_id}/readiness', '/api/v1/stores/{store_id}/planning-context', *expected, *staff_paths, *import_paths,
         '/api/v1/imports/{import_id}/completion', '/api/v1/stores/{store_id}/inventory/receipts', '/api/v1/stores/{store_id}/inventory/{ingredient_id}/threshold',
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule',
         '/api/v1/stores/{store_id}/products/{product_id}/recipe-schedule/changes',

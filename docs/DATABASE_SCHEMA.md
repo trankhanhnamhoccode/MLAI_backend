@@ -1,6 +1,95 @@
 # Database schema — implemented cluster and Schema v1 proposals
 
-CURRENT FACT in main local source: head `f4_20261016_metadata_v2`
+## CURRENT FACT - L5 combined migration graph
+
+Single source head `l5_20261016_assistant_f4` has parents0030_conversational_chat
+and f4_20261016_metadata_v2; both descend from0027_self_service_stores. The merge
+revision has no DDL, renumbering or reparenting. Four Assistant tables and metadata2
+constraint from their original migrations coexist:75 application tables/76 with
+Alembic. Base.metadata and schema comparison match. Old isolated counts/heads below
+are historical component facts, not the combined current head. No demo migration.
+Empty roundtrip/from-each-parent upgrades and retained metadata2/Assistant guard
+rehearsals run only on owned disposable L5 PostgreSQL5441. Downgrade parent guards
+refuse evidence loss; do not downgrade a populated customer/development DB.
+
+## CURRENT FACT — isolated assistant L2 schema
+
+CURRENT FACT L4.1 adds only internal retained version8 (selection8/prompt7/
+validator8/resolver5, renderer9 for new deterministic receipts). Version7 and6
+remain pinned with absent optional fields elided as before. Actual test factory
+uses PlanningRunUseCases.accept/claim/retain/finalize with captured input/exact
+pipeline and fresh read;20/35 outputs are computed, not JSON quantity patches.
+No column, migration, trigger, endpoint, retained-row rewrite or default6 change.
+
+CURRENT FACT L4 candidate keeps head0030 and all columns/triggers. Explicit
+presentation7 generations pin selection7/prompt6/validator7/resolver5 and renderer8.
+Internal grouped cards carry typed original members, exact semantic values and
+reference union; optional presentation/group/product_id fields elide when absent,
+preserving old canonical plan JSON. New model-OFF renderer8 receipts and model-ON
+generation7 read through their retained versions, independent of current selection.
+V6 remains default; no rewrite/backfill, new endpoint or migration.
+
+CURRENT FACT L3.2 keeps head0030 and the existing tables/triggers. New JSON
+generation records pin prompt/5, chat_assertions/6 and assertions/2, structured
+request context, per-request completion/cost limits and final safe failure traces.
+New JSON selection_version pins plan/6; absent means legacy plan/2 and is elided
+on canonical serialization. Existing L3.1 proof receipts do not acquire new
+eligibility obligations during replay. No migration is needed for this JSON field.
+Plan/4-/5-/6 pin the resolved question; absent is elided for old hashes.
+Old records use their pinned selector/renderer/grammar on read; serializers elide
+new absent fields to preserve original canonical hashes. No data rewrite/backfill.
+
+L3 conversational head0030_conversational_chat depends only on0029. All sibling
+revision directories were inspected before choosing the unused revision; no head
+merge or applied-migration edits. Additive chat_generations brings this worktree
+to76 tables including Alembic. UUID PK, actor/Store/Run RESTRICT FKs, unique scoped
+key digest, request/record SHA-256, status/created_at and typed chat_generation/1
+JSONB pin request/profile/evidence/selection/prompt/schema/validator/process/claim.
+Running→terminal alone can change status/time/output/result/error; triggers reject
+all terminal UPDATE/DELETE and downgrade refuses retained rows. A completed final
+assistant_message/2 receipt and terminal generation commit atomically; /1 receipts
+are preserved, not rewritten. Short advisory key lock serializes legacy receipt
+versus new provider acceptance across configuration changes, never across network.
+Same key/body replays; different body409. Alive/unknown running claim409; OS-proven
+dead claim is failed only on explicit replay and never reissues an unknown paid call.
+Failed keys remain failed; explicit new key is deliberate new work. Recognized
+applied lost ACKs reconcile exact retained claims/finals in fresh Sessions; unapplied
+or unknown DB/programming failures do not fabricate success. Only assistant test DB
+is migrated, with no business/PlanningRun mutation or other-worktree DB access.
+
+L3 additive head0029_assistant_messages (parent0028) adds assistant_messages,
+bringing this worktree to75 tables with Alembic. All sibling revision directories
+were checked; no0029 collision observed at creation. Composite PK actor/Store/Run/
+key digest owns AS03 idempotency. RESTRICT FKs, normalized request digest and typed
+assistant_message/1 JSONB request/response plus record SHA-256; no provider secret.
+All UPDATE/DELETE rejected by trigger; downgrade refuses retained rows. Replay
+checks current rights, exact request, raw hash and current pinned deterministic
+renderer/evidence before delivery. No conversation graph, job or mutable lifecycle:
+deterministic result and receipt commit atomically. Lost ACK returns503; explicit
+same-key retry safely reads or recreates one receipt. Only owned assistant test DB
+is migrated; no other worktree/runtime DB is touched.
+
+`0028_assistant_summaries` depends only on0027_self_service_stores. All registered
+worktree migration directories were inspected before choosing the unused revision;
+no other head/dependency is merged or edited. Additive2 tables,74 including Alembic;
+only the owned assistant test DB is migrated, not main/demo/readiness/challenger.
+
+plan_summary_generations retains id, actor/Store/PlanningRun RESTRICT FKs,
+identity/record SHA-256, status, created_at and typed canonical summary_generation/1
+JSONB containing pinned request/profile/evidence digest/process/claim and result.
+Partial unique(actor,Store,Run,identity_digest) applies to running/completed rows;
+explicit new-key retry after failure can create a new generation. Receipts retain
+actor/Store/Run/key digest PK, request digest and generation FK. They do not store
+raw keys, credentials or mutate PlanningRun/operational rows.
+
+DB triggers refuse receipt updates/deletes and all terminal generation updates/
+deletes; running→terminal retains acceptance/claim identity and permits only
+status/finished_at/result/error changes. Application additionally verifies exact
+hash/canonical/column identity, renderer facts/refs and current rights. Downgrade
+refuses retained generation rows; no purge/backfill or migration of another DB.
+Lifecycle semantics belong to [Planning §18](PROCUREMENT_API_CONTRACT_VI.md#decision-assistant).
+
+HISTORICAL INFORMATION before L5: main source head `f4_20261016_metadata_v2`
 follows0027 and only permits execution metadata schema2 alongside1 in the existing
 `forecast_execution_metadata` check constraint. No table/column/backfill or existing
 payload change. Downgrade refuses retained schema2 rows; an empty dedicated F4 test

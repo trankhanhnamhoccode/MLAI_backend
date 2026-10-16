@@ -12474,14 +12474,14 @@
             }
           },
           {
-            "in": "query",
             "name": "planning_request",
+            "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "maxLength": 65536,
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 65536
                 },
                 {
                   "type": "null"
@@ -12599,14 +12599,14 @@
             }
           },
           {
-            "in": "query",
             "name": "planning_request",
+            "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "maxLength": 65536,
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 65536
                 },
                 {
                   "type": "null"
@@ -13750,6 +13750,529 @@
               }
             },
             "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/procurement-plans/{plan_id}/assistant/summary": {
+      "post": {
+        "tags": [
+          "Decision Assistant summary"
+        ],
+        "summary": "Create",
+        "operationId": "AS01",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Plan Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SummaryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/procurement-plans/{plan_id}/assistant/summary/{generation_id}": {
+      "get": {
+        "tags": [
+          "Decision Assistant summary"
+        ],
+        "summary": "Read",
+        "operationId": "AS02",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Plan Id"
+            }
+          },
+          {
+            "name": "generation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Generation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/procurement-plans/{plan_id}/assistant/messages": {
+      "post": {
+        "tags": [
+          "Decision Assistant chat"
+        ],
+        "summary": "Create",
+        "operationId": "AS03",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Plan Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
           },
           "503": {
             "content": {
@@ -15203,6 +15726,143 @@
         ],
         "title": "Assignment"
       },
+      "AssistantResponse": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "decision_assistant/1",
+            "title": "Schema Version",
+            "default": "decision_assistant/1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "evidence_version": {
+            "type": "string",
+            "title": "Evidence Version"
+          },
+          "result_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Digest"
+          },
+          "option_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Id"
+          },
+          "ingredient_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingredient Id"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "vi",
+              "en"
+            ],
+            "title": "Locale"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "answer",
+              "clarification"
+            ],
+            "title": "Kind"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "model",
+              "deterministic_fallback",
+              "deterministic_clarification"
+            ],
+            "title": "Source"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/ChatClaim"
+            },
+            "type": "array",
+            "title": "Claims"
+          },
+          "references": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceReference"
+            },
+            "type": "array",
+            "title": "References"
+          },
+          "clarification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Clarification"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diagnostics": {
+            "$ref": "#/components/schemas/ChatDiagnostics"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChatContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "evidence_version",
+          "result_digest",
+          "option_id",
+          "ingredient_id",
+          "locale",
+          "kind",
+          "source",
+          "answer",
+          "claims",
+          "references",
+          "clarification",
+          "diagnostics"
+        ],
+        "title": "AssistantResponse"
+      },
       "Audit": {
         "properties": {
           "change_id": {
@@ -16160,6 +16820,488 @@
           "audit"
         ],
         "title": "ChangeRead"
+      },
+      "ChatClaim": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text",
+          "evidence_ids"
+        ],
+        "title": "ChatClaim"
+      },
+      "ChatContext": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "evidence_version": {
+            "type": "string",
+            "title": "Evidence Version"
+          },
+          "option_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Id"
+          },
+          "comparison_pair": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Pair"
+          },
+          "ingredient_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingredient Id"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "pending": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PendingQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "purchase",
+                  "purchase_rationale",
+                  "stock",
+                  "daily_shortage",
+                  "daily_ending"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "evidence_version"
+        ],
+        "title": "ChatContext"
+      },
+      "ChatDiagnostics": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "MODEL_DISABLED",
+              "EVIDENCE_INSUFFICIENT",
+              "PROVIDER_UNAVAILABLE",
+              "PREFLIGHT_REJECTED",
+              "SCHEMA_REJECTED",
+              "GROUNDING_REJECTED",
+              "COVERAGE_REJECTED",
+              "INPUT_LIMIT",
+              "PROCESS_INTERRUPTED",
+              "WORDING_UNSUPPORTED"
+            ],
+            "title": "Reason"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "validator_version": {
+            "type": "string",
+            "title": "Validator Version",
+            "default": "decision_chat_renderer/1"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "resolved_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Model"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "attempts": {
+            "type": "integer",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Attempts",
+            "default": 0
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens"
+          },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Usd"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "finish_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finish Reason"
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "REPAIRED",
+              "TRIMMED",
+              "REGENERATED",
+              "FALLBACK",
+              "CLARIFICATION"
+            ],
+            "title": "Disposition",
+            "default": "FALLBACK"
+          },
+          "prompt_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Hash"
+          },
+          "schema_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Hash"
+          },
+          "evidence_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Hash"
+          },
+          "failure_trace": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failure Trace",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "ChatDiagnostics"
+      },
+      "ChatEnvelope": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AssistantResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/SummaryMeta"
+          },
+          "error": {
+            "type": "null",
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ChatEnvelope"
+      },
+      "ChatRequest": {
+        "properties": {
+          "expected_evidence_version": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Expected Evidence Version"
+          },
+          "option_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Id"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "vi",
+              "en"
+            ],
+            "title": "Locale"
+          },
+          "detail_level": {
+            "type": "string",
+            "enum": [
+              "simple",
+              "technical"
+            ],
+            "title": "Detail Level"
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Question"
+          },
+          "ingredient_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingredient Id"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryMessage"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "title": "History"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChatContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_evidence_version",
+          "option_id",
+          "locale",
+          "detail_level",
+          "question",
+          "ingredient_id",
+          "history"
+        ],
+        "title": "ChatRequest"
+      },
+      "Clarification": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "ENTITY_AMBIGUOUS",
+              "ENTITY_CONTEXT_MISMATCH",
+              "QUERY_UNSUPPORTED"
+            ],
+            "title": "Code"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/IngredientCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "original_question": {
+            "type": "string",
+            "title": "Original Question"
+          },
+          "option_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/OptionCandidate"
+            },
+            "type": "array",
+            "title": "Option Candidates",
+            "default": []
+          },
+          "product_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ProductCandidate"
+            },
+            "type": "array",
+            "title": "Product Candidates",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "question",
+          "candidates",
+          "original_question"
+        ],
+        "title": "Clarification"
       },
       "ClassificationCounts": {
         "properties": {
@@ -19389,6 +20531,171 @@
         ],
         "title": "ErrorInfo"
       },
+      "EvidenceIdentity": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "aggregate_digest": {
+            "type": "string",
+            "title": "Aggregate Digest"
+          },
+          "input_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Digest"
+          },
+          "result_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Digest"
+          },
+          "request_digest": {
+            "type": "string",
+            "title": "Request Digest"
+          },
+          "storage_version": {
+            "type": "string",
+            "title": "Storage Version"
+          },
+          "package_schema_version": {
+            "type": "integer",
+            "title": "Package Schema Version"
+          },
+          "result_schema_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Schema Version"
+          },
+          "capture_schema_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capture Schema Version"
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Accepted At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "captured_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captured At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "store_id",
+          "aggregate_digest",
+          "input_digest",
+          "result_digest",
+          "request_digest",
+          "storage_version",
+          "package_schema_version",
+          "result_schema_version",
+          "capture_schema_version",
+          "accepted_at",
+          "started_at",
+          "finished_at",
+          "captured_at"
+        ],
+        "title": "EvidenceIdentity"
+      },
+      "EvidenceReference": {
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "title": "Evidence Id"
+          },
+          "pointer": {
+            "type": "string",
+            "title": "Pointer"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "retained_C03",
+              "retained_C08",
+              "retained_C05",
+              "retained_capture",
+              "retained_comparison"
+            ],
+            "title": "Source"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "evidence_id",
+          "pointer",
+          "source"
+        ],
+        "title": "EvidenceReference"
+      },
       "ExactQuantity": {
         "properties": {
           "numerator": {
@@ -21089,6 +22396,66 @@
         ],
         "title": "FileView"
       },
+      "ForecastAssessment": {
+        "properties": {
+          "requested_mode": {
+            "type": "string",
+            "enum": [
+              "BASELINE",
+              "TRAINED"
+            ],
+            "title": "Requested Mode"
+          },
+          "actual_model_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Model Type"
+          },
+          "actual_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Model Version"
+          },
+          "selection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection Reason"
+          },
+          "quality_status": {
+            "type": "string",
+            "const": "not_evaluated",
+            "title": "Quality Status",
+            "default": "not_evaluated"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "requested_mode",
+          "actual_model_type",
+          "actual_model_version",
+          "selection_reason"
+        ],
+        "title": "ForecastAssessment"
+      },
       "ForecastView": {
         "properties": {
           "forecast_run_id": {
@@ -21456,6 +22823,31 @@
           "error"
         ],
         "title": "HistoryEnvelope[ImportHistory, ImportHistoryMeta]"
+      },
+      "HistoryMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "HistoryMessage"
       },
       "HistoryMeta": {
         "properties": {
@@ -22523,6 +23915,26 @@
           "ending_usable"
         ],
         "title": "IngredientBalance"
+      },
+      "IngredientCandidate": {
+        "properties": {
+          "ingredient_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Ingredient Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ingredient_id",
+          "name"
+        ],
+        "title": "IngredientCandidate"
       },
       "IngredientDay": {
         "properties": {
@@ -24370,6 +25782,74 @@
           "name"
         ],
         "title": "InvitationStore"
+      },
+      "Issue": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "authorization",
+              "catalog",
+              "recipe",
+              "sales",
+              "inventory",
+              "supplier",
+              "fees",
+              "constraints",
+              "forecast",
+              "configuration",
+              "runtime"
+            ],
+            "title": "Source"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "STORE",
+              "PRODUCT",
+              "INGREDIENT"
+            ],
+            "title": "Scope"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "affected_dates": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array",
+            "title": "Affected Dates"
+          },
+          "details": {
+            "$ref": "#/components/schemas/ReadinessIssueDetails"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "source",
+          "scope",
+          "entity_id",
+          "affected_dates",
+          "details"
+        ],
+        "title": "Issue"
       },
       "IssueDetails": {
         "properties": {
@@ -27394,6 +28874,33 @@
         ],
         "title": "Option"
       },
+      "OptionCandidate": {
+        "properties": {
+          "option_id": {
+            "type": "string",
+            "title": "Option Id"
+          },
+          "source_strategies": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "lean",
+                "balanced",
+                "protected"
+              ]
+            },
+            "type": "array",
+            "title": "Source Strategies"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "option_id",
+          "source_strategies"
+        ],
+        "title": "OptionCandidate"
+      },
       "OptionReason": {
         "properties": {
           "option_id": {
@@ -27616,6 +29123,41 @@
           "file_id"
         ],
         "title": "ParseFailureLocation"
+      },
+      "PendingQuestion": {
+        "properties": {
+          "original_question": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Original Question"
+          },
+          "candidate_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 30,
+            "title": "Candidate Ids"
+          },
+          "entity_kind": {
+            "type": "string",
+            "enum": [
+              "ingredient",
+              "product"
+            ],
+            "title": "Entity Kind",
+            "default": "ingredient"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "original_question",
+          "candidate_ids"
+        ],
+        "title": "PendingQuestion"
       },
       "PermissionDescriptor": {
         "properties": {
@@ -28039,6 +29581,66 @@
           "evidence_reference"
         ],
         "title": "PlannedArrivalExpiryRule"
+      },
+      "PlanningAssessment": {
+        "properties": {
+          "semantics_version": {
+            "type": "string",
+            "const": "planning_readiness/1",
+            "title": "Semantics Version",
+            "default": "planning_readiness/1"
+          },
+          "input_scope": {
+            "type": "string",
+            "enum": [
+              "DEFAULT_CONFIGURATION",
+              "SUPPLIED_REQUEST"
+            ],
+            "title": "Input Scope"
+          },
+          "requirements_mode": {
+            "type": "string",
+            "enum": [
+              "default",
+              "custom",
+              "saved"
+            ],
+            "title": "Requirements Mode"
+          },
+          "configuration_status": {
+            "type": "string",
+            "enum": [
+              "RESOLVED",
+              "INVALID",
+              "UNKNOWN"
+            ],
+            "title": "Configuration Status"
+          },
+          "blockers": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "type": "array",
+            "title": "Blockers"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "input_scope",
+          "requirements_mode",
+          "configuration_status",
+          "blockers",
+          "warnings"
+        ],
+        "title": "PlanningAssessment"
       },
       "PlanningConfigurationNotification": {
         "properties": {
@@ -29773,6 +31375,26 @@
         ],
         "title": "ProductBrief"
       },
+      "ProductCandidate": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "product_id",
+          "name"
+        ],
+        "title": "ProductCandidate"
+      },
       "ProductDependency": {
         "properties": {
           "product_id": {
@@ -31243,20 +32865,20 @@
             ],
             "title": "History Watermark"
           },
-          "forecast_assessment": {
+          "planning_assessment": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/ForecastAssessment"
+                "$ref": "#/components/schemas/PlanningAssessment"
               },
               {
                 "type": "null"
               }
             ]
           },
-          "planning_assessment": {
+          "forecast_assessment": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/PlanningAssessment"
+                "$ref": "#/components/schemas/ForecastAssessment"
               },
               {
                 "type": "null"
@@ -31279,6 +32901,102 @@
           "history_watermark"
         ],
         "title": "Readiness"
+      },
+      "ReadinessIssueDetails": {
+        "properties": {
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "classification": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classification"
+          },
+          "proof_scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proof Scope"
+          },
+          "suggested_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Action"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ReadinessIssueDetails"
       },
       "Receipt": {
         "properties": {
@@ -36405,6 +38123,438 @@
         ],
         "title": "SuggestionDiagnostic"
       },
+      "SummaryAnswer": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "plan_summary/1",
+            "title": "Schema Version",
+            "default": "plan_summary/1"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/EvidenceIdentity"
+          },
+          "option_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Id"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "vi",
+              "en"
+            ],
+            "title": "Locale"
+          },
+          "detail_level": {
+            "type": "string",
+            "enum": [
+              "simple",
+              "technical"
+            ],
+            "title": "Detail Level"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "deterministic_fallback",
+              "model_presentation"
+            ],
+            "title": "Source"
+          },
+          "presentation": {
+            "$ref": "#/components/schemas/SummaryExpression"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/SummaryClaim"
+            },
+            "type": "array",
+            "title": "Claims"
+          },
+          "references": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceReference"
+            },
+            "type": "array",
+            "title": "References"
+          },
+          "diagnostics": {
+            "$ref": "#/components/schemas/SummaryDiagnostics"
+          },
+          "renderer_version": {
+            "type": "string",
+            "const": "plan_summary_renderer/1",
+            "title": "Renderer Version",
+            "default": "plan_summary_renderer/1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "identity",
+          "option_id",
+          "locale",
+          "detail_level",
+          "source",
+          "presentation",
+          "answer",
+          "claims",
+          "references",
+          "diagnostics"
+        ],
+        "title": "SummaryAnswer"
+      },
+      "SummaryClaim": {
+        "properties": {
+          "family": {
+            "type": "string",
+            "enum": [
+              "outcome",
+              "cost",
+              "requirements",
+              "coverage",
+              "proof",
+              "limitations"
+            ],
+            "title": "Family"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "family",
+          "text",
+          "evidence_ids"
+        ],
+        "title": "SummaryClaim"
+      },
+      "SummaryDiagnostics": {
+        "properties": {
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "FALLBACK"
+            ],
+            "title": "Disposition"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "MODEL_DISABLED",
+              "PROVIDER_UNAVAILABLE",
+              "SCHEMA_REJECTED",
+              "GROUNDING_REJECTED",
+              "INPUT_LIMIT",
+              "PROCESS_INTERRUPTED"
+            ],
+            "title": "Reason"
+          },
+          "prompt_version": {
+            "type": "string",
+            "const": "plan_summary_prompt/1",
+            "title": "Prompt Version",
+            "default": "plan_summary_prompt/1"
+          },
+          "validator_version": {
+            "type": "string",
+            "const": "summary_presentation_guard/1",
+            "title": "Validator Version",
+            "default": "summary_presentation_guard/1"
+          },
+          "requested_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Model"
+          },
+          "resolved_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Model"
+          },
+          "resolved_provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Provider"
+          },
+          "attempts": {
+            "type": "integer",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Attempts",
+            "default": 0
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "disposition",
+          "reason",
+          "requested_model"
+        ],
+        "title": "SummaryDiagnostics"
+      },
+      "SummaryEnvelope": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SummaryView"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/SummaryMeta"
+          },
+          "error": {
+            "type": "null",
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "SummaryEnvelope"
+      },
+      "SummaryExpression": {
+        "properties": {
+          "ordering": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "outcome",
+                "cost",
+                "requirements",
+                "coverage",
+                "proof",
+                "limitations"
+              ]
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 6,
+            "title": "Ordering"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "plain",
+              "brief"
+            ],
+            "title": "Tone"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ordering",
+          "tone"
+        ],
+        "title": "SummaryExpression",
+        "description": "No free-form claims/numbers/entities, including hidden optional fields."
+      },
+      "SummaryMeta": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id"
+        ],
+        "title": "SummaryMeta"
+      },
+      "SummaryRequest": {
+        "properties": {
+          "expected_evidence_version": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Expected Evidence Version"
+          },
+          "option_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Id"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "vi",
+              "en"
+            ],
+            "title": "Locale"
+          },
+          "detail_level": {
+            "type": "string",
+            "enum": [
+              "simple",
+              "technical"
+            ],
+            "title": "Detail Level"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_evidence_version",
+          "option_id",
+          "locale",
+          "detail_level"
+        ],
+        "title": "SummaryRequest"
+      },
+      "SummaryView": {
+        "properties": {
+          "generation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Generation Id"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "completed",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SummaryAnswer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "generation_id",
+          "run_id",
+          "status",
+          "created_at",
+          "finished_at",
+          "result",
+          "error_code"
+        ],
+        "title": "SummaryView"
+      },
       "SupplierConfiguration": {
         "properties": {
           "canonical_id": {
@@ -38718,290 +40868,6 @@
           "recipes"
         ],
         "title": "UpdatedResources"
-      },
-      "ForecastAssessment": {
-        "additionalProperties": false,
-        "properties": {
-          "actual_model_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Actual Model Type"
-          },
-          "actual_model_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Actual Model Version"
-          },
-          "quality_status": {
-            "const": "not_evaluated",
-            "default": "not_evaluated",
-            "title": "Quality Status",
-            "type": "string"
-          },
-          "requested_mode": {
-            "enum": [
-              "BASELINE",
-              "TRAINED"
-            ],
-            "title": "Requested Mode",
-            "type": "string"
-          },
-          "selection_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Selection Reason"
-          }
-        },
-        "required": [
-          "requested_mode",
-          "actual_model_type",
-          "actual_model_version",
-          "selection_reason"
-        ],
-        "title": "ForecastAssessment",
-        "type": "object"
-      },
-      "Issue": {
-        "additionalProperties": false,
-        "properties": {
-          "affected_dates": {
-            "items": {
-              "format": "date",
-              "type": "string"
-            },
-            "title": "Affected Dates",
-            "type": "array"
-          },
-          "code": {
-            "title": "Code",
-            "type": "string"
-          },
-          "details": {
-            "$ref": "#/components/schemas/ReadinessIssueDetails"
-          },
-          "entity_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Entity Id"
-          },
-          "scope": {
-            "enum": [
-              "STORE",
-              "PRODUCT",
-              "INGREDIENT"
-            ],
-            "title": "Scope",
-            "type": "string"
-          },
-          "source": {
-            "enum": [
-              "authorization",
-              "catalog",
-              "recipe",
-              "sales",
-              "inventory",
-              "supplier",
-              "fees",
-              "constraints",
-              "forecast",
-              "configuration",
-              "runtime"
-            ],
-            "title": "Source",
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "source",
-          "scope",
-          "entity_id",
-          "affected_dates",
-          "details"
-        ],
-        "title": "Issue",
-        "type": "object"
-      },
-      "PlanningAssessment": {
-        "additionalProperties": false,
-        "properties": {
-          "blockers": {
-            "items": {
-              "$ref": "#/components/schemas/Issue"
-            },
-            "title": "Blockers",
-            "type": "array"
-          },
-          "configuration_status": {
-            "enum": [
-              "RESOLVED",
-              "INVALID",
-              "UNKNOWN"
-            ],
-            "title": "Configuration Status",
-            "type": "string"
-          },
-          "input_scope": {
-            "enum": [
-              "DEFAULT_CONFIGURATION",
-              "SUPPLIED_REQUEST"
-            ],
-            "title": "Input Scope",
-            "type": "string"
-          },
-          "requirements_mode": {
-            "enum": [
-              "default",
-              "custom",
-              "saved"
-            ],
-            "title": "Requirements Mode",
-            "type": "string"
-          },
-          "semantics_version": {
-            "const": "planning_readiness/1",
-            "default": "planning_readiness/1",
-            "title": "Semantics Version",
-            "type": "string"
-          },
-          "warnings": {
-            "items": {
-              "$ref": "#/components/schemas/Issue"
-            },
-            "title": "Warnings",
-            "type": "array"
-          }
-        },
-        "required": [
-          "input_scope",
-          "requirements_mode",
-          "configuration_status",
-          "blockers",
-          "warnings"
-        ],
-        "title": "PlanningAssessment",
-        "type": "object"
-      },
-      "ReadinessIssueDetails": {
-        "additionalProperties": false,
-        "properties": {
-          "classification": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Classification"
-          },
-          "entity_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Entity Id"
-          },
-          "field": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Field"
-          },
-          "impact": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Impact"
-          },
-          "proof_scope": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Proof Scope"
-          },
-          "reference": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reference"
-          },
-          "suggested_action": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Suggested Action"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version"
-          }
-        },
-        "title": "ReadinessIssueDetails",
-        "type": "object"
       }
     },
     "securitySchemes": {
@@ -39011,29 +40877,5 @@
         "name": "__Host-shelfcash_session"
       }
     }
-  },
-  "x-shelfcash-provenance": {
-    "source_manifest_sha256": "1e367f61dfa86df461cd1bf986dad0c85c8ff8d415c42a131c315015127d3a01",
-    "manifest_algorithm": "sorted app/alembic Python path NUL SHA256(LF bytes) LF",
-    "migration_head": "0027_self_service_stores",
-    "generated_at": "2026-10-15T09:51:10.258552+00:00",
-    "source_only": true,
-    "database_access": false,
-    "workers": false,
-    "operations": 73,
-    "paths": 66,
-    "previous_be_artifact": {
-      "git_ref": "052cddee075e165af2c0cea42ebc2e616c396760",
-      "path": "docs/handoff/openapi.json",
-      "sha256": "9cf5b8f4abf3ffc7d776290a159658356f7cad5c72b26678d08d98e02f34c696",
-      "operations": 73,
-      "paths": 66,
-      "hash_basis": "Git blob bytes at git_ref/path"
-    },
-    "source_inputs": {
-      "main_before_integration": "052cddee075e165af2c0cea42ebc2e616c396760",
-      "readiness_d5": "11ef320a5873fc4dc314fdad63878db5f8a8b38c"
-    },
-    "scope": "Enclosing merge commit owns integrated source; no deployment claim"
   }
 }

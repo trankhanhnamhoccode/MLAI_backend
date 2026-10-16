@@ -6,7 +6,7 @@ from app.config import Settings
 def test_c2_exact_operations_strict_union_and_paired_queue_reference():
     schema=create_app(Settings(_env_file=None,environment='test')).openapi()
     operations={(p,m,s['operationId']) for p,e in schema['paths'].items() for m,s in e.items() if m in ('get','post','put','patch','delete')}
-    assert len(operations)==73 and len(schema['paths'])==66
+    assert len(operations)==76 and len(schema['paths'])==69
     assert {(p,m,i) for p,m,i in operations if i.startswith(('PR','MQ'))}=={
         ('/api/v1/stores/{store_id}/permission-requests','post','PR01'),
         ('/api/v1/stores/{store_id}/permission-requests','get','PR02'),

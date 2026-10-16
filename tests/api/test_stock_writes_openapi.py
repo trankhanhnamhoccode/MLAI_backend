@@ -21,7 +21,7 @@ def test_excel_receipt_uses_existing_operations_and_typed_inventory_effect():
     schema = create_app(Settings(_env_file=None)).openapi()
     operations = {value['operationId'] for methods in schema['paths'].values()
                   for method, value in methods.items() if method in ('get','post','put','patch','delete')}
-    assert len(operations) == 73 and len(schema['paths']) == 66
+    assert len(operations) == 76 and len(schema['paths']) == 69
     assert len(SCHEMAS) == 15 and 'inventory_receipts' in SCHEMAS
     components = schema['components']['schemas']
     assert components['ActualReceiptValue']['properties']['origin']['const'] == 'ACTUAL_RECEIPT'

@@ -22,6 +22,24 @@ class Settings(BaseSettings):
     upload_directory: Path = Path("runtime/uploads")
     model_artifact_directory: Path = Path("runtime/model_artifacts")
     openrouter_api_key: SecretStr | None = None
+    chat_llm_enabled: bool = False
+    chat_model: str | None = None
+    chat_providers: tuple[str,...] = ()
+    chat_max_tokens: int = Field(default=768,ge=128,le=1200)
+    chat_input_bytes: int = Field(default=12000,ge=1000,le=24000)
+    chat_timeout_seconds: float = Field(default=25,gt=0,le=30)
+    chat_deadline_seconds: float = Field(default=30,gt=0,le=60)
+    chat_max_prompt_price: str = '0.3'
+    chat_max_completion_price: str = '2.5'
+    chat_completion_limit: int = Field(default=2,ge=1,le=2)
+    chat_max_request_cost_usd: str = '0.10'
+    summary_llm_enabled: bool = False
+    summary_model: str | None = None
+    summary_providers: tuple[str,...] = ()
+    summary_max_tokens: int = Field(default=256,ge=64,le=1024)
+    summary_input_bytes: int = Field(default=16000,ge=1000,le=64000)
+    summary_timeout_seconds: float = Field(default=20,gt=0,le=30)
+    summary_deadline_seconds: float = Field(default=25,gt=0,le=60)
     import_llm_suggestions_enabled: bool = False
     openrouter_model: str | None = None
     openrouter_mapping_model: Literal["qwen/qwen3.5-9b"] = "qwen/qwen3.5-9b"
